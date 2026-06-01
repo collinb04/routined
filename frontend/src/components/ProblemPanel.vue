@@ -1,11 +1,19 @@
 <template>
-  <aside class="problem-panel">
-    <div class="problem-meta">
-      <span class="problem-id">#001</span>
-      <span class="difficulty medium">Medium</span>
+  <aside class="bg-surface border-r border-border px-6 py-7 flex flex-col gap-5 overflow-y-auto">
+    <div class="flex items-center gap-2.5">
+      <span class="font-mono text-xs text-text-muted">#001</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-yellow-50 text-yellow-600 border border-yellow-200">
+        Medium
+      </span>
     </div>
-    <h2>Two Sum</h2>
-    <p>Given an array of integers <code>nums</code> and an integer <code>target</code>, return indices of the two numbers that add up to <code>target</code>.</p>
+    <h2 class="text-lg font-semibold text-text leading-snug">Two Sum</h2>
+    <p class="text-sm text-text-dim leading-relaxed">
+      Given an array of integers
+      <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-accent">nums</code>
+      and an integer
+      <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-accent">target</code>,
+      return indices of the two numbers that add up to <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-accent">target</code>.
+    </p>
     <LensNav />
   </aside>
 </template>

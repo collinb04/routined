@@ -10,9 +10,9 @@ onMounted(() => store.initLens(0))
 </script>
 
 <template>
-  <div class="session-layout">
+  <div class="grid h-screen overflow-hidden" style="grid-template-columns: 340px 1fr;">
     <ProblemPanel />
-    <div class="session-main">
+    <div class="flex flex-col h-screen overflow-hidden">
       <ChatArea />
       <InputZone />
     </div>
