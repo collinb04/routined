@@ -1,19 +1,15 @@
-<script setup lang="ts">
-import NavBar from '@/components/NavBar.vue'
-</script>
-
 <template>
-  <div class="mt-12 bg-white flex flex-col">
-    <main class="flex-1 flex items-center justify-center px-16 py-10">
-      <div class="max-w-3xl flex flex-col gap-7 items-start">
+  <div class="mt-25 bg-white flex flex-col">
+    <main class="relative flex-1 flex items-center justify-center px-16 py-10 overflow-hidden">
+<div class="max-w-3xl flex flex-col gap-7 items-start">
         <h1 class="text-[clamp(38px,5.5vw,64px)] font-light leading-[1.12] tracking-tight text-text">
           You've been <span class="font-semibold">memorizing.</span><br />
-          <span class="text-accent">You should start <span class="font-semibold">thinking</span></span>
+          <span class="text-black">You should start <span class="font-semibold"><span style="color:#e85d4a">t</span><span style="color:#e8a23a">h</span><span style="color:#e8d23a">i</span><span style="color:#4caf7d">n</span><span style="color:#3a9ae8">k</span><span style="color:#7c5ce8">i</span><span style="color:#c45ce8">n</span><span style="color:#e85d9a">g</span>.</span></span>
         </h1>
         <div class="flex items-center gap-6 text-lg text-text-muted">
           <span class="flex items-center gap-1.5">
             <svg class="w-4 h-4 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg>
-            Distinguish
+            Disect
           </span>
           <span class="flex items-center gap-2">
             <svg class="w-4 h-4 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
@@ -28,7 +24,7 @@ import NavBar from '@/components/NavBar.vue'
           Experts aren't smarter, but they do have better mental models. Routined instills said models until it's just... <span class="italic">how you think.</span>
         </p>
         <div class="flex gap-3 items-center mt-2">
-          <a href="#" class="bg-accent text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
+          <a href="#" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
             Start a session
           </a>
           <a href="#" class="text-text-muted text-sm px-6 py-3 rounded-lg transition-opacity hover:bg-gray-100/50 hover:text-text">
@@ -38,5 +34,9 @@ import NavBar from '@/components/NavBar.vue'
       </div>
     </main>
 
+    <div class="flex flex-col items-center gap-32 px-[12.5%] py-32">
+      <div v-for="i in 6" :key="i" class="w-full max-w-3xl h-48 rounded-2xl bg-gray-100 animate-pulse" />
+    </div>
   </div>
 </template>
+

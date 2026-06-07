@@ -30,7 +30,7 @@ function handleKey(e: KeyboardEvent) {
     <button
       @click="submit"
       :disabled="store.isLoading || store.allComplete"
-      class="bg-accent text-white text-sm font-semibold px-5 h-10.5 rounded-lg shrink-0 transition-opacity hover:opacity-85 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+      class="bg-black text-white text-sm font-semibold px-5 h-10.5 rounded-lg shrink-0 transition-opacity hover:opacity-85 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
     >
       Send
     </button>

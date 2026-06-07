@@ -20,7 +20,7 @@ watch(() => store.messages.length, async () => {
     >
       <div
         class="text-[11px] font-semibold uppercase tracking-wider"
-        :class="msg.role === 'tutor' ? 'text-accent' : 'text-text-muted'"
+        :class="msg.role === 'tutor' ? 'text-black' : 'text-text-muted'"
       >
         {{ msg.role === 'tutor' ? 'Routined' : 'You' }}
       </div>
@@ -35,7 +35,7 @@ watch(() => store.messages.length, async () => {
     </div>
 
     <div v-if="store.isLoading" class="self-start items-start flex flex-col gap-1 max-w-2xl">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-accent">Routined</div>
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-black">Routined</div>
       <div class="text-sm px-4 py-3 bg-surface border border-border rounded-[10px_10px_10px_2px] text-text-muted italic">
         thinking...
       </div>
@@ -44,7 +44,7 @@ watch(() => store.messages.length, async () => {
     <div v-if="store.lensCompleted[store.currentLens] && !store.allComplete" class="self-center mt-2">
       <button
         @click="store.advanceLens()"
-        class="bg-accent/10 border border-accent text-accent text-sm font-medium px-5 py-2.5 rounded-lg transition-colors hover:bg-accent/20 cursor-pointer"
+        class="bg-black/10 border border-accent text-black text-sm font-medium px-5 py-2.5 rounded-lg transition-colors hover:bg-black/20 cursor-pointer"
       >
         Continue to next lens →
       </button>

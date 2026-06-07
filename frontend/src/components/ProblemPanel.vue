@@ -9,10 +9,10 @@
     <h2 class="text-lg font-semibold text-text leading-snug">Two Sum</h2>
     <p class="text-sm text-text-dim leading-relaxed">
       Given an array of integers
-      <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-accent">nums</code>
+      <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-black">nums</code>
       and an integer
-      <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-accent">target</code>,
-      return indices of the two numbers that add up to <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-accent">target</code>.
+      <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-black">target</code>,
+      return indices of the two numbers that add up to <code class="font-mono text-xs bg-surface-raised border border-border px-1 py-0.5 rounded text-black">target</code>.
     </p>
     <LensNav />
   </aside>

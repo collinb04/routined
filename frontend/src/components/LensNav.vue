@@ -11,13 +11,13 @@ const store = useSessionStore()
       :key="i"
       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
       :class="{
-        'bg-accent/10': store.currentLens === i,
+        'bg-black/10': store.currentLens === i,
       }"
     >
       <div
         class="w-6 h-6 rounded-full border flex items-center justify-center font-mono text-[11px] shrink-0 transition-colors"
         :class="{
-          'border-accent text-accent': store.currentLens === i && !store.lensCompleted[i],
+          'border-accent text-black': store.currentLens === i && !store.lensCompleted[i],
           'border-green bg-green/10 text-green': store.lensCompleted[i],
           'border-border text-text-muted': store.currentLens !== i && !store.lensCompleted[i],
         }"
