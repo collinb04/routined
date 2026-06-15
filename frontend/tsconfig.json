@@ -11,5 +11,5 @@
     },
     "lib": ["ES2020", "DOM"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "src/views/About.vue", "src/views/Home.vue"]
 }
