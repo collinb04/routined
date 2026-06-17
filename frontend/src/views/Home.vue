@@ -30,10 +30,10 @@
              Start learning efficiently with Routined.
           </p>
           <div class="flex gap-3 items-center mt-2">
-            <a href="#" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
+            <a href="product" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
               Start a session
             </a>
-            <a href="#" class="text-text-muted text-sm px-6 py-3 rounded-lg transition-opacity hover:bg-white hover:text-text">
+            <a href="#product" class="text-text-muted text-sm px-6 py-3 rounded-lg transition-opacity hover:bg-white hover:text-text">
               See how it works
             </a>
           </div>

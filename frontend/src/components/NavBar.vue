@@ -87,7 +87,7 @@
     </div>
 
     <!-- Desktop CTA -->
-    <a href="#"
+    <RouterLink to="/blog"
       class="
         hidden md:inline-flex items-center
         relative text-sm font-medium text-black
@@ -102,7 +102,7 @@
       "
     >
       Get started
-    </a>
+    </RouterLink>
 
     <!-- Hamburger button -->
     <button
@@ -158,13 +158,13 @@
           {{ link.label }}
         </a>
       </template>
-      <a
-        href="#"
+      <RouterLink
+        to="/blog"
         class="mt-3 text-center text-sm font-medium text-black border border-black hover:bg-white shadow-[0_3px_0_0_#000] rounded-lg px-4 py-2.5 transition-all duration-100 hover:shadow-[0_1px_0_0_#000] hover:translate-y-0.5 active:shadow-none active:translate-y-1"
         @click="mobileOpen = false"
       >
         Get started
-      </a>
+      </RouterLink>
     </div>
   </Transition>
 </template>
