@@ -9,9 +9,9 @@ import SessionView from '@/views/SessionView.vue'
 const routes = [
   { path: '/', component: Home },
   { path: '/about', component: About },
-  { path: '/blog', component: Blog },
+  { path: '/learn', component: Blog },
   { path: '/pricing', component: Pricing },
-  { path: '/product', component: Product },
+  { path: '/problems', component: Product },
   { path: '/session', component: SessionView },
 ]
 

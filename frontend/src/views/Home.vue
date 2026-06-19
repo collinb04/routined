@@ -30,10 +30,10 @@
              Start learning efficiently with Routined.
           </p>
           <div class="flex gap-3 items-center mt-2">
-            <a href="product" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
+            <a href="/problems" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
               Start a session
             </a>
-            <a href="#product" class="text-text-muted text-sm px-6 py-3 rounded-lg transition-opacity hover:bg-white hover:text-text">
+            <a href="#problems" class="text-text-muted text-sm px-6 py-3 rounded-lg transition-opacity hover:bg-white hover:text-text">
               See how it works
             </a>
           </div>
@@ -135,7 +135,7 @@
     </section>
 
     <!-- HOW IT WORKS (STEPS) -->
-    <section id="product" class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
+    <section id="problems" class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
       <div class="max-w-3xl w-full flex flex-col gap-2 text-center">
         <h2 class="text-4xl sm:text-6xl font-medium leading-snug tracking-tight text-text text-center">
           A Concrete Walkthrough

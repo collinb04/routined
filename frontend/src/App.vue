@@ -17,7 +17,7 @@ import NavBar from './components/NavBar.vue'
       <span>© 2026 Routined. All rights reserved.</span>
     </div>
     <div class="flex gap-6">
-      <RouterLink to="/#product" class="hover:text-text transition-colors">Product</RouterLink>
+      <RouterLink to="/#problems" class="hover:text-text transition-colors">Problems</RouterLink>
       <RouterLink to="/pricing" class="hover:text-text transition-colors">Pricing</RouterLink>
       <a href="#" class="hover:text-text transition-colors">Get Started</a>
       <RouterLink to="/#contact" class="hover:text-text transition-colors">FAQs + Contact</RouterLink>

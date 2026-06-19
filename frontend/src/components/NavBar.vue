@@ -87,7 +87,7 @@
     </div>
 
     <!-- Desktop CTA -->
-    <RouterLink to="/blog"
+    <RouterLink to="/learn"
       class="
         hidden md:inline-flex items-center
         relative text-sm font-medium text-black
@@ -185,7 +185,8 @@ function clearDropdownTimer() {
 }
 
 const links = [
-  { label: 'Product', to: '/product' },
+  { label: 'Problems', to: '/problems' },
+  { label: 'Learn', to: '/learn' },
   { label: 'Pricing', to: '/pricing' },
   {
     label: 'About',
@@ -203,12 +204,6 @@ const links = [
           description: 'Meet the people building the product',
           to: '/about',
           icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-        },
-        {
-          label: 'Blog',
-          description: 'Thoughts on learning, interviews, and DSA',
-          to: '/blog',
-          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>',
         },
         {
           label: 'Contact',
