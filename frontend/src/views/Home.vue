@@ -41,99 +41,6 @@
       </main>
     </section>
 
-    <!-- THE WHY -->
-    <section id="why" class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
-      <div class="max-w-3xl w-full flex flex-col gap-4 text-center">
-        <h2 class="text-4xl sm:text-6xl font-medium leading-snug tracking-tight text-text">
-          Why Routined?
-        </h2>
-        <p class="text-md text-text-dim leading-relaxed max-w-sm mx-auto">
-          Our competitors regurgitate solutions.<br/> We teach you how to <span class="italic">problem solve</span>.
-        </p>
-
-        <!-- Cards -->
-        <div class="flex flex-col sm:flex-row w-full max-w-3xl mb-10 gap-3">
-
-          <!-- Competitors -->
-          <div class="flex-1 bg-white border border-black rounded-xl p-7">
-            <!-- Maze -->
-            <svg width="72" height="60" viewBox="0 0 72 60" fill="none" class="block mx-auto mb-5" stroke="#ddd" stroke-width="1.5" stroke-linecap="round">
-              <!-- outer border, entry gap top-left, exit gap bottom-right -->
-              <line x1="18" y1="4" x2="68" y2="4"/>
-              <line x1="68" y1="4" x2="68" y2="56"/>
-              <line x1="4"  y1="56" x2="54" y2="56"/>
-              <line x1="4"  y1="4" x2="4" y2="56"/>
-              <!-- internal walls -->
-              <line x1="4"  y1="20" x2="15" y2="20"/>
-              <line x1="28" y1="14"  x2="28" y2="36"/>
-              <line x1="28" y1="36" x2="68" y2="36"/>
-              <line x1="52" y1="4"  x2="52" y2="20"/>
-              <line x1="16" y1="36" x2="16" y2="56"/>
-              <line x1="40" y1="36" x2="40" y2="46"/>
-              <line x1="40" y1="20" x2="52" y2="20"/>
-            </svg>
-            <p class="text-sm text-black font-light mb-4">Competitors</p>
-            <ul class="flex flex-col gap-3">
-              <li v-for="(item, i) in competitors" :key="i" class="flex items-start gap-2.5">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="shrink-0 mt-0.5">
-                  <line x1="2" y1="2" x2="12" y2="12" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
-                  <line x1="12" y1="2" x2="2" y2="12" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                <span class="text-[13px] text-[#bbb] leading-relaxed line-through decoration-[#e0e0e0]">{{ item }}</span>
-              </li>
-            </ul>
-            <div class="mt-5 pt-4 border-t border-[#f0f0f0]">
-              <p class="text-[10px] font-semibold uppercase tracking-widest text-[#ccc] mb-4">Results</p>
-              <ul class="flex flex-col gap-1.5 text-left">
-                <li v-for="(item, i) in competitorResults" :key="i" class="text-[12px] text-[#ccc] leading-relaxed">• {{ item }}</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="flex flex-row sm:flex-col items-center py-1 sm:py-0 sm:px-1 sm:min-h-full gap-1.5">
-            <div class="h-px sm:h-auto sm:w-px flex-1 bg-[#e0e0da]" />
-            <span class="text-[11px] text-[#ccc] py-1">vs</span>
-            <div class="h-px sm:h-auto sm:w-px flex-1 bg-[#e0e0da]" />
-          </div>
-
-          <!-- Routined -->
-          <div class="flex-1 bg-[#fafafa] border border-[#3a9ae8] rounded-xl p-7">
-            <!-- A to B path -->
-            <svg width="72" height="60" viewBox="0 0 72 60" fill="none" class="block mx-auto mb-5">
-              <!-- A circle -->
-              <circle cx="12" cy="30" r="8" stroke="#1a1a1a" stroke-width="1.5"/>
-              <text x="12" y="34" text-anchor="middle" font-size="9" font-family="sans-serif" font-weight="600" fill="#1a1a1a">A</text>
-              <!-- B circle -->
-              <circle cx="60" cy="30" r="8" stroke="#1a1a1a" stroke-width="1.5"/>
-              <text x="60" y="34" text-anchor="middle" font-size="9" font-family="sans-serif" font-weight="600" fill="#1a1a1a">B</text>
-              <!-- arrow line -->
-              <line x1="22" y1="30" x2="48" y2="30" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
-              <polyline points="44,25 50,30 44,35" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            </svg>
-            <p class="text-sm text-black font-light mb-4">Routined</p>
-            <ul class="flex flex-col gap-3">
-              <li v-for="(item, i) in routined" :key="i" class="flex items-start gap-2.5">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="shrink-0 mt-0.5">
-                  <polyline points="2,7 5.5,11 12,3" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span class="text-[13px] text-[#1a1a1a] leading-relaxed">{{ item }}</span>
-              </li>
-            </ul>
-            <div class="mt-5 pt-4 border-t border-gray-100">
-              <p class="text-[10px] font-semibold uppercase tracking-widest text-[#999] mb-4">Results</p>
-              <ul class="flex flex-col gap-1.5 text-left">
-                <li v-for="(item, i) in routinedResults" :key="i" class="text-[12px] text-[#1a1a1a] leading-relaxed">• {{ item }}</li>
-              </ul>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
     <!-- HOW IT WORKS (STEPS) -->
     <section id="problems" class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
       <div class="max-w-3xl w-full flex flex-col gap-2 text-center">
@@ -141,114 +48,248 @@
           A Concrete Walkthrough
         </h2>
         <p class="text-md text-text-dim leading-relaxed max-w-lg text-center mx-auto">
-          It may not be easy work, but it is simple. Follow these simple steps and become a DSA machine.
+          It may not be easy work, but it is simple. Watch this demo to see what it takes to become a DSA machine.
         </p>
       </div>
-      <div class="max-w-3xl w-full flex flex-col gap-6">
-        <div v-for="(step, i) in steps" :key="step.title" class="flex gap-6 items-start bg-white rounded-2xl p-6 shadow-sm">
-          <div class="shrink-0 w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-semibold text-sm">
-            {{ i + 1 }}
-          </div>
-          <div class="flex flex-col gap-1">
-            <p class="font-semibold text-text">{{ step.title }}</p>
-            <p class="text-sm text-text-dim leading-relaxed">{{ step.body }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHY WE BUILT ROUTINED -->
-    <section id="about" class="flex flex-col items-center gap-6 px-5 sm:px-[12.5%] py-16 sm:py-22 bg-[#f5f5f2]">
-      <div class="max-w-4xl w-full">
-        <h2 class="text-4xl sm:text-6xl font-medium leading-snug tracking-tight text-text text-center sm:text-left">
-          Why we built Routined.
-        </h2>
-      </div>
-
-      <!-- Big Idea card -->
-      <div class="max-w-4xl w-full bg-white rounded-2xl p-4 flex flex-col sm:flex-row gap-6 sm:gap-10 items-center">
-        <!-- Radar SVG -->
-        <div class="hidden sm:block shrink-0">
-          <svg width="190" height="190" viewBox="0 0 190 190" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="95" cy="95" r="72" stroke="#1a1a1a" stroke-width="1"/>
-            <circle cx="95" cy="95" r="46" stroke="#1a1a1a" stroke-width="1"/>
-            <circle cx="95" cy="95" r="20" stroke="#1a1a1a" stroke-width="1"/>
-            <line x1="95" y1="95" x2="95" y2="18" stroke="#1a1a1a" stroke-width="1"/>
-            <line x1="95" y1="95" x2="162" y2="148" stroke="#1a1a1a" stroke-width="1"/>
-            <line x1="95" y1="95" x2="28" y2="148" stroke="#1a1a1a" stroke-width="1"/>
-            <line x1="95" y1="95" x2="168" y2="58" stroke="#1a1a1a" stroke-width="1"/>
-            <circle cx="95" cy="18" r="3.5" fill="#1a1a1a"/>
-            <circle cx="162" cy="148" r="3.5" fill="#1a1a1a"/>
-            <circle cx="28" cy="148" r="3.5" fill="#1a1a1a"/>
-            <circle cx="168" cy="58" r="3.5" fill="#1a1a1a"/>
-            <circle cx="95" cy="49" r="3" fill="#1a1a1a"/>
-            <circle cx="95" cy="95" r="3.5" fill="#1a1a1a"/>
+      <div class="max-w-3xl w-full aspect-video bg-black/5 rounded-2xl flex items-center justify-center border border-black/8">
+        <div class="flex flex-col items-center gap-3 text-text-muted">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
           </svg>
-        </div>
-        <!-- Text -->
-        <div class="flex flex-col gap-4 p-4">
-          <p class="font-semibold text-text text-lg">The Big Idea</p>
-          <p class="text-text-dim leading-relaxed">
-            Pattern recognition is one of the strongest components of measured intelligence. Gifted people aren't memorizing more, they're noticing structure faster.
-          </p>
-          <p class="font-semibold text-text">That's a learnable skill.</p>
-        </div>
-      </div>
-
-      <!-- Story cards -->
-      <div class="max-w-4xl w-full bg-white rounded-2xl p-6 sm:p-8 flex flex-col gap-6">
-        <div class="flex flex-col sm:flex-row items-start gap-6 sm:gap-2">
-
-          <!-- My Story -->
-          <div class="flex-1 flex flex-col gap-4 sm:pr-6">
-            <span class="font-semibold text-text">My Story</span>
-            <div class="h-px bg-gray-100 w-full"/>
-            <p class="text-sm text-text-dim leading-relaxed">I'm Collin, founder of Routined. A Discrete Structures professor changed how I saw learning.
-              Instead of drilling topics, he mapped prerequisites and webbed ideas together. Something clicked.</p>
-          </div>
-
-          <!-- Arrow (desktop only) -->
-          <div class="hidden sm:block shrink-0 mt-25 text-gray-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-            </svg>
-          </div>
-
-          <!-- The Theory -->
-          <div class="flex-1 flex flex-col gap-4 sm:px-6">
-            <span class="font-semibold text-text">The Theory</span>
-            <div class="h-px bg-gray-100 w-full"/>
-            <p class="text-sm text-text-dim leading-relaxed">That click was pattern recognition. Gifted people notice structure faster.
-              It's not more memorization, it's recognizing how ideas connect. Once you see the pattern, everything changes.</p>
-          </div>
-
-          <!-- Arrow (desktop only) -->
-          <div class="hidden sm:block shrink-0 mt-25 text-gray-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-            </svg>
-          </div>
-
-          <!-- How Routined Helps -->
-          <div class="flex-1 flex flex-col gap-4 sm:pl-6">
-            <span class="font-semibold text-text">Routined's Role</span>
-            <div class="h-px bg-gray-100 w-full"/>
-            <p class="text-sm text-text-dim leading-relaxed">Technical interviews aren't trivia, they're pattern recognition problems.
-              Routined teaches you to recognize which pattern applies, through Socratic dialogue and deliberate practice.
-              We teach the structure behind the solutions.</p>
-          </div>
-
-        </div>
-
-        <!-- Bottom tagline -->
-        <div class="flex flex-col items-center justify-center gap-1 pt-3 border-t border-gray-100">
-                <p class="font-bold text-text text-md">The Final Result</p>
-          <p class="font-medium text-text text-sm">Get the dream job. Make hard things click. Fall in love with learning.</p>
+          <span class="text-sm font-medium">Video coming soon</span>
         </div>
       </div>
     </section>
 
-    <!-- RESULTS + TESTIMONIALS 
+    <!-- BENTO GRID -->
+    <section class="flex flex-col items-center gap-10 px-5 sm:px-[12.5%] py-16 sm:py-24 bg-[#f5f5f2]">
+
+      <!-- Header -->
+      <div class="max-w-4xl w-full flex flex-col items-center gap-3 text-center">
+        <h2 class="text-4xl sm:text-6xl font-medium leading-snug tracking-tight text-text">
+          Engineered for the interview.
+        </h2>
+        <p class="text-md text-text-dim leading-relaxed max-w-md">
+          Every decision — from cluster order to problem selection — is built around one question: does this make patterns stick?
+        </p>
+      </div>
+
+      <!-- Grid -->
+      <div class="max-w-4xl w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 [&>div]:transition-transform [&>div]:duration-200 [&>div]:ease-out [&>div]:hover:scale-[1.025]">
+
+        <!-- Dark hero card (flippable, row-span-2) -->
+        <div class="sm:row-span-2 rounded-2xl cursor-pointer h-full" style="perspective:1000px" @click="heroFlipped = !heroFlipped">
+          <div class="relative w-full h-full min-h-64 sm:min-h-70" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: heroFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-7 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.02) 100%),rgba(17,17,17,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.18),0 0 16px rgba(255,255,255,0.07);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <div class="flex items-start justify-between">
+                <span class="text-white/30 text-[10px] font-semibold uppercase tracking-widest">Foundation</span>
+                <span class="flex items-center gap-1 text-white/25 text-[9px] font-medium select-none">
+                  flip
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                </span>
+              </div>
+              <p class="text-5xl font-semibold text-white leading-none tracking-tight"><span class="text-4xl">Win</span> Big.</p>
+              <div class="flex flex-col gap-4">
+                <p class="text-white/60 text-sm leading-relaxed">Pattern recognition is one of the strongest components of measured intelligence. Gifted people aren't memorizing more, they're noticing structure faster.</p>
+                <p class="text-white font-semibold text-sm">That's a learnable skill.</p>
+                <div class="h-px bg-white/10" />
+                <p class="text-white text-xl font-medium leading-snug tracking-tight">Built around how you actually learn.</p>
+              </div>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-7 flex flex-col gap-5 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <p class="text-4xl font-semibold text-gray-800 leading-none">Fall Behind.</p>
+              <div class="flex flex-col gap-3">
+                <p class="text-gray-400 text-sm leading-relaxed">Grinding solutions is one of the weakest retention strategies. Without pattern recognition, you're just hoping to see the same problem twice.</p>
+              </div>
+              <div class="mt-auto">
+                <div class="h-px bg-gray-100 mb-4" />
+                <p class="text-gray-700 text-xl font-medium leading-snug">Built on luck. Broken by a new problem.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 01 Cluster Learning (flippable) -->
+        <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="clusterFlipped = !clusterFlipped">
+          <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: clusterFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(124,92,232,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <div class="flex items-start justify-between">
+                <span class="text-white/50 text-[10px] font-medium uppercase tracking-widest">01</span>
+                <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
+                  flip
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                </span>
+              </div>
+              <div>
+                <p class="font-semibold text-white mt-1">Cluster Learning</p>
+                <p class="text-white/70 text-xs leading-relaxed mt-1">Concepts ordered by how they connect, not alphabetically.</p>
+              </div>
+              <a href="/learn" @click.stop class="mt-3 inline-block text-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-black hover:bg-black hover:text-white transition-colors duration-150">Explore the clusters →</a>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-5 flex flex-col gap-3 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <p class="text-[9px] font-bold uppercase tracking-widest text-red-500">Competitors offer</p>
+              <ul class="flex flex-col gap-2.5">
+                <li v-for="item in competitors" :key="item" class="flex items-start gap-2">
+                  <svg class="shrink-0 mt-0.5" width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="#ef4444" stroke-width="1.75" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="#ef4444" stroke-width="1.75" stroke-linecap="round"/></svg>
+                  <span class="text-xs text-gray-500 leading-relaxed">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patterns & Algorithms (flippable) -->
+        <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="patternsFlipped = !patternsFlipped">
+          <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: patternsFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(232,93,74,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <div class="flex items-start justify-between">
+                <span class="text-white/50 text-[10px] font-semibold uppercase tracking-widest">Patterns & Algorithms</span>
+                <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none shrink-0 ml-2">
+                  flip
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                </span>
+              </div>
+              <div>
+                <p class="text-5xl font-bold text-white leading-none">36</p>
+                <p class="text-white/70 text-xs mt-1.5">Topics covered — from sliding window to DP</p>
+              </div>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <div>
+                <p class="text-5xl font-bold text-gray-800 leading-none">0</p>
+                <p class="text-gray-400 text-xs mt-1.5">Patterns truly internalized by grinding solutions alone</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 300 Problems (flippable) -->
+        <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="problemsFlipped = !problemsFlipped">
+          <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: problemsFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(58,154,232,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <div class="flex items-start justify-between">
+                <span class="text-white/50 text-[10px] font-semibold uppercase tracking-widest">Problems</span>
+                <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
+                  flip
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                </span>
+              </div>
+              <div>
+                <p class="text-5xl font-bold text-white leading-none mt-1">300</p>
+                <p class="text-white/70 text-xs mt-1.5">Handpicked problems to drill in key ideas</p>
+              </div>
+              <a href="/problems" @click.stop class="mt-3 inline-block text-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-black hover:bg-black hover:text-white transition-colors duration-150">Start drilling →</a>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <div>
+                <p class="text-5xl font-bold text-gray-800 leading-none">3,000+</p>
+                <p class="text-gray-400 text-xs mt-1.5">Problems you can grind and still blank on your interview</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 02 Socratic Method (flippable) -->
+        <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="socraticFlipped = !socraticFlipped">
+          <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: socraticFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-1" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(76,175,125,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <div class="flex items-start justify-between">
+                <span class="text-white/50 text-[10px] font-medium uppercase tracking-widest">02</span>
+                <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
+                  flip
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                </span>
+              </div>
+              <p class="font-semibold text-white">Socratic Method</p>
+              <p class="text-white/70 text-xs leading-relaxed mt-1">Our AI chat guides you to the insight with reactive questioning — no solution feeding here.</p>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-2 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <p class="font-semibold text-gray-800">Answer Dumping</p>
+              <p class="text-gray-400 text-xs leading-relaxed mt-1">Copy a solution, move on. No understanding built, no transfer to new problems.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wide stat: 0 solutions memorized (flippable, col-span-2) -->
+        <div class="sm:col-span-2 rounded-2xl cursor-pointer" style="perspective:1000px" @click="solutionsFlipped = !solutionsFlipped">
+          <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: solutionsFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-6 bg-white flex items-center gap-6 shadow-sm" style="backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <p class="text-7xl font-bold text-text leading-none shrink-0">0</p>
+              <div class="flex-1">
+                <div class="flex items-start justify-between">
+                  <p class="font-semibold text-text">Solutions memorized.</p>
+                  <span class="flex items-center gap-1 text-gray-300 text-[9px] font-medium select-none shrink-0 ml-4">
+                    flip
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                  </span>
+                </div>
+                <p class="text-sm text-text-dim leading-relaxed mt-1">That's the point. You learn to think through problems, not recite answers to ones you've seen before.</p>
+              </div>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-6 bg-white flex items-center gap-6" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <p class="text-7xl font-bold text-gray-200 leading-none shrink-0">100s</p>
+              <div>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-red-400 mb-1">Without Routined</p>
+                <p class="font-semibold text-gray-700">Solutions memorized.</p>
+                <p class="text-sm text-gray-400 leading-relaxed mt-1">Memorized and forgotten. Solutions without understanding vanish the moment the problem looks slightly different.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Goal card (flippable) -->
+        <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="goalFlipped = !goalFlipped">
+          <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: goalFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
+            <!-- Front -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-4" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(232,162,58,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+              <div class="flex items-start justify-between">
+                <span class="text-white/50 text-[10px] font-semibold uppercase tracking-widest">Goal</span>
+                <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
+                  flip
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
+                </span>
+              </div>
+              <ul class="flex flex-col gap-2.5">
+                <li v-for="goal in ['Interview-ready pattern recognition', 'Get your dream job', 'Learn to learn in the process']" :key="goal" class="flex items-start gap-2">
+                  <span class="mt-1.5 w-1 h-1 rounded-full bg-white/50 shrink-0" />
+                  <span class="text-xs text-white/80 leading-relaxed">{{ goal }}</span>
+                </li>
+              </ul>
+            </div>
+            <!-- Back -->
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-4 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <ul class="flex flex-col gap-2.5">
+                <li v-for="item in ['Blank on unseen variants', 'Grind 300 problems for a chance', 'Forget what you learned']" :key="item" class="flex items-start gap-2">
+                  <svg class="shrink-0 mt-0.5" width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="#ef4444" stroke-width="1.75" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="#ef4444" stroke-width="1.75" stroke-linecap="round"/></svg>
+                  <span class="text-xs text-gray-500 leading-relaxed">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RESULTS + TESTIMONIALS
     <section class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
       <div class="max-w-3xl w-full flex flex-col gap-4 text-center">
         <h2 class="text-4xl sm:text-6xl font-medium leading-snug tracking-tight text-text">
@@ -323,6 +364,13 @@
   import { ref } from 'vue'
 
   const openFaq = ref(null)
+  const heroFlipped = ref(false)
+  const clusterFlipped = ref(false)
+  const patternsFlipped = ref(false)
+  const problemsFlipped = ref(false)
+  const socraticFlipped = ref(false)
+  const solutionsFlipped = ref(false)
+  const goalFlipped = ref(false)
 
   const whyCards = [
     { icon: '', title: 'Mental models, not solutions', body: 'We teach you how experts think about problems, not just the answer to this one problem.' },
@@ -330,56 +378,17 @@
     { icon: '', title: 'Interview-focused', body: 'Every session is calibrated to the patterns that actually show up in DSA interviews.' },
   ]
 
-  const steps = [
-    { title: 'Pick a problem', body: 'Choose from curated problems organized by pattern: sliding window, two pointers, graphs, and more.' },
-    { title: 'Disect the problem', body: 'Our AI chat guides you to reason what your options are and why, the key mental model.' },
-    { title: 'Try it yourself first', body: 'Attempt the problem before any hints. Struggle is where learning happens.' },
-    { title: 'Get Socratic guidance', body: 'Routined asks questions that lead you to the insight — it never just gives you the answer.' },
-    { title: 'Lock in the pattern', body: 'After solving, you reflect on the underlying model so it transfers to future problems.' },
-  ]
-
-  const testimonials = [
-    { quote: 'I used to blank on anything I hadn\'t seen before. After two weeks with Routined I started seeing the pattern before I even finished reading the problem.', name: 'Alex M.', role: 'SWE, Google' },
-    { quote: 'The Socratic approach is genuinely different. It feels like having a patient senior dev walking you through your own thinking.', name: 'Priya K.', role: 'CS Student, UC Berkeley' },
-    { quote: 'Landed my first FAANG offer after grinding Routined for a month. The pattern recognition training is real.', name: 'Jordan T.', role: 'New grad, Meta' },
-    { quote: 'Way more effective than just reading editorials. You actually understand why a solution works, not just what it is.', name: 'Sam L.', role: 'SWE, Amazon' },
-  ]
-
-  const faqs = [
+const faqs = [
     { q: 'Is this just another Leetcode clone?', a: 'No. We don\'t grade you on passing test cases. We train you on the reasoning process — asking questions until you arrive at the insight yourself.' },
     { q: 'What skill level is this for?', a: 'Primarily aimed at CS students and early-career engineers preparing for DSA interviews, but the mental models are useful at any level.' },
     { q: 'How long should I practice each day?', a: '30–45 minutes of focused Socratic practice beats 3 hours of passive grinding. Quality over quantity.' },
     { q: 'Is it free?', a: 'We\'re in early access — reach out or sign up to get notified when we launch.' },
   ]
 
-  const competitorResults = [
-    'Forget solutions quickly',
-    'Blank on unseen problem variants',
-    'Low confidence under pressure',
-    'Solve 300 problems for a CHANCE',
-  ]
-
-  const routinedResults = [
-    'Retain patterns long-term',
-    'Recognize structure on fresh problems',
-    'Interview-ready confidence',
-    'Ease in explaining thoughts',
-  ]
-
   const competitors = [
-    'Provide a book of information',
     'Throw a problem at you',
     'Supply a solution',
-    'Result: memorize the solution',
     'Pattern recognition by chance',
-  ]
-
-  const routined = [
-    'Supply ordered problems by pattern',
-    'Guided mental model walkthrough with AI',
-    'Socratic learning methods',
-    'Teach you to recognize patterns',
-    'Solve fresh problems with ease',
   ]
 
 </script>

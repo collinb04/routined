@@ -11,7 +11,7 @@
       Routined exists to close that gap — giving every learner the tools and guidance to build knowledge with confidence. I have found
       a love for building, mentoring, and a life long committment to learning. 
       "
-      image="./public/me.jpg"
+      image="me.jpg"
       email="collinbrennanwork@gmail.com"
       linkedin="https://www.linkedin.com/in/colbren04/"
     />

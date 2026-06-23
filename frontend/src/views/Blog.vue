@@ -1,73 +1,100 @@
 <template>
   <div class="bg-[#f5f5f2] flex">
 
-    <!-- Sidebar -->
+    <!-- Mobile backdrop (tap outside to close) -->
+    <div
+      v-if="sidebarOpen"
+      class="fixed inset-0 z-30 bg-black/20 lg:hidden"
+      @click="sidebarOpen = false"
+    />
+
+    <!-- Sidebar / mobile dropdown -->
     <aside
-      class="sticky top-16 self-start h-[calc(100vh-4rem)] bg-[#f5f5f2] border-r border-gray-200 flex flex-col transition-all duration-300 shrink-0 overflow-hidden"
-      :class="sidebarOpen ? 'w-60' : 'w-0'"
+      class="z-40 fixed lg:sticky top-16 left-0 right-0 lg:right-auto lg:self-start lg:h-[calc(100vh-4rem)] bg-[#f5f5f2] border-gray-200 border-b lg:border-b-0 lg:border-r flex flex-col transition-all duration-300 shrink-0"
+      :class="sidebarOpen
+        ? 'max-h-[70vh] overflow-y-auto shadow-xl lg:shadow-none lg:overflow-hidden lg:max-h-none lg:w-60'
+        : 'max-h-0 overflow-hidden lg:max-h-none lg:w-0'"
     >
       <!-- Nav -->
-      <nav class="w-60 flex-1 overflow-y-auto pb-6 px-2">
+      <nav class="w-full lg:w-60 flex-1 overflow-y-auto pb-6 px-2">
+
         <!-- Sidebar header -->
         <div class="flex items-center justify-between px-2 pt-6 pb-3">
-          <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Contents</span>
-          <button
-            class="p-1 rounded-md text-text-muted hover:text-text transition-colors"
-            @click="sidebarOpen = false"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m15 18-6-6 6-6"/>
-            </svg>
-          </button>
+          <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Learn</span>
+          <div class="flex items-center gap-1">
+            <!-- Search button -->
+            <button
+              class="p-1 rounded-md text-text-muted hover:text-text transition-colors"
+              title="Jump to topic (⌘K)"
+              @click="searchOpen = true"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </button>
+            <!-- Collapse sidebar -->
+            <button
+              class="p-1 rounded-md text-text-muted hover:text-text transition-colors"
+              @click="sidebarOpen = false"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
-
-        <!-- Intro (flat, no subsections) -->
+        <!-- Static pages (above clusters) -->
         <button
-          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-2"
+          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-0.5"
           :class="activeView === 'intro'
             ? 'border-black text-text bg-black/5'
             : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
-          @click="activeView = 'intro'; selectedSection = null"
+          @click="navigateToId('__intro')"
         >
           Intro
         </button>
-
-                <!-- Intro (flat, no subsections) -->
         <button
-          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-2"
+          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-0.5"
           :class="activeView === 'guide'
             ? 'border-black text-text bg-black/5'
             : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
-          @click="activeView = 'guide'; selectedSection = null"
+          @click="navigateToId('__guide')"
         >
           Guide to Learning
         </button>
+        <button
+          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-3"
+          :class="activeView === 'complexity'
+            ? 'border-black text-text bg-black/5'
+            : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
+          @click="navigateToId('__complexity')"
+        >
+          Understanding Complexity
+        </button>
 
-        <div v-for="cat in categories" :key="cat.id" class="mb-0.5">
+        <!-- Cluster accordion -->
+        <div v-for="cluster in CLUSTERS" :key="cluster.id" class="mb-0.5">
 
-          <!-- Category row -->
+          <!-- Cluster row -->
           <button
-            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-text transition-colors"
-            :class="catHoverBg[cat.id]"
-            @click="toggleCategory(cat.id)"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-text transition-colors hover:bg-black/5"
+            @click="toggleCluster(cluster.id)"
           >
-            <span class="flex items-center gap-1.5">
-              {{ cat.label }}
-              <svg v-if="isCatCompleted(cat)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 6 9 17l-5-5"/>
-              </svg>
+            <span class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full shrink-0" :style="{ background: cluster.color }" />
+              {{ cluster.label }}
             </span>
             <svg
-              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="shrink-0 text-text-muted transition-transform duration-200"
-              :class="openCategories.includes(cat.id) ? 'rotate-180' : ''"
+              :class="openClusters.includes(cluster.id) ? 'rotate-180' : ''"
             >
               <path d="m6 9 6 6 6-6"/>
             </svg>
           </button>
 
-          <!-- Subsections -->
+          <!-- Cluster concepts -->
           <Transition
             enter-active-class="transition-all duration-200 ease-out"
             enter-from-class="opacity-0 -translate-y-1"
@@ -76,19 +103,23 @@
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-1"
           >
-            <div v-if="openCategories.includes(cat.id)" class="mt-0.5 ml-1 flex flex-col gap-px pb-1">
+            <div v-if="openClusters.includes(cluster.id)" class="mt-0.5 ml-1 flex flex-col gap-px pb-1">
               <button
-                v-for="sub in cat.subsections"
-                :key="sub.id"
+                v-for="concept in cluster.concepts"
+                :key="concept.id"
                 class="w-full text-left pl-3 pr-3 py-1.5 rounded-lg text-[12.5px] transition-colors border-l-2"
-                :class="[catHoverBg[cat.id], selectedSection?.id === sub.id
-                  ? ['border-black text-text font-medium', catActiveBg[cat.id]]
-                  : 'border-transparent text-text-muted']"
-                @click="selectSection(sub, cat)"
+                :class="[
+                  selectedSection?.id === concept.id
+                    ? 'border-black text-text font-medium bg-black/5'
+                    : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text',
+                  concept.isNew ? 'opacity-45 cursor-default' : '',
+                ]"
+                @click="!concept.isNew && navigateToId(concept.id)"
               >
                 <span class="flex items-center gap-1.5">
-                  {{ sub.label }}
-                  <svg v-if="completed.has(sub.id)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  {{ concept.label }}
+                  <span v-if="concept.isNew" class="text-[9px] text-text-muted/50 ml-auto">soon</span>
+                  <svg v-else-if="completed.has(concept.id)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 6 9 17l-5-5"/>
                   </svg>
                 </span>
@@ -98,17 +129,21 @@
 
         </div>
 
-        <button
-          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mt-2"
-          :class="activeView === 'career-prep'
-            ? 'border-orange-400 text-text bg-orange-50'
-            : 'border-transparent text-text-muted hover:bg-orange-50 hover:text-text'"
-          @click="activeView = 'career-prep'; selectedSection = null"
-        >
-          Career Prep
-        </button>
+        <!-- Python Tips & Tricks standalone link -->
+        <div class="mt-2 pt-2 border-t border-gray-100">
+          <button
+            class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2"
+            :class="selectedSection?.id === 'python-tips'
+              ? 'border-black text-text bg-black/5'
+              : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
+            @click="navigateToId('python-tips')"
+          >
+            Python Tips & Tricks
+          </button>
+        </div>
 
       </nav>
+
     </aside>
 
     <!-- Main content -->
@@ -125,11 +160,130 @@
             <path d="M9 3v18"/>
           </svg>
         </button>
-        <div v-if="selectedSection" class="flex items-center gap-1.5 text-xs text-text-muted">
-          <span>{{ selectedSection.category }}</span>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-          <span class="text-text">{{ selectedSection.label }}</span>
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-1.5 text-xs text-text-muted">
+          <template v-if="activeView === 'map'">
+            <span class="text-text">Structure of Learning</span>
+          </template>
+          <template v-else-if="selectedSection">
+            <button class="hover:text-text transition-colors" @click="navigateToId('__map')">Map</button>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="text-text">{{ selectedSection.label }}</span>
+          </template>
         </div>
+      </div>
+
+      <!-- TopicSearch palette -->
+      <TopicSearch
+        v-model="searchOpen"
+        :flat-sections="flatSections"
+        @navigate="navigateToId"
+      />
+
+      <!-- Map view (Structure of Learning) -->
+      <div v-if="activeView === 'map'" class="flex flex-col">
+
+        <!-- Page header -->
+        <div class="max-w-5xl mx-auto w-full px-5 sm:px-10 pt-4 pb-6 flex flex-col gap-2">
+          <h1 class="text-2xl sm:text-3xl font-medium tracking-tight text-text">Structure of Learning</h1>
+          <p class="text-sm text-text-muted leading-relaxed max-w-xl">
+            Eight problem-domain clusters. The value is in the edges — the relationships between them — not the nodes.
+            Hover a cluster to see its primitives. Hover an edge to see what connects them. Click a cluster to explore it.
+          </p>
+        </div>
+
+        <!-- Cluster map -->
+        <div class="max-w-5xl mx-auto w-full px-4 sm:px-8">
+          <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="aspect-ratio: 720/480;">
+            <ClusterMap
+              @select-cluster="selectCluster"
+              @select-concept="navigateToId"
+            />
+          </div>
+        </div>
+
+        <!-- Selected cluster detail -->
+        <div v-if="activeCluster" class="max-w-5xl mx-auto w-full px-5 sm:px-10 py-8 flex flex-col gap-5">
+          <template v-for="cluster in CLUSTERS" :key="cluster.id">
+            <div v-if="cluster.id === activeCluster" class="flex flex-col gap-5">
+
+              <!-- Cluster header -->
+              <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: cluster.color }" />
+                <h2 class="text-xl font-medium text-text">{{ cluster.label }}</h2>
+              </div>
+
+              <!-- Central primitive callout -->
+              <div class="flex gap-4">
+                <div class="w-1 rounded-full shrink-0" :style="{ background: cluster.color }" />
+                <div class="flex flex-col gap-2 py-1">
+                  <span
+                    class="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full w-fit"
+                    :style="{ color: cluster.color, background: cluster.color + '18' }"
+                  >Central Primitive</span>
+                  <p class="text-base font-medium text-text leading-relaxed">{{ cluster.primitive }}</p>
+                  <p class="text-sm text-text-muted leading-relaxed">{{ cluster.primitiveExplainer }}</p>
+                </div>
+              </div>
+
+              <!-- Why this groups together -->
+              <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
+                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Why this groups together</span>
+                <div class="h-px bg-gray-100" />
+                <p class="text-sm text-text-dim leading-relaxed">{{ cluster.why }}</p>
+              </div>
+
+              <!-- Concepts in order -->
+              <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Internal learning order</span>
+                <div class="h-px bg-gray-100" />
+                <div class="flex flex-col gap-2">
+                  <button
+                    v-for="(concept, i) in cluster.concepts"
+                    :key="concept.id"
+                    class="flex items-center gap-4 rounded-xl px-4 py-3 text-left transition-colors"
+                    :class="concept.isNew
+                      ? 'bg-[#f5f5f2] opacity-50 cursor-default'
+                      : 'bg-[#f5f5f2] hover:bg-black/5 cursor-pointer'"
+                    @click="!concept.isNew && navigateToId(concept.id)"
+                  >
+                    <span class="text-2xl font-semibold text-gray-100 leading-none select-none w-8 shrink-0">{{ String(i + 1).padStart(2, '0') }}</span>
+                    <span class="text-[13px] font-medium text-text flex-1">{{ concept.label }}</span>
+                    <span v-if="concept.isNew" class="text-[10px] text-text-muted/50 border border-gray-200 rounded-full px-2 py-0.5">soon</span>
+                    <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-text-muted shrink-0"><path d="m9 18 6-6-6-6"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Transfer hooks -->
+              <div v-if="cluster.transferHooks.length" class="flex flex-col gap-2">
+                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted px-1">Connected clusters</span>
+                <div
+                  v-for="hook in cluster.transferHooks"
+                  :key="hook.targetId"
+                  class="bg-white rounded-2xl p-5 shadow-sm flex items-start gap-4 cursor-pointer hover:shadow-md transition-shadow"
+                  @click="selectCluster(hook.targetId)"
+                >
+                  <div class="w-2 h-2 rounded-full mt-1.5 shrink-0" :style="{ background: CLUSTERS.find(c => c.id === hook.targetId)?.color }" />
+                  <div class="flex flex-col gap-1 flex-1">
+                    <span class="text-[11px] font-semibold text-text-muted uppercase tracking-widest">
+                      {{ CLUSTERS.find(c => c.id === hook.targetId)?.label }}
+                    </span>
+                    <p class="text-sm text-text-dim leading-relaxed">{{ hook.text }}</p>
+                  </div>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-text-muted shrink-0 mt-0.5"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+              </div>
+
+            </div>
+          </template>
+        </div>
+
+        <!-- No-selection prompt -->
+        <div v-else class="max-w-5xl mx-auto w-full px-5 sm:px-10 py-8">
+          <p class="text-sm text-text-muted text-center">Click a cluster to see its structure and concepts.</p>
+        </div>
+
       </div>
 
       <!-- Intro view -->
@@ -296,10 +450,37 @@
               and <em>why</em> it works — otherwise you're just memorizing solutions, not building a skill.
             </p>
             <p class="text-sm text-text-dim leading-relaxed">
-              After each problem, we debrief. That means breaking down the pattern used, why it fits that problem's shape,
-              and how to recognize it the next time you see something similar. The debrief is where the real learning happens.
+              You will be guided through each problem with steps to minimize what options may be useful. After enough repetition,
+              this will be second nature. We believe in problem solving rather than strict memorization.
             </p>
           </div>
+        </div>
+
+        <!-- Mark as completed -->
+        <div class="flex justify-center pt-2">
+          <button
+            class="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium border transition-colors"
+            :class="completed.has('__intro') ? 'bg-black text-white border-black hover:bg-black/80' : 'bg-white text-text border-gray-200 hover:border-gray-400'"
+            @click="toggleCompleted('__intro')"
+          >
+            <svg v-if="completed.has('__intro')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ completed.has('__intro') ? 'Completed' : 'Mark as completed' }}
+          </button>
+        </div>
+
+        <!-- Prev / Next -->
+        <div class="flex items-center justify-between pt-2 pb-6">
+          <div />
+          <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-text hover:border-gray-300 transition-colors group"
+            @click="navigateToId('__guide')"
+          >
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] uppercase tracking-widest text-text-muted">Next</span>
+              <span class="font-medium">Guide to Learning</span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted group-hover:text-text transition-colors"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
 
       </div>
@@ -324,14 +505,12 @@
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">Information abstraction</h2>
-          <p class="text-sm text-text-dim leading-relaxed">Your brain can't hold everything — and it shouldn't have to. Good learning is about building the right compression.</p>
+          <p class="text-sm text-text-dim leading-relaxed">Learning can be fast-tracked with one skill - understanding how information itself is structured.</p>
           <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
             <p class="text-sm text-text-dim leading-relaxed">
-              When you encounter a new concept, your brain tries to compress it into something manageable. The goal isn't to memorize every detail, it's to build a <em>mental model</em> 
-              accurate enough to reason from. Understanding when to stay at the surface and when to dive deep is important.
-            </p>
-            <p class="text-sm text-text-dim leading-relaxed">
-              When a new topic arises, do your best to think "what does this remind me of?" Learning is accelerated by connecting topics to one another, preferably with familiar ones.
+            Understanding how information is structured — what does that even mean? Think about anything you've ever learned: it almost certainly had prerequisites, things you needed to know first.
+              And it probably became a prerequisite for something else down the line. How the topics connect is structure. There is also structure within a topic. Any topic can be represented at surface level
+              or very complex, this is called levels of abstraction. Choosing the right altitude to think at will help you see the shape of a problem instead of getting lost in its details.
             </p>
             <div class="flex flex-col gap-3 pt-1">
               <div v-for="point in abstractionPoints" :key="point" class="flex items-start gap-3">
@@ -355,7 +534,10 @@
             <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Return on investment</h3>
             <div class="h-px bg-gray-100" />
             <p class="text-sm text-text-dim leading-relaxed">
-              Not all topics are equal. Arrays, hash maps, and trees alone cover the majority of real interview problems. Learn those deeply before touching anything exotic. Time spent on graph theory before you've internalized two pointers is wasted time.
+              Not all topics are equal. Arrays, hash maps, and trees alone cover the majority of real interview problems. 
+              We structured the content to be grouped by relationship and in order. 
+              Time spent on graph theory before you've internalized two pointers is wasted time.
+              Notice a specific topic coming up a disproportionate amount of time? Become intimate with it.
             </p>
           </div>
 
@@ -419,369 +601,886 @@
           </div>
         </div>
 
-      </div>
-
-      <!-- Career Prep coming soon -->
-      <div v-else-if="activeView === 'career-prep'" class="max-w-3xl mx-auto px-5 sm:px-10 py-10 flex flex-col gap-8">
-
-        <div class="flex flex-col gap-3">
-          <div class="flex items-center gap-3">
-            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Career Prep</h1>
-            <span class="text-[10px] font-semibold uppercase tracking-widest text-orange-400 shrink-0">Coming soon</span>
-          </div>
-          <p class="text-sm text-text-muted leading-relaxed">The DSA section covers the technical interview — this one covers everything around it. Here's what's coming.</p>
+        <!-- Mark as completed -->
+        <div class="flex justify-center pt-2">
+          <button
+            class="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium border transition-colors"
+            :class="completed.has('__guide') ? 'bg-black text-white border-black hover:bg-black/80' : 'bg-white text-text border-gray-200 hover:border-gray-400'"
+            @click="toggleCompleted('__guide')"
+          >
+            <svg v-if="completed.has('__guide')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ completed.has('__guide') ? 'Completed' : 'Mark as completed' }}
+          </button>
         </div>
 
+        <!-- Prev / Next -->
+        <div class="flex items-center justify-between pt-2 pb-6">
+          <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-text hover:border-gray-300 transition-colors group"
+            @click="navigateToId('__intro')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted group-hover:text-text transition-colors"><path d="m15 18-6-6 6-6"/></svg>
+            <div class="flex flex-col items-start">
+              <span class="text-[10px] uppercase tracking-widest text-text-muted">Previous</span>
+              <span class="font-medium">Intro</span>
+            </div>
+          </button>
+          <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-text hover:border-gray-300 transition-colors group"
+            @click="navigateToId('__complexity')"
+          >
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] uppercase tracking-widest text-text-muted">Next</span>
+              <span class="font-medium">Understanding Complexity</span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted group-hover:text-text transition-colors"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Understanding Complexity view -->
+      <div v-else-if="activeView === 'complexity'" class="max-w-3xl mx-auto px-5 sm:px-10 py-10 flex flex-col gap-10">
+
+        <!-- Hero -->
         <div class="flex flex-col gap-4">
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
-              </div>
-              <span class="text-[12px] font-semibold text-text">Resume &amp; Applications</span>
+          <h1 class="text-3xl sm:text-5xl font-medium leading-snug tracking-tight text-text">
+            Understanding Complexity
+          </h1>
+          <p class="text-sm text-text-dim leading-relaxed max-w-lg">
+            Big O describes how an algorithm's performance grows as its input grows — not the exact time in seconds, but the <em>shape</em> of the growth.
+            Click any curve to see a plain-English explanation. Big O answers what the worst case scenario is.
+          </p>
+          <div class="flex gap-4">
+            <div class="w-1 rounded-full bg-accent shrink-0" />
+            <div class="flex flex-col gap-2 py-1">
+              <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Importance</span>
+              <p class="text-base font-medium text-text leading-relaxed">Complexity is the difference between a product that scales and one that collapses under load.</p>
+              <p class="text-sm text-text-dim leading-relaxed">When working with millions of requests, the difference between visiting each request once vs an exponential amount is drastic. Companies want you to demonstrate your understanding of efficiency at scale in interviews.</p>
             </div>
-            <p class="text-sm text-text-dim leading-relaxed">Concrete tips on structuring your resume for technical roles, what to include on each bullet, how to frame projects without experience, and the need-to-knows that most candidates skip over.</p>
-          </div>
-
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <span class="text-[12px] font-semibold text-text">Behavioral Interviews</span>
-            </div>
-            <p class="text-sm text-text-dim leading-relaxed">The STAR framework applied to real engineer questions, how to structure answers for leadership principles, common traps to avoid, and a bank of strong story templates you can adapt to your own experience.</p>
-          </div>
-
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-              </div>
-              <span class="text-[12px] font-semibold text-text">System Design Resources</span>
-            </div>
-            <p class="text-sm text-text-dim leading-relaxed">A curated, opinionated list of third-party resources for system design — organized by topic so you know what to read and in what order, rather than drowning in the Grokking rabbit hole.</p>
           </div>
         </div>
 
+        <ComplexityGraph />
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+          <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">What matters in practice</h3>
+          <div class="h-px bg-gray-100" />
+          <div class="flex flex-col gap-3">
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">O(n²) is a warning sign</strong> — not always wrong, but always worth questioning. If you have a nested loop, ask whether a hash map or two pointers can eliminate the inner one.</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">O(n log n) is the sorting ceiling</strong> — the best any comparison-based sort can do. Most well-optimized solutions land here or better.</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">O(2ⁿ) means you need memoization</strong> — exponential growth blows up at n=30. If your recursion tree doubles at every step, cache the results (DP).</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Space complexity counts too</strong> — an O(n) space solution uses memory proportional to input size. O(1) means you only use a fixed number of extra variables, regardless of n.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mark as completed -->
+        <div class="flex justify-center pt-2">
+          <button
+            class="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium border transition-colors"
+            :class="completed.has('__complexity') ? 'bg-black text-white border-black hover:bg-black/80' : 'bg-white text-text border-gray-200 hover:border-gray-400'"
+            @click="toggleCompleted('__complexity')"
+          >
+            <svg v-if="completed.has('__complexity')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ completed.has('__complexity') ? 'Completed' : 'Mark as completed' }}
+          </button>
+        </div>
+
+        <!-- Prev / Next -->
+        <div class="flex items-center justify-between pt-2 pb-6">
+          <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-text hover:border-gray-300 transition-colors group"
+            @click="navigateToId('__guide')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted group-hover:text-text transition-colors"><path d="m15 18-6-6 6-6"/></svg>
+            <div class="flex flex-col items-start">
+              <span class="text-[10px] uppercase tracking-widest text-text-muted">Previous</span>
+              <span class="font-medium">Guide to Learning</span>
+            </div>
+          </button>
+          <div />
+        </div>
+
       </div>
+
 
       <!-- Section skeleton -->
       <div v-else-if="selectedSection" class="max-w-3xl mx-auto px-5 sm:px-10 py-10 flex flex-col gap-4">
 
-        <!-- ── Intro to Data Structures ── -->
-        <template v-if="selectedSection.id === 'ds-intro'">
+        <!-- ── Sorting ── -->
+        <template v-if="selectedSection.id === 'sorting'">
 
-          <!-- Header -->
           <div class="flex flex-col gap-3 pb-2">
-            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Intro to Data Structures</h1>
+            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Sorting</h1>
+            <p class="text-sm text-text-muted leading-relaxed max-w-xl">The algorithms that put data in order — and the tradeoffs that make each one suited to different situations.</p>
           </div>
 
-          <!-- 1. Hook + Definition -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Definition</h2>
-            </div>
-            <div class="h-px bg-gray-100" />
-            <p class="text-sm text-text-dim leading-relaxed">
-              First, let's understand what a data structure even is. Looking at the name we can infer it is a structure that holds data. Perfect, all done!
-            </p>
-            <p class="text-sm text-text-dim leading-relaxed">
-              Jk jk — a data structure is something that organizes and stores data in a way that determines how it can be accessed and modified. That second part is the important bit.
-            </p>
-          </div>
-
-          <!-- 2. Why More Than One -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-5">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Why more than one?</h2>
-            </div>
-            <!-- macOS-style tab bar -->
-            <div class="bg-gray-100 rounded-xl p-1 flex gap-0.5">
-              <button
-                class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                :class="dsIntroWhyTab === 'type-of-data'
-                  ? 'bg-white text-text shadow-sm'
-                  : 'text-text-muted hover:text-text'"
-                @click="dsIntroWhyTab = 'type-of-data'"
-              >type of data</button>
-              <button
-                class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                :class="dsIntroWhyTab === 'constraints'
-                  ? 'bg-white text-text shadow-sm'
-                  : 'text-text-muted hover:text-text'"
-                @click="dsIntroWhyTab = 'constraints'"
-              >constraints</button>
-              <button
-                class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                :class="dsIntroWhyTab === 'access-memory'
-                  ? 'bg-white text-text shadow-sm'
-                  : 'text-text-muted hover:text-text'"
-                @click="dsIntroWhyTab = 'access-memory'"
-              >access &amp; memory</button>
-            </div>
-            <!-- Tab content -->
-            <div class="flex flex-col gap-2">
-              <template v-if="dsIntroWhyTab === 'type-of-data'">
-                <span class="text-[12px] font-semibold text-text">The type of data</span>
-                <p class="text-sm text-text-dim leading-relaxed">Some data is just a simple list of things in order, like a leaderboard or a todo list. Some data is pairs — a word and its definition, a username and a password — that's what we call key-value data. Some data has relationships baked in, like a family tree or a file system with folders inside folders — that's hierarchical. And some data is just connections between things with no real "up" or "down," like how people on a social app are connected to some people but not others — that's more of a network. Different shapes of data want different shapes of structures. You wouldn't store a family tree the same way you store a todo list.</p>
-              </template>
-              <template v-else-if="dsIntroWhyTab === 'constraints'">
-                <span class="text-[12px] font-semibold text-text">Constraints</span>
-                <p class="text-sm text-text-dim leading-relaxed">This one feels backwards at first — why would I want <em>less</em> functionality? But constraints are a feature, not a bug. If you can only ever add or remove from the top of a pile, that's a constraint — and it makes the structure completely predictable. You'll see this with stacks (last in, first out — like a stack of plates) and queues (first in, first out — like a line at the deli counter). By taking away options, we make the behavior obvious and reliable, which is exactly what lets us build bigger systems on top of it.</p>
-              </template>
-              <template v-else>
-                <span class="text-[12px] font-semibold text-text">Access &amp; modification</span>
-                <p class="text-sm text-text-dim leading-relaxed">At a high level this is asking: when I want a piece of data, do I need it instantly — like looking something up by name — or am I okay walking through everything one by one? Do I add and remove things constantly, or is the data mostly set once it's created? The answers push you toward different structures, and we'll unpack exactly why as we go.</p>
-              </template>
-            </div>
-          </div>
-
-          <!-- 3. Key Insight Callout -->
-          <div class="flex gap-4">
-            <div class="w-1 rounded-full bg-[#3a9ae8] shrink-0" />
-            <div class="flex flex-col gap-3 py-1">
-              <span class="text-[10px] font-semibold text-[#3a9ae8] bg-[#3a9ae8]/10 px-2 py-0.5 rounded-full w-fit">Key insight</span>
-              <p class="text-base font-medium text-text leading-relaxed">A problem, abstracted as much as possible, is simply: how do I turn the input into the output?</p>
-              <p class="text-sm text-text-dim leading-relaxed">This starts with how you structure the data in the input. Seriously — like 80% of solving a problem well is just picking the right structure before you write a single line of logic.</p>
-            </div>
-          </div>
-
-          <!-- 4. RAM & Memory Model -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">RAM & Memory Model</h2>
-            </div>
-            <div class="h-px bg-gray-100" />
-            <p class="text-sm text-text-dim leading-relaxed">There are two types of memory in a computer: short-lived memory (RAM) and long-term memory (the hard drive or SSD). A static program lives in long-term memory. When you run it, it becomes a <em>process</em> — and that process lives in RAM. Which means your data structures, while the program runs, also live in RAM.</p>
-            <p class="text-sm text-text-dim leading-relaxed">RAM is a bunch of addresses. To find any piece of data, something has to know its address. If you know what your friend's house looks like but have no idea where it is, you might have to pass every house on the block — worst case. The same is true in memory. How we organize data determines how fast we can find it.</p>
-
-            <!-- Expandable: go deeper -->
-            <button
-              class="flex items-center justify-between w-full bg-[#f5f5f2] rounded-xl px-4 py-3 text-sm text-text-muted hover:text-text transition-colors"
-              @click="dsIntroRamOpen = !dsIntroRamOpen"
-            >
-              <span class="text-xs font-medium">go deeper: contiguous vs scattered, big O</span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200" :class="dsIntroRamOpen ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6"/></svg>
+          <!-- Tab bar -->
+          <div class="bg-gray-100 rounded-xl p-1 flex gap-0.5">
+            <button v-for="tab in ['intro', 'merge', 'bubble', 'insertion', 'bucket', 'quicksort']" :key="tab"
+              class="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 capitalize"
+              :class="sortingTab === tab ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
+              @click="sortingTab = tab">
+              {{ tab === 'intro' ? 'Intro' : tab === 'merge' ? 'Merge' : tab === 'bubble' ? 'Bubble' : tab === 'insertion' ? 'Insertion' : tab === 'bucket' ? 'Bucket' : 'Quicksort' }}
             </button>
-            <div v-if="dsIntroRamOpen" class="flex flex-col gap-4 pt-1">
+          </div>
+
+          <!-- ── INTRO ── -->
+          <template v-if="sortingTab === 'intro'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">What is sorting?</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">Sorting rearranges a collection into a defined order — usually ascending. On its own, that's not very exciting. What makes it matter is everything sorting <em>enables</em>: binary search requires a sorted array. Two-pointer techniques often assume sorted input. Finding duplicates, closest pairs, or overlapping intervals all become dramatically simpler once the data has been put in order. Sorting is usually a preprocessing step, not the final answer.</p>
+              <p class="text-sm text-text-dim leading-relaxed">In practice, you'll reach for Python's built-in <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">sorted()</code> or <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">.sort()</code> — both use <strong>Timsort</strong>, a hybrid of merge sort and insertion sort that runs in O(n log n) and is stable. Understanding the individual algorithms still matters: the concepts — divide and conquer, invariants, stability — show up everywhere else in DSA.</p>
+            </div>
+
+            <!-- Comparison table -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Algorithm comparison</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-100">
+                      <th class="text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted pb-3 pr-4">Algorithm</th>
+                      <th class="text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted pb-3 pr-4">Avg time</th>
+                      <th class="text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted pb-3 pr-4">Worst time</th>
+                      <th class="text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted pb-3 pr-4">Space</th>
+                      <th class="text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted pb-3 pr-4">Stable</th>
+                      <th class="text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted pb-3">In-place</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-50">
+                    <tr v-for="row in SORT_TABLE" :key="row.name" class="group">
+                      <td class="py-3 pr-4 font-medium text-text text-[13px]">{{ row.name }}</td>
+                      <td class="py-3 pr-4 font-mono text-xs text-text-dim">{{ row.avg }}</td>
+                      <td class="py-3 pr-4 font-mono text-xs text-text-dim">{{ row.worst }}</td>
+                      <td class="py-3 pr-4 font-mono text-xs text-text-dim">{{ row.space }}</td>
+                      <td class="py-3 pr-4">
+                        <span class="text-xs font-medium px-1.5 py-0.5 rounded-full"
+                          :class="row.stable ? 'bg-green-bg text-green' : 'bg-[#f5f5f2] text-text-muted'">
+                          {{ row.stable ? 'Yes' : 'No' }}
+                        </span>
+                      </td>
+                      <td class="py-3">
+                        <span class="text-xs font-medium px-1.5 py-0.5 rounded-full"
+                          :class="row.inplace ? 'bg-green-bg text-green' : 'bg-[#f5f5f2] text-text-muted'">
+                          {{ row.inplace ? 'Yes' : 'No' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Lower bound callout -->
+            <div class="flex gap-4">
+              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="flex flex-col gap-2 py-1">
+                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <p class="text-base font-medium text-text leading-relaxed">No comparison-based sort can beat O(n log n) in the worst case — it's a mathematical lower bound.</p>
+                <p class="text-sm text-text-dim leading-relaxed">To sort n elements by comparing them, you need to determine which of n! possible orderings is correct. Each comparison eliminates half the remaining possibilities, so you need at least log₂(n!) comparisons — which simplifies to Ω(n log n). Bucket sort escapes this bound only because it doesn't compare elements against each other.</p>
+              </div>
+            </div>
+
+            <!-- Python built-in card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Python built-ins</h2>
+              <div class="h-px bg-gray-100" />
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Contiguous</span>
-                  <p class="text-xs text-text-dim leading-relaxed">All data sits right next to each other in memory — like apartments in a building sharing one street address range. If you know where the row starts, you can do math to jump straight to any spot. Great for fast lookups.</p>
+                  <code class="font-mono text-xs font-semibold text-text">sorted(iterable)</code>
+                  <p class="text-xs text-text-dim leading-relaxed">Returns a <strong>new sorted list</strong>. Works on any iterable (list, tuple, string, dict keys). Does not modify the original.</p>
                 </div>
                 <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Scattered</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Each piece of data could be anywhere. The only way you find the next piece is if something tells you where to look — that's a <em>pointer</em>, just an address that says "the next thing is over there." Great for flexibility, growth, and rearranging.</p>
+                  <code class="font-mono text-xs font-semibold text-text">list.sort()</code>
+                  <p class="text-xs text-text-dim leading-relaxed">Sorts the list <strong>in-place</strong>, returns None. Slightly faster than sorted() since it avoids creating a new list.</p>
                 </div>
               </div>
-              <p class="text-sm text-text-dim leading-relaxed">Neither is "better" — they're different tradeoffs. Get comfortable with that word. It's the theme of this entire course.</p>
-              <p class="text-sm text-text-dim leading-relaxed">Quick heads up: "how fast we find, add, or remove data" has an actual name — <em>time complexity</em>, written with something called Big O notation. We're not diving into that today. Just plant the flag that it exists and that it's how we compare structures. It's not just a vibe.</p>
-            </div>
-          </div>
-
-          <!-- 5. The Silverware Drawer -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Preview: The Silverware Drawer</h2>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <span v-for="ds in dsPreview" :key="ds" class="text-xs font-medium text-text bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200">{{ ds }}</span>
-            </div>
-            <div class="h-px bg-gray-100" />
-            <p class="text-sm text-text-dim leading-relaxed">Think of data structures like utensils — you wouldn't use a fork to eat cereal. You <em>could</em> use a spoon for salad, but there'd be some complications. Same deal here:</p>
-            <div class="flex flex-col gap-3">
-              <div v-for="item in dsPreviewDetails" :key="item.name" class="flex items-start gap-3">
-                <span class="text-xs font-medium text-text bg-[#f5f5f2] px-2 py-0.5 rounded-full border border-gray-200 shrink-0 mt-0.5">{{ item.name }}</span>
-                <span class="text-sm text-text-dim leading-relaxed">{{ item.description }}</span>
+              <div class="flex flex-col gap-2">
+                <span class="text-xs font-medium text-text-muted">Both support:</span>
+                <div class="flex flex-col gap-1.5">
+                  <div v-for="tip in SORT_TIPS" :key="tip.code" class="flex flex-col gap-0.5">
+                    <code class="font-mono text-[11.5px] text-text bg-[#f5f5f2] px-2.5 py-1.5 rounded-lg">{{ tip.code }}</code>
+                    <span class="text-[11px] text-text-muted pl-1">{{ tip.note }}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <p class="text-sm text-text-dim leading-relaxed pt-1">You don't need to memorize any of that right now — I'm just giving you a preview of the drawer so the next few lessons don't feel random. Each structure is a different utensil for a different meal. Your job is picking the right one before you start eating.</p>
-            <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-sm text-text-dim italic">
-              Next up: we actually start opening drawers. First stop — arrays.
+
+          </template>
+
+          <!-- ── MERGE SORT ── -->
+          <template v-else-if="sortingTab === 'merge'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">Imagine you have two separate piles of cards, each already sorted face-up. Merging them into one sorted pile is easy: always take the smaller of the two top cards. You never need to look further down either pile. Merge sort exploits this — it recursively splits the array in half until each piece has one element (trivially sorted), then merges those pieces back together, bottom up.</p>
+              <p class="text-sm text-text-dim leading-relaxed">The split costs nothing. All the real work happens in the <strong>merge step</strong>, where two sorted halves are combined in linear time. Because there are log n levels of splitting, and each level does O(n) work in total across all merges, the overall cost is O(n log n) — always, regardless of input order.</p>
             </div>
-          </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n log n)</span>
+                <span class="text-[11px] text-text-muted">all cases</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n)</span>
+                <span class="text-[11px] text-text-muted">merge buffer</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-sm font-semibold text-green">Yes</span>
+                <span class="text-[11px] text-text-muted">equal elements keep order</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col gap-3">
+                <div v-for="(step, i) in SORT_STEPS.merge" :key="i" class="flex gap-3">
+                  <span class="text-2xl font-semibold text-gray-100 leading-none select-none shrink-0 pt-0.5">{{ i + 1 }}</span>
+                  <div>
+                    <span class="text-[12px] font-semibold text-text">{{ step.title }} — </span>
+                    <span class="text-sm text-text-dim">{{ step.desc }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-xs text-text-muted leading-relaxed">
+                <strong class="text-text">When to use:</strong> when you need <strong>guaranteed O(n log n)</strong>, when stability matters, when sorting a linked list (no random access needed), or when implementing external sort on data that doesn't fit in memory.
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="sort-merge" />
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3 flex items-center justify-between">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.merge, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+          </template>
+
+          <!-- ── BUBBLE SORT ── -->
+          <template v-else-if="sortingTab === 'bubble'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">Think of bubbles in a glass of water — lighter bubbles rise to the top. In bubble sort, larger elements "bubble" toward the end of the array. Each pass compares adjacent pairs and swaps them if they're out of order. After one full pass, the largest element is guaranteed to be in its correct final position. After k passes, the k largest elements are correctly placed.</p>
+              <p class="text-sm text-text-dim leading-relaxed">Bubble sort is rarely used in production — O(n²) is too slow for large inputs. It earns its place in DSA education because it makes the concept of a <strong>loop invariant</strong> very tangible: you can watch the sorted suffix grow one element per pass and reason about exactly why it works.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n²)</span>
+                <span class="text-[11px] text-text-muted">O(n) best case</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">in-place</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-sm font-semibold text-green">Yes</span>
+                <span class="text-[11px] text-text-muted">adjacent swaps only</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col gap-3">
+                <div v-for="(step, i) in SORT_STEPS.bubble" :key="i" class="flex gap-3">
+                  <span class="text-2xl font-semibold text-gray-100 leading-none select-none shrink-0 pt-0.5">{{ i + 1 }}</span>
+                  <div>
+                    <span class="text-[12px] font-semibold text-text">{{ step.title }} — </span>
+                    <span class="text-sm text-text-dim">{{ step.desc }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-xs text-text-muted leading-relaxed">
+                <strong class="text-text">Invariant:</strong> after pass i, the last i elements are in their final sorted positions. Each pass extends this sorted suffix by one.
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="sort-bubble" />
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.bubble, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+          </template>
+
+          <!-- ── INSERTION SORT ── -->
+          <template v-else-if="sortingTab === 'insertion'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">Think about how you sort a hand of cards. You pick up one card at a time and slide it left until it's in the right position relative to the cards you're already holding. You don't look at all the remaining cards first — you just maintain a sorted section in your hand and insert each new card where it belongs.</p>
+              <p class="text-sm text-text-dim leading-relaxed">Insertion sort works the same way. It maintains a sorted prefix at the front of the array and extends it by one element per pass — shifting existing elements right to open up the correct spot for the new one. It's O(n²) in the worst case, but O(n) when the input is nearly sorted, which makes it exceptionally practical. <strong>Timsort</strong>, Python's built-in algorithm, uses insertion sort for small subarrays (under ~64 elements) because it outperforms merge sort at that scale.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n²)</span>
+                <span class="text-[11px] text-text-muted">O(n) if nearly sorted</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">in-place</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-sm font-semibold text-green">Yes</span>
+                <span class="text-[11px] text-text-muted">shifts, not swaps</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col gap-3">
+                <div v-for="(step, i) in SORT_STEPS.insertion" :key="i" class="flex gap-3">
+                  <span class="text-2xl font-semibold text-gray-100 leading-none select-none shrink-0 pt-0.5">{{ i + 1 }}</span>
+                  <div>
+                    <span class="text-[12px] font-semibold text-text">{{ step.title }} — </span>
+                    <span class="text-sm text-text-dim">{{ step.desc }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-xs text-text-muted leading-relaxed">
+                <strong class="text-text">When to use:</strong> small arrays, nearly-sorted data, or as the final pass in more complex algorithms like Timsort. It's also the mental model to reach for when you need to maintain a sorted structure while streaming in new values one at a time.
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="sort-insertion" />
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.insertion, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+          </template>
+
+          <!-- ── BUCKET SORT ── -->
+          <template v-else-if="sortingTab === 'bucket'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">Imagine a postal worker sorting mail for a city. Instead of comparing every letter to every other letter, they first drop each piece into one of many labeled bins — say, by the first digit of the zip code. Within each bin, the volume is small and easy to sort. Then they collect the bins in order. The total work is much less than a full pairwise comparison.</p>
+              <p class="text-sm text-text-dim leading-relaxed">Bucket sort does the same thing: distribute input elements into k buckets based on value range, sort each bucket individually (usually with insertion sort), then concatenate. If the input is <strong>uniformly distributed</strong>, each bucket gets roughly n/k elements, and the whole process runs in O(n + k). This is how bucket sort escapes the O(n log n) comparison lower bound — it doesn't compare elements against each other to determine placement; it uses their values directly.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n + k)</span>
+                <span class="text-[11px] text-text-muted">O(n²) worst case</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n + k)</span>
+                <span class="text-[11px] text-text-muted">buckets + output</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-sm font-semibold text-green">Yes</span>
+                <span class="text-[11px] text-text-muted">if inner sort is stable</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col gap-3">
+                <div v-for="(step, i) in SORT_STEPS.bucket" :key="i" class="flex gap-3">
+                  <span class="text-2xl font-semibold text-gray-100 leading-none select-none shrink-0 pt-0.5">{{ i + 1 }}</span>
+                  <div>
+                    <span class="text-[12px] font-semibold text-text">{{ step.title }} — </span>
+                    <span class="text-sm text-text-dim">{{ step.desc }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-xs text-text-muted leading-relaxed">
+                <strong class="text-text">When to use:</strong> floating-point values uniformly distributed over a range (e.g. scores between 0.0 and 1.0), or any time you know the input spread and it's bounded. Degrades to O(n²) if all elements cluster in one bucket — never use it without understanding your input distribution.
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="sort-bucket" />
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.bucket, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+          </template>
+
+          <!-- ── QUICKSORT ── -->
+          <template v-else-if="sortingTab === 'quicksort'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">Picture arranging people at a party by height. You pick one person — the pivot — and ask everyone shorter to move left and everyone taller to move right. Now the pivot is in its exact final position, and you have two independent groups to sort. Apply the same logic recursively to each group. No one compares against anyone outside their group.</p>
+              <p class="text-sm text-text-dim leading-relaxed">Quicksort is the fastest comparison sort in practice — not in theory. Its O(n log n) average case is the same as merge sort, but it wins on real hardware due to <strong>cache efficiency</strong>: it sorts in-place, so data stays hot in the CPU cache instead of being copied to a separate buffer. The weakness is the worst case: if the pivot is always the smallest or largest element, partitioning is lopsided and the algorithm degrades to O(n²). Randomizing the pivot selection makes this astronomically unlikely.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(n log n)</span>
+                <span class="text-[11px] text-text-muted">O(n²) worst case</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(log n)</span>
+                <span class="text-[11px] text-text-muted">call stack depth</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-sm font-semibold text-text-muted">No</span>
+                <span class="text-[11px] text-text-muted">partition swaps disturb order</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col gap-3">
+                <div v-for="(step, i) in SORT_STEPS.quicksort" :key="i" class="flex gap-3">
+                  <span class="text-2xl font-semibold text-gray-100 leading-none select-none shrink-0 pt-0.5">{{ i + 1 }}</span>
+                  <div>
+                    <span class="text-[12px] font-semibold text-text">{{ step.title }} — </span>
+                    <span class="text-sm text-text-dim">{{ step.desc }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-xs text-text-muted leading-relaxed">
+                <strong class="text-text">Key tradeoff vs merge sort:</strong> Quicksort is faster in practice (cache-friendly, in-place) but has an O(n²) worst case and is not stable. Merge sort is slower in practice but guarantees O(n log n) and stability. Python's Timsort splits the difference by using merge sort logic at scale.
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="sort-quicksort" />
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.quicksort, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+          </template>
 
         </template>
 
-        <!-- ── Intro to Algorithms ── -->
-        <template v-else-if="selectedSection.id === 'algs-intro'">
+        <!-- ── BFS & DFS ── -->
+        <template v-else-if="selectedSection.id === 'bfs-dfs'">
 
-          <!-- Header -->
           <div class="flex flex-col gap-3 pb-2">
-            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Intro to Algorithms</h1>
+            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">BFS & DFS</h1>
+            <p class="text-sm text-text-muted leading-relaxed max-w-xl">The two fundamental traversal strategies — one explores level by level, the other goes as deep as possible first.</p>
           </div>
 
-          <!-- 1. Definition -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Definition</h2>
-            </div>
-            <div class="h-px bg-gray-100" />
-            <p class="text-sm text-text-dim leading-relaxed">
-              First, let's understand what an algorithm even is— an algorithm is a finite, step-by-step procedure for solving a problem. It takes <em>input</em>, performs a defined sequence of operations, and produces <em>output</em>. Two things matter: it has to be <em>correct</em> (always gives the right answer), and it has to be <em>efficient</em> (gets there fast enough). That second one is where most of DSA lives.
-              <br/>
-              <br/>
-              One of my professors had us put together a step-by-step for PB & Js. As an 18 year-old, I found this pretty silly,
-              but it was to stress a simple point. All an algorithm is, is a step-by-step plan to turn inputs into an output! Even Smuckers, Jif, and sourdough(the best bread- argue with a wall).
-            </p>
-          </div>
-
-          <!-- 2. Why efficiency matters (tabs) -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-5">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M11 16V9"/><path d="M15 16v-3"/><path d="M19 16V6"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Why efficiency matters</h2>
-            </div>
-            <!-- macOS-style tab bar -->
-            <div class="bg-gray-100 rounded-xl p-1 flex gap-0.5">
-              <button
-                class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                :class="algsIntroWhyTab === 'time' ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
-                @click="algsIntroWhyTab = 'time'"
-              >time</button>
-              <button
-                class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                :class="algsIntroWhyTab === 'space' ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
-                @click="algsIntroWhyTab = 'space'"
-              >space</button>
-              <button
-                class="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                :class="algsIntroWhyTab === 'tradeoffs' ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
-                @click="algsIntroWhyTab = 'tradeoffs'"
-              >tradeoffs</button>
-            </div>
-            <!-- Tab content -->
-            <div class="flex flex-col gap-2">
-              <template v-if="algsIntroWhyTab === 'time'">
-                <span class="text-[12px] font-semibold text-text">Time complexity</span>
-                <p class="text-sm text-text-dim leading-relaxed">How does the runtime grow as the input gets bigger? An algorithm that looks at every element once is O(n) — double the input, double the time. An algorithm with a nested loop is O(n²) — double the input, four times the time. At n = 1,000,000, the difference between O(n) and O(n²) is the difference between a millisecond and a full day. The right algorithm on the same input can be astronomically faster.</p>
-              </template>
-              <template v-else-if="algsIntroWhyTab === 'space'">
-                <span class="text-[12px] font-semibold text-text">Space complexity</span>
-                <p class="text-sm text-text-dim leading-relaxed">How does memory usage grow with input size? Build a full copy of the input to work from — that's O(n) extra space. Use only a handful of variables regardless of input size — that's O(1). Memory isn't free, especially in constrained environments. In most interview problems time is the primary concern, but you're always expected to state the space complexity too.</p>
-              </template>
-              <template v-else>
-                <span class="text-[12px] font-semibold text-text">Tradeoffs</span>
-                <p class="text-sm text-text-dim leading-relaxed">Time and space almost always trade off against each other. You can often make something faster by using more memory — storing results you've already computed instead of recomputing them. Or save memory by doing more work. Neither is universally better. The skill is knowing which resource matters more for a given problem, and being able to articulate that tradeoff clearly.</p>
-              </template>
-            </div>
-          </div>
-
-          <!-- 3. Key Insight callout -->
-          <div class="flex gap-4">
-            <div class="w-1 rounded-full bg-[#3a9ae8] shrink-0" />
-            <div class="flex flex-col gap-3 py-1">
-              <span class="text-[10px] font-semibold text-[#3a9ae8] bg-[#3a9ae8]/10 px-2 py-0.5 rounded-full w-fit">Key insight</span>
-              <p class="text-base font-medium text-text leading-relaxed">The question is never just "does it work?" — it's "does it work fast enough?"</p>
-              <p class="text-sm text-text-dim leading-relaxed">A correct algorithm that takes a year to run is useless. Both properties matter. Get both right and you're done — that's the entire game.</p>
-            </div>
-          </div>
-
-          <!-- 4. Big O Notation -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Big O Notation</h2>
-            </div>
-            <div class="h-px bg-gray-100" />
-            <p class="text-sm text-text-dim leading-relaxed">Big O notation is how we describe algorithm efficiency. The "O" stands for "order of" — as in, the order of magnitude by which the runtime scales. It describes the <em>worst case</em> and ignores constants. We care about the shape of the growth, not the exact number.</p>
-            <p class="text-sm text-text-dim leading-relaxed">When someone asks "what's the complexity?", they mean: how many operations does the algorithm perform, expressed as a function of input size <em>n</em>. You'll use this constantly in interviews, and more importantly, you'll use it to think through your own code before you write it.</p>
-
-            <!-- Expandable -->
-            <button
-              class="flex items-center justify-between w-full bg-[#f5f5f2] rounded-xl px-4 py-3 text-sm text-text-muted hover:text-text transition-colors"
-              @click="algsIntroComplexityOpen = !algsIntroComplexityOpen"
-            >
-              <span class="text-xs font-medium">go deeper: complexity table, what each means in practice</span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200" :class="algsIntroComplexityOpen ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6"/></svg>
+          <!-- Tab bar -->
+          <div class="bg-gray-100 rounded-xl p-1 flex gap-0.5">
+            <button v-for="tab in ['bfs', 'dfs']" :key="tab"
+              class="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
+              :class="bfsDfsTab === tab ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
+              @click="bfsDfsTab = tab">
+              {{ tab === 'bfs' ? 'BFS' : 'DFS' }}
             </button>
-            <div v-if="algsIntroComplexityOpen" class="flex flex-col gap-4 pt-1">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">O(1) — Constant</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Same time regardless of input size. Dict lookup, array index access. The ideal case — doesn't get better than this.</p>
-                </div>
-                <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">O(log n) — Logarithmic</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Cuts the problem in half each step. Binary search. One billion items → about 30 steps. Strikingly efficient.</p>
-                </div>
-                <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">O(n) — Linear</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Touches every element once. Most single loops. Usually the best achievable when you must look at all input.</p>
-                </div>
-                <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">O(n log n) — Efficient</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Timsort, merge sort. Slightly worse than linear but still fast. The target complexity for most sorting problems.</p>
-                </div>
-                <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">O(n²) — Quadratic</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Nested loops over the same input. Double the input → four times the work. Almost always the brute-force baseline to beat.</p>
-                </div>
-                <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">O(2ⁿ) and beyond</span>
-                  <p class="text-xs text-text-dim leading-relaxed">Exponential and factorial. Fine for tiny inputs, unusable past n ≈ 30–50. These are the complexities we optimize away.</p>
-                </div>
-              </div>
-              <p class="text-sm text-text-dim leading-relaxed">None of these is inherently "bad" — it depends entirely on what the problem demands. Know the target complexity, then find an algorithm that meets it.</p>
-            </div>
           </div>
 
-          <!-- 5. Preview: The Toolkit -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Preview: The Toolkit</h2>
+          <!-- ── BFS ── -->
+          <template v-if="bfsDfsTab === 'bfs'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">BFS is like dropping a stone in water — ripples spread outward <strong>level by level</strong>, reaching every node at distance 1 before any node at distance 2. It uses a <strong>queue</strong> (first in, first out) to track what to visit next, processing nodes in the exact order they were discovered.</p>
+              <p class="text-sm text-text-dim leading-relaxed">That ordering guarantee is the point. In an unweighted graph, the number of edges on a path is its cost. BFS explores paths in order of increasing edge count, so the first time it reaches a node, it has taken the shortest possible path. Once a node is dequeued, the optimal distance to it is final.</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <span v-for="alg in algsPreview" :key="alg" class="text-xs font-medium text-text bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200">{{ alg }}</span>
-            </div>
-            <div class="h-px bg-gray-100" />
-            <p class="text-sm text-text-dim leading-relaxed">Every algorithm you'll encounter in DSA falls into one of a handful of categories. Here's a quick preview so the next few lessons don't feel random:</p>
-            <div class="flex flex-col gap-3">
-              <div v-for="item in algsPreviewDetails" :key="item.name" class="flex items-start gap-3">
-                <span class="text-xs font-medium text-text bg-[#f5f5f2] px-2 py-0.5 rounded-full border border-gray-200 shrink-0 mt-0.5">{{ item.name }}</span>
-                <span class="text-sm text-text-dim leading-relaxed">{{ item.description }}</span>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(V + E)</span>
+                <span class="text-[11px] text-text-muted">each vertex and edge visited once</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(V)</span>
+                <span class="text-[11px] text-text-muted">queue + visited set</span>
               </div>
             </div>
-            <div class="bg-[#f5f5f2] rounded-xl px-4 py-3 text-sm text-text-dim italic">
-              Next up: we start exploring each category. First stop — binary search.
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">When to use BFS</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col divide-y divide-gray-100">
+                <div v-for="signal in BFS_SIGNALS" :key="signal.cue" class="flex flex-col gap-0.5 py-3 first:pt-0 last:pb-0">
+                  <span class="text-[12px] font-medium text-text font-mono">{{ signal.cue }}</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">{{ signal.why }}</span>
+                </div>
+              </div>
             </div>
-          </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(BFS_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+            <!-- Key insight -->
+            <div class="flex gap-4">
+              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="flex flex-col gap-2 py-1">
+                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <p class="text-base font-medium text-text leading-relaxed">BFS guarantees shortest path in unweighted graphs — not because it's searching smarter, but because it can't visit anything far before visiting everything close.</p>
+                <p class="text-sm text-text-dim leading-relaxed">The queue enforces FIFO order. Nodes at distance d are enqueued before nodes at distance d+1, so they're also dequeued first. That ordering is why the first time BFS reaches a node, the path taken is provably shortest. No revisit can improve it.</p>
+              </div>
+            </div>
+
+          </template>
+
+          <!-- ── DFS ── -->
+          <template v-else-if="bfsDfsTab === 'dfs'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">DFS is like exploring a cave with a single flashlight — go as deep as possible down one tunnel before backtracking and trying the next. It uses a <strong>stack</strong> (or the call stack via recursion) to track the current path. When a dead end is reached, it unwinds to the last unexplored branch.</p>
+              <p class="text-sm text-text-dim leading-relaxed">On trees there are no cycles, so DFS naturally terminates and needs no visited set. On graphs, a visited set is mandatory — without it, cycles cause infinite loops. The three tree traversal orders (preorder, inorder, postorder) are DFS with different points at which the node's value is processed.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="font-mono text-sm font-semibold text-text">O(V + E)</span>
+                <span class="text-[11px] text-text-muted">each vertex and edge visited once</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="font-mono text-sm font-semibold text-text">O(H)</span>
+                <span class="text-[11px] text-text-muted">H = height of recursion / stack</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Tree traversal orders</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col divide-y divide-gray-100">
+                <div class="flex flex-col gap-0.5 py-3 first:pt-0">
+                  <span class="text-[12px] font-medium text-text font-mono">Preorder — root → left → right</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Process the node before its children. Use when the parent decision must be made before recursing — serializing trees, copying structure.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3">
+                  <span class="text-[12px] font-medium text-text font-mono">Inorder — left → root → right</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Visits a BST in sorted order. If the problem needs sorted access to BST values, inorder is the answer.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3 last:pb-0">
+                  <span class="text-[12px] font-medium text-text font-mono">Postorder — left → right → root</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Process children before the parent. Use when a node's answer depends on its subtrees — tree height, diameter, merge operations.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">When to use DFS</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col divide-y divide-gray-100">
+                <div v-for="signal in DFS_SIGNALS" :key="signal.cue" class="flex flex-col gap-0.5 py-3 first:pt-0 last:pb-0">
+                  <span class="text-[12px] font-medium text-text font-mono">{{ signal.cue }}</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">{{ signal.why }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(DFS_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+            <!-- Key insight -->
+            <div class="flex gap-4">
+              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="flex flex-col gap-2 py-1">
+                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <p class="text-base font-medium text-text leading-relaxed">Recursive DFS and iterative DFS with an explicit stack are the same algorithm — the call stack IS a stack.</p>
+                <p class="text-sm text-text-dim leading-relaxed">When you call a function recursively, Python pushes a frame onto the call stack and pops it when the function returns. Replacing the call stack with an explicit stack just makes that process visible. For graphs, always add a visited set — on trees, the absence of cycles makes it unnecessary. For deep graphs (recursion depth &gt; 1000), prefer the iterative form to avoid Python's stack limit.</p>
+              </div>
+            </div>
+
+          </template>
 
         </template>
 
-        <!-- ── Python DSA Tips & Tricks ── -->
+        <!-- ── Stacks & Queues ── -->
+        <template v-else-if="selectedSection.id === 'stacks-queues'">
+
+          <div class="flex flex-col gap-3 pb-2">
+            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Stacks & Queues</h1>
+            <p class="text-sm text-text-muted leading-relaxed max-w-xl">Two data structures built on a single rule: which end can you access? That constraint is the feature.</p>
+          </div>
+
+          <!-- Tab bar -->
+          <div class="bg-gray-100 rounded-xl p-1 flex gap-0.5">
+            <button v-for="tab in ['stack', 'queue']" :key="tab"
+              class="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
+              :class="stacksQueuesTab === tab ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
+              @click="stacksQueuesTab = tab">
+              {{ tab === 'stack' ? 'Stack' : 'Queue' }}
+            </button>
+          </div>
+
+          <!-- ── Stack ── -->
+          <template v-if="stacksQueuesTab === 'stack'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">A stack is like a stack of plates — you add to the top and remove from the top. <strong>LIFO: Last In, First Out.</strong> The most recently added item is always the first to be removed. Only one end is ever accessible; the rest of the stack is hidden.</p>
+              <p class="text-sm text-text-dim leading-relaxed">This constraint is the feature. Function calls unwind in reverse order because the runtime uses a call stack — each frame is pushed when a function is called and popped when it returns. DFS works the same way: push the current node, explore, pop when backtracking. Any time you need to undo the last action or process things in reverse order, a stack is the structure.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Push</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">append()</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Pop</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">pop()</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Peek</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">stack[-1]</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Use cases</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col divide-y divide-gray-100">
+                <div class="flex flex-col gap-0.5 py-3 first:pt-0">
+                  <span class="text-[12px] font-medium text-text">DFS traversal</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Recursive DFS uses the call stack implicitly. Iterative DFS uses an explicit stack — same behavior, no recursion depth limit.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3">
+                  <span class="text-[12px] font-medium text-text">Balanced parentheses / bracket matching</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Push opening brackets, pop when a closing bracket matches the top. An empty stack at the end means balanced.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3">
+                  <span class="text-[12px] font-medium text-text">Undo / redo systems</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Each action is pushed onto a stack. Undo pops the last action and reverses it. Redo pushes it back.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3 last:pb-0">
+                  <span class="text-[12px] font-medium text-text">Monotonic stack problems</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">A stack with an ordering invariant (elements always increasing or decreasing). Finds "next greater element" in O(n) total.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(STACK_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+            <!-- Key insight -->
+            <div class="flex gap-4">
+              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="flex flex-col gap-2 py-1">
+                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <p class="text-base font-medium text-text leading-relaxed">A stack is a list with a rule. Python's list supports push and pop from the tail in O(1) — that's all a stack is.</p>
+                <p class="text-sm text-text-dim leading-relaxed">append() and pop() are the only operations you need. Peek with stack[-1] — never remove when you just want to look. The discipline of only touching one end is what makes stacks useful: it encodes a relationship between order of insertion and order of removal that mirrors how function calls, DFS paths, and bracket matching all work.</p>
+              </div>
+            </div>
+
+          </template>
+
+          <!-- ── Queue ── -->
+          <template v-else-if="stacksQueuesTab === 'queue'">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <div class="h-px bg-gray-100" />
+              <p class="text-sm text-text-dim leading-relaxed">A queue is like a line at a coffee shop — the first person in line is the first to order. <strong>FIFO: First In, First Out.</strong> Items are added at the back and removed from the front. The order of insertion is preserved exactly.</p>
+              <p class="text-sm text-text-dim leading-relaxed">In Python, use <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">collections.deque</code> — a doubly-ended queue that supports O(1) operations at both ends. A regular list can simulate a queue with <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">pop(0)</code>, but that's O(n) — it shifts every element left. Don't do it.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Enqueue</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">append()</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Dequeue</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">popleft()</span>
+              </div>
+              <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
+                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Peek</span>
+                <span class="font-mono text-sm font-semibold text-text">O(1)</span>
+                <span class="text-[11px] text-text-muted">queue[0]</span>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Use cases</h2>
+              <div class="h-px bg-gray-100" />
+              <div class="flex flex-col divide-y divide-gray-100">
+                <div class="flex flex-col gap-0.5 py-3 first:pt-0">
+                  <span class="text-[12px] font-medium text-text">BFS traversal</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">The queue IS BFS. Nodes are enqueued when discovered and dequeued when processed — FIFO guarantees level-by-level order and shortest paths.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3">
+                  <span class="text-[12px] font-medium text-text">Level-order tree traversal</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Enqueue the root, then repeatedly dequeue a node and enqueue its children. Snapshot queue size before each level to process one depth at a time.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3">
+                  <span class="text-[12px] font-medium text-text">Task scheduling / worker queues</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">Tasks arrive in order and should be processed in arrival order — the fundamental use case FIFO was designed for.</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3 last:pb-0">
+                  <span class="text-[12px] font-medium text-text">Sliding window maximum (monotonic deque)</span>
+                  <span class="text-[12px] text-text-muted leading-relaxed">A deque used as a monotonic queue — remove elements from both ends to maintain a decreasing order, tracking the window maximum in O(1).</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(QUEUE_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
+            </div>
+
+            <!-- Key insight -->
+            <div class="flex gap-4">
+              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="flex flex-col gap-2 py-1">
+                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <p class="text-base font-medium text-text leading-relaxed">Never use <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">list.pop(0)</code> as a queue — it's O(n). Use <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">collections.deque</code> with <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">popleft()</code>.</p>
+                <p class="text-sm text-text-dim leading-relaxed">A Python list is backed by an array. Removing from the front (pop(0)) shifts every remaining element one position left — O(n). A deque uses a doubly-linked block structure that makes both ends O(1). This is a silent performance bug that won't fail your code on small inputs but will time-out on large ones. Always use deque for queues.</p>
+              </div>
+            </div>
+
+          </template>
+
+        </template>
+
+        <!-- ── Python Tips & Tricks ── -->
         <template v-else-if="selectedSection.id === 'python-tips'">
 
-          <div class="flex flex-col gap-3 pb-2">
-            <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Python DSA Tips &amp; Tricks</h1>
-            <p class="text-sm text-text-muted leading-relaxed">A quick-reference guide to the Python tools that come up again and again in DSA problems. Each one either simplifies the code, improves the complexity, or both.</p>
-          </div>
+        <div class="flex flex-col gap-3 pb-2">
+          <h1 class="text-3xl sm:text-4xl font-medium leading-snug tracking-tight text-text">Python Tips & Tricks</h1>
+          <p class="text-sm text-text-muted leading-relaxed">Essential Python built-ins and patterns that come up constantly in DSA interviews.</p>
+        </div>
 
-          <div
-            v-for="tip in selectedSection.content.tips"
-            :key="tip.name"
-            class="bg-white rounded-2xl shadow-sm overflow-hidden"
-          >
-            <!-- Name + description -->
-            <div class="p-6 flex flex-col gap-3 border-b border-gray-100">
-              <span class="font-mono text-[13px] font-semibold text-text">{{ tip.name }}</span>
-              <p class="text-sm text-text-dim leading-relaxed">{{ tip.description }}</p>
-            </div>
-            <!-- Code -->
-            <div class="overflow-hidden">
-              <pre class="hljs p-5! m-0! rounded-none!"><code
-                v-html="hljs.highlight(tip.code, { language: 'python' }).value"
-                class="font-mono text-[12.5px] leading-relaxed"
-              /></pre>
-            </div>
+        <div v-for="tip in selectedSection.content.tips" :key="tip.name" class="bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden">
+          <div class="flex items-center justify-between px-6 pt-5 pb-3">
+            <h2 class="text-[13px] font-semibold text-text font-mono">{{ tip.name }}</h2>
           </div>
+          <div class="h-px bg-gray-100" />
+          <p class="text-sm text-text-dim leading-relaxed px-6 pt-4 pb-3">{{ tip.description }}</p>
+          <div class="rounded-xl overflow-hidden mx-6 mb-5">
+            <pre class="hljs p-5! m-0! rounded-xl!"><code
+              v-html="hljs.highlight(tip.code, { language: 'python' }).value"
+              class="font-mono text-[12.5px] leading-relaxed"
+            /></pre>
+          </div>
+        </div>
 
         </template>
 
@@ -795,20 +1494,59 @@
           </h1>
         </div>
 
-        <!-- 1. Analogy -->
-        <div class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
-          <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Analogy</h2>
+
+
+        <!-- 1. Analogy / Made Simple -->
+        <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl shadow-sm flex flex-col">
+          <div class="flex items-center justify-between px-6 pt-5 pb-3">
+            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">
+              {{ selectedSection.content?.madeSimple ? 'Made Simple' : 'Analogy' }}
+            </h2>
             <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">High abstraction</span>
+              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">
+                {{ selectedSection.content?.madeSimple ? 'Visual' : 'High abstraction' }}
+              </span>
               <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                A real-world analogy to make the concept intuitive before getting into mechanics.
+                {{ selectedSection.content?.madeSimple ? 'A visual walkthrough of the core concept before getting into mechanics.' : 'A real-world analogy to make the concept intuitive before getting into mechanics.' }}
               </div>
             </div>
           </div>
           <div class="h-px bg-gray-100" />
-          <p class="text-sm leading-relaxed" :class="selectedSection.content?.analogy ? 'text-text-dim' : 'text-text-muted italic'"
-             v-html="selectedSection.content?.analogy || `A real-world analogy that makes ${selectedSection.label} intuitive before getting into the mechanics...`" />
+
+          <!-- Made Simple: string visual + step-by-step -->
+          <template v-if="selectedSection.content?.madeSimple">
+            <div class="px-6 pt-5 pb-2 flex flex-col gap-3">
+              <code class="font-mono text-xs text-text-muted">s = "{{ selectedSection.content.madeSimple.visualString }}"</code>
+              <div class="flex items-start gap-1.5">
+                <div v-for="(char, i) in selectedSection.content.madeSimple.visualString.split('')" :key="i" class="flex flex-col items-center gap-1.5">
+                  <div class="w-10 h-10 border border-gray-200 rounded-lg bg-[#f5f5f2] flex items-center justify-center font-mono text-base font-semibold text-text select-none">{{ char }}</div>
+                  <span class="font-mono text-[10px] text-text-muted">{{ i }}</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-sm text-text-dim leading-relaxed px-6 pt-2 pb-4" v-html="selectedSection.content.madeSimple.body" />
+            <div class="mx-6 mb-5 rounded-xl border border-gray-100 overflow-hidden">
+              <div class="px-4 py-2.5 bg-[#f5f5f2] border-b border-gray-100">
+                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Try it — s = "{{ selectedSection.content.madeSimple.visualString }}"</span>
+              </div>
+              <div class="flex flex-col divide-y divide-gray-50">
+                <div v-for="step in selectedSection.content.madeSimple.steps" :key="step.expr" class="flex items-baseline gap-3 px-4 py-3">
+                  <code class="font-mono text-[12px] text-text shrink-0">{{ step.expr }}</code>
+                  <span class="text-text-muted text-[11px] shrink-0">→</span>
+                  <code class="font-mono text-[12px] shrink-0 font-semibold" :class="step.isError ? 'text-red-400' : 'text-[#3a9ae8]'">{{ step.result }}</code>
+                  <span class="text-[11px] text-text-muted leading-relaxed">{{ step.note }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Standard analogy -->
+          <template v-else>
+            <div class="px-6 pt-4 pb-2"></div>
+            <p class="text-sm leading-relaxed px-6 pt-0 pb-5"
+               :class="selectedSection.content?.analogy ? 'text-text-dim' : 'text-text-muted italic'"
+               v-html="selectedSection.content?.analogy || `A real-world analogy that makes ${selectedSection.label} intuitive before getting into the mechanics...`" />
+          </template>
         </div>
 
         <!-- 2. What / Why / How -->
@@ -869,8 +1607,8 @@
           </div>
         </div>
 
-        <!-- 3b. Memory & Storage (DS only) -->
-        <div v-if="selectedSection.categoryId === 'data-structures'" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+        <!-- 3b. Memory & Storage (DS only, not cluster intros) -->
+        <div v-if="selectedSection.categoryId === 'data-structures' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Memory & Storage</h2>
             <div class="relative group">
@@ -921,7 +1659,7 @@
         </div>
 
         <!-- 4. Complexity -->
-        <div v-if="selectedSection.categoryId !== 'the-connection'" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+        <div v-if="selectedSection.categoryId !== 'the-connection' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Complexity</h2>
             <div class="relative group">
@@ -933,7 +1671,7 @@
           </div>
           <div class="h-px bg-gray-100" />
           <!-- DS: per-operation table -->
-          <div v-if="selectedSection.categoryId === 'data-structures'" class="flex flex-col divide-y divide-gray-50">
+          <div v-if="selectedSection.categoryId === 'data-structures' && !selectedSection.content?.isClusterIntro" class="flex flex-col divide-y divide-gray-50">
             <div v-for="op in ['access', 'search', 'insert', 'delete']" :key="op" class="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
               <span class="text-sm text-text-muted capitalize">{{ op }}</span>
               <span class="font-mono text-sm" :class="selectedSection.content?.complexity?.[op] ? 'text-text-dim' : 'text-text-muted italic'">{{ selectedSection.content?.complexity?.[op] || 'O(?)' }}</span>
@@ -953,8 +1691,8 @@
           </div>
         </div>
 
-        <!-- 5. Pros & Cons (DS only) -->
-        <div v-if="selectedSection.categoryId === 'data-structures'" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+        <!-- 5. Pros & Cons (DS only, not cluster intros) -->
+        <div v-if="selectedSection.categoryId === 'data-structures' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Pros & Cons</h2>
           <div class="h-px bg-gray-100" />
           <div class="grid grid-cols-2 gap-6">
@@ -1032,7 +1770,7 @@
         </div>
 
         <!-- 8. Visuals & Examples -->
-        <div class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+        <div v-if="!selectedSection.content?.isClusterIntro && !selectedSection.content?.madeSimple" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Visuals & Examples</h2>
             <div class="relative group">
@@ -1043,14 +1781,39 @@
             </div>
           </div>
           <div class="h-px bg-gray-100" />
-          <div class="bg-[#f5f5f2] rounded-xl h-44 flex items-center justify-center border border-dashed border-gray-200">
-            <span class="text-sm text-text-muted italic">Visual diagram / step-by-step illustration</span>
-          </div>
-          <p class="text-sm text-text-muted italic leading-relaxed">Worked example — tracing through a concrete input...</p>
+          <!-- Sliding window: tabbed fixed vs variable -->
+          <template v-if="selectedSection.id === 'sliding-window'">
+            <div class="bg-gray-100 rounded-xl p-1 flex gap-0.5 w-fit">
+              <button v-for="tab in ['fixed', 'variable']" :key="tab"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
+                :class="slidingWindowVisualTab === tab ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'"
+                @click="slidingWindowVisualTab = tab">
+                {{ tab === 'fixed' ? 'Fixed window' : 'Variable window' }}
+              </button>
+            </div>
+            <PatternVisualizer
+              :key="slidingWindowVisualTab"
+              :pattern="slidingWindowVisualTab === 'fixed' ? 'sliding-window' : 'sliding-window-variable'"
+            />
+          </template>
+
+          <!-- All other sections -->
+          <template v-else>
+            <div v-if="selectedSection && sectionVisualizer[selectedSection.id]" class="flex flex-col gap-6">
+              <PatternVisualizer
+                v-for="(pattern, pi) in [sectionVisualizer[selectedSection.id]].flat()"
+                :key="`${selectedSection.id}-${pi}`"
+                :pattern="pattern"
+              />
+            </div>
+            <div v-else class="bg-[#f5f5f2] rounded-xl h-44 flex items-center justify-center border border-dashed border-gray-200">
+              <span class="text-sm text-text-muted italic">Visual diagram / step-by-step illustration</span>
+            </div>
+          </template>
         </div>
 
         <!-- 9. Code -->
-        <div class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
+        <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Code</h2>
             <div class="relative group">
@@ -1072,7 +1835,7 @@
         </div>
 
         <!-- 10. Sandbox -->
-        <div class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm border border-dashed border-gray-200">
+        <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm border border-dashed border-gray-200">
           <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Sandbox</h2>
           <div class="h-px bg-gray-100" />
           <div class="h-32 flex items-center justify-center">
@@ -1080,7 +1843,17 @@
           </div>
         </div>
 
-        <!-- 11. Connections -->
+        <!-- 11. Key Insight -->
+        <div v-if="selectedSection.content?.keyInsight" class="flex gap-4">
+          <div class="w-1 rounded-full bg-accent shrink-0" />
+          <div class="flex flex-col gap-2 py-1">
+            <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+            <p class="text-base font-medium text-text leading-relaxed" v-html="selectedSection.content.keyInsight.heading" />
+            <p class="text-sm text-text-dim leading-relaxed" v-html="selectedSection.content.keyInsight.body" />
+          </div>
+        </div>
+
+        <!-- 12. Connections -->
         <div class="bg-white rounded-2xl p-6 flex flex-col gap-5 shadow-sm border border-[#3a9ae8]/25">
           <div class="flex items-center gap-2">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Connections</h2>
@@ -1124,8 +1897,9 @@
           </div>
         </div>
 
-        </template>
         <!-- ── end generic skeleton ── -->
+
+        </template>
 
         <!-- Disclaimer (optional per-section note) -->
         <div v-if="selectedSection.content?.disclaimer" class="px-1">
@@ -1188,24 +1962,345 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import hljs from 'highlight.js/lib/core'
 import python from 'highlight.js/lib/languages/python'
 import 'highlight.js/styles/vs2015.css'
 hljs.registerLanguage('python', python)
+import PatternVisualizer from '@/components/visualizers/PatternVisualizer.vue'
+import ClusterMap from '@/components/learn-map/ClusterMap.vue'
+import TopicSearch from '@/components/learn-map/TopicSearch.vue'
+import ComplexityGraph from '@/components/ComplexityGraph.vue'
+import { CLUSTERS, clusterForSection } from '@/data/clusters'
+
 
 const router = useRouter()
 const route = useRoute()
 
-const sidebarOpen = ref(true)
+const sidebarOpen = ref(window.innerWidth >= 1024)
 const openCategories = ref([])
+const openClusters = ref([])
 const selectedSection = ref(null)
 const activeView = ref('intro')
-const dsIntroRamOpen = ref(false)
-const dsIntroWhyTab = ref('type-of-data')
-const algsIntroComplexityOpen = ref(false)
-const algsIntroWhyTab = ref('time')
+const activeCluster = ref(null)
+const searchOpen = ref(false)
+
+const sortingTab = ref('intro')
+const bfsDfsTab = ref('bfs')
+const stacksQueuesTab = ref('stack')
+const slidingWindowVisualTab = ref('fixed')
+
+const BFS_SIGNALS = [
+  { cue: '"Shortest path" or "minimum steps"', why: 'BFS guarantees the shortest path in unweighted graphs — nodes are dequeued in order of increasing distance.' },
+  { cue: '"Level by level" processing', why: 'BFS naturally processes all nodes at depth d before any at depth d+1. Track levels by snapshotting queue size at each iteration.' },
+  { cue: '"Connected components" or "number of islands"', why: 'Start BFS from each unvisited node. Each call explores exactly one connected component.' },
+  { cue: '"Closest" or "nearest" to multiple sources', why: 'Multi-source BFS: seed the queue with all source nodes at once. Distance spreads outward uniformly from every source simultaneously.' },
+]
+
+const DFS_SIGNALS = [
+  { cue: '"Does a path exist?" or "can we reach X?"', why: 'DFS explores any path to completion before backtracking — finds a path if one exists, without caring about its length.' },
+  { cue: '"All paths" or "all combinations"', why: 'DFS + backtracking visits every possible path in the decision tree — it\'s the engine behind exhaustive search.' },
+  { cue: '"Detect a cycle"', why: 'In DFS, finding an edge back to an already-visited node in the current recursion stack signals a cycle.' },
+  { cue: '"Topological sort" or "dependency order"', why: 'DFS postorder (append after all descendants are visited) + reverse gives a valid topological ordering.' },
+]
+
+const BFS_CODE = `from collections import deque
+
+# BFS on a graph — visits level by level
+def bfs(graph, start):
+    visited = {start}
+    queue = deque([start])
+    while queue:
+        node = queue.popleft()
+        print(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+# BFS with distance tracking — shortest path
+def bfs_distance(graph, start, target):
+    visited = {start}
+    queue = deque([(start, 0)])      # (node, distance)
+    while queue:
+        node, dist = queue.popleft()
+        if node == target:
+            return dist
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, dist + 1))
+    return -1                        # unreachable
+
+# Grid BFS (number of islands)
+def num_islands(grid):
+    count = 0
+    for r in range(len(grid)):
+        for c in range(len(grid[0])):
+            if grid[r][c] == '1':
+                count += 1
+                queue = deque([(r, c)])
+                grid[r][c] = '0'    # mark visited by sinking
+                while queue:
+                    row, col = queue.popleft()
+                    for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:
+                        nr, nc = row+dr, col+dc
+                        if 0<=nr<len(grid) and 0<=nc<len(grid[0]) and grid[nr][nc]=='1':
+                            grid[nr][nc] = '0'
+                            queue.append((nr, nc))
+    return count`
+
+const DFS_CODE = `# DFS — recursive (graph, needs visited set)
+def dfs(graph, node, visited=None):
+    if visited is None: visited = set()
+    visited.add(node)
+    print(node)
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(graph, neighbor, visited)
+
+# DFS — iterative (explicit stack, avoids recursion depth limits)
+def dfs_iterative(graph, start):
+    visited = set()
+    stack = [start]
+    while stack:
+        node = stack.pop()
+        if node in visited: continue
+        visited.add(node)
+        print(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                stack.append(neighbor)
+
+# Tree traversal orders (no visited set needed — no cycles)
+def preorder(root):     # root → left → right
+    if not root: return
+    print(root.val)
+    preorder(root.left)
+    preorder(root.right)
+
+def inorder(root):      # left → root → right  (BST → sorted output)
+    if not root: return
+    inorder(root.left)
+    print(root.val)
+    inorder(root.right)
+
+def postorder(root):    # left → right → root
+    if not root: return
+    postorder(root.left)
+    postorder(root.right)
+    print(root.val)`
+
+const STACK_CODE = `# Stack — Python list (append/pop at the tail)
+stack = []
+stack.append(1)    # push  O(1)
+stack.append(2)
+stack.append(3)
+top = stack[-1]    # peek without removing: 3
+val = stack.pop()  # pop   O(1): removes and returns 3
+
+# Classic use: balanced parentheses
+def is_valid(s: str) -> bool:
+    stack = []
+    pairs = {')': '(', '}': '{', ']': '['}
+    for ch in s:
+        if ch in '({[':
+            stack.append(ch)
+        elif not stack or stack[-1] != pairs[ch]:
+            return False
+        else:
+            stack.pop()
+    return not stack
+
+# Classic use: monotonic stack (next greater element)
+def next_greater(nums):
+    result = [-1] * len(nums)
+    stack = []          # stores indices
+    for i, n in enumerate(nums):
+        while stack and nums[stack[-1]] < n:
+            result[stack.pop()] = n
+        stack.append(i)
+    return result`
+
+const QUEUE_CODE = `from collections import deque
+
+# Queue — collections.deque (O(1) at both ends)
+queue = deque()
+queue.append(1)          # enqueue  O(1)
+queue.append(2)
+queue.append(3)
+front = queue[0]         # peek front: 1
+val = queue.popleft()    # dequeue  O(1): returns 1
+print(queue)             # deque([2, 3])
+
+# Never use list.pop(0) — shifts all elements, O(n)
+# bad = [1, 2, 3]; bad.pop(0)  ← avoid
+
+# Classic use: BFS level-order tree traversal
+def level_order(root):
+    if not root: return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):   # snapshot current level size
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:  queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+    return result`
+
+const SORT_TABLE = [
+  { name: 'Merge Sort',        avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)',     stable: true,  inplace: false },
+  { name: 'Quicksort',         avg: 'O(n log n)', worst: 'O(n²)',      space: 'O(log n)', stable: false, inplace: true  },
+  { name: 'Insertion Sort',    avg: 'O(n²)',       worst: 'O(n²)',      space: 'O(1)',     stable: true,  inplace: true  },
+  { name: 'Bubble Sort',       avg: 'O(n²)',       worst: 'O(n²)',      space: 'O(1)',     stable: true,  inplace: true  },
+  { name: 'Bucket Sort',       avg: 'O(n + k)',    worst: 'O(n²)',      space: 'O(n+k)',   stable: true,  inplace: false },
+  { name: 'Timsort (built-in)', avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)',    stable: true,  inplace: false },
+]
+
+const SORT_TIPS = [
+  { code: 'sorted(arr, reverse=True)',                      note: 'Descending order' },
+  { code: 'sorted(arr, key=lambda x: x[1])',                note: 'Sort by second element of each tuple' },
+  { code: 'sorted(arr, key=len)',                           note: 'Sort strings by length' },
+  { code: 'sorted(arr, key=lambda x: (x.grade, x.name))',  note: 'Multi-key sort — grade first, name as tiebreaker' },
+]
+
+const SORT_STEPS = {
+  merge: [
+    { title: 'Divide',   desc: 'Split the array at the midpoint into two halves. This takes O(1).' },
+    { title: 'Conquer',  desc: 'Recursively call merge_sort on each half. The recursion bottoms out at arrays of length 1 — a single element is always sorted.' },
+    { title: 'Merge',    desc: 'Combine the two sorted halves into one sorted array. Walk two pointers across the halves, always picking the smaller front element. This step is O(n).' },
+    { title: 'Return',   desc: 'The merged result propagates back up the call stack until the full array is sorted.' },
+  ],
+  bubble: [
+    { title: 'Outer loop',      desc: 'Runs n times. Each iteration represents one full pass through the unsorted portion of the array.' },
+    { title: 'Inner loop',      desc: 'Walks from index 0 to n - i - 1. The last i elements are already in their final positions, so we skip them.' },
+    { title: 'Compare and swap', desc: 'If arr[j] > arr[j+1], swap them. This pushes the larger element one step to the right.' },
+    { title: 'Early exit',      desc: 'Track whether any swap occurred. If a full pass makes zero swaps, the array is already sorted — exit early. This gives O(n) best case on already-sorted input.' },
+  ],
+  insertion: [
+    { title: 'Pick up the key', desc: 'Starting from index 1, take the current element (the key). Everything to its left is already sorted.' },
+    { title: 'Find the gap',    desc: 'Walk left through the sorted portion, shifting each element one position right if it is larger than the key.' },
+    { title: 'Place the key',   desc: 'When you find an element smaller than or equal to the key (or reach the start), drop the key into the vacated slot. The sorted prefix is now one element longer.' },
+    { title: 'Repeat',          desc: 'Move to the next element and repeat. After n-1 passes, every element has been inserted into its correct position.' },
+  ],
+  bucket: [
+    { title: 'Find range',      desc: 'Compute the min and max of the array to determine the full value range.' },
+    { title: 'Distribute',      desc: 'Map each element to a bucket index based on its position in the value range. Elements with similar values end up in the same bucket.' },
+    { title: 'Sort each bucket', desc: 'Sort the contents of each bucket. Because buckets are small (on average n/k elements), insertion sort is fast here.' },
+    { title: 'Concatenate',     desc: 'Collect all buckets in order from first to last. The result is a fully sorted array.' },
+  ],
+  quicksort: [
+    { title: 'Choose a pivot', desc: 'Select one element as the pivot. Common choices: last element, first element, or a random element. Random pivot avoids worst-case behavior on sorted or reverse-sorted input.' },
+    { title: 'Partition',      desc: 'Rearrange elements so everything smaller than or equal to the pivot is to its left, everything larger is to its right. The pivot is now in its final sorted position. This step is O(n).' },
+    { title: 'Recurse left',   desc: 'Apply quicksort to the subarray to the left of the pivot.' },
+    { title: 'Recurse right',  desc: 'Apply quicksort to the subarray to the right of the pivot. No merge step needed — the pivot is already placed.' },
+  ],
+}
+
+const SORT_CODE = {
+  merge: `def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid = len(arr) // 2
+    left  = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result, i, j = [], 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:         # <= preserves stability
+            result.append(left[i]); i += 1
+        else:
+            result.append(right[j]); j += 1
+    return result + left[i:] + right[j:]`,
+
+  bubble: `def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break               # already sorted — O(n) best case
+    return arr`,
+
+  insertion: `def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]         # shift larger elements right
+            j -= 1
+        arr[j + 1] = key                # place key in correct position
+    return arr`,
+
+  bucket: `def bucket_sort(arr):
+    if not arr:
+        return arr
+    min_val, max_val = min(arr), max(arr)
+    n = len(arr)
+    buckets = [[] for _ in range(n)]
+
+    for num in arr:
+        ratio = (num - min_val) / (max_val - min_val + 1)
+        idx   = int(ratio * n)
+        buckets[idx].append(num)
+
+    result = []
+    for bucket in buckets:
+        result.extend(sorted(bucket))   # insertion sort is fast for small buckets
+    return result`,
+
+  quicksort: `def quicksort(arr, lo=0, hi=None):
+    if hi is None:
+        hi = len(arr) - 1
+    if lo < hi:
+        p = partition(arr, lo, hi)
+        quicksort(arr, lo, p - 1)
+        quicksort(arr, p + 1, hi)
+
+def partition(arr, lo, hi):
+    pivot = arr[hi]             # last element as pivot
+    i = lo - 1
+    for j in range(lo, hi):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+    arr[i + 1], arr[hi] = arr[hi], arr[i + 1]
+    return i + 1`,
+}
+
+const sectionVisualizer = {
+  'two-pointers':        'two-pointers',
+  'sliding-window':      'sliding-window',
+  'binary-search':       'binary-search',
+  'fast-slow':           'fast-slow',
+  'dynamic-programming': 'dynamic-programming',
+  'monotonic-stack':     'monotonic-stack',
+  'trees':               'bst-search',
+  'heaps':               'heap-extract',
+  'arrays':              'array-access',
+  'python-lists':        'python-list',
+  'strings':             'array-access',
+  'linked-lists':        'linked-list-insert',
+  'stacks-queues':       'stack-queue',
+  'hash-maps':           'hash-map',
+  'graphs':              'graph-bfs',
+  'recursion':           'recursion-tree',
+  'greedy':              'greedy-coins',
+  'backtracking':        'backtracking-tree',
+  'merge-intervals':     'merge-intervals',
+  'bfs-dfs':             ['bfs-dfs', 'dfs'],
+  'topological-sort':    'topo-sort',
+  'union-find':          'union-find',
+}
 
 const completed = ref(new Set())
 
@@ -1233,32 +2328,102 @@ const catActiveBg = {
   'the-connection':  'bg-yellow-100',
 }
 
-const dsPreview = ['Array', 'Linked List', 'Stack & Queue', 'Hash Map', 'Tree & Graph']
-
-const dsPreviewDetails = [
-  { name: 'Array', description: 'Great when you know exactly how many items you need and want fast access by index. A pain if you constantly add or remove from the middle.' },
-  { name: 'Linked List', description: 'Great for constant rearranging — you can grow, shrink, and reorder cheaply. Slow if you need to find something specific, since you walk from the front.' },
-  { name: 'Stack & Queue', description: 'Constrained by design. Stacks are last-in first-out (like plates). Queues are first-in first-out (like a deli line). The constraint is the point.' },
-  { name: 'Hash Map', description: 'The instant-lookup utensil. Trades some memory and ordering for O(1) access by key. Reach for it whenever you need to count, group, or find things by name.' },
-  { name: 'Tree & Graph', description: 'Trees for anything with a natural hierarchy — file systems, decisions, rankings. Graphs for pure connections with no clean hierarchy — friendships, routes, dependencies.' },
+const careerResumeTips = [
+  { title: 'ATS keywords', body: 'Most large companies run resumes through an applicant tracking system before a human sees them. Mirror the exact language from the job description — "React" not "ReactJS," "REST API" not "RESTful services" if that is what they wrote.' },
+  { title: 'GitHub link', body: 'Put it in the header next to your email. Recruiters do click. Make sure your pinned repos are your best work and that every project has a README that explains what it does and how to run it.' },
+  { title: 'Skills section', body: 'List languages, frameworks, and tools you can actually talk about in depth. Being grilled on something you listed but barely touched is one of the most avoidable interview mistakes.' },
+  { title: 'GPA', body: 'Include it if it is above 3.5 and you have under 2 years of experience. Drop it otherwise — experience and projects carry more weight.' },
 ]
 
-const algsPreview = ['Searching', 'Sorting', 'Recursion', 'Dynamic Programming', 'Greedy', 'Graph Traversal']
-
-const algsPreviewDetails = [
-  { name: 'Searching', description: 'Finding a value in a collection. Binary search turns O(n) into O(log n) by exploiting sorted order — one of the cleanest efficiency gains in all of DSA.' },
-  { name: 'Sorting', description: 'Rearranging data into order. Unlocks binary search, two pointers, and most sliding window problems. Often a preprocessing step, not the solution itself.' },
-  { name: 'Recursion', description: 'Solving a problem by solving a smaller version of the same problem. The foundation of trees, graphs, divide-and-conquer, and backtracking.' },
-  { name: 'Dynamic Programming', description: 'Caching subproblem results to avoid recomputing them. Turns exponential brute force into polynomial time. The hardest category to internalize — and the most rewarding.' },
-  { name: 'Greedy', description: 'Always pick the locally optimal choice and never look back. Fast and elegant when the problem supports it — and knowing when it applies is the real skill.' },
-  { name: 'Graph Traversal', description: 'BFS and DFS — the two ways to visit every node in a graph. Most graph problems reduce to choosing the right traversal and tracking what you\'ve seen.' },
+const careerStarFramework = [
+  { letter: 'S', name: 'Situation', desc: '1–2 sentences. Set the scene. Where were you, what was the context, what was at stake?' },
+  { letter: 'T', name: 'Task', desc: '1 sentence. What specifically were you responsible for?' },
+  { letter: 'A', name: 'Action', desc: 'The bulk of your answer. What did you do, step by step? Use "I," not "we" — the interviewer is evaluating you.' },
+  { letter: 'R', name: 'Result', desc: 'Non-negotiable. What happened? Quantify if possible. If not, describe scope or impact.' },
 ]
 
-const flatSections = computed(() =>
-  categories.flatMap(cat =>
+const careerBehavioralQuestions = [
+  { question: 'Tell me about yourself.', hint: 'This is your pitch, not your life story. 60–90 seconds: where you are, what you have done, and why this role. Practice it until it sounds natural, not rehearsed.' },
+  { question: 'Tell me about a challenge you faced.', hint: 'Pick a real technical or interpersonal challenge where your actions made a material difference. Avoid anything where "the challenge" was someone else\'s fault or where you had no agency.' },
+  { question: 'Tell me about a time you disagreed with someone.', hint: 'Interviewers want to see you disagree respectfully, make your case with data, and either change your mind or accept the team\'s decision gracefully. Avoid stories where you just capitulated.' },
+  { question: 'Tell me about a project you are proud of.', hint: 'Describe the problem, your specific contribution, and why the result matters. Bonus if you can articulate what you would do differently — it shows self-awareness.' },
+  { question: 'Why do you want to work here?', hint: 'This is not the place to say "I love the culture." Name something specific about the company\'s product, technical stack, or mission that connects to something real about what you want to work on.' },
+]
+
+const careerBehavioralTraps = [
+  'Saying "we" throughout — the interviewer cannot evaluate what "we" did. Say "I."',
+  'No result. Every answer needs a measurable or observable outcome. "The team felt better about the process" is not a result.',
+  'Blaming others. Even if someone else caused the problem, your answer should center your response to it.',
+  'Answering a different question. Listen for the specific type — challenge, conflict, failure, success. Give them what they asked for.',
+  'Too long. Behavioral answers should take 90–120 seconds, not 4 minutes. Practice trimming.',
+]
+
+const careerSysDesignStages = [
+  { title: 'Networking basics', desc: 'TCP vs UDP, DNS, HTTP/HTTPS, latency vs throughput. If you cannot explain what happens when you type a URL, start here.' },
+  { title: 'Storage primitives', desc: 'SQL vs NoSQL, indexes, replication, sharding, CAP theorem. Understanding storage constraints drives most architectural decisions.' },
+  { title: 'Scalability patterns', desc: 'Load balancing, caching (CDN, Redis), message queues, horizontal vs vertical scaling. These are the levers you pull in an interview.' },
+  { title: 'Case studies', desc: 'Design URL shortener, rate limiter, key-value store, feed system. Only after steps 1–3 — otherwise you are memorizing without understanding.' },
+]
+
+const careerSysDesignResources = [
+  {
+    topic: 'Start here',
+    items: [
+      { name: 'System Design Primer (GitHub)', note: 'The best free overview. Read the intro sections before anything else.' },
+      { name: 'ByteByteGo newsletter', note: 'Alex Xu\'s weekly breakdowns are concise and visual. Free tier is enough.' },
+    ],
+  },
+  {
+    topic: 'Go deeper',
+    items: [
+      { name: 'Designing Data-Intensive Applications (Kleppmann)', note: 'The definitive book on storage and distributed systems. Dense but worth it. Read chapters 1, 3, 5, 7 minimum.' },
+      { name: 'High Scalability blog', note: 'Real architecture teardowns of production systems. Good for seeing how the patterns play out at scale.' },
+    ],
+  },
+  {
+    topic: 'Practice',
+    items: [
+      { name: 'Exponent system design course', note: 'Mock interview videos with feedback. Useful for seeing what "good" looks like in real time.' },
+      { name: 'System Design Fight Club (YouTube)', note: 'Short, opinionated comparisons. Good for cementing tradeoffs.' },
+    ],
+  },
+]
+
+const careerSysDesignInterview = [
+  { title: 'Clarify requirements', desc: 'Ask about scale (users, requests/sec), read/write ratio, and consistency requirements before drawing anything. Most candidates skip this and design the wrong system.' },
+  { title: 'Estimate scale', desc: 'Back-of-the-envelope math. 10M users × 100 requests/day = ~10k RPS. This tells you whether a single database can handle it or whether you need sharding.' },
+  { title: 'High-level design', desc: 'Draw the main components: clients, load balancers, services, databases, caches. Get agreement before going deep on any one piece.' },
+  { title: 'Deep dive', desc: 'The interviewer will steer you. Usually storage schema, a specific bottleneck, or a consistency/availability tradeoff. This is where you show depth.' },
+  { title: 'Tradeoffs', desc: 'Proactively name what your design does not do well. SQL gives consistency but is harder to shard. Eventual consistency scales better but complicates client logic. Naming these unprompted is what separates strong candidates.' },
+]
+
+
+
+const flatSections = computed(() => {
+  const allSections = categories.flatMap(cat =>
     cat.subsections.map(sub => ({ ...sub, category: cat.label, categoryId: cat.id }))
   )
-)
+  const sectionMap = new Map(allSections.map(s => [s.id, s]))
+  const clusteredIds = new Set(CLUSTERS.flatMap(c => c.concepts.map(concept => concept.id)))
+
+  const dsIntro = sectionMap.get('ds-intro')
+  const clusterSections = CLUSTERS
+    .flatMap(c => c.concepts.map(concept => sectionMap.get(concept.id)))
+    .filter(Boolean)
+  const unclustered = allSections.filter(s =>
+    !clusteredIds.has(s.id) &&
+    s.id !== 'ds-intro' &&
+    s.categoryId !== 'the-connection'
+  )
+  const connectionSections = allSections.filter(s => s.categoryId === 'the-connection')
+
+  return [
+    ...(dsIntro ? [dsIntro] : []),
+    ...clusterSections,
+    ...unclustered,
+    ...connectionSections,
+  ]
+})
 
 const currentIndex = computed(() =>
   selectedSection.value ? flatSections.value.findIndex(s => s.id === selectedSection.value.id) : -1
@@ -1287,7 +2452,59 @@ onMounted(() => {
       activeView.value = 'section'
     }
   }
+  const cluster = route.query.cluster
+  if (cluster) {
+    activeCluster.value = cluster
+    activeView.value = 'map'
+  }
+  window.addEventListener('keydown', globalKeydown)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', globalKeydown)
+})
+
+function globalKeydown(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    searchOpen.value = true
+  }
+}
+
+function toggleCluster(id) {
+  const idx = openClusters.value.indexOf(id)
+  if (idx >= 0) openClusters.value.splice(idx, 1)
+  else openClusters.value.push(id)
+}
+
+function selectCluster(id) {
+  activeCluster.value = id
+  activeView.value = 'map'
+  if (!openClusters.value.includes(id)) openClusters.value.push(id)
+  router.replace({ query: { cluster: id } })
+}
+
+function navigateToId(id) {
+  if (id === '__map')         { activeView.value = 'map'; activeCluster.value = null; router.replace({ query: {} }); return }
+  if (id === '__intro')       { activeView.value = 'intro'; selectedSection.value = null; router.replace({ query: {} }); return }
+  if (id === '__guide')       { activeView.value = 'guide'; selectedSection.value = null; router.replace({ query: {} }); return }
+  if (id === '__complexity')  { activeView.value = 'complexity'; selectedSection.value = null; router.replace({ query: {} }); return }
+
+  const found = flatSections.value.find(s => s.id === id)
+  if (found) {
+    selectedSection.value = found
+    activeView.value = 'section'
+    // Open the cluster that owns this concept in the sidebar
+    const owningCluster = clusterForSection(id)
+    if (owningCluster && !openClusters.value.includes(owningCluster.id)) {
+      openClusters.value.push(owningCluster.id)
+    }
+  } else {
+    // Section not yet built — still navigate so the cluster is visible
+    selectedSection.value = { id, label: id, category: '', categoryId: '', content: null }
+    activeView.value = 'section'
+  }
+}
 
 const whyPoints = [
   'Knowing a concept exists is different from knowing when and why to reach for it.',
@@ -1345,7 +2562,7 @@ const patternHints = [
 const abstractionPoints = [
   'The right abstraction lets you reason quickly — a mental model you can run simulations on without looking anything up.',
   'Over-abstracting loses the precision you need during implementation. Under-abstracting is just memorization in disguise.',
-  'The static content in routined is written at exactly that middle ground: conceptual precision without implementation noise.',
+  'The static content in routined is written at exactly that middle ground: conceptual precision without low ROI details.',
 ]
 
 const prereqChains = [
@@ -1360,7 +2577,7 @@ const cogSciPrinciples = [
     name: 'Active Recall',
     researcher: 'Jeffrey Karpicke',
     credential: 'Cognitive Psychologist, Purdue',
-    image: '/public/karpicke.jpg',
+    image: 'Karpicke.jpg',
     science: 'Retrieving information from memory strengthens retention far more than re-reading. Testing yourself is a learning act, not just an assessment.',
     inRoutined: 'In routined: every problem you work through is an active recall event — you generate the answer, not consume it.',
   },
@@ -1396,8 +2613,8 @@ const routinedFeatures = [
     description: 'Rather than showing solutions, routined asks questions that lead you to the insight. This triggers the generation effect and builds intuition you actually own.',
   },
   {
-    label: 'Structured debrief after every problem',
-    description: 'After solving, you break down the pattern used, why it fits, and what signals pointed to it. This is where recognition gets encoded — not during the solve itself.',
+    label: 'Structured mental model for every problem',
+    description: 'Before any code is written, you will be guided to build the mental models that narrow down which solutions could possibly work. When under pressure- like in an interview, you will fall back to your preparation. So we have structured that preparation around narrowing your problem space.',
   },
   {
     label: 'Pattern-first organization',
@@ -1434,13 +2651,43 @@ const categories = [
     subsections: [
       { id: 'ds-intro', label: 'Intro to Data Structures' },
       {
+        id: 'linear-intro',
+        label: 'Intro to Linear DSA',
+        content: {
+          what: `The <strong>Linear cluster</strong> is built on one primitive: linear data structures, also known as a sequencing of elements stored at consecutive positions. Because each position is numbered, you can reach any one in <strong>O(1)</strong> — no traversal, just addition. Everything in this cluster is a technique for exploiting that property.`,
+          why: `Two pointers are just two indices moving through the same line under different rules. A sliding window is a range of consecutive indices that shifts. Prefix sums pre-compute cumulative totals so any range query becomes a single subtraction. Monotonic stacks maintain a useful ordering within that line. None of these are isolated tricks — they're all different ways of working a numbered sequence. Once you see the array as the foundation, the techniques follow naturally.`,
+          isClusterIntro: true,
+          how: `Start by identifying the index structure. Most linear problems reduce to: (1) a single index sweeping left to right, (2) two indices converging from opposite ends, or (3) a sliding window of fixed or variable width moving rightward. When you see an O(n²) brute force that checks every pair, ask whether a second pointer or a precomputed prefix sum can collapse the inner loop. The answer is almost always yes.`,
+          keyProperties: [
+            'O(1) random access is the foundation — it enables the two-pointer collapse',
+            'Adjacent elements are adjacent in memory — CPU cache-friendly, fast in practice',
+            'A sliding window is just a range [left, right] with rules for when each pointer moves',
+            'Prefix sums turn range-sum queries from O(n) per query into O(1) after O(n) preprocessing',
+            'Monotonic stacks maintain a useful ordering to answer "next greater element" in O(n) total',
+          ],
+          complexity: { time: 'O(n) for most techniques', space: 'O(1) to O(n) depending on technique' },
+          useCases: [
+            'Finding pairs or triplets that satisfy a condition in a sorted array (Two Pointers)',
+            'Tracking the best contiguous subarray matching a constraint (Sliding Window)',
+            'Answering range-sum queries in O(1) after O(n) preprocessing (Prefix Sums)',
+            'Finding the next greater or smaller element for each position (Monotonic Stack)',
+            'Stack-based problems: valid parentheses, expression evaluation (Stacks & Queues)',
+          ],
+          connections: {
+            prereqs: ['Intro to Data Structures'],
+            unlocks: ['Arrays', 'Strings', 'Two Pointers', 'Sliding Window', 'Prefix Sums', 'Stacks & Queues', 'Monotonic Stack'],
+            related: ['Intro to Linked', 'Intro to Sorted Search'],
+          },
+        },
+      },
+      {
         id: 'arrays',
         label: 'Arrays',
         content: {
           analogy: `Think of an array like a row of numbered mailboxes in an apartment building. Every box has a fixed address, they\'re all lined up next to each other, 
           and you can walk straight to box #7 without checking any of the others first. You can\'t squeeze a new box between two existing ones without moving everything down.
-           Similarly, you can add data to the end of the array(computers know the length) in constant time, we can find a piece of data if me know it's postion in the array(indexing) in constant time
-           , but if we have to search for an item or add an item not in the last position of the array... we would have to at worst case, move or search every item.`,
+           Similarly, you can add data to the end of the array(computers know the length) in constant time, we can find a piece of data if we know it's postion in the array(indexing) in constant time
+           , but if we have to search for an item or add an item not in the last position of the array... we would have to, at worst case, move or search every item.`,
           what: 'An array is a <strong>fixed-size</strong>, ordered collection of elements stored in <strong>contiguous</strong> (back-to-back) memory locations, where every element is the same type and size. Because the layout is uniform, the CPU can calculate the address of any element directly: <strong>base_address + (index × element_size)</strong>. No searching, no traversal — just arithmetic. This makes index-based access <strong>O(1)</strong> and is the defining property that all other data structures are measured against.',
           why: 'When you need instant access to any element by position, nothing beats an array. Because elements sit side by side in memory, the CPU can jump directly to any index in <strong>constant time</strong> — no searching required.',
           how: `In other languages, you may have to declare a block of memory large enough to hold N elements of the same type. However, in python we do not have to declare types or sizes, that
@@ -1491,6 +2738,10 @@ nums.append(6)
 
 # O(n) search
 print(3 in nums)        # True`,
+          keyInsight: {
+            heading: 'Index access is O(1) — the CPU calculates the address directly. But insert or delete in the middle is O(n), because every element after the target has to shift.',
+            body: 'An array is a contiguous block of memory. Finding the element at index i costs one multiply and one add — no search involved. The tradeoff: inserting or deleting anywhere except the end means shifting every subsequent element. Append is <strong>O(1) amortized</strong> — Python over-allocates capacity and only resizes occasionally, spreading the cost across many appends. When a problem says "by index" or "contiguous subarray," you are working with an array.',
+          },
           connections: {
             prereqs: ['Intro to Data Structures'],
             unlocks: ['Two Pointers', 'Sliding Window', 'Binary Search', 'Sorting'],
@@ -1561,10 +2812,134 @@ sub = nums[1:3]         # O(k) where k = slice length
 # For numerical work, prefer numpy:
 # import numpy as np
 # arr = np.array([1, 2, 3])  # raw C ints, cache-friendly`,
+          keyInsight: {
+            heading: "Python's list is a dynamic array — <strong>append is O(1) amortized</strong>, but pop(0) is O(n).",
+            body: 'The list over-allocates capacity and resizes (~12.5×) when full, making append amortized O(1). insert(i, x) shifts all elements right — O(n). pop() from the end is O(1); pop(0) shifts every element left — O(n). Use <strong>collections.deque</strong> for fast removal from both ends. In interviews, list is your array — you almost never need anything else.',
+          },
           connections: {
             prereqs: ['Arrays', 'Intro to Data Structures'],
             unlocks: ['Linked Lists', 'Stacks & Queues'],
             related: ['Arrays', 'Linked Lists', 'Stacks & Queues'],
+          },
+        },
+      },
+      {
+        id: 'strings',
+        label: 'Strings',
+        content: {
+          madeSimple: {
+            visualString: 'hello',
+            body: 'A string is a sequence of characters in a fixed order. Python assigns each character a position number starting at 0 — <strong>s[0]</strong> is the first character, <strong>s[1]</strong> is the second, and so on. You can also count from the end using negative indices: <strong>s[-1]</strong> is always the last character, <strong>s[-2]</strong> is second to last. The critical rule: strings are <strong>immutable</strong>. You can read any character, but you cannot change one in place — every apparent modification returns a brand new string.',
+            steps: [
+              { expr: "s[1]",       result: "'e'",     note: 'index from the left — 0 is first',                   isError: false },
+              { expr: "s[-1]",      result: "'o'",     note: 'negative index — -1 is always last',                 isError: false },
+              { expr: "s[1:4]",     result: "'ell'",   note: 'slice: start at 1, stop before 4',                  isError: false },
+              { expr: "s[::-1]",    result: "'olleh'", note: 'reverse: step -1 walks backward through every char', isError: false },
+              { expr: "s[0] = 'H'", result: 'TypeError', note: 'immutable — you cannot assign to a position',     isError: true  },
+            ],
+          },
+          what: 'A string is an <strong>immutable</strong> sequence of characters stored in contiguous memory, indexed from 0. In Python there is no separate character type — a single character is just a length-1 string. Strings are <strong>hashable</strong> because they are immutable, which means they can serve as dictionary keys. Every operation that appears to "modify" a string — concatenation, replace, slice — actually creates a new string and leaves the original untouched.',
+          why: 'Immutability has a cost and a payoff. The cost: you cannot edit in place, so naive string building inside a loop is <strong>O(n²)</strong>. The payoff: strings can be used as hash map keys, shared between threads without locks, and cached by the interpreter. Knowing the immutability rule tells you when to reach for <code>\'\'<strong>.join()</strong></code> instead of <code>+=</code> — one of the most common Python performance mistakes.',
+          how: 'Index access is <strong>O(1)</strong>. Slicing is <strong>O(k)</strong> where k is the slice length — it copies characters into a new string. Concatenation with <code>+</code> is <strong>O(n + m)</strong> — also a copy. To build a string from many pieces, collect them in a list and call <code>\'\'<strong>.join(list)</strong></code> at the end — that is one pass, <strong>O(n) total</strong> instead of O(n²).',
+          memory: {
+            overview: 'CPython stores strings as a compact, fixed array of Unicode code points. Because strings are immutable, CPython can <strong>intern</strong> short strings — reuse the same object when content is identical — which saves memory for repeated values like dictionary keys.',
+            layout: 'Contiguous array of Unicode code points. CPython uses different internal encodings (Latin-1, UCS-2, or UCS-4) depending on the highest code point in the string, keeping memory proportional to what is actually needed.',
+            implication: 'Index access is <strong>O(1)</strong> — same arithmetic as arrays. Slicing and concatenation are <strong>O(k)</strong> and <strong>O(n + m)</strong> because they produce new objects. Mutation in place is not possible — if you need to make many character-level changes, work with a list of characters and join at the end.',
+          },
+          complexity: {
+            access: 'O(1)',
+            search: 'O(n)',
+            insert: 'O(n + m) — new string',
+            delete: 'O(n) — new string',
+          },
+          pros: [
+            'O(1) index access — same as arrays, same address arithmetic.',
+            'Hashable — strings work as dict keys and set elements because they cannot change.',
+            'CPython interns common strings — repeated identical strings often share one object in memory.',
+          ],
+          cons: [
+            'Immutable — every "modification" allocates a new string. Plan for it.',
+            'Naive concatenation with + in a loop is O(n²) — use \'\'.join() instead.',
+            'For high-frequency character-level mutation, convert to a list of chars first.',
+          ],
+          keyProperties: [
+            'Immutable — cannot be changed in place. s[0] = \'H\' raises TypeError.',
+            '0-indexed — s[0] is the first character, s[-1] is the last.',
+            'Slicing creates a new string — s[1:3] is O(k), not O(1).',
+            'Concatenation creates a new string — \'\'.join(parts) is O(n) total vs O(n²) for repeated +.',
+            'Hashable — usable as dict keys and set elements precisely because they cannot change.',
+          ],
+          useCases: [
+            'Sliding window — longest substring without repeating characters, minimum window substring.',
+            'Two pointers — palindrome checks, reversals, comparing from both ends simultaneously.',
+            'Anagram and frequency problems — count characters with a dict or Counter, compare distributions.',
+            'String building — parsing, formatting output; always use \'\'.join() for multi-part assembly.',
+          ],
+          code: `s = "hello"
+
+# O(1) access
+print(s[1])          # 'e'
+print(s[-1])         # 'o'
+
+# O(k) slice — creates a new string
+print(s[1:4])        # 'ell'
+print(s[::-1])       # 'olleh' — reverse
+
+# Immutability — this raises TypeError:
+# s[0] = 'H'
+
+# O(n²) — don't do this in a loop
+result = ""
+for c in s:
+    result += c      # new string every iteration
+
+# O(n) — the right way
+result = "".join(c for c in s)
+
+# Useful string methods (all O(n))
+s.split(",")         # split into list
+",".join(["a","b"])  # join list into string
+s.find("ll")         # first index, or -1
+s.count("l")         # count occurrences
+s.replace("l","r")   # new string, no mutation`,
+          keyInsight: {
+            heading: 'Strings are immutable — every concatenation creates a new string, and <strong>+= in a loop is O(n²)</strong>.',
+            body: "Index access is O(1) and slicing is O(k), but concatenation with + copies both strings into a new one. Building a string with += across n iterations runs n copies of growing strings — that's O(n²). Instead, collect pieces in a list and call <strong>''.join()</strong> at the end: one pass, O(n) total. Two pointers and sliding window cover the dominant string problem patterns.",
+          },
+          connections: {
+            prereqs: ['Arrays', 'Lists (Python)'],
+            unlocks: ['Two Pointers', 'Sliding Window', 'Hash Maps & Sets'],
+            related: ['Arrays', 'Hash Maps & Sets'],
+          },
+        },
+      },
+      {
+        id: 'linked-intro',
+        label: 'Intro to Linked DSA',
+        content: {
+          analogy: `Arrays are apartment buildings — numbered rooms, all in a row. Linked lists are more like a scavenger hunt: each clue tells you where to find the next one, but there's no shortcut to clue 47. You have to follow the chain.`,
+          what: `The <strong>Linked cluster</strong> is built on the pointer. Each node holds a value and a reference to the next node. There are no indices — to reach node k you must traverse k steps from the head. This restriction is also the freedom: nodes can be rearranged without copying data.`,
+          why: `This structure creates a specific set of natural operations. Cycle detection emerges when two pointers traverse the same chain at different speeds — they must eventually meet if the chain loops. Reversal is simply rewiring which direction the pointers face, without touching values. Merging two sorted lists means advancing whichever pointer holds the smaller value. The pointer is the primitive; these patterns are its natural consequences.`,
+          isClusterIntro: true,
+          how: `Draw the pointer diagram before writing any code. Most linked list bugs come from rewiring pointers in the wrong order — you lose your reference forward before you've saved it. The safe rule: save next before you redirect. For fast/slow problems, the two pointers always start at the head; slow moves one step, fast moves two; they meet if a cycle exists, fast hits null if there isn't one.`,
+          keyProperties: [
+            'No random access — reaching node k costs O(k), not O(1)',
+            'Insertion and deletion at a known pointer: O(1) — just rewire two pointers, no shifting',
+            'Fast/slow pointers converge in O(n) and use O(1) extra space — no visited set needed',
+            'Reversal in-place: three pointers (prev, curr, next) — O(n) time, O(1) space',
+            'Doubly linked lists add a prev pointer, enabling O(1) deletion from both ends',
+          ],
+          complexity: { time: 'O(n) traversal, O(1) insert/delete at known position', space: 'O(1) extra for most pointer techniques' },
+          useCases: [
+            'Detecting whether a linked list contains a cycle (Fast & Slow Pointers)',
+            'Finding the middle of a list without knowing its length (Fast & Slow)',
+            'Reversing a list or a sublist in-place (Reversal Patterns)',
+            'LRU cache implementation (doubly linked list + hash map)',
+          ],
+          connections: {
+            prereqs: ['Intro to Data Structures'],
+            unlocks: ['Linked Lists', 'Fast & Slow Pointers', 'Reversal Patterns'],
+            related: ['Intro to Linear', 'Intro to Recursive'],
           },
         },
       },
@@ -1632,6 +3007,10 @@ head.next = new_node          # 1 -> 99 -> 2 -> 3
 
 # Delete node after head: O(1) at known node
 head.next = head.next.next    # 1 -> 2 -> 3`,
+          keyInsight: {
+            heading: 'No index access — traversal is always O(n). But insert and delete at a <strong>known node</strong> are O(1).',
+            body: "Unlike arrays, a linked list stores no position information. Getting to node i means walking from the head — that's the fundamental cost. The payoff: once you have a pointer to a node, redirecting two pointers is all insert or delete requires. Most problems only need 1–3 pointers (curr, prev, next). Always draw the before and after state before writing pointer code — order of reassignment matters.",
+          },
           connections: {
             prereqs: ['Arrays', 'Intro to Data Structures'],
             unlocks: ['Stacks & Queues', 'Fast & Slow Pointers'],
@@ -1693,10 +3072,45 @@ front = queue.popleft()  # dequeue O(1): 1
 print(queue)             # deque([2, 3])
 
 # BAD: list.pop(0) is O(n) — never use for queues`,
+          keyInsight: {
+            heading: 'Stacks power DFS. Queues power BFS. The data structure choice determines the traversal order.',
+            body: 'Stack (LIFO): Python list with append() / pop(), both O(1). Queue (FIFO): <strong>collections.deque</strong> with append() / popleft(), both O(1). Never use a list as a queue — pop(0) is O(n). When a problem asks for level-by-level traversal or shortest path in steps, reach for a queue. For depth-first exploration or undo/redo patterns, reach for a stack. A monotonic stack is the same structure with an ordering invariant maintained on every push.',
+          },
           connections: {
             prereqs: ['Arrays', 'Linked Lists'],
             unlocks: ['BFS & DFS', 'Monotonic Stack', 'Topological Sort'],
             related: ['Arrays', 'Linked Lists', 'BFS & DFS'],
+          },
+        },
+      },
+      {
+        id: 'lookup-intro',
+        label: 'Intro to Lookup',
+        content: {
+          analogy: `Searching a list for a value is like scanning every seat in a stadium. A hash map is like having a seating chart — you look up the name, get the section number, go straight there. One step, every time, regardless of stadium size.`,
+          what: `The <strong>Lookup cluster</strong> is built on the hash function. A hash map converts any key into a direct storage address, giving <strong>O(1)</strong> average-case lookup, insert, and delete. You trade a fixed amount of memory for the ability to answer "is this here?" in constant time.`,
+          why: `"Have we seen this value before?" — answered in O(1) instead of O(n). That single capability unlocks a wide class of problems. Two-sum becomes one pass: store each value you've seen, check if the complement exists. Frequency counting becomes a tally in one loop. Interval overlap detection works by sorting and scanning, often with a hash set for O(1) membership checks. The pattern is always the same: precompute into a structure that makes future lookups trivial.`,
+          isClusterIntro: true,
+          how: `When you catch yourself writing a nested loop to check "does this value exist somewhere earlier?" — that's your signal. Store each element in a hash map on the way through. For two-sum: as you scan, check if (target − current) is already in the map, then add current to the map. One pass, O(n). For intervals: sort by start time first, then sweep with a running merge endpoint. The sort brings order; the sweep does the work.`,
+          keyProperties: [
+            'O(1) average-case lookup, insert, and delete — this is what makes one-pass solutions possible',
+            'The classic pattern: "for each element, check if complement exists, then add element"',
+            'Hash sets for membership tests; hash maps when you need to store a value alongside the key',
+            'defaultdict(int) in Python auto-initializes missing keys — cleaner frequency counting',
+            'Hash maps are the cache for DP — memoization is just "hash map from inputs to result"',
+          ],
+          complexity: { time: 'O(1) average per operation', space: 'O(n) for the map' },
+          useCases: [
+            'Two-sum and complement-finding (seen before? O(1))',
+            'Frequency counting and anagram detection',
+            'Duplicate detection in O(n) instead of O(n²)',
+            'Merging and detecting overlapping intervals',
+            'Caching / memoization (DP cache is a hash map)',
+          ],
+          connections: {
+            prereqs: ['Intro to Data Structures', 'Intro to Linear'],
+            unlocks: ['Hash Maps & Sets', 'Interval Problems'],
+            related: ['Intro to Optimization'],
           },
         },
       },
@@ -1758,6 +3172,10 @@ def two_sum(nums, target):
         if complement in seen:
             return [seen[complement], i]
         seen[n] = i`,
+          keyInsight: {
+            heading: '"Have I seen this before?" — answered in <strong>O(1)</strong>. That single capability turns O(n²) problems into O(n).',
+            body: "Average O(1) insert, lookup, and delete. Two Sum is the canonical pattern: store each value you've seen, check if target - current exists. <strong>Counter(iterable)</strong> gives frequency in one line. <strong>defaultdict(int)</strong> accumulates without key-existence checks. Python dict preserves insertion order (3.7+). set is a hash map with no values — use it for fast membership testing.",
+          },
           connections: {
             prereqs: ['Arrays', 'Intro to Data Structures'],
             unlocks: ['Sliding Window', 'Two Pointers', 'Dynamic Programming'],
@@ -1831,10 +3249,45 @@ def level_order(root):
         print(node.val)
         if node.left:  q.append(node.left)
         if node.right: q.append(node.right)`,
+          keyInsight: {
+            heading: 'The BST invariant — left &lt; node &lt; right — enables O(log n) search, but only when the tree stays balanced.',
+            body: 'In a balanced BST, height is O(log n) — each comparison halves the remaining search space. An unbalanced BST degenerates into a linked list: O(n) height, O(n) search. Inorder traversal (left → root → right) visits BST nodes in sorted order. Most tree problems follow the same recursive pattern: solve for the left subtree, solve for the right, combine at the root.',
+          },
           connections: {
             prereqs: ['Arrays', 'Linked Lists', 'Recursion & D&C'],
             unlocks: ['Heaps & Priority Queues', 'Graphs', 'BFS & DFS', 'Dynamic Programming'],
             related: ['Graphs', 'Heaps & Priority Queues', 'BFS & DFS'],
+          },
+        },
+      },
+      {
+        id: 'ordered-intro',
+        label: 'Intro to Ordered',
+        content: {
+          analogy: `An emergency room doesn't treat patients in the order they arrived — it treats the most critical case first. A heap works the same way: it always serves the most extreme element next, and it does so efficiently, without keeping everything in sorted order.`,
+          what: `The <strong>Ordered cluster</strong> is built on partial order. A <strong>heap</strong> is a tree with one rule: every parent is smaller (min-heap) or larger (max-heap) than its children. That single constraint is enough to give you the minimum (or maximum) in <strong>O(1)</strong> and replace it in <strong>O(log n)</strong> — without ever sorting the rest.`,
+          why: `Full sorting costs O(n log n). A heap gives you the best element in O(1) and the next best in O(log n). For top-K problems, you only need a heap of size K — not a sorted array of size n. As you scan elements, keep only the K largest in the heap. Total cost: O(n log K), often much cheaper than O(n log n). The insight is deferred commitment: don't sort what you don't need to sort.`,
+          isClusterIntro: true,
+          how: `Reach for a heap when a problem asks you to repeatedly find the minimum or maximum of a changing set. For top-K largest: maintain a min-heap of size K. As you scan each element, if it's larger than the heap's minimum, pop the minimum and push the new element. At the end, the heap contains exactly the K largest. Python's heapq is a min-heap by default — negate values for a max-heap.`,
+          keyProperties: [
+            'Min-heap invariant: every parent ≤ its children — the smallest element is always at the root',
+            'heappush and heappop both run in O(log n) — the heap stays valid after each operation',
+            'heapify() converts a list to a heap in O(n) — faster than n individual pushes',
+            'Top-K with a size-K heap costs O(n log K), often much cheaper than O(n log n) full sort',
+            'Two-heap pattern for running median: max-heap for lower half, min-heap for upper half',
+          ],
+          complexity: { time: 'O(log n) push/pop, O(1) peek at min/max', space: 'O(n) for the heap' },
+          useCases: [
+            'Finding the K largest or K smallest elements in a stream',
+            'Scheduling: always process the highest-priority task next',
+            'Merging K sorted lists efficiently (K-way merge)',
+            'Median of a data stream (two heaps: one min, one max)',
+            "Dijkstra's shortest path (BFS with a priority queue instead of a regular queue)",
+          ],
+          connections: {
+            prereqs: ['Intro to Data Structures', 'Intro to Recursive'],
+            unlocks: ['Heaps & Priority Queues', 'Top-K Patterns'],
+            related: ['Intro to Graph'],
           },
         },
       },
@@ -1898,10 +3351,115 @@ print(-heapq.heappop(max_heap))  # 5
 # Top K smallest
 def top_k_smallest(nums, k):
     return heapq.nsmallest(k, nums)`,
+          keyInsight: {
+            heading: 'A heap gives you the minimum (or maximum) in <strong>O(1)</strong> without sorting everything else.',
+            body: "A heap is not a sorted array — it only guarantees parent ≤ children (min-heap). Elements at the same level have no guaranteed order. Push and pop are O(log n). Peek is <strong>O(1)</strong>. heapify() builds a heap from an existing list in O(n), not O(n log n). Python's heapq is a min-heap — negate values to simulate a max-heap. Use a heap when you need repeated access to the current minimum or maximum of a changing dataset.",
+          },
           connections: {
             prereqs: ['Trees', 'Arrays'],
             unlocks: ['Topological Sort', 'Greedy Algorithms'],
             related: ['Trees', 'Sorting', 'Greedy Algorithms'],
+          },
+        },
+      },
+      {
+        id: 'top-k',
+        label: 'Top-K Patterns',
+        content: {
+          analogy: 'You want the ten best restaurants in your city. You do not need a complete ranked list of every place — you just need the top ten. A min-heap of size 10 does exactly this: scan each restaurant, and if it scores higher than the worst in your current top-10, swap it in. The heap stays at size 10 the whole time.',
+          what: '<strong>Top-K problems</strong> ask for the K largest, K smallest, or K most frequent elements. A <strong>min-heap of size K</strong> answers "K largest" in <strong>O(n log K)</strong> — far better than sorting everything at O(n log n). At each element, if it beats the heap root (the current worst of the top K), pop the root and push the new element. The heap always holds the K best candidates seen so far.',
+          why: 'Sorting n elements costs O(n log n). When K is much smaller than n, a fixed-size heap reduces this to <strong>O(n log K)</strong> — you only maintain K elements in the heap instead of all n. For top-K frequency problems, a hash map + heap combination gives O(n log K), which beats sorting the frequency table entirely.',
+          how: 'For <strong>K largest</strong>: maintain a min-heap of size K. For each element, push it; if heap size exceeds K, pop the minimum. At the end, the heap contains the K largest elements. For <strong>K most frequent</strong>: count frequencies with a hash map, then run the same heap strategy on (count, element) pairs.',
+          complexity: { time: 'O(n log K)', space: 'O(K)' },
+          signals: [
+            '"Find the K largest / K smallest elements"',
+            '"K most frequent elements"',
+            '"Kth largest element in a stream"',
+            '"Top K frequent words"',
+            'Any problem where you need to maintain a running best-K without full sorting',
+          ],
+          keyProperties: [
+            'Min-heap of size K finds K largest — the root is the current "worst of the best"',
+            'Max-heap of size K finds K smallest — the root is the current "best of the worst"',
+            'Python heapq is a min-heap; negate values to simulate max-heap',
+            'heapq.nlargest(k, iterable) and nsmallest are O(n log K) — prefer them for one-shot queries',
+          ],
+          useCases: [
+            'Kth Largest Element in an Array',
+            'K Most Frequent Elements',
+            'Top K Frequent Words',
+            'Kth Largest Element in a Stream — maintain a running heap',
+            'Find K Closest Points to Origin',
+          ],
+          code: `import heapq
+from collections import Counter
+
+# K largest elements — O(n log K)
+def k_largest(nums, k):
+    heap = []
+    for n in nums:
+        heapq.heappush(heap, n)
+        if len(heap) > k:
+            heapq.heappop(heap)   # drop the smallest
+    return heap   # contains K largest
+
+# K most frequent elements — O(n log K)
+def top_k_frequent(nums, k):
+    count = Counter(nums)
+    return heapq.nlargest(k, count, key=count.get)
+
+# Kth largest in a stream — maintain a size-K min-heap
+class KthLargest:
+    def __init__(self, k, nums):
+        self.k = k
+        self.heap = []
+        for n in nums:
+            self.add(n)
+
+    def add(self, val):
+        heapq.heappush(self.heap, val)
+        if len(self.heap) > self.k:
+            heapq.heappop(self.heap)
+        return self.heap[0]   # Kth largest is the heap min`,
+          keyInsight: {
+            heading: 'A min-heap of size K finds the K largest elements in <strong>O(n log K)</strong> — no need to sort the full array.',
+            body: "Push each element; if the heap exceeds K, pop the root (the current weakest candidate). The root is always the smallest of the top K seen so far. Sorting n elements costs O(n log n); a fixed-size heap reduces that to O(n log K) — a major win when K ≪ n. For K most frequent: <strong>Counter + heapq.nlargest(k, count, key=count.get)</strong> is the one-liner. Know it cold.",
+          },
+          connections: {
+            prereqs: ['Heaps & Priority Queues', 'Sorting', 'Hash Maps & Sets'],
+            unlocks: [],
+            related: ['Heaps & Priority Queues', 'Sorting', 'K-way Merge'],
+          },
+        },
+      },
+      {
+        id: 'graph-intro',
+        label: 'Intro to Graph',
+        content: {
+          analogy: `Cities and roads. Each city is a node. Each road is an edge. Asking "is there a route from A to B?" is a graph problem. Asking "what's the shortest route?" is a graph problem. Asking "if this road closes, does the network stay connected?" is a graph problem. Most relationship problems, once you draw them, are graphs.`,
+          what: `The <strong>Graph cluster</strong> is built on the adjacency relationship. Unlike arrays (fixed positions) or trees (hierarchical parents), a graph allows any node to connect to any other node. Structure emerges from relationships, not from fixed coordinates or ranks.`,
+          why: `Four techniques, one underlying question: which things are connected, and how? <strong>BFS</strong> finds shortest paths in unweighted graphs — the same queue logic as tree level-order traversal, now on a general structure. <strong>Topological sort</strong> orders nodes with dependencies — the moment a problem has "A must come before B," it's a graph. <strong>Union-Find</strong> determines connected components without traversal at all, in near-O(1) per query. Together, these cover a huge class of problems that look unrelated on the surface.`,
+          isClusterIntro: true,
+          how: `Always start by representing the graph — usually an adjacency list (dict of lists in Python). Then ask: directed or undirected? Weighted or unweighted? Cyclic or acyclic? The answers narrow your tool selection fast. BFS for shortest path (unweighted). DFS for all paths or cycle detection. Topological sort for dependency ordering. Union-Find for connected components without repeated traversal. And always: maintain a visited set to avoid infinite loops on graphs with cycles.`,
+          keyProperties: [
+            'BFS uses a queue — processes nodes level by level, guarantees shortest path on unweighted graphs',
+            'DFS uses a stack (or recursion) — explores as deep as possible before backtracking',
+            'Adjacency list: O(V + E) space. Adjacency matrix: O(V²) — use list unless edges are dense',
+            'Topological sort requires a DAG (directed acyclic graph) — any cycle makes it impossible',
+            'Union-Find answers "are these connected?" in near-O(1) without traversal',
+          ],
+          complexity: { time: 'O(V + E) for BFS and DFS', space: 'O(V + E) for adjacency list' },
+          useCases: [
+            'Shortest path in an unweighted graph (BFS)',
+            'All paths, cycle detection, connected components (DFS)',
+            'Task scheduling with dependencies (Topological Sort)',
+            'Grouping nodes into connected components (Union-Find)',
+            'Course prerequisites, build systems, package managers (Topological Sort)',
+          ],
+          connections: {
+            prereqs: ['Intro to Recursive', 'Intro to Linear'],
+            unlocks: ['Graphs', 'Topological Sort', 'Union-Find'],
+            related: ['Intro to Ordered'],
           },
         },
       },
@@ -1970,6 +3528,10 @@ def dfs(graph, node, visited=None):
     for neighbor in graph[node]:
         if neighbor not in visited:
             dfs(graph, neighbor, visited)`,
+          keyInsight: {
+            heading: 'Always use a visited set — without it, you loop forever on graphs with cycles.',
+            body: 'Store graphs as <strong>adjacency lists</strong> — dicts in Python. Adjacency matrices use O(V²) space and are only worth it for dense graphs. BFS finds shortest paths in unweighted graphs (queue, level by level). DFS handles cycle detection, connected components, and topological sort (stack or recursion). Grid problems are just graphs: each cell is a node with up to 4 neighbors.',
+          },
           connections: {
             prereqs: ['Trees', 'BFS & DFS', 'Recursion & D&C'],
             unlocks: ['Topological Sort', 'Union-Find'],
@@ -2065,10 +3627,44 @@ def lower_bound(nums, target):
         else:
             right = mid
     return left`,
+          keyInsight: {
+            heading: 'Binary search works on any monotonic predicate — not just sorted arrays.',
+            body: "The classic form: lo, hi = 0, len(nums)-1; mid = (lo + hi) // 2. Use lo &lt;= hi for an exact match; lo &lt; hi for finding a boundary. Off-by-one in the update condition is the most common interview bug — settle on one template and know it cold. The deeper insight: any problem where you can ask 'is X feasible?' with a yes/no answer that's monotonic (all-false then all-true) can be solved with binary search over X values.",
+          },
           connections: {
             prereqs: ['Arrays', 'Intro to Algorithms'],
             unlocks: ['Sorting', 'Two Pointers'],
             related: ['Two Pointers', 'Sorting', 'Sliding Window'],
+          },
+        },
+      },
+      {
+        id: 'sorted-search-intro',
+        label: 'Intro to Sorted Search',
+        content: {
+          analogy: `You're looking for a name in a phone book. You open to the middle — too late in the alphabet, so you throw away the second half entirely. Middle of what's left — too early, throw away the first half. A few more cuts and you have the name. You didn't read the book; you exploited the fact that it was sorted.`,
+          what: `The <strong>Sorted Search cluster</strong> is built on monotonicity — the property that if you can determine which half of the search space contains the answer, you can discard the other half permanently. Each cut halves the problem, giving <strong>O(log n)</strong> instead of O(n).`,
+          why: `Classic binary search applies this to a sorted array. The pattern generalizes further: "binary search on the answer space" works whenever you can frame any candidate answer as a yes/no question with monotonic structure. "Can k workers finish in d days?" — binary search over d. "What's the minimum capacity needed?" — binary search over capacity. The sorted array is one special case of a much broader idea. Once you recognize the yes/no monotonic structure, a whole class of optimization problems reveals itself as a search problem.`,
+          isClusterIntro: true,
+          how: `Two tests before applying binary search: (1) is the search space sorted or monotone? (2) can I determine which half contains the answer in O(1)? If both yes — binary search. For "search on answer space," the search space is a range of possible answers, not an array. Write a helper function: given a candidate value, can we verify it's feasible in O(n)? If that function is monotone (all false then all true), binary search over the candidate values.`,
+          keyProperties: [
+            'Binary search requires sorted input or a monotone feasibility function — not just any array',
+            'Each comparison eliminates half the remaining candidates — O(log n) total',
+            '"First true" binary search: lo and hi converge to the boundary where condition flips',
+            'Off-by-one errors are the #1 failure mode — always check lo=3, hi=4 edge cases',
+            '"Binary search on answer" works whenever feasibility is monotone: all-false then all-true',
+          ],
+          complexity: { time: 'O(log n) search, O(n log n) for sorting', space: 'O(1)' },
+          useCases: [
+            'Finding a value in a sorted array in O(log n) (Binary Search)',
+            'Finding the first position where a condition becomes true (Binary Search)',
+            'Minimizing or maximizing a value subject to a monotonic feasibility test',
+            'Sorting as preprocessing before other techniques',
+          ],
+          connections: {
+            prereqs: ['Intro to Linear', 'Intro to Data Structures'],
+            unlocks: ['Sorting', 'Binary Search', 'Search on Answer Space'],
+            related: ['Intro to Optimization'],
           },
         },
       },
@@ -2122,10 +3718,45 @@ def merge(left, right):
         else:
             result.append(right[j]); j += 1
     return result + left[i:] + right[j:]`,
+          keyInsight: {
+            heading: 'Sorting is preprocessing — it unlocks binary search, two pointers, interval merging, and greedy algorithms.',
+            body: "Python's sorted() and list.sort() use <strong>Timsort</strong>: O(n log n), stable, O(n) space. Use these in interviews — never implement your own. No comparison sort can beat O(n log n) worst case; it's a mathematical lower bound. sorted(arr, key=lambda x: x[1]) sorts by any attribute. Reverse with reverse=True.",
+          },
           connections: {
             prereqs: ['Arrays', 'Recursion & D&C'],
             unlocks: ['Binary Search', 'Two Pointers', 'Merge Intervals', 'Greedy Algorithms'],
             related: ['Binary Search', 'Two Pointers', 'Merge Intervals'],
+          },
+        },
+      },
+      {
+        id: 'recursive-intro',
+        label: 'Intro to Recursive',
+        content: {
+          analogy: `Imagine you want to know how many people are ahead of you in a line. You could count from the front — or you could just ask the person in front of you. They ask the person in front of them. The question propagates forward, and the answer comes back: "three people ahead of me, so four ahead of you." That's recursion. The problem asks itself.`,
+          what: `The <strong>Recursive cluster</strong> is built on the call stack. Every recursive algorithm does three things: makes a choice, delegates the rest of the work to itself on a smaller input, then combines the result on the way back up. This structure — push, recurse, unwind — is the heartbeat of trees, DFS, backtracking, and divide & conquer.`,
+          why: `A binary tree is this structure materialized in data: each node has two recursive sub-problems. DFS walks that structure, one choice at a time. Backtracking is DFS with a pruning step — when a partial path is already invalid, undo the last choice and try the next one. Divide & conquer splits the input in half, recurses on both, and merges the results. Same mechanical heartbeat, different decisions about what "try next" and "combine results" mean. Once you can feel the call stack unwind in your head, all of these click into place.`,
+          isClusterIntro: true,
+          how: `Three steps for any recursive function: (1) define the base case — what's the answer when input is smallest? (2) define the recursive step — how does this problem reduce to the same problem on smaller input? (3) trust the call — assume the recursive call returns the right answer, and build on it. Don't trace the whole recursion in your head. Write base case, write recursive step, trust the function. For backtracking: make a choice, recurse, undo the choice. Those three lines, repeated, explore the entire decision tree.`,
+          keyProperties: [
+            'Every recursive call adds a stack frame — deep recursion without a base case causes stack overflow',
+            'The base case is not optional — it is what stops the recursion',
+            'Memoization converts any recursive solution into DP: cache the result of each unique call',
+            'Backtracking = DFS on a decision tree, with pruning to skip dead branches early',
+            'Divide & conquer: split input in half, recurse on both halves, merge results on the way back up',
+          ],
+          complexity: { time: 'O(n) to O(2ⁿ) depending on branching factor', space: 'O(depth) call stack, O(n) for memoized DP' },
+          useCases: [
+            'Tree traversal: inorder, preorder, postorder, level-order',
+            'Finding all paths, subsets, or permutations (Backtracking)',
+            'Shortest path, connected components in graphs (BFS/DFS)',
+            'Sorting via divide & conquer (merge sort, quicksort)',
+            'Recursive structure is the base for memoized DP',
+          ],
+          connections: {
+            prereqs: ['Intro to Linked', 'Intro to Linear'],
+            unlocks: ['Recursion', 'Trees', 'BFS & DFS', 'Backtracking', 'Greedy'],
+            related: ['Intro to Graph', 'Intro to Optimization'],
           },
         },
       },
@@ -2176,10 +3807,45 @@ def binary_search(nums, target, left, right):
         return binary_search(nums, target, mid + 1, right)
     else:
         return binary_search(nums, target, left, mid - 1)`,
+          keyInsight: {
+            heading: "Define the base case, define the recursive step, and trust the call — don't trace the full recursion in your head.",
+            body: 'Every recursive function does two things: returns a known answer for the smallest input (base case), and reduces any larger input to the same function on something smaller. Assume the recursive call returns the right answer — your job is to combine results. Python defaults to a recursion depth of 1000; for deep recursion, convert to iterative with an explicit stack. Memoize by caching each subproblem result the first time — that\'s DP.',
+          },
           connections: {
             prereqs: ['Arrays', 'Intro to Algorithms'],
             unlocks: ['Dynamic Programming', 'Backtracking', 'Trees', 'BFS & DFS'],
             related: ['Dynamic Programming', 'Backtracking', 'Trees'],
+          },
+        },
+      },
+      {
+        id: 'optimization-intro',
+        label: 'Intro to Optimization',
+        content: {
+          analogy: `Fibonacci computed naively recalculates fib(2) hundreds of times just to compute fib(10). A child who's bad at math but has a notepad beats a genius without one: write down fib(2) the first time, look it up every time after. That notepad is the DP cache.`,
+          what: `The <strong>Optimization cluster</strong> is built on overlapping subproblems. A problem has this property when its solution can be composed from solutions to smaller versions of the same problem — and those smaller versions appear repeatedly. Dynamic programming solves each subproblem once, stores the result, and reuses it rather than recomputing.`,
+          why: `The progression from 1D DP to 2D DP to interval DP to knapsack is not a collection of unrelated tricks. It's a progression in the shape of the state space. 1D DP tracks one variable (position, index). 2D DP tracks two (two strings, a grid). Interval DP asks about every subarray of every length. Knapsack adds a capacity constraint. The process is always the same: define what the subproblem is, write the recurrence that expresses the larger problem in terms of smaller ones, fill the table bottom-up (or recurse top-down with memoization). What changes is only how many dimensions of state the problem forces you to track.`,
+          isClusterIntro: true,
+          how: `The DP thought process: (1) define what dp[i] means — precisely, in one sentence; (2) write the recurrence — how does dp[i] depend on previous values? (3) identify base cases; (4) fill the table in dependency order. If you can't define dp[i] in one sentence, you haven't found the right state yet. When stuck, write the brute-force recursive solution first, then add a memo dictionary. That's valid DP and often easier to verify than jumping straight to bottom-up.`,
+          keyProperties: [
+            'Two requirements: optimal substructure + overlapping subproblems — both must hold for DP to apply',
+            'Top-down (memoization) = recursive function + cache. Bottom-up (tabulation) = loop + table.',
+            'Space optimization: if dp[i] only needs dp[i-1], you can reduce to two variables instead of an array',
+            '1D DP: one dimension of state. 2D DP: two (grid, two sequences). Interval: all subranges. Knapsack: adds a capacity.',
+            'State definition is everything — if the recurrence is hard, the state is usually wrong',
+          ],
+          complexity: { time: 'O(states × transitions)', space: 'O(states), often reducible to O(1 row)' },
+          useCases: [
+            'Longest common subsequence, edit distance (2D DP on two strings)',
+            'Minimum path through a grid (2D DP)',
+            'Longest palindromic subsequence, matrix chain (Interval DP)',
+            'Subset sum, 0/1 knapsack, coin change (Knapsack Variants)',
+            'Any problem where brute-force recursion repeats the same sub-call',
+          ],
+          connections: {
+            prereqs: ['Intro to Recursive', 'Intro to Lookup'],
+            unlocks: ['Dynamic Programming', '2D DP', 'Interval DP', 'Knapsack Variants'],
+            related: ['Intro to Sorted Search'],
           },
         },
       },
@@ -2230,10 +3896,216 @@ def coin_change(coins, amount):
             if coin <= i:
                 dp[i] = min(dp[i], dp[i - coin] + 1)
     return dp[amount] if dp[amount] != float('inf') else -1`,
+          keyInsight: {
+            heading: 'DP is recursion + memoization. If your recursive solution recomputes the same subproblems, DP fixes it.',
+            body: 'Define the state before writing any code: what does dp[i] represent? The recurrence follows directly from the definition. <strong>Top-down</strong>: memoized recursion, often easier to write. <strong>Bottom-up</strong>: iterative table, often faster in practice. Same complexity, different code shape. If a greedy solution gets the wrong answer, DP is the fix — DP considers all subproblems; greedy commits to one and never looks back.',
+          },
           connections: {
             prereqs: ['Recursion & D&C', 'Arrays', 'Hash Maps & Sets'],
-            unlocks: ['Greedy Algorithms'],
+            unlocks: ['2D DP', 'Interval DP', 'Knapsack Variants'],
             related: ['Recursion & D&C', 'Backtracking', 'Greedy Algorithms'],
+          },
+        },
+      },
+      {
+        id: 'dp-2d',
+        label: '2D DP',
+        content: {
+          analogy: 'A hiker crossing a grid of terrain, choosing at each cell whether to come from the left or from above. The cheapest path to any cell depends only on the cheapest path to the two cells feeding into it. Fill the grid cell by cell — left to right, top to bottom — and the answer is waiting in the bottom-right corner.',
+          what: '<strong>2D DP</strong> adds a second dimension of state to the standard 1D DP table. Instead of dp[i], you track dp[i][j] — where i and j represent two independent dimensions of the problem (often two strings, two arrays, or a position and a constraint). The recurrence fills a 2D grid; each cell depends on a small set of neighboring cells.',
+          why: 'Problems involving two sequences, two indices, or a position paired with a running value cannot be modeled with 1D DP alone. Adding a dimension captures the state fully. The cost is O(n × m) time and space, but most 2D DP problems have no better known approach.',
+          how: 'Define dp[i][j] as the answer for subproblem (i, j). Write the base cases (usually row 0 and column 0). Write the recurrence relating dp[i][j] to previously computed cells. Fill in order so every cell you reference has already been computed. The answer is typically dp[n][m] or the maximum/minimum over some slice of the table.',
+          complexity: { time: 'O(n × m)', space: 'O(n × m), often reducible to O(min(n, m)) with row compression' },
+          signals: [
+            '"Edit distance between two strings"',
+            '"Longest common subsequence of two sequences"',
+            '"Unique paths in a grid" — 2D position with movement constraints',
+            '"Minimum path sum through a grid"',
+            'Any problem with two independent sequences or a 2D traversal',
+          ],
+          keyProperties: [
+            'State is dp[i][j] — two dimensions, two independent sources of variation',
+            'Base cases are the 0th row and 0th column — fill these explicitly before the main loop',
+            'Fill order must ensure referenced cells are already computed — row by row, left to right',
+            'Space optimization: if dp[i][j] only depends on dp[i-1][...], you only need two rows',
+          ],
+          useCases: [
+            'Longest Common Subsequence',
+            'Edit Distance (Levenshtein distance)',
+            'Unique Paths in a Grid',
+            'Minimum Path Sum',
+            'Regular Expression Matching',
+          ],
+          code: `# Longest Common Subsequence
+def lcs(s1, s2):
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    return dp[m][n]
+
+# Edit Distance
+def edit_distance(word1, word2):
+    m, n = len(word1), len(word2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(m + 1):
+        dp[i][0] = i          # delete all chars of word1
+    for j in range(n + 1):
+        dp[0][j] = j          # insert all chars of word2
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if word1[i-1] == word2[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(
+                    dp[i-1][j],    # delete
+                    dp[i][j-1],    # insert
+                    dp[i-1][j-1],  # replace
+                )
+
+    return dp[m][n]`,
+          keyInsight: {
+            heading: 'dp[i][j] represents the answer for the first i elements of one sequence and first j of another — fill row by row.',
+            body: 'Base cases: row 0 (empty first sequence) and column 0 (empty second) — initialize these before the loops. LCS recurrence: if chars match, dp[i-1][j-1] + 1; else max(dp[i-1][j], dp[i][j-1]). Space optimization: if dp[i][j] only looks at row i-1, two 1D arrays replace the full table.',
+          },
+          connections: {
+            prereqs: ['Dynamic Programming', 'Arrays', 'Strings'],
+            unlocks: [],
+            related: ['Dynamic Programming', 'Interval DP', 'Knapsack Variants'],
+          },
+        },
+      },
+      {
+        id: 'dp-intervals',
+        label: 'Interval DP',
+        content: {
+          analogy: 'Deciding in what order to multiply a chain of matrices. The cost depends on which pair you multiply first — a choice that splits the chain into two subchains, each of which must also be solved optimally. Small intervals are solved first, then combined into larger ones, until the entire chain is handled.',
+          what: '<strong>Interval DP</strong> solves problems defined on contiguous subarrays or subsequences, where the answer for interval [i, j] is built from answers to strictly shorter intervals. The key structural property: the answer for [i, j] involves choosing a split point k inside [i, j] and combining solutions to [i, k] and [k, j]. The table is filled by increasing interval length.',
+          why: 'Problems like burst balloons, stone merging, and matrix chain multiplication have exponentially many recursive subproblems if approached naively. Interval DP memoizes all (i, j) pairs — O(n²) subproblems — and computes each in O(n) by iterating over split points. Total: O(n³), which is often the best achievable for these problems.',
+          how: 'Let dp[i][j] = answer for the subarray from i to j. Fill by interval length: first solve all length-1 intervals, then length-2, up to length-n. For each interval [i, j], try every split point k from i to j-1, compute the cost of splitting there (using already-solved subproblems), and take the optimum.',
+          complexity: { time: 'O(n³) in most cases', space: 'O(n²)' },
+          signals: [
+            '"Burst balloons" — removing elements where the cost depends on neighbors',
+            '"Minimum cost to merge stones" or split an array into groups',
+            '"Matrix chain multiplication" — order of operations optimization',
+            '"Palindrome partitioning" — minimum cuts to split a string into palindromes',
+            'Any problem where you optimize over all ways to split a range',
+          ],
+          keyProperties: [
+            'Fill by length, not by start index — ensures subproblems are solved before they are needed',
+            'The split point k iterates over all positions inside [i, j] — this is the O(n) inner loop',
+            'dp[i][i] (length-1 intervals) are the base cases — usually 0 or a trivial value',
+            'Hardest part is getting the recurrence right — carefully define what dp[i][j] represents',
+          ],
+          useCases: [
+            'Burst Balloons',
+            'Minimum Cost to Merge Stones',
+            'Strange Printer',
+            'Minimum Score Triangulation of Polygon',
+            'Palindrome Removal',
+          ],
+          code: `# Burst Balloons — O(n³)
+# dp[i][j] = max coins from bursting all balloons between i and j (exclusive)
+def max_coins(nums):
+    nums = [1] + nums + [1]   # sentinel boundaries
+    n = len(nums)
+    dp = [[0] * n for _ in range(n)]
+
+    # fill by interval length (at least 2 apart = at least 1 balloon inside)
+    for length in range(2, n):
+        for i in range(n - length):
+            j = i + length
+            for k in range(i + 1, j):
+                # k is the LAST balloon burst in [i+1, j-1]
+                coins = nums[i] * nums[k] * nums[j]
+                dp[i][j] = max(dp[i][j], dp[i][k] + coins + dp[k][j])
+
+    return dp[0][n - 1]`,
+          keyInsight: {
+            heading: 'Fill by interval length, not by start index — this guarantees subproblems are always smaller than the current one.',
+            body: 'For each interval [i, j], try every split point k in (i, j). This O(n) inner loop inside O(n²) intervals makes total complexity O(n³). dp[i][i] (single element) is the base case — usually 0. The hardest part is defining what dp[i][j] means. Write that definition in plain English before writing any code.',
+          },
+          connections: {
+            prereqs: ['Dynamic Programming', '2D DP'],
+            unlocks: [],
+            related: ['Dynamic Programming', '2D DP', 'Knapsack Variants'],
+          },
+        },
+      },
+      {
+        id: 'dp-knapsack',
+        label: 'Knapsack Variants',
+        content: {
+          analogy: 'A thief with a backpack of limited capacity, choosing which items to steal to maximize value. Each item has a weight and a value. The decision for each item is binary: take it or leave it. If you can take fractions of items, greedy works — pick by value-per-weight. If you must take whole items, greedy fails, and DP is the tool.',
+          what: '<strong>Knapsack DP</strong> solves optimization problems with a capacity or budget constraint, where you choose a subset of items. The classic <strong>0/1 knapsack</strong> asks: given items each with a weight and value, and a maximum capacity W, maximize total value. dp[i][w] = max value using the first i items with capacity w. The "0/1" means each item is taken at most once.',
+          why: 'Greedy (take highest value-per-weight) does not work for 0/1 knapsack because you cannot take fractions. The subset space is 2ⁿ — exponential. DP collapses this to O(n × W) by observing that dp[i][w] only depends on dp[i-1][...]. The same idea generalizes to dozens of interview problems: coin change, subset sum, partition equal subset — all are knapsack variants.',
+          how: 'Build dp[i][w] = max value considering items 0..i with capacity w. For each item i and capacity w: either skip item i (dp[i-1][w]) or take it if it fits (dp[i-1][w - weight[i]] + value[i]). Take the max. Final answer is dp[n][W]. Space optimization: since row i only depends on row i-1, you can use a single 1D array updated in reverse.',
+          complexity: { time: 'O(n × W)', space: 'O(n × W), reducible to O(W) with 1D array' },
+          signals: [
+            '"Can you partition a set into two equal-sum subsets?"',
+            '"Minimum coins to make change" — unbounded variant (items reusable)',
+            '"Count distinct ways to reach a target sum" — 0/1 or unbounded',
+            '"Maximum value subject to a weight limit"',
+            'Any "select a subset meeting a constraint, optimize a quantity" problem',
+          ],
+          keyProperties: [
+            '0/1 knapsack: each item used at most once — update capacity in reverse to avoid reuse',
+            'Unbounded knapsack: items can be reused — update capacity forward (Coin Change)',
+            '1D optimization: dp[w] = max(dp[w], dp[w - wt] + val) — iterate w in reverse for 0/1',
+            'Subset sum is 0/1 knapsack with value = weight: "can we reach exactly W?"',
+          ],
+          useCases: [
+            'Partition Equal Subset Sum',
+            'Coin Change — minimum coins (unbounded knapsack)',
+            'Coin Change II — count ways (unbounded)',
+            'Target Sum — count assignments using +/- to reach target',
+            'Ones and Zeroes — 2D knapsack with two capacity dimensions',
+          ],
+          code: `# 0/1 Knapsack — O(n × W) time, O(W) space
+def knapsack(weights, values, W):
+    dp = [0] * (W + 1)
+    for w, v in zip(weights, values):
+        for cap in range(W, w - 1, -1):   # reverse to avoid reuse
+            dp[cap] = max(dp[cap], dp[cap - w] + v)
+    return dp[W]
+
+# Partition Equal Subset Sum
+def can_partition(nums):
+    total = sum(nums)
+    if total % 2 != 0:
+        return False
+    target = total // 2
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for n in nums:
+        for cap in range(target, n - 1, -1):
+            dp[cap] = dp[cap] or dp[cap - n]
+    return dp[target]
+
+# Coin Change — unbounded knapsack (coins reusable)
+def coin_change(coins, amount):
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    for coin in coins:
+        for cap in range(coin, amount + 1):   # forward: allow reuse
+            dp[cap] = min(dp[cap], dp[cap - coin] + 1)
+    return dp[amount] if dp[amount] != float('inf') else -1`,
+          keyInsight: {
+            heading: 'Iterate capacity in <strong>reverse</strong> for 0/1 knapsack (each item once), <strong>forward</strong> for unbounded (items can repeat).',
+            body: '1D recurrence: dp[cap] = max(dp[cap], dp[cap - weight] + value). Iterating reverse prevents the same item from being used twice in one pass. Iterating forward allows reuse — that\'s Coin Change. Subset sum is just 0/1 knapsack with value = weight: dp[target] becomes True/False instead of a numeric value.',
+          },
+          connections: {
+            prereqs: ['Dynamic Programming', 'Arrays'],
+            unlocks: [],
+            related: ['Dynamic Programming', '2D DP', 'Greedy Algorithms'],
           },
         },
       },
@@ -2278,6 +4150,10 @@ def can_jump(nums):
             return False       # cannot reach index i
         max_reach = max(max_reach, i + jump)
     return True`,
+          keyInsight: {
+            heading: 'Greedy works when the locally optimal choice never forecloses a globally better outcome.',
+            body: "The key question: does committing to the best-looking option now ever block a better global result? If yes, DP is the fix. Most greedy algorithms start with sorting — if you don't know which criterion, ask what property should come first. Classic signals: maximum non-overlapping intervals, minimum number of operations, can you reach the end?",
+          },
           connections: {
             prereqs: ['Sorting', 'Arrays', 'Intro to Algorithms'],
             unlocks: ['Merge Intervals'],
@@ -2332,6 +4208,10 @@ def permutations(nums):
                 current.pop()
     backtrack([])
     return result`,
+          keyInsight: {
+            heading: 'Make a choice, recurse, undo the choice — the <strong>undo step</strong> is what lets backtracking explore all possibilities.',
+            body: "Without the undo, you contaminate the path for future branches. Pruning — skipping invalid partial states early — is what separates a fast backtrack from a slow one. Three templates: subsets (include/exclude each element), permutations (used[] array), combinations (start index to avoid reuse). Track the path as a list: append on the way in, pop on the way out.",
+          },
           connections: {
             prereqs: ['Recursion & D&C', 'Arrays'],
             unlocks: ['Dynamic Programming'],
@@ -2441,6 +4321,10 @@ def is_palindrome(s):
         left += 1
         right -= 1
     return True`,
+          keyInsight: {
+            heading: 'Two pointers turn an O(n²) nested loop into <strong>O(n)</strong> by moving left and right based on sorted order.',
+            body: 'Requires sorted input (or a monotonic property). Left starts at 0, right at len-1. Sum too small: move left. Too large: move right. Same-direction variant: left = slow write pointer, right = fast read pointer — used for in-place compress or remove. Both pointers only move forward, so each element is processed at most twice: O(n) total.',
+          },
           connections: {
             prereqs: ['Arrays', 'Sorting', 'Intro to Patterns'],
             unlocks: ['Sliding Window', 'Fast & Slow Pointers'],
@@ -2452,7 +4336,7 @@ def is_palindrome(s):
         id: 'sliding-window',
         label: 'Sliding Window',
         content: {
-          analogy: 'Looking out a moving train window. You see a fixed-width view of the landscape. As the train moves, the leftmost edge disappears and a new bit appears on the right. You are always looking at a contiguous chunk — just sliding it forward. A sliding window maintains that view into a subarray, expanding or contracting it as needed.',
+          analogy: '<strong>Fixed window</strong><br>A cashier scanning exactly k items off a conveyor belt at a time. As the belt advances one position, the leftmost item exits the scanner and one new item enters from the right. The window is always exactly k items wide — it never grows or shrinks, it just shifts forward.<br><br><strong>Variable window</strong><br>Two people holding opposite ends of a rope stretched across a row of elements. The right person steps forward to grow the window and take in more elements. When the window holds too much and violates the condition, the left person steps forward to release elements from the back. The rope stretches and contracts dynamically until the right range is found.',
           what: '<strong>Sliding window</strong> solves problems involving <strong>contiguous</strong> subarrays or substrings. Instead of recomputing the answer for every possible subarray from scratch (<strong>O(n²)</strong>), maintain a <strong>window</strong> of elements and update the answer incrementally as the window slides — <strong>O(n)</strong>. Fixed-size windows slide uniformly; variable-size windows expand and shrink based on a condition.',
           why: 'Any time the problem asks about a <strong>contiguous subarray</strong> — maximum sum, longest substring meeting a condition — brute force is <strong>O(n²)</strong> or worse. Sliding window avoids recomputing from scratch by maintaining running state and updating it as the window moves.',
           how: 'For a <strong>fixed window</strong>: advance both left and right together, keeping window size constant. For a <strong>variable window</strong>: expand right until the window violates a condition, then shrink left until valid again. At each step, update your answer from the current window state in <strong>O(n)</strong>.',
@@ -2494,6 +4378,10 @@ def length_of_longest_substring(s):
         seen[ch] = right
         best = max(best, right - left + 1)
     return best`,
+          keyInsight: {
+            heading: 'Expand right freely, shrink left as soon as the window violates the condition — both pointers only move forward, so the total cost is <strong>O(n)</strong>.',
+            body: "Fixed window: advance both ends together, keep size constant. Variable window: expand right until the constraint breaks, then shrink left until valid again. The invariant: at every moment, the window either satisfies your condition or you're in the process of restoring it. Pair with a Counter or dict to track state inside the window. Most variable-window problems need one.",
+          },
           connections: {
             prereqs: ['Arrays', 'Hash Maps & Sets', 'Two Pointers'],
             unlocks: [],
@@ -2550,6 +4438,10 @@ def find_middle(head):
         slow = slow.next
         fast = fast.next.next
     return slow   # slow is at middle when fast exits`,
+          keyInsight: {
+            heading: 'If a cycle exists, fast (2 steps) and slow (1 step) will always meet inside it.',
+            body: "When fast reaches None, slow is exactly at the midpoint — use this to split a linked list in one pass. The meeting point is not the cycle start. To find the cycle entrance: reset slow to head, advance both one step at a time, and they meet at the entrance. Works on any repeated-state sequence, not just linked lists — the Happy Number problem uses the same pattern.",
+          },
           connections: {
             prereqs: ['Linked Lists', 'Two Pointers'],
             unlocks: [],
@@ -2609,6 +4501,10 @@ def insert_interval(intervals, new_interval):
     result.append(new_interval)
     result.extend(intervals[i:])
     return result`,
+          keyInsight: {
+            heading: 'Sort by start time first — then detecting overlap is a single left-to-right scan in <strong>O(n)</strong>.',
+            body: "Two intervals overlap if and only if the next interval's start ≤ current merged end. When they overlap, extend the end to max(current end, next end) — don't assume the later interval always has the larger end. One pass after sorting: O(n log n) total. Without sorting first, detecting overlaps requires O(n²) pairwise comparisons.",
+          },
           connections: {
             prereqs: ['Arrays', 'Sorting', 'Greedy Algorithms'],
             unlocks: [],
@@ -2682,6 +4578,10 @@ def num_islands(grid):
             if grid[r][c] == '1':
                 count += 1; sink(r, c)
     return count`,
+          keyInsight: {
+            heading: 'Queue gives you BFS (shortest path). Stack or recursion gives you DFS. The data structure is the algorithm.',
+            body: 'BFS visits level by level and finds shortest path in unweighted graphs. DFS explores deep before backtracking — use it for path existence, cycle detection, and all paths. BFS space is O(width), DFS space is O(height) — for wide trees, DFS wins on memory; for deep trees, BFS does. Grid problems are BFS/DFS where each cell has up to 4 neighbors.',
+          },
           connections: {
             prereqs: ['Graphs', 'Trees', 'Stacks & Queues', 'Recursion & D&C'],
             unlocks: ['Topological Sort', 'Union-Find'],
@@ -2740,6 +4640,10 @@ def topological_sort(n, edges):
 # Course Schedule
 def can_finish(num_courses, prerequisites):
     return len(topological_sort(num_courses, prerequisites)) == num_courses`,
+          keyInsight: {
+            heading: "Topological sort only works on DAGs — a cycle means no valid ordering exists, and Kahn's detects it automatically.",
+            body: "Kahn's algorithm: start with all in-degree-0 nodes, remove them, decrement successor in-degrees, repeat. Nodes remaining at the end = cycle detected. DFS-based: after visiting all descendants of a node, append it to results; reverse at the end. Signal words: prerequisites, build order, task dependencies, course schedule.",
+          },
           connections: {
             prereqs: ['Graphs', 'BFS & DFS', 'Stacks & Queues'],
             unlocks: [],
@@ -2801,6 +4705,10 @@ def count_components(n, edges):
     for a, b in edges:
         uf.union(a, b)
     return len({uf.find(i) for i in range(n)})`,
+          keyInsight: {
+            heading: 'Path compression makes find() near-O(1): parent[x] = find(parent[x]) — one line that flattens the entire tree.',
+            body: "Two operations: find(x) returns the root of x's component; union(x, y) merges the two components. Without optimizations, O(n) per operation. With path compression + union by rank, O(α(n)) ≈ O(1) in practice. Signal words: connected components, cycle detection in undirected graphs, groups that merge over time.",
+          },
           connections: {
             prereqs: ['Graphs', 'BFS & DFS', 'Arrays'],
             unlocks: [],
@@ -2859,10 +4767,428 @@ def daily_temperatures(temps):
             result[idx] = i - idx   # days until warmer
         stack.append(i)
     return result`,
+          keyInsight: {
+            heading: 'Each element is pushed once and popped once — the inner while loop is still <strong>O(n)</strong> total.',
+            body: "Store indices in the stack, not values — you need the index to compute distances like 'how many days until warmer.' A monotonic decreasing stack finds the next greater element for each popped item; a monotonic increasing stack finds next smaller. Popping happens when the invariant breaks — that's the moment you compute the answer for the popped element.",
+          },
           connections: {
             prereqs: ['Stacks & Queues', 'Arrays', 'Intro to Patterns'],
             unlocks: [],
             related: ['Stacks & Queues', 'Sliding Window', 'Two Pointers'],
+          },
+        },
+      },
+      {
+        id: 'prefix-sums',
+        label: 'Prefix Sums',
+        content: {
+          analogy: 'An odometer on a road trip. Instead of measuring how far you drove each leg individually, you record the total mileage at every stop. To find the distance between any two stops, subtract the earlier reading from the later one — one calculation, no matter how many stops are in between.',
+          what: 'A <strong>prefix sum array</strong> stores the cumulative sum at each index: <code>prefix[i] = nums[0] + ... + nums[i-1]</code>. With this table precomputed in one <strong>O(n)</strong> pass, the sum of any subarray <code>nums[l..r]</code> reduces to <code>prefix[r+1] - prefix[l]</code> — <strong>O(1)</strong> per query instead of O(n).',
+          why: 'Subarray sum problems are rampant in interviews. Brute force computes every range from scratch — <strong>O(n²)</strong>. Prefix sums move that work upfront in one O(n) pass, then answer any range query in <strong>O(1)</strong>. Combined with a hash map, they also count subarrays meeting a sum condition without any nested loops.',
+          how: 'Build <code>prefix[0..n]</code> where <code>prefix[0] = 0</code> and <code>prefix[i] = prefix[i-1] + nums[i-1]</code>. Range sum: <code>prefix[r+1] - prefix[l]</code>. For counting subarrays summing to k: track prefix sums in a hash map — at each index, check how many times <code>prefix[i] - k</code> has appeared.',
+          complexity: { time: 'O(n) build, O(1) per query', space: 'O(n)' },
+          signals: [
+            '"Sum of any subarray" asked repeatedly — prefix sums give O(1) per query',
+            '"Count subarrays that sum to k" — prefix sums + hash map',
+            '"Pivot index where left sum equals right sum"',
+            'Running total needed across multiple queries on the same static array',
+          ],
+          keyProperties: [
+            'prefix[0] = 0 is the sentinel — handles subarrays starting at index 0 without a special case',
+            'Range sum is prefix[r+1] - prefix[l] — get the off-by-one right',
+            'For counting subarrays summing to k, use a defaultdict: "has prefix[i] - k appeared before?"',
+            'Extends to 2D for grid problems: 2D prefix sums answer rectangle sum queries in O(1)',
+          ],
+          useCases: [
+            'Subarray Sum Equals K — count subarrays with exact sum target',
+            'Range Sum Query — precompute once, answer all queries in O(1)',
+            'Find Pivot Index — where left sum equals right sum',
+            'Product of Array Except Self — prefix products instead of prefix sums',
+          ],
+          code: `# Build prefix sum array
+nums = [1, 2, 3, 4, 5]
+prefix = [0] * (len(nums) + 1)
+for i, x in enumerate(nums):
+    prefix[i + 1] = prefix[i] + x
+
+# O(1) range sum: sum of nums[l..r]
+def range_sum(l, r):
+    return prefix[r + 1] - prefix[l]
+
+# Count subarrays summing to k
+from collections import defaultdict
+
+def subarray_sum(nums, k):
+    count = 0
+    running = 0
+    seen = defaultdict(int)
+    seen[0] = 1          # empty prefix
+    for x in nums:
+        running += x
+        count += seen[running - k]
+        seen[running] += 1
+    return count`,
+          keyInsight: {
+            heading: 'Build prefix sums once in O(n), then answer any range sum query in <strong>O(1)</strong>.',
+            body: 'prefix[0] = 0 is mandatory — it handles subarrays starting at index 0 without special cases. Range sum: prefix[r+1] - prefix[l]. Counting subarrays summing to k: use a defaultdict and check if (running_sum - k) has been seen. One pass, O(n). Whenever the same static array receives multiple range queries, prefix sums are the answer.',
+          },
+          connections: {
+            prereqs: ['Arrays', 'Hash Maps & Sets'],
+            unlocks: ['Sliding Window'],
+            related: ['Sliding Window', 'Dynamic Programming', 'Arrays'],
+          },
+        },
+      },
+      {
+        id: 'list-reversal',
+        label: 'Reversal Patterns',
+        content: {
+          analogy: 'A group of people in a line who need to reverse their order. Instead of walking to new positions, two people at opposite ends swap places, then the next two in from each end swap, and so on until they meet in the middle. Nobody leaves the line — you just swap within it.',
+          what: '<strong>In-place reversal</strong> manipulates pointers or indices directly on the existing structure — no auxiliary array. For <strong>linked lists</strong>, you iterate through and redirect each node\'s <code>next</code> pointer. For <strong>arrays</strong>, you swap symmetric elements from both ends inward. Space is always <strong>O(1)</strong>.',
+          why: 'Problems involving reversals — whole lists, sublists, groups of k nodes — test pointer manipulation directly, which is a skill interviewers grade. The naive approach copies to a new structure. In-place reversal does the same work with <strong>O(1)</strong> space and forces you to think carefully about order-of-operations when redirecting pointers.',
+          how: 'For a linked list: keep three pointers — <code>prev = None</code>, <code>curr = head</code>, <code>next_node</code>. Each step: save <code>curr.next</code>, point <code>curr.next</code> back to <code>prev</code>, advance both. When <code>curr</code> is None, <code>prev</code> is the new head. For a sublist reversal, locate the node before the start — it becomes the reconnection anchor.',
+          complexity: { time: 'O(n)', space: 'O(1)' },
+          signals: [
+            '"Reverse a linked list" or "reverse a sublist from m to n"',
+            '"Reverse nodes in k-group" — process the list in segments',
+            '"Rotate a list by k positions"',
+            '"Check if a linked list is a palindrome" — reverse the second half, compare',
+          ],
+          keyProperties: [
+            'Three pointers are always enough: prev, curr, next — draw it out if stuck',
+            'Order matters: save next_node before overwriting curr.next',
+            'Sublist reversal needs the node before the sublist — it becomes the reconnection point',
+            'Rotating by k = reversing parts of the list, not repeated shifting',
+          ],
+          useCases: [
+            'Reverse Linked List — the foundational problem',
+            'Reverse Linked List II — reverse from position m to n',
+            'Reverse Nodes in k-Group',
+            'Rotate List by k positions',
+            'Palindrome Linked List — reverse second half and compare',
+          ],
+          code: `# Reverse entire linked list
+def reverse_list(head):
+    prev, curr = None, head
+    while curr:
+        next_node = curr.next
+        curr.next = prev
+        prev = curr
+        curr = next_node
+    return prev
+
+# Reverse sublist from position left to right (1-indexed)
+def reverse_between(head, left, right):
+    dummy = ListNode(0)
+    dummy.next = head
+    prev = dummy
+    for _ in range(left - 1):
+        prev = prev.next
+    curr = prev.next
+    for _ in range(right - left):
+        next_node = curr.next
+        curr.next = next_node.next
+        next_node.next = prev.next
+        prev.next = next_node
+    return dummy.next
+
+# Reverse an array in-place
+def reverse_array(arr):
+    left, right = 0, len(arr) - 1
+    while left < right:
+        arr[left], arr[right] = arr[right], arr[left]
+        left += 1
+        right -= 1`,
+          keyInsight: {
+            heading: 'Save curr.next before overwriting it — forgetting this one step breaks the rest of the list.',
+            body: 'Three pointers: prev = None, curr = head, next_node. Draw the before and after state first. For sublist reversal: find the node before the sublist (it becomes the anchor), reverse the sublist, reattach both ends. Rotate by k: reverse the whole list, reverse [0..k-1], reverse [k..n-1] — no shifting, just pointer operations.',
+          },
+          connections: {
+            prereqs: ['Linked Lists', 'Arrays', 'Two Pointers'],
+            unlocks: ['Fast & Slow Pointers'],
+            related: ['Two Pointers', 'Fast & Slow Pointers'],
+          },
+        },
+      },
+      {
+        id: 'binary-search-answer',
+        label: 'Search on Answer Space',
+        content: {
+          analogy: "You lost your keys somewhere in your house. You don't check every room sequentially — you pick the middle, look, and based on whether the keys could be there, eliminate half the house. Modified binary search applies this halving to cases where the target is not a specific value, but a condition that is either satisfied or not — and once it flips, it never flips back.",
+          what: 'Standard binary search finds a value in a sorted array. <strong>Modified binary search</strong> applies the same halving logic to: rotated sorted arrays, finding the first or last position satisfying a condition, or searching over a range of <strong>possible answers</strong> to an optimization problem. If a function is <strong>monotonic</strong> — false for small values and true from some threshold onward — binary search finds the transition in <strong>O(log n)</strong>.',
+          why: 'Linear scan is O(n). Whenever a function is monotonic over a search space, binary search reduces it to <strong>O(log n)</strong>. This applies not just to sorted arrays but to any problem where you can define a predicate and check it in O(f(n)) — total cost becomes O(f(n) × log n).',
+          how: 'Identify what you are searching over (array indices, or a range of possible answer values). Define the <strong>monotonic predicate</strong>. Set <code>lo</code> and <code>hi</code> to the extremes. At each <code>mid</code>, evaluate the predicate. If satisfied, record <code>mid</code> as a candidate and narrow toward smaller values. The loop exits when the search space collapses.',
+          complexity: { time: 'O(log n) on arrays; O(log(range) × f(n)) for answer-space search', space: 'O(1)' },
+          signals: [
+            '"Find first or last occurrence of a value"',
+            '"Search in a rotated sorted array" — one half is always fully sorted',
+            '"Minimum capacity / speed / days to complete task" — minimize-the-maximum pattern',
+            'Any problem where you can check "is answer ≤ x feasible?" in O(n)',
+          ],
+          keyProperties: [
+            'Monotonicity is the requirement — once the condition flips, it never flips back',
+            'Off-by-one errors are common: know when to use lo < hi vs lo <= hi, and mid vs mid + 1',
+            'Rotated array: one half is always fully sorted — determine which half, then decide where target lies',
+            'Binary search on answer: lo = minimum possible, hi = maximum possible; search for the boundary',
+          ],
+          useCases: [
+            'Search in Rotated Sorted Array',
+            'Find Minimum in Rotated Sorted Array',
+            'First Bad Version / find leftmost or rightmost position',
+            'Koko Eating Bananas — minimize eating speed that finishes in h hours',
+            'Capacity to Ship Packages — minimize weight limit that ships all packages in d days',
+          ],
+          code: `# Find leftmost position of target
+def search_left(nums, target):
+    lo, hi = 0, len(nums) - 1
+    result = -1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            result = mid
+            hi = mid - 1    # keep searching left for first occurrence
+        elif nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return result
+
+# Search in rotated sorted array
+def search_rotated(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[lo] <= nums[mid]:       # left half is sorted
+            if nums[lo] <= target < nums[mid]:
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        else:                            # right half is sorted
+            if nums[mid] < target <= nums[hi]:
+                lo = mid + 1
+            else:
+                hi = mid - 1
+    return -1
+
+# Binary search on answer: min speed to finish in h hours (Koko)
+def min_eating_speed(piles, h):
+    def can_finish(speed):
+        return sum((p + speed - 1) // speed for p in piles) <= h
+    lo, hi = 1, max(piles)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if can_finish(mid):
+            hi = mid        # mid works — try smaller
+        else:
+            lo = mid + 1
+    return lo`,
+          keyInsight: {
+            heading: "If you can ask 'is X feasible?' with a monotonic yes/no answer, <strong>binary search over X</strong>.",
+            body: "lo = minimum possible answer, hi = maximum possible answer. The predicate is the entire logic — get that right and the template handles the rest. Rotated array: one half is always fully sorted; check which half, then determine if target lies in it. When the predicate costs O(n), the total is O(n log(range)) — that's why min/max capacity problems have O(n × log(max_val)) solutions.",
+          },
+          connections: {
+            prereqs: ['Binary Search', 'Arrays', 'Sorting'],
+            unlocks: [],
+            related: ['Binary Search', 'Greedy Algorithms', 'Sliding Window'],
+          },
+        },
+      },
+      {
+        id: 'two-heaps',
+        label: 'Two Heaps',
+        content: {
+          analogy: "A company tracks salaries split into two teams — the lower half and the upper half. The lower team's manager always knows the highest salary in her group. The upper team's manager always knows the lowest salary in his group. The median is always held by one of those two managers — you never need to look at everyone.",
+          what: '<strong>Two heaps</strong> maintains a <strong>max-heap</strong> for the lower half of a data stream and a <strong>min-heap</strong> for the upper half. By keeping sizes balanced — max-heap has equal or one more element — the <strong>median</strong> is always the max-heap\'s root, or the average of both roots. No re-sorting needed after each insertion.',
+          why: 'Finding the median of a stream after each insertion is O(n log n) naively — sort every time. Two heaps achieves <strong>O(log n) per insertion</strong> and <strong>O(1) per median query</strong>. The pattern also applies wherever you need simultaneous access to the largest element of the lower half and the smallest of the upper half.',
+          how: 'Insert: if <code>num ≤ max_heap.top</code>, push to the max-heap; otherwise push to the min-heap. Rebalance so sizes differ by at most 1 — move the root of the larger heap to the smaller. Median: if sizes are equal, average both tops; if max-heap is larger, its top is the median.',
+          complexity: { time: 'O(log n) insert, O(1) find median', space: 'O(n)' },
+          signals: [
+            '"Median of a data stream"',
+            '"Sliding window median"',
+            'Need simultaneous access to the max of the lower half and the min of the upper half',
+            '"Maximize capital" — scheduling problems where you pick the best available option below a threshold',
+          ],
+          keyProperties: [
+            'Python heapq is a min-heap — negate values to simulate a max-heap for the lower half',
+            'After every insertion, rebalance: |len(lo) - len(hi)| must stay ≤ 1',
+            'Invariant: max_heap.top ≤ min_heap.top — verify after every push and rebalance',
+            'Sliding window median extends this by removing elements that leave the window',
+          ],
+          useCases: [
+            'Find Median from Data Stream',
+            'Sliding Window Median',
+            'IPO — maximize profit by choosing available projects within budget',
+          ],
+          code: `import heapq
+
+class MedianFinder:
+    def __init__(self):
+        self.lo = []   # max-heap (negate values)
+        self.hi = []   # min-heap
+
+    def add_num(self, num):
+        heapq.heappush(self.lo, -num)
+
+        # Invariant: max of lo must not exceed min of hi
+        if self.lo and self.hi and (-self.lo[0]) > self.hi[0]:
+            heapq.heappush(self.hi, -heapq.heappop(self.lo))
+
+        # Rebalance sizes
+        if len(self.lo) > len(self.hi) + 1:
+            heapq.heappush(self.hi, -heapq.heappop(self.lo))
+        elif len(self.hi) > len(self.lo):
+            heapq.heappush(self.lo, -heapq.heappop(self.hi))
+
+    def find_median(self):
+        if len(self.lo) > len(self.hi):
+            return float(-self.lo[0])
+        return (-self.lo[0] + self.hi[0]) / 2.0`,
+          keyInsight: {
+            heading: 'Two heaps maintain the running median: a max-heap for the lower half, a min-heap for the upper half.',
+            body: "Invariant: max_heap.top ≤ min_heap.top. If this breaks after an insert, move the offending root to the other heap. After every insert, rebalance so |len(lo) - len(hi)| ≤ 1. The heap with more elements holds the median when sizes are unequal. Python's heapq is a min-heap — negate values going into the lower-half heap.",
+          },
+          connections: {
+            prereqs: ['Heaps & Priority Queues', 'Sorting'],
+            unlocks: [],
+            related: ['Heaps & Priority Queues', 'Sliding Window'],
+          },
+        },
+      },
+      {
+        id: 'cyclic-sort',
+        label: 'Cyclic Sort',
+        content: {
+          analogy: 'A shuffled deck of numbered cards (1 through n). Each card tells you exactly where it belongs — card 3 goes in position 3. Just put each card where it says until everything is in place. No comparisons needed, only placements. When you are done, any card still out of place is either a duplicate or evidence of a missing number.',
+          what: '<strong>Cyclic sort</strong> is an O(n) in-place algorithm for arrays containing numbers in a known range — typically [1..n] or [0..n-1]. Each element is swapped to its correct index. After one pass, any element still out of place signals a <strong>missing number</strong> or <strong>duplicate</strong>.',
+          why: 'Finding missing or duplicate numbers in a bounded range can use a hash set (O(n) space) or sorting (O(n log n)). Cyclic sort achieves <strong>O(n) time and O(1) space</strong> by exploiting the constraint that values map directly to indices — each element already "knows" where it belongs.',
+          how: 'Walk index i from 0 to n-1. While <code>nums[i]</code> is not at its correct position (<code>nums[i] - 1 ≠ i</code> for a [1..n] array), swap it there. But if <code>nums[i] == nums[nums[i]-1]</code>, stop — that is a duplicate. After the full pass, scan once for any index where <code>nums[i] ≠ i + 1</code>.',
+          complexity: { time: 'O(n) — each element is placed at most once', space: 'O(1)' },
+          signals: [
+            '"Find the missing number" in an array of [1..n]',
+            '"Find all duplicates" in an array where values are in [1..n]',
+            '"First missing positive integer"',
+            'Array values are in a bounded, known range where values map to indices',
+          ],
+          keyProperties: [
+            'Only works when values map directly to indices — range [1..n] or [0..n-1] must be known',
+            'Each swap moves at least one element to its final position — the while loop terminates in O(n) total',
+            'Skip swapping when nums[i] == nums[nums[i]-1] — that is a duplicate, not a misplaced element',
+            'After the sort pass, one more scan finds all out-of-place values',
+          ],
+          useCases: [
+            'Missing Number (LeetCode 268)',
+            'Find All Duplicates in an Array',
+            'Find the Duplicate Number',
+            'First Missing Positive',
+          ],
+          code: `# Cyclic sort for values in [1..n]
+def cyclic_sort(nums):
+    i = 0
+    while i < len(nums):
+        j = nums[i] - 1          # correct index for nums[i]
+        if nums[i] != nums[j]:
+            nums[i], nums[j] = nums[j], nums[i]
+        else:
+            i += 1
+
+# Find all missing numbers in [1..n]
+def find_missing_numbers(nums):
+    cyclic_sort(nums)
+    return [i + 1 for i in range(len(nums)) if nums[i] != i + 1]
+
+# Find the duplicate number
+def find_duplicate(nums):
+    i = 0
+    while i < len(nums):
+        j = nums[i] - 1
+        if nums[i] != i + 1:
+            if nums[i] != nums[j]:   # swap to correct position
+                nums[i], nums[j] = nums[j], nums[i]
+            else:
+                return nums[i]       # same value already at j — it's the duplicate
+        else:
+            i += 1`,
+          keyInsight: {
+            heading: 'When values map directly to indices — range [1..n] — you can sort in <strong>O(n)</strong> without comparisons.',
+            body: 'At each index i, while nums[i] is out of place, swap it to position nums[i]-1. The while loop is key — one swap is often not enough. Skip swapping if nums[i] == nums[nums[i]-1]: identical values means you found a duplicate, not a misplaced element. After the full pass, scan once: any index where nums[i] != i+1 is your answer (missing number or duplicate).',
+          },
+          connections: {
+            prereqs: ['Arrays', 'Sorting'],
+            unlocks: [],
+            related: ['Arrays', 'Binary Search'],
+          },
+        },
+      },
+      {
+        id: 'k-way-merge',
+        label: 'K-way Merge',
+        content: {
+          analogy: 'Three friends each hand you a sorted deck of cards one at a time. To merge into one sorted deck, look at the top card from each friend, take the smallest, and ask that friend for their next card. A min-heap always knows who holds the current minimum — you never compare more than k cards at once.',
+          what: '<strong>K-way merge</strong> uses a <strong>min-heap</strong> to merge k sorted arrays or lists in <strong>O(n log k)</strong> time, where n is the total number of elements. The heap holds one candidate per source — always the current minimum of each list. Pop the minimum, append to result, push the next element from the same source.',
+          why: 'Merging k sorted arrays by repeated pairwise merge takes <strong>O(nk)</strong> total work. A heap-based approach reduces this to <strong>O(n log k)</strong> — the heap size is k throughout, so each push and pop is O(log k), and there are n total operations. This also handles k sorted linked lists without converting them to arrays.',
+          how: 'Push the first element of each list into a min-heap as tuples: <code>(value, list_index, element_index)</code>. Pop the minimum, append to result, push the next element from that same source list. The source index inside the tuple tells you which list to draw from. Repeat until the heap is empty.',
+          complexity: { time: 'O(n log k) where n = total elements, k = number of lists', space: 'O(k) for the heap' },
+          signals: [
+            '"Merge k sorted lists or arrays"',
+            '"Kth smallest element in a sorted matrix"',
+            '"Smallest range covering elements from k lists"',
+            '"Sort a nearly-sorted array where each element is at most k positions from sorted position"',
+          ],
+          keyProperties: [
+            'Heap holds exactly one candidate per source — size stays at k throughout',
+            'Tuple must include source index so you know which list to pull from when popping',
+            'For linked lists: push (node.val, list_index, node) and follow node.next after each pop',
+            'Kth smallest in a sorted matrix = k-way merge over n sorted rows',
+          ],
+          useCases: [
+            'Merge K Sorted Lists',
+            'Kth Smallest Element in a Sorted Matrix',
+            'Smallest Range Covering Elements from K Lists',
+            'Sort a Nearly Sorted Array',
+          ],
+          code: `import heapq
+
+# Merge k sorted arrays
+def merge_k_sorted(arrays):
+    heap = []
+    for i, arr in enumerate(arrays):
+        if arr:
+            heapq.heappush(heap, (arr[0], i, 0))
+
+    result = []
+    while heap:
+        val, arr_i, elem_i = heapq.heappop(heap)
+        result.append(val)
+        if elem_i + 1 < len(arrays[arr_i]):
+            next_val = arrays[arr_i][elem_i + 1]
+            heapq.heappush(heap, (next_val, arr_i, elem_i + 1))
+    return result
+
+# Merge k sorted linked lists
+def merge_k_lists(lists):
+    heap = []
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.val, i, node))
+
+    dummy = curr = ListNode(0)
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        curr.next = node
+        curr = curr.next
+        if node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+    return dummy.next`,
+          keyInsight: {
+            heading: 'A heap of size k merges k sorted lists in <strong>O(n log k)</strong> — it holds exactly one candidate per source.',
+            body: 'Tuple format: (value, source_index, element_index). Seed the heap with the first element from every source. Loop: pop the minimum, append to result, push the next element from that same source. The heap never grows beyond k entries. Kth smallest in a sorted matrix uses the same pattern: treat each row as a sorted source.',
+          },
+          connections: {
+            prereqs: ['Heaps & Priority Queues', 'Sorting', 'Linked Lists'],
+            unlocks: [],
+            related: ['Heaps & Priority Queues', 'Merge Intervals'],
           },
         },
       },

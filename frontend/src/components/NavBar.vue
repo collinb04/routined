@@ -185,9 +185,8 @@ function clearDropdownTimer() {
 }
 
 const links = [
-  { label: 'Problems', to: '/problems' },
   { label: 'Learn', to: '/learn' },
-  { label: 'Pricing', to: '/pricing' },
+  { label: 'Problems', to: '/problems' },
   {
     label: 'About',
     dropdown: {
@@ -204,6 +203,12 @@ const links = [
           description: 'Meet the people building the product',
           to: '/about',
           icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        },
+        {
+          label: 'Pricing',
+          description: 'Plans and pricing for individuals and teams',
+          to: '/pricing',
+          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>',
         },
         {
           label: 'Contact',
