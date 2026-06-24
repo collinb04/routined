@@ -1835,12 +1835,159 @@
         </div>
 
         <!-- 10. Sandbox -->
-        <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm border border-dashed border-gray-200">
-          <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Sandbox</h2>
-          <div class="h-px bg-gray-100" />
-          <div class="h-32 flex items-center justify-center">
-            <span class="text-sm text-text-muted italic">Interactive practice — coming soon</span>
+        <div v-if="!selectedSection.content?.isClusterIntro && sectionProblem" class="flex flex-col gap-4">
+
+          <!-- Problem info card (white) -->
+          <div v-if="sectionProblem" class="rounded-xl border border-gray-200 bg-white px-6 py-5 flex flex-col gap-5 shadow-sm">
+            <!-- Title + difficulty -->
+            <div class="flex items-center gap-3">
+              <span class="text-2xl font-semibold text-text">{{ sectionProblem.title }}</span>
+              <span
+                class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full shrink-0"
+                :style="sectionProblem.difficulty === 'easy'
+                  ? 'background:#dcfce7;color:#16a34a'
+                  : sectionProblem.difficulty === 'medium'
+                    ? 'background:#fef9c3;color:#ca8a04'
+                    : 'background:#fee2e2;color:#dc2626'"
+              >{{ sectionProblem.difficulty }}</span>
+            </div>
+            <!-- Description -->
+            <p class="text-[14px] leading-relaxed text-text-dim" v-html="sectionProblem.description" />
+            <!-- Examples -->
+            <div v-if="sectionProblem.examples?.length" class="flex flex-col gap-2">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Examples</span>
+              <div
+                v-for="(ex, i) in sectionProblem.examples"
+                :key="i"
+                class="rounded-lg px-4 py-3 flex flex-col gap-1.5 text-[12.5px] font-mono bg-gray-50 border border-gray-100"
+              >
+                <div><span class="text-text-muted">Input: </span><span class="text-text">{{ ex.input }}</span></div>
+                <div><span class="text-text-muted">Output: </span><span class="text-text">{{ ex.output }}</span></div>
+                <div v-if="ex.explanation" class="font-sans text-[12px] text-text-muted mt-0.5">{{ ex.explanation }}</div>
+              </div>
+            </div>
+            <!-- Constraints -->
+            <div v-if="sectionProblem.constraints.length" class="flex flex-col gap-1.5">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Constraints</span>
+              <ul class="flex flex-col gap-1">
+                <li v-for="c in sectionProblem.constraints" :key="c" class="text-[13px] text-text-dim font-mono">{{ c }}</li>
+              </ul>
+            </div>
           </div>
+
+          <!-- Editor + Console row -->
+          <div class="flex gap-3 items-stretch">
+
+            <!-- Dark editor card -->
+            <div class="flex-1 min-w-0 rounded-xl overflow-hidden flex flex-col" style="background:#1e1e1e;box-shadow:0 4px 24px rgba(0,0,0,0.18)">
+              <!-- Editor header bar -->
+              <!-- Title bar with reset -->
+              <div class="flex items-center justify-end px-4 py-2.5 shrink-0" style="border-bottom:1px solid rgba(255,255,255,0.06);background:#252526">
+                <button
+                  @click="resetSandbox"
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded transition-all text-[11px]"
+                  style="color:rgba(255,255,255,0.3)"
+                  title="Reset to starter code"
+                  onmouseover="this.style.color='rgba(255,255,255,0.65)';this.style.background='rgba(255,255,255,0.07)'"
+                  onmouseout="this.style.color='rgba(255,255,255,0.3)';this.style.background='transparent'"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  Reset
+                </button>
+              </div>
+              <!-- Editor fills remaining height -->
+              <div class="flex-1 min-h-0">
+                <CodeEditor v-model="sandboxCode" />
+              </div>
+              <!-- Bottom bar -->
+              <div class="flex items-center justify-between px-4 py-2.5 shrink-0" style="border-top:1px solid rgba(255,255,255,0.06);background:#252526">
+                <!-- Console toggle -->
+                <button
+                  class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all"
+                  :style="consoleOpen
+                    ? 'background:rgba(255,255,255,0.12);color:#d4d4d4'
+                    : 'background:transparent;color:rgba(255,255,255,0.4)'"
+                  @click="consoleOpen = !consoleOpen"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                  </svg>
+                  <span class="text-[12px] font-medium">Test Results</span>
+                  <span
+                    v-if="testResults.length"
+                    class="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    :style="testResults.every(r => r.passed)
+                      ? 'background:rgba(74,222,128,0.15);color:#4ade80'
+                      : 'background:rgba(248,113,113,0.15);color:#f87171'"
+                  >{{ testResults.filter(r => r.passed).length }}/{{ testResults.length }}</span>
+                </button>
+                <button
+                  @click="runSandbox"
+                  :disabled="sandboxLoading"
+                  class="flex items-center gap-2 text-[13px] font-semibold px-5 py-2 rounded-md transition-all disabled:opacity-40"
+                  style="background:#16a34a;color:#fff;box-shadow:0 1px 8px rgba(22,163,74,0.35)"
+                >
+                  <svg v-if="!sandboxLoading" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                  <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  {{ sandboxLoading ? 'Running…' : 'Run' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Console panel -->
+            <div
+              class="shrink-0 rounded-xl overflow-hidden transition-all duration-300 flex flex-col"
+              :style="consoleOpen ? 'width:300px;opacity:1' : 'width:0;opacity:0;pointer-events:none'"
+              style="background:#1e1e1e;box-shadow:0 4px 24px rgba(0,0,0,0.18)"
+            >
+              <!-- Console header -->
+              <div class="px-4 py-3 flex items-center justify-between shrink-0" style="background:#252526;border-bottom:1px solid rgba(255,255,255,0.06)">
+                <div class="flex items-center gap-2.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:rgba(255,255,255,0.4)">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                  </svg>
+                  <span class="text-[12px] font-semibold" style="color:rgba(255,255,255,0.6)">Test Results</span>
+                </div>
+                <button
+                  @click="consoleOpen = false"
+                  class="w-6 h-6 flex items-center justify-center rounded transition-all"
+                  style="color:rgba(255,255,255,0.3)"
+                  onmouseover="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)'"
+                  onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,0.3)'"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <!-- Console content -->
+              <div class="flex-1 overflow-y-auto">
+                <!-- Test results (normal run) -->
+                <TestResults v-if="sectionProblem && testResults.length" :results="testResults" />
+                <!-- Error or stdout output -->
+                <div v-else-if="sandboxOutput" class="p-4 flex flex-col gap-2">
+                  <div
+                    class="rounded-lg px-3 py-2.5 text-[12px] font-mono leading-relaxed whitespace-pre-wrap"
+                    :style="sandboxOutput.startsWith('Error:')
+                      ? 'background:rgba(248,113,113,0.08);color:#f87171;border-left:2px solid rgba(248,113,113,0.4)'
+                      : 'background:rgba(255,255,255,0.04);color:#4ade80'"
+                  >{{ sandboxOutput }}</div>
+                </div>
+                <!-- Empty state -->
+                <div v-else class="flex flex-col items-center justify-center h-full gap-3 py-12 px-6">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.05)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:rgba(255,255,255,0.2)">
+                      <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                    </svg>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-[12px] font-medium" style="color:rgba(255,255,255,0.25)">No output yet</p>
+                    <p class="text-[11px] mt-1" style="color:rgba(255,255,255,0.15)">Run your code to see results</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
         <!-- 11. Key Insight -->
@@ -1972,6 +2119,10 @@ import PatternVisualizer from '@/components/visualizers/PatternVisualizer.vue'
 import ClusterMap from '@/components/learn-map/ClusterMap.vue'
 import TopicSearch from '@/components/learn-map/TopicSearch.vue'
 import ComplexityGraph from '@/components/ComplexityGraph.vue'
+import CodeEditor from '@/components/sandbox/CodeEditor.vue'
+import TestResults from '@/components/sandbox/TestResults.vue'
+import { usePyodide } from '@/composables/usePyodide'
+import { PROBLEMS, problemForConcept } from '@/data/problems'
 import { CLUSTERS, clusterForSection } from '@/data/clusters'
 
 
@@ -1990,6 +2141,51 @@ const sortingTab = ref('intro')
 const bfsDfsTab = ref('bfs')
 const stacksQueuesTab = ref('stack')
 const slidingWindowVisualTab = ref('fixed')
+
+const consoleOpen = ref(false)
+const sandboxCode = ref('# Write Python here...')
+const sandboxOutput = ref(null)
+const sandboxLoading = ref(false)
+const testResults = ref([])
+
+const sectionProblem = computed(() =>
+  selectedSection.value ? problemForConcept(selectedSection.value.id) : null
+)
+
+const { runPython, runTests } = usePyodide()
+
+function resetSandbox() {
+  sandboxCode.value = sectionProblem.value ? sectionProblem.value.starterCode : '# Write Python here...'
+  testResults.value = []
+  sandboxOutput.value = null
+  consoleOpen.value = false
+}
+
+async function runSandbox() {
+  sandboxLoading.value = true
+  sandboxOutput.value = null
+  testResults.value = []
+  consoleOpen.value = true
+  try {
+    if (sectionProblem.value) {
+      testResults.value = await runTests(
+        sandboxCode.value,
+        sectionProblem.value.functionName,
+        sectionProblem.value.testCases,
+        sectionProblem.value.runnerSetup,
+      )
+    } else {
+      sandboxOutput.value = await runPython(sandboxCode.value)
+    }
+  } catch (e) {
+    const msg = e.message ?? String(e)
+    sandboxOutput.value = msg.includes('timed out')
+      ? `Error: Execution timed out after 5s.\nCheck for infinite loops or very slow code.`
+      : `Error: ${msg}`
+  } finally {
+    sandboxLoading.value = false
+  }
+}
 
 const BFS_SIGNALS = [
   { cue: '"Shortest path" or "minimum steps"', why: 'BFS guarantees the shortest path in unweighted graphs — nodes are dequeued in order of increasing distance.' },
@@ -2441,6 +2637,11 @@ const nextSection = computed(() =>
 
 watch(selectedSection, (section) => {
   router.replace({ query: section ? { section: section.id } : {} })
+  consoleOpen.value = false
+  testResults.value = []
+  sandboxOutput.value = null
+  const problem = section ? problemForConcept(section.id) : null
+  sandboxCode.value = problem ? problem.starterCode : '# Write Python here...'
 })
 
 onMounted(() => {
@@ -5631,3 +5832,6 @@ function navigateToLabel(label) {
   }
 }
 </script>
+
+<style scoped>
+</style>

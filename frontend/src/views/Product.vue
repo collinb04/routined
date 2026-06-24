@@ -113,19 +113,24 @@
 
                 <!-- Problem name -->
                 <td class="px-4 py-3.5">
-                  <a
-                    :href="problem.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-text hover:text-black transition-colors group"
+                  <button
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-text hover:text-black transition-colors group text-left"
+                    @click="handleProblemClick(problem)"
                   >
                     {{ problem.name }}
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    <!-- Session badge -->
+                    <span
+                      v-if="SESSION_IDS[problem.name]"
+                      class="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0"
+                      style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0"
+                    >solve</span>
+                    <!-- External link icon for LeetCode -->
+                    <svg v-else width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                       class="text-text-muted opacity-0 group-hover:opacity-60 transition-opacity shrink-0">
                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                       <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
                     </svg>
-                  </a>
+                  </button>
                 </td>
 
                 <!-- Difficulty -->
@@ -161,9 +166,49 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const sidebarOpen = ref(true)
 const selectedTopic = ref(null)
+
+// Maps problem names to our internal session IDs (subset with sandbox support)
+const SESSION_IDS = {
+  'Contains Duplicate':                   'contains-duplicate',
+  'Valid Palindrome':                     'valid-palindrome',
+  'Two Sum II':                           'two-sum-ii',
+  'Maximum Average Subarray I':           'max-average-subarray',
+  'Valid Parentheses':                    'valid-parentheses',
+  'Next Greater Element I':              'next-greater-element',
+  'Binary Search':                        'binary-search',
+  'Koko Eating Bananas':                  'koko-eating-bananas',
+  'Two Sum':                              'two-sum',
+  'Remove Linked List Elements':          'remove-linked-list-elements',
+  'Linked List Cycle':                    'linked-list-cycle',
+  'Reverse Linked List':                  'reverse-linked-list',
+  'Maximum Depth of Binary Tree':         'max-depth-tree',
+  'Binary Tree Level Order Traversal':    'level-order-traversal',
+  'Subsets':                              'subsets',
+  'Assign Cookies':                       'assign-cookies',
+  'Find if Path Exists in Graph':         'find-path-in-graph',
+  'Course Schedule':                      'course-schedule',
+  'Kth Largest Element in a Stream':      'kth-largest-stream',
+  'Top K Frequent Elements':              'top-k-frequent',
+  'Climbing Stairs':                      'climbing-stairs',
+  'Unique Paths':                         'unique-paths',
+  'Partition Equal Subset Sum':           'partition-equal-subset',
+  'Fibonacci Number':                     'fibonacci-number',
+  'Meeting Rooms':                        'meeting-rooms',
+}
+
+function handleProblemClick(problem) {
+  const sessionId = SESSION_IDS[problem.name]
+  if (sessionId) {
+    router.push(`/session/${sessionId}`)
+  } else {
+    window.open(problem.url, '_blank', 'noopener,noreferrer')
+  }
+}
 
 const topics = reactive([
   {

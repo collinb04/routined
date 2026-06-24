@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import NavBar from './components/NavBar.vue'
+import { usePyodide } from './composables/usePyodide'
+const { loadPyodide } = usePyodide()
+
+onMounted(() => loadPyodide())
 </script>
 
 <template>

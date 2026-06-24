@@ -12,7 +12,7 @@ const routes = [
   { path: '/learn', component: Blog },
   { path: '/pricing', component: Pricing },
   { path: '/problems', component: Product },
-  { path: '/session', component: SessionView },
+  { path: '/session/:id', component: SessionView, props: true },
 ]
 
 export default createRouter({

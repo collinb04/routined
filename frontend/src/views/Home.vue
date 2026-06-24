@@ -42,23 +42,17 @@
     </section>
 
     <!-- HOW IT WORKS (STEPS) -->
-    <section id="problems" class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
-      <div class="max-w-3xl w-full flex flex-col gap-2 text-center">
+    <section id="problems" class="min-h-screen flex flex-col items-center justify-center gap-12 px-5 sm:px-[6%] py-16 sm:py-28 bg-[#f5f5f2]">
+      <div class="max-w-5xl w-full flex flex-col gap-2 text-center">
         <h2 class="text-4xl sm:text-6xl font-medium leading-snug tracking-tight text-text text-center">
           A Concrete Walkthrough
         </h2>
         <p class="text-md text-text-dim leading-relaxed max-w-lg text-center mx-auto">
-          It may not be easy work, but it is simple. Watch this demo to see what it takes to become a DSA machine.
+          It may not be easy work, but it is simple. See what it takes to become a DSA machine.
         </p>
       </div>
-      <div class="max-w-3xl w-full aspect-video bg-black/5 rounded-2xl flex items-center justify-center border border-black/8">
-        <div class="flex flex-col items-center gap-3 text-text-muted">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
-          </svg>
-          <span class="text-sm font-medium">Video coming soon</span>
-        </div>
+      <div class="max-w-5xl w-full rounded-2xl overflow-hidden shadow-sm border border-black/6" style="height:620px">
+        <ProblemSpace height="620px" :embedded="true" />
       </div>
     </section>
 
@@ -362,6 +356,7 @@
 
 <script setup>
   import { ref } from 'vue'
+  import ProblemSpace from '@/components/ProblemSpace.vue'
 
   const openFaq = ref(null)
   const heroFlipped = ref(false)
