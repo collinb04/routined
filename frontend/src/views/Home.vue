@@ -30,9 +30,9 @@
              Start learning efficiently with Routined.
           </p>
           <div class="flex gap-3 items-center mt-2">
-            <a href="/problems" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85">
+            <button class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg transition-opacity hover:opacity-85" @click="goStart">
               Start a session
-            </a>
+            </button>
             <a href="#problems" class="text-text-muted text-sm px-6 py-3 rounded-lg transition-opacity hover:bg-white hover:text-text">
               See how it works
             </a>
@@ -48,7 +48,8 @@
           A Concrete Walkthrough
         </h2>
         <p class="text-md text-text-dim leading-relaxed max-w-lg text-center mx-auto">
-          It may not be easy work, but it is simple. See what it takes to become a DSA machine.
+          It may not be easy work, but it is simple. Routined focuses on instilling pattern recognition
+          to turn you into a DSA machine.
         </p>
       </div>
       <div class="max-w-5xl w-full rounded-2xl overflow-hidden shadow-sm border border-black/6" style="height:620px">
@@ -182,7 +183,7 @@
                 <p class="text-5xl font-bold text-white leading-none mt-1">300</p>
                 <p class="text-white/70 text-xs mt-1.5">Handpicked problems to drill in key ideas</p>
               </div>
-              <a href="/problems" @click.stop class="mt-3 inline-block text-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-black hover:bg-black hover:text-white transition-colors duration-150">Start drilling →</a>
+              <button @click.stop="goStart" class="mt-3 inline-block text-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-black hover:bg-black hover:text-white transition-colors duration-150">Start drilling →</button>
             </div>
             <!-- Back -->
             <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
@@ -356,7 +357,16 @@
 
 <script setup>
   import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/auth'
   import ProblemSpace from '@/components/ProblemSpace.vue'
+
+  const router = useRouter()
+  const auth = useAuthStore()
+
+  function goStart() {
+    router.push(auth.isLoggedIn ? '/problems' : '/login')
+  }
 
   const openFaq = ref(null)
   const heroFlipped = ref(false)
@@ -367,11 +377,6 @@
   const solutionsFlipped = ref(false)
   const goalFlipped = ref(false)
 
-  const whyCards = [
-    { icon: '', title: 'Mental models, not solutions', body: 'We teach you how experts think about problems, not just the answer to this one problem.' },
-    { icon: '', title: 'Spaced repetition built in', body: 'Concepts surface again right before you forget them, so knowledge actually sticks.' },
-    { icon: '', title: 'Interview-focused', body: 'Every session is calibrated to the patterns that actually show up in DSA interviews.' },
-  ]
 
 const faqs = [
     { q: 'Is this just another Leetcode clone?', a: 'No. We don\'t grade you on passing test cases. We train you on the reasoning process — asking questions until you arrive at the insight yourself.' },

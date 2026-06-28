@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: routined_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: collinbrennan
+      POSTGRES_PASSWORD: Becky2012
+      POSTGRES_DB: routined_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

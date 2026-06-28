@@ -86,23 +86,89 @@
       </div>
     </div>
 
-    <!-- Desktop CTA -->
-    <RouterLink to="/learn"
-      class="
-        hidden md:inline-flex items-center
-        relative text-sm font-medium text-black
-        px-4 py-1.5 rounded-lg
-        bg-[#f5f5f2]
-        border border-black
-        shadow-[0_4px_0_0_#000]
-        transition-all duration-100
-        hover:shadow-[0_2px_0_0_#000] hover:translate-y-0.5
-        hover:bg-white
-        active:shadow-none active:translate-y-1
-      "
-    >
-      Get started
-    </RouterLink>
+    <!-- Desktop: profile avatar (logged in) or Get started -->
+    <div class="hidden md:flex items-center" v-if="auth.ready">
+
+      <!-- Profile dropdown -->
+      <div
+        v-if="auth.isLoggedIn"
+        class="relative"
+        @mouseenter="clearDropdownTimer(); openDropdown = '__profile__'"
+        @mouseleave="scheduleCloseDropdown()"
+      >
+        <button
+          class="w-8 h-8 rounded-full bg-black text-white text-[13px] font-semibold flex items-center justify-center hover:opacity-80 transition-opacity"
+          @click="openDropdown = openDropdown === '__profile__' ? null : '__profile__'"
+        >
+          {{ userInitial }}
+        </button>
+
+        <Transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-1"
+        >
+          <div
+            v-if="openDropdown === '__profile__'"
+            class="absolute top-full right-0 mt-4 w-52 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+          >
+            <div class="absolute -top-[5px] right-3 w-2.5 h-2.5 bg-white border-l border-t border-gray-100 rotate-45" />
+
+            <!-- User info -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <p class="text-[13px] font-semibold text-text truncate">{{ auth.user?.displayName || 'Account' }}</p>
+              <p class="text-[11.5px] text-text-muted truncate mt-0.5">{{ auth.user?.email }}</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="p-1.5 flex flex-col">
+              <RouterLink to="/problems"
+                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-text hover:bg-[#f5f5f2] transition-colors"
+                @click="openDropdown = null"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Problems
+              </RouterLink>
+              <button
+                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-red-500 hover:bg-red-50 transition-colors w-full text-left"
+                @click="handleLogout"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Log out
+              </button>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- Get started (logged out) -->
+      <button
+        v-else
+        class="
+          inline-flex items-center
+          relative text-sm font-medium text-black
+          px-4 py-1.5 rounded-lg
+          bg-[#f5f5f2]
+          border border-black
+          shadow-[0_4px_0_0_#000]
+          transition-all duration-100
+          hover:shadow-[0_2px_0_0_#000] hover:translate-y-0.5
+          hover:bg-white
+          active:shadow-none active:translate-y-1
+        "
+        @click="goGetStarted"
+      >
+        Get started
+      </button>
+
+    </div>
 
     <!-- Hamburger button -->
     <button
@@ -158,19 +224,63 @@
           {{ link.label }}
         </a>
       </template>
-      <RouterLink
-        to="/blog"
+      <!-- Mobile: profile actions (logged in) or Get started -->
+      <template v-if="auth.ready && auth.isLoggedIn">
+        <div class="mt-3 border-t border-black/8 pt-3 flex flex-col gap-1">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-text-muted px-1 mb-1">
+            {{ auth.user?.email }}
+          </p>
+          <RouterLink
+            to="/problems"
+            class="py-2 text-[15px] font-medium text-text hover:translate-x-1.5 transition-transform"
+            @click="mobileOpen = false"
+          >
+            Problems
+          </RouterLink>
+          <button
+            class="py-2 text-[15px] font-medium text-red-500 text-left"
+            @click="handleLogout"
+          >
+            Log out
+          </button>
+        </div>
+      </template>
+      <button
+        v-else-if="auth.ready"
         class="mt-3 text-center text-sm font-medium text-black border border-black hover:bg-white shadow-[0_3px_0_0_#000] rounded-lg px-4 py-2.5 transition-all duration-100 hover:shadow-[0_1px_0_0_#000] hover:translate-y-0.5 active:shadow-none active:translate-y-1"
-        @click="mobileOpen = false"
+        @click="goGetStarted"
       >
         Get started
-      </RouterLink>
+      </button>
     </div>
   </Transition>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const auth   = useAuthStore()
+
+const userInitial = computed(() => {
+  const name  = auth.user?.displayName
+  const email = auth.user?.email
+  return (name?.[0] ?? email?.[0] ?? '?').toUpperCase()
+})
+
+function goGetStarted() {
+  mobileOpen.value = false
+  router.push(auth.isLoggedIn ? '/problems' : '/login')
+}
+
+async function handleLogout() {
+  openDropdown.value = null
+  mobileOpen.value   = false
+  await auth.logout()
+  router.push('/')
+}
 
 const openDropdown = ref(null)
 const mobileOpen = ref(false)

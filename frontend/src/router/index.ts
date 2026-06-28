@@ -5,6 +5,8 @@ import Blog from '@/views/Blog.vue'
 import Pricing from '@/views/Pricing.vue'
 import Product from '@/views/Product.vue'
 import SessionView from '@/views/SessionView.vue'
+import Login from '@/views/Login.vue'
+import Signup from '@/views/Signup.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -13,6 +15,8 @@ const routes = [
   { path: '/pricing', component: Pricing },
   { path: '/problems', component: Product },
   { path: '/session/:id', component: SessionView, props: true },
+  { path: '/login', component: Login },
+  { path: '/signup', component: Signup },
 ]
 
 export default createRouter({

@@ -150,8 +150,18 @@
           <div class="flex-1 flex flex-col overflow-hidden" style="background:#1a1a1a">
 
             <!-- CodeEditor fills all space above bottom bar -->
-            <div class="flex-1 min-h-0 overflow-hidden">
+            <div class="relative flex-1 min-h-0 overflow-hidden">
               <CodeEditor v-model="codeContent" />
+              <button
+                class="absolute top-2.5 right-3 flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium transition-all z-10"
+                style="color:rgba(255,255,255,0.25);background:transparent"
+                onmouseover="this.style.color='rgba(255,255,255,0.6)';this.style.background='rgba(255,255,255,0.07)'"
+                onmouseout="this.style.color='rgba(255,255,255,0.25)';this.style.background='transparent'"
+                @click="resetCode"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset
+              </button>
             </div>
 
             <!-- Console panel — slides up from bottom -->
@@ -271,6 +281,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import confetti from 'canvas-confetti'
 
 const props = defineProps({
   height:   { type: String,  default: 'calc(100vh - 4rem)' },
@@ -283,7 +294,9 @@ import { usePyodide } from '@/composables/usePyodide'
 const activeLeftTab  = ref('problem')
 const activeRightTab = ref('dissect')
 const unlockedTabs   = ref(['dissect', 'brute', 'optimize', 'attack'])
-const STARTER = `def two_sum(nums, target):
+const BLANK = `def two_sum(nums, target):\n    pass`
+
+const DEMO_CODE = `def two_sum(nums, target):
     seen = {}
     for i, n in enumerate(nums):
         diff = target - n
@@ -291,7 +304,7 @@ const STARTER = `def two_sum(nums, target):
             return [seen[diff], i]
         seen[n] = i`
 
-const codeContent    = ref(STARTER)
+const codeContent    = ref(props.embedded ? DEMO_CODE : BLANK)
 const hasRun         = ref(false)
 const runLoading     = ref(false)
 const runError       = ref(null)
@@ -329,7 +342,7 @@ const constraints = [
   'Only one valid answer exists.',
 ]
 
-const chatMessages = reactive({
+const DEMO_MESSAGES = {
   dissect: [
     { role: 'ai',   text: "Let's dissect this problem. Before writing any code — what are the inputs and outputs of this function? Walk me through what you notice." },
     { role: 'user', text: "I just iterate through the array with a hash map — store each number's index and check for the complement." },
@@ -363,7 +376,19 @@ const chatMessages = reactive({
     { role: 'user', text: "I store each number mapped to its index. At each element, I check if target minus nums[i] is already in the map." },
     { role: 'ai',   text: "That's it. One pass, O(n) time, O(n) space. If the complement is in the map, you're done — return its index and i. Go implement it in the Attack tab." },
   ],
-})
+}
+
+const FRESH_MESSAGES = {
+  dissect:  [{ role: 'ai', text: "Let's dissect this problem. Before writing any code — what are the inputs and outputs of this function? Walk me through what you notice." }],
+  brute:    [{ role: 'ai', text: "Good. Now let's think brute force — what's the most straightforward solution, even if it's slow?" }],
+  optimize: [{ role: 'ai', text: "You've got a working solution. Now let's push it. What's the bottleneck, and what data structure might help you eliminate it?" }],
+}
+
+const chatMessages = reactive(
+  props.embedded
+    ? { dissect: [...DEMO_MESSAGES.dissect], brute: [...DEMO_MESSAGES.brute], optimize: [...DEMO_MESSAGES.optimize] }
+    : { dissect: [...FRESH_MESSAGES.dissect], brute: [...FRESH_MESSAGES.brute], optimize: [...FRESH_MESSAGES.optimize] }
+)
 
 const testResults = ref([])
 
@@ -391,6 +416,12 @@ const SUBMIT_TEST_CASES = [
 
 const isSubmitting = ref(false)
 
+function fireConfetti() {
+  const burst = (opts) => confetti({ particleCount: 60, spread: 70, ticks: 200, gravity: 1.1, scalar: 0.9, ...opts })
+  burst({ origin: { x: 0.3, y: 0.6 }, angle: 60 })
+  setTimeout(() => burst({ origin: { x: 0.7, y: 0.6 }, angle: 120 }), 120)
+}
+
 async function execute(cases) {
   runError.value = null
   testResults.value = []
@@ -417,11 +448,12 @@ async function runCode() {
 async function submitCode() {
   isSubmitting.value = true
   await execute(SUBMIT_TEST_CASES)
+  if (testResults.value.length && testResults.value.every(t => t.passed)) fireConfetti()
   isSubmitting.value = false
 }
 
 function resetCode() {
-  codeContent.value = STARTER
+  codeContent.value = BLANK
   testResults.value = []
   runError.value = null
   hasRun.value = false
