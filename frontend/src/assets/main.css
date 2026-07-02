@@ -6,8 +6,8 @@ html, body {
 }
 
 @theme {
-  --color-accent: #4a7cf7;
-  --color-accent-hover: #3a6ce6;
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
   --color-surface: #f4f5f7;
   --color-surface-raised: #eaecf0;
   --color-border: #dde1e7;

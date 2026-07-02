@@ -2,6 +2,8 @@ export interface ClusterConcept {
   id: string
   label: string
   isNew?: boolean
+  bridge?: boolean
+  stub?: boolean
 }
 
 export interface Cluster {
@@ -85,6 +87,22 @@ export const CLUSTERS: Cluster[] = [
     position: { cx: 245, cy: 315 },
   },
   {
+    id: 'bitwise',
+    label: 'Bitwise',
+    color: '#0d9488',
+    primitive: 'The bit',
+    primitiveExplainer: 'Operate directly on binary representations — no arithmetic, just masks and shifts.',
+    why: ``,
+    concepts: [
+      { id: 'bitwise-intro', label: 'Intro to Bitwise', stub: true },
+      { id: 'bit-manipulation', label: 'Bit Manipulation', stub: true },
+      { id: 'xor-patterns', label: 'XOR Patterns', stub: true },
+      { id: 'bitmask-subset', label: 'Bitmask & Subset Enumeration', stub: true },
+    ],
+    transferHooks: [],
+    position: { cx: 160, cy: 315 },
+  },
+  {
     id: 'sorted-search',
     label: 'Sorted Search',
     color: '#0891b2',
@@ -116,12 +134,30 @@ export const CLUSTERS: Cluster[] = [
       { id: 'bfs-dfs', label: 'BFS & DFS' },
       { id: 'backtracking', label: 'Backtracking' },
       { id: 'greedy', label: 'Greedy' },
+      { id: 'recursion-dp-bridge', label: 'Recursion to DP Bridge', bridge: true, stub: true },
     ],
     transferHooks: [
       { text: 'DFS on a graph is the same DFS from trees — same call stack, now with a visited set to handle cycles.', targetId: 'graph' },
       { text: 'Recursion + memoization = DP. The cache is a hash map of subproblem results. Recursive Structures and Optimization are the same structure, viewed differently.', targetId: 'optimization' },
     ],
     position: { cx: 590, cy: 185 },
+  },
+  {
+    id: 'grid-matrix',
+    label: 'Grid & Matrix',
+    color: '#65a30d',
+    primitive: 'The 2D index',
+    primitiveExplainer: 'Rows and columns give every cell an (r, c) address — neighbor access follows 4-directional offsets.',
+    why: ``,
+    concepts: [
+      { id: 'grid-intro', label: 'Intro to Grid & Matrix', stub: true },
+      { id: '2d-array-traversal', label: '2D Array Traversal', stub: true },
+      { id: 'grid-bfs-dfs', label: 'Grid BFS & DFS', stub: true },
+      { id: 'matrix-rotation', label: 'Matrix Rotation & Transformation', stub: true },
+      { id: 'multi-pass-patterns', label: 'Multi-pass Patterns', stub: true },
+    ],
+    transferHooks: [],
+    position: { cx: 510, cy: 270 },
   },
   {
     id: 'graph',

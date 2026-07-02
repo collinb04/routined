@@ -87,11 +87,11 @@
     </div>
 
     <!-- Desktop: profile avatar (logged in) or Get started -->
-    <div class="hidden md:flex items-center" v-if="auth.ready">
+    <div class="hidden md:flex items-center" v-if="!auth.isLoading">
 
       <!-- Profile dropdown -->
       <div
-        v-if="auth.isLoggedIn"
+        v-if="auth.isAuthenticated"
         class="relative"
         @mouseenter="clearDropdownTimer(); openDropdown = '__profile__'"
         @mouseleave="scheduleCloseDropdown()"
@@ -119,7 +119,7 @@
 
             <!-- User info -->
             <div class="px-4 py-3 border-b border-gray-100">
-              <p class="text-[13px] font-semibold text-text truncate">{{ auth.user?.displayName || 'Account' }}</p>
+              <p class="text-[13px] font-semibold text-text truncate">{{ auth.user?.name || 'Account' }}</p>
               <p class="text-[11.5px] text-text-muted truncate mt-0.5">{{ auth.user?.email }}</p>
             </div>
 
@@ -225,7 +225,7 @@
         </a>
       </template>
       <!-- Mobile: profile actions (logged in) or Get started -->
-      <template v-if="auth.ready && auth.isLoggedIn">
+      <template v-if="!auth.isLoading && auth.isAuthenticated">
         <div class="mt-3 border-t border-black/8 pt-3 flex flex-col gap-1">
           <p class="text-[11px] font-semibold uppercase tracking-wider text-text-muted px-1 mb-1">
             {{ auth.user?.email }}
@@ -246,7 +246,7 @@
         </div>
       </template>
       <button
-        v-else-if="auth.ready"
+        v-else-if="!auth.isLoading"
         class="mt-3 text-center text-sm font-medium text-black border border-black hover:bg-white shadow-[0_3px_0_0_#000] rounded-lg px-4 py-2.5 transition-all duration-100 hover:shadow-[0_1px_0_0_#000] hover:translate-y-0.5 active:shadow-none active:translate-y-1"
         @click="goGetStarted"
       >
@@ -265,14 +265,14 @@ const router = useRouter()
 const auth   = useAuthStore()
 
 const userInitial = computed(() => {
-  const name  = auth.user?.displayName
+  const name  = auth.user?.name
   const email = auth.user?.email
   return (name?.[0] ?? email?.[0] ?? '?').toUpperCase()
 })
 
 function goGetStarted() {
   mobileOpen.value = false
-  router.push(auth.isLoggedIn ? '/problems' : '/login')
+  router.push(auth.isAuthenticated ? '/problems' : '/login')
 }
 
 async function handleLogout() {

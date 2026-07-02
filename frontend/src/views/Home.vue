@@ -305,6 +305,13 @@
       </div>
     </section> -->
 
+    <!-- MY STORY · MISSION · VALUES -->
+    <section id="about" class="flex flex-col items-center gap-10 px-5 sm:px-[12.5%] py-16 sm:py-24 bg-[#f5f5f2]">
+      <div class="max-w-4xl w-full">
+        <StoryGraph />
+      </div>
+    </section>
+
     <!-- FAQS + CONTACT -->
     <section id="contact" class="min-h-screen flex items-center justify-center px-5 sm:px-[12.5%] py-16 sm:py-28 bg-[#f5f5f2]">
       <div class="max-w-5xl w-full flex flex-col md:flex-row gap-10 md:gap-16 md:items-start">
@@ -360,12 +367,13 @@
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/stores/auth'
   import ProblemSpace from '@/components/ProblemSpace.vue'
+  import StoryGraph from '@/components/StoryGraph.vue'
 
   const router = useRouter()
   const auth = useAuthStore()
 
   function goStart() {
-    router.push(auth.isLoggedIn ? '/problems' : '/login')
+    router.push(auth.isAuthenticated ? '/problems' : '/login')
   }
 
   const openFaq = ref(null)

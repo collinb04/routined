@@ -21,7 +21,7 @@ function createWorker(): Worker {
   isReady.value = false
   isLoading.value = true
 
-  const w = new Worker('/pyodide.worker.js')
+  const w = new Worker('/pyodide.worker.ts')
 
   w.onmessage = (e) => {
     const { type, id, result, error } = e.data

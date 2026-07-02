@@ -119,6 +119,7 @@
                 <span class="flex items-center gap-1.5">
                   {{ concept.label }}
                   <span v-if="concept.isNew" class="text-[9px] text-text-muted/50 ml-auto">soon</span>
+                  <span v-else-if="concept.stub" class="ml-auto text-[10px] text-text-muted/40">★</span>
                   <svg v-else-if="completed.has(concept.id)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 6 9 17l-5-5"/>
                   </svg>
@@ -218,8 +219,8 @@
                 <div class="w-1 rounded-full shrink-0" :style="{ background: cluster.color }" />
                 <div class="flex flex-col gap-2 py-1">
                   <span
-                    class="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full w-fit"
-                    :style="{ color: cluster.color, background: cluster.color + '18' }"
+                    class="text-[10px] font-mono px-1.5 py-0.5 rounded border w-fit"
+                    :style="{ color: cluster.color, borderColor: cluster.color }"
                   >Central Primitive</span>
                   <p class="text-base font-medium text-text leading-relaxed">{{ cluster.primitive }}</p>
                   <p class="text-sm text-text-muted leading-relaxed">{{ cluster.primitiveExplainer }}</p>
@@ -249,7 +250,7 @@
                   >
                     <span class="text-2xl font-semibold text-gray-100 leading-none select-none w-8 shrink-0">{{ String(i + 1).padStart(2, '0') }}</span>
                     <span class="text-[13px] font-medium text-text flex-1">{{ concept.label }}</span>
-                    <span v-if="concept.isNew" class="text-[10px] text-text-muted/50 border border-gray-200 rounded-full px-2 py-0.5">soon</span>
+                    <span v-if="concept.isNew" class="text-[10px] font-mono text-text-muted/50 border border-gray-200 rounded px-1.5 py-0.5">soon</span>
                     <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-text-muted shrink-0"><path d="m9 18 6-6-6-6"/></svg>
                   </button>
                 </div>
@@ -417,14 +418,14 @@
             <div class="ml-11 flex flex-col divide-y divide-gray-50">
               <div v-for="hint in patternHints" :key="hint.phrase" class="flex items-center justify-between py-3 first:pt-0 last:pb-0 gap-4">
                 <span class="text-sm text-text-dim italic">{{ hint.phrase }}</span>
-                <span class="text-xs font-medium text-text bg-[#f5f5f2] px-2.5 py-0.5 rounded-full border border-gray-200 shrink-0">{{ hint.pattern }}</span>
+                <span class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 shrink-0">{{ hint.pattern }}</span>
               </div>
             </div>
           </div>
 
           <!-- Closing: the grinding problem -->
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-200/70 flex flex-col gap-3">
-            <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full w-fit">The problem with grinding</span>
+            <span class="text-[10px] font-mono text-amber-700 border border-amber-700 rounded px-1.5 py-0.5 w-fit">The problem with grinding</span>
             <p class="text-sm text-text-dim leading-relaxed">
               Tools like roadmaps and curated problem lists have made DSA prep better. But there's still a ceiling: grinding 200 problems and hoping to think <em>"wait, I think I remember something similar... was that a queue or a heap?"</em> is not a reliable skill.
             </p>
@@ -443,7 +444,7 @@
           <h2 class="text-xl font-medium text-text">The DSA problem debrief</h2>
           <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4 border border-[#3a9ae8]/20">
             <div class="flex items-center gap-2">
-              <span class="text-[10px] font-semibold text-[#3a9ae8] bg-[#3a9ae8]/10 px-2 py-0.5 rounded-full">How we teach it</span>
+              <span class="text-[10px] font-mono text-[#3a9ae8] border border-[#3a9ae8] rounded px-1.5 py-0.5">How we teach it</span>
             </div>
             <p class="text-sm text-text-dim leading-relaxed">
               You can't just grind 200 LeetCode problems and expect mastery. You need to know <em>what</em> you're doing
@@ -546,7 +547,7 @@
             <div class="h-px bg-gray-100" />
             <div class="flex flex-col gap-3">
               <div v-for="chain in prereqChains" :key="chain.topic" class="flex items-start gap-3">
-                <span class="text-xs font-medium text-text bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 shrink-0 mt-0.5">{{ chain.topic }}</span>
+                <span class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 shrink-0 mt-0.5">{{ chain.topic }}</span>
                 <span class="text-sm text-text-dim leading-relaxed">{{ chain.unlocks }}</span>
               </div>
             </div>
@@ -654,7 +655,7 @@
           <div class="flex gap-4">
             <div class="w-1 rounded-full bg-accent shrink-0" />
             <div class="flex flex-col gap-2 py-1">
-              <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Importance</span>
+              <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Importance</span>
               <p class="text-base font-medium text-text leading-relaxed">Complexity is the difference between a product that scales and one that collapses under load.</p>
               <p class="text-sm text-text-dim leading-relaxed">When working with millions of requests, the difference between visiting each request once vs an exponential amount is drastic. Companies want you to demonstrate your understanding of efficiency at scale in interviews.</p>
             </div>
@@ -770,14 +771,14 @@
                       <td class="py-3 pr-4 font-mono text-xs text-text-dim">{{ row.worst }}</td>
                       <td class="py-3 pr-4 font-mono text-xs text-text-dim">{{ row.space }}</td>
                       <td class="py-3 pr-4">
-                        <span class="text-xs font-medium px-1.5 py-0.5 rounded-full"
-                          :class="row.stable ? 'bg-green-bg text-green' : 'bg-[#f5f5f2] text-text-muted'">
+                        <span class="text-xs font-mono px-1.5 py-0.5 rounded border"
+                          :class="row.stable ? 'text-green border-green' : 'text-text-muted border-gray-300'">
                           {{ row.stable ? 'Yes' : 'No' }}
                         </span>
                       </td>
                       <td class="py-3">
-                        <span class="text-xs font-medium px-1.5 py-0.5 rounded-full"
-                          :class="row.inplace ? 'bg-green-bg text-green' : 'bg-[#f5f5f2] text-text-muted'">
+                        <span class="text-xs font-mono px-1.5 py-0.5 rounded border"
+                          :class="row.inplace ? 'text-green border-green' : 'text-text-muted border-gray-300'">
                           {{ row.inplace ? 'Yes' : 'No' }}
                         </span>
                       </td>
@@ -791,7 +792,7 @@
             <div class="flex gap-4">
               <div class="w-1 rounded-full bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
-                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">No comparison-based sort can beat O(n log n) in the worst case — it's a mathematical lower bound.</p>
                 <p class="text-sm text-text-dim leading-relaxed">To sort n elements by comparing them, you need to determine which of n! possible orderings is correct. Each comparison eliminates half the remaining possibilities, so you need at least log₂(n!) comparisons — which simplifies to Ω(n log n). Bucket sort escapes this bound only because it doesn't compare elements against each other.</p>
               </div>
@@ -1215,7 +1216,7 @@
             <div class="flex gap-4">
               <div class="w-1 rounded-full bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
-                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">BFS guarantees shortest path in unweighted graphs — not because it's searching smarter, but because it can't visit anything far before visiting everything close.</p>
                 <p class="text-sm text-text-dim leading-relaxed">The queue enforces FIFO order. Nodes at distance d are enqueued before nodes at distance d+1, so they're also dequeued first. That ordering is why the first time BFS reaches a node, the path taken is provably shortest. No revisit can improve it.</p>
               </div>
@@ -1288,7 +1289,7 @@
             <div class="flex gap-4">
               <div class="w-1 rounded-full bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
-                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">Recursive DFS and iterative DFS with an explicit stack are the same algorithm — the call stack IS a stack.</p>
                 <p class="text-sm text-text-dim leading-relaxed">When you call a function recursively, Python pushes a frame onto the call stack and pops it when the function returns. Replacing the call stack with an explicit stack just makes that process visible. For graphs, always add a visited set — on trees, the absence of cycles makes it unnecessary. For deep graphs (recursion depth &gt; 1000), prefer the iterative form to avoid Python's stack limit.</p>
               </div>
@@ -1379,7 +1380,7 @@
             <div class="flex gap-4">
               <div class="w-1 rounded-full bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
-                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">A stack is a list with a rule. Python's list supports push and pop from the tail in O(1) — that's all a stack is.</p>
                 <p class="text-sm text-text-dim leading-relaxed">append() and pop() are the only operations you need. Peek with stack[-1] — never remove when you just want to look. The discipline of only touching one end is what makes stacks useful: it encodes a relationship between order of insertion and order of removal that mirrors how function calls, DFS paths, and bracket matching all work.</p>
               </div>
@@ -1450,7 +1451,7 @@
             <div class="flex gap-4">
               <div class="w-1 rounded-full bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
-                <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+                <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">Never use <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">list.pop(0)</code> as a queue — it's O(n). Use <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">collections.deque</code> with <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">popleft()</code>.</p>
                 <p class="text-sm text-text-dim leading-relaxed">A Python list is backed by an array. Removing from the front (pop(0)) shifts every remaining element one position left — O(n). A deque uses a doubly-linked block structure that makes both ends O(1). This is a silent performance bug that won't fail your code on small inputs but will time-out on large ones. Always use deque for queues.</p>
               </div>
@@ -1494,20 +1495,33 @@
           </h1>
         </div>
 
-
+        <!-- Stub placeholder -->
+        <template v-if="!selectedSection.content || Object.keys(selectedSection.content).length === 0">
+          <div class="bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center gap-3 py-16 px-8 text-center">
+            <span class="text-3xl">★</span>
+            <p class="text-sm font-medium text-text">Coming soon</p>
+            <p class="text-sm text-text-muted max-w-xs">This topic is on the roadmap. Content is being written and will appear here when ready.</p>
+          </div>
+        </template>
 
         <!-- 1. Analogy / Made Simple -->
+        <template v-else>
         <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl shadow-sm flex flex-col">
           <div class="flex items-center justify-between px-6 pt-5 pb-3">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">
               {{ selectedSection.content?.madeSimple ? 'Made Simple' : 'Analogy' }}
             </h2>
-            <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">
                 {{ selectedSection.content?.madeSimple ? 'Visual' : 'High abstraction' }}
               </span>
-              <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                {{ selectedSection.content?.madeSimple ? 'A visual walkthrough of the core concept before getting into mechanics.' : 'A real-world analogy to make the concept intuitive before getting into mechanics.' }}
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  {{ selectedSection.content?.madeSimple ? 'A visual walkthrough of the core concept before getting into mechanics.' : 'A real-world analogy to make the concept intuitive before getting into mechanics.' }}
+                </div>
               </div>
             </div>
           </div>
@@ -1553,10 +1567,15 @@
         <div class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">What / Why / How</h2>
-            <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">Conceptual</span>
-              <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                The mental model — what it is, why it exists, and how it works.
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Conceptual</span>
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  The mental model — what it is, why it exists, and how it works.
+                </div>
               </div>
             </div>
           </div>
@@ -1583,7 +1602,17 @@
         <div v-if="selectedSection.content?.fixedVsDynamic" class="bg-white rounded-2xl p-6 flex flex-col gap-5 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Fixed vs Dynamic Arrays</h2>
-            <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-full border border-gray-100">Concept</span>
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Concept</span>
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  A conceptual breakdown — no code, just building the right mental model.
+                </div>
+              </div>
+            </div>
           </div>
           <div class="h-px bg-gray-100" />
           <div class="flex flex-col gap-4">
@@ -1611,10 +1640,15 @@
         <div v-if="selectedSection.categoryId === 'data-structures' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Memory & Storage</h2>
-            <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">Technical</span>
-              <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                How this structure is laid out in memory — directly explains why certain operations are fast or slow.
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Technical</span>
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  How this structure is laid out in memory — directly explains why certain operations are fast or slow.
+                </div>
               </div>
             </div>
           </div>
@@ -1662,10 +1696,15 @@
         <div v-if="selectedSection.categoryId !== 'the-connection' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Complexity</h2>
-            <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">Technical</span>
-              <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                Big O time and space costs — how performance scales as input size grows.
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Technical</span>
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  Big O time and space costs — how performance scales as input size grows.
+                </div>
               </div>
             </div>
           </div>
@@ -1773,10 +1812,15 @@
         <div v-if="!selectedSection.content?.isClusterIntro && !selectedSection.content?.madeSimple" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Visuals & Examples</h2>
-            <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">Concrete</span>
-              <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                A worked example or diagram that makes the concept tangible and traceable.
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Concrete</span>
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  A worked example or diagram that makes the concept tangible and traceable.
+                </div>
               </div>
             </div>
           </div>
@@ -1816,10 +1860,15 @@
         <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
           <div class="flex items-center justify-between">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Code</h2>
-            <div class="relative group">
-              <span class="text-[10px] text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-md border border-gray-100 cursor-default">Implementation</span>
-              <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
-                Python code showing how to actually write or use this in practice.
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Implementation</span>
+              <div class="relative group">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-text-muted/50 cursor-default hover:text-text-muted transition-colors" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
+                </svg>
+                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-52 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 pointer-events-none z-20 text-center">
+                  Python code showing how to actually write or use this in practice.
+                </div>
               </div>
             </div>
           </div>
@@ -1994,7 +2043,7 @@
         <div v-if="selectedSection.content?.keyInsight" class="flex gap-4">
           <div class="w-1 rounded-full bg-accent shrink-0" />
           <div class="flex flex-col gap-2 py-1">
-            <span class="text-[10px] font-semibold text-accent bg-accent/8 px-2 py-0.5 rounded-full w-fit">Key insight</span>
+            <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
             <p class="text-base font-medium text-text leading-relaxed" v-html="selectedSection.content.keyInsight.heading" />
             <p class="text-sm text-text-dim leading-relaxed" v-html="selectedSection.content.keyInsight.body" />
           </div>
@@ -2004,7 +2053,7 @@
         <div class="bg-white rounded-2xl p-6 flex flex-col gap-5 shadow-sm border border-[#3a9ae8]/25">
           <div class="flex items-center gap-2">
             <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Connections</h2>
-            <span class="text-[10px] font-semibold text-[#3a9ae8] bg-[#3a9ae8]/10 px-2 py-0.5 rounded-full">Graph</span>
+            <span class="text-[10px] font-mono text-[#3a9ae8] border border-[#3a9ae8] rounded px-1.5 py-0.5">Graph</span>
           </div>
           <div class="h-px bg-gray-100" />
           <div class="flex flex-col gap-4">
@@ -2012,10 +2061,10 @@
               <span class="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Prerequisites</span>
               <div class="flex flex-wrap gap-2">
                 <template v-if="selectedSection.content?.connections?.prereqs?.length">
-                  <button v-for="p in selectedSection.content.connections.prereqs" :key="p" class="text-xs text-text bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 hover:border-gray-400 hover:bg-white transition-colors" @click="navigateToLabel(p)">← {{ p }}</button>
+                  <button v-for="p in selectedSection.content.connections.prereqs" :key="p" class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 hover:border-gray-600 transition-colors" @click="navigateToLabel(p)">← {{ p }}</button>
                 </template>
                 <template v-else>
-                  <span v-for="i in 2" :key="i" class="text-xs text-text-muted bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 italic">← Prereq {{ i }}</span>
+                  <span v-for="i in 2" :key="i" class="text-xs font-mono text-text-muted border border-gray-200 rounded px-1.5 py-0.5 italic">← Prereq {{ i }}</span>
                 </template>
               </div>
             </div>
@@ -2023,10 +2072,10 @@
               <span class="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Unlocks</span>
               <div class="flex flex-wrap gap-2">
                 <template v-if="selectedSection.content?.connections?.unlocks?.length">
-                  <button v-for="u in selectedSection.content.connections.unlocks" :key="u" class="text-xs text-text bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 hover:border-gray-400 hover:bg-white transition-colors" @click="navigateToLabel(u)">→ {{ u }}</button>
+                  <button v-for="u in selectedSection.content.connections.unlocks" :key="u" class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 hover:border-gray-600 transition-colors" @click="navigateToLabel(u)">→ {{ u }}</button>
                 </template>
                 <template v-else>
-                  <span v-for="i in 3" :key="i" class="text-xs text-text-muted bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 italic">→ Next concept {{ i }}</span>
+                  <span v-for="i in 3" :key="i" class="text-xs font-mono text-text-muted border border-gray-200 rounded px-1.5 py-0.5 italic">→ Next concept {{ i }}</span>
                 </template>
               </div>
             </div>
@@ -2034,10 +2083,10 @@
               <span class="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Related</span>
               <div class="flex flex-wrap gap-2">
                 <template v-if="selectedSection.content?.connections?.related?.length">
-                  <button v-for="r in selectedSection.content.connections.related" :key="r" class="text-xs text-text bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 hover:border-gray-400 hover:bg-white transition-colors" @click="navigateToLabel(r)">∼ {{ r }}</button>
+                  <button v-for="r in selectedSection.content.connections.related" :key="r" class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 hover:border-gray-600 transition-colors" @click="navigateToLabel(r)">∼ {{ r }}</button>
                 </template>
                 <template v-else>
-                  <span v-for="i in 3" :key="i" class="text-xs text-text-muted bg-[#f5f5f2] px-2.5 py-1 rounded-full border border-gray-200 italic">∼ Related {{ i }}</span>
+                  <span v-for="i in 3" :key="i" class="text-xs font-mono text-text-muted border border-gray-200 rounded px-1.5 py-0.5 italic">∼ Related {{ i }}</span>
                 </template>
               </div>
             </div>
@@ -2045,6 +2094,8 @@
         </div>
 
         <!-- ── end generic skeleton ── -->
+
+        </template> <!-- end v-else (has content) -->
 
         </template>
 
@@ -3740,6 +3791,11 @@ def dfs(graph, node, visited=None):
           },
         },
       },
+      { id: 'grid-intro', label: 'Intro to Grid & Matrix', content: {} },
+      { id: '2d-array-traversal', label: '2D Array Traversal', content: {} },
+      { id: 'grid-bfs-dfs', label: 'Grid BFS & DFS', content: {} },
+      { id: 'matrix-rotation', label: 'Matrix Rotation & Transformation', content: {} },
+      { id: 'multi-pass-patterns', label: 'Multi-pass Patterns', content: {} },
     ],
   },
   {
@@ -4361,6 +4417,12 @@ def can_jump(nums):
             related: ['Dynamic Programming', 'Sorting', 'Merge Intervals'],
           },
         },
+      },
+      {
+        id: 'recursion-dp-bridge',
+        label: 'Recursion to DP Bridge',
+        bridge: true,
+        content: {},
       },
       {
         id: 'backtracking',
@@ -5393,6 +5455,10 @@ def merge_k_lists(lists):
           },
         },
       },
+      { id: 'bitwise-intro', label: 'Intro to Bitwise', content: {} },
+      { id: 'bit-manipulation', label: 'Bit Manipulation', content: {} },
+      { id: 'xor-patterns', label: 'XOR Patterns', content: {} },
+      { id: 'bitmask-subset', label: 'Bitmask & Subset Enumeration', content: {} },
     ],
   },
   {

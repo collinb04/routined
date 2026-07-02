@@ -1,51 +1,71 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  type User,
-} from 'firebase/auth'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '@/lib/firebase'
+
+interface User {
+  sub: string
+  email: string
+  name?: string
+  nickname?: string
+  picture?: string
+}
+
+function mapError(body: { error?: string }, fallbackCode: string) {
+  const msg = (body.error || '').toLowerCase()
+  if (msg.includes('wrong email or password') || msg.includes('invalid')) return 'auth/invalid-credential'
+  if (msg.includes('already') || msg.includes('exists')) return 'auth/email-already-in-use'
+  if (msg.includes('weak') || msg.includes('password strength')) return 'auth/weak-password'
+  return fallbackCode
+}
 
 export const useAuthStore = defineStore('auth', () => {
   const user       = ref<User | null>(null)
-  const isLoggedIn = ref(false)
-  const ready      = ref(false)
+  const isAuthenticated = ref(false)
+  const isLoading  = ref(true)
 
-  onAuthStateChanged(auth, (firebaseUser) => {
-    user.value       = firebaseUser
-    isLoggedIn.value = !!firebaseUser
-    ready.value      = true
-  })
+  async function init() {
+    try {
+      const res = await fetch('/auth/me', { credentials: 'include' })
+      if (res.ok) {
+        user.value       = await res.json()
+        isAuthenticated.value = true
+      }
+    } catch {}
+    isLoading.value = false
+  }
 
   async function login(email: string, password: string) {
-    const cred = await signInWithEmailAndPassword(auth, email, password)
-    user.value       = cred.user
-    isLoggedIn.value = true
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    })
+    const body = await res.json()
+    if (!res.ok) throw { code: mapError(body, 'auth/invalid-credential') }
+    user.value       = body
+    isAuthenticated.value = true
   }
 
   async function signup(email: string, password: string, name: string) {
-    const cred = await createUserWithEmailAndPassword(auth, email, password)
-    user.value       = cred.user
-    isLoggedIn.value = true
-
-    // Write user profile to Firestore
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      uid:       cred.user.uid,
-      name,
-      email,
-      createdAt: serverTimestamp(),
+    const res = await fetch('/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password, name }),
     })
+    const body = await res.json()
+    if (!res.ok) throw { code: mapError(body, 'auth/email-already-in-use') }
+    user.value       = body
+    isAuthenticated.value = true
   }
 
   async function logout() {
-    await signOut(auth)
+    await fetch('/auth/logout', { method: 'POST', credentials: 'include' })
     user.value       = null
-    isLoggedIn.value = false
+    isAuthenticated.value = false
   }
 
-  return { user, isLoggedIn, ready, login, signup, logout }
+  init()
+
+  return { user, isAuthenticated, isLoading, init, login, signup, logout }
 })

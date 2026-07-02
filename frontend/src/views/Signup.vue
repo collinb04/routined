@@ -18,8 +18,8 @@
         <input
           v-model="fields.name"
           type="text"
-          placeholder="Full Name"
-          autocomplete="name"
+          placeholder="Username"
+          autocomplete="username"
           class="w-full rounded-lg border px-5 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 transition-all"
           :class="submitted && errors.name ? 'border-red-300 bg-red-50/50 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-black/10'"
         />
@@ -55,10 +55,21 @@
           </button>
         </div>
 
-        <!-- Strength bar -->
-        <div v-if="fields.password" class="flex gap-1 px-1">
-          <div v-for="i in 4" :key="i" class="h-1 flex-1 rounded-lg transition-all duration-300"
-            :style="{ background: i <= strength.score ? strength.color : '#e5e7eb' }" />
+        <!-- Password requirements -->
+        <div v-if="fields.password" class="grid grid-cols-2 gap-x-3 gap-y-1 px-1 py-0.5">
+          <div
+            v-for="req in requirements" :key="req.label"
+            class="flex items-center gap-1.5 text-[11.5px] transition-colors duration-200"
+            :class="req.met ? 'text-green-600' : 'text-text-muted'"
+          >
+            <svg v-if="req.met" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <svg v-else width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 opacity-40">
+              <circle cx="12" cy="12" r="9"/>
+            </svg>
+            {{ req.label }}
+          </div>
         </div>
 
         <div class="relative">
@@ -68,7 +79,11 @@
             placeholder="Confirm Password"
             autocomplete="new-password"
             class="w-full rounded-lg border px-5 py-3 pr-11 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 transition-all"
-            :class="submitted && errors.confirm ? 'border-red-300 bg-red-50/50 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-black/10'"
+            :class="fields.confirm && fields.confirm === fields.password
+              ? 'border-green-400 bg-white focus:ring-green-200'
+              : fields.confirm && fields.confirm !== fields.password
+                ? 'border-red-300 bg-red-50/50 focus:ring-red-200'
+                : 'border-gray-200 bg-white focus:ring-black/10'"
           />
           <button type="button" tabindex="-1"
             class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
@@ -83,21 +98,17 @@
           </button>
         </div>
 
-        <!-- Terms -->
-        <label class="flex items-start gap-3 cursor-pointer select-none px-1">
-          <div class="relative mt-0.5 shrink-0">
-            <input type="checkbox" v-model="fields.terms" class="sr-only" />
-            <div class="w-4 h-4 rounded border-2 flex items-center justify-center transition-all"
-              :class="fields.terms ? 'bg-black border-black' : submitted && errors.terms ? 'border-red-400' : 'border-gray-300'">
-              <svg v-if="fields.terms" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-          </div>
-          <span class="text-[12px] text-text-muted leading-snug">
-            I agree to the <a href="#" class="text-text underline underline-offset-2">Terms of Service</a> and <a href="#" class="text-text underline underline-offset-2">Privacy Policy</a>
-          </span>
-        </label>
+        <!-- Match indicator -->
+        <div v-if="fields.confirm" class="flex items-center gap-1.5 px-1 text-[11.5px] transition-colors duration-200"
+          :class="fields.confirm === fields.password ? 'text-green-600' : 'text-red-500'">
+          <svg v-if="fields.confirm === fields.password" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <svg v-else width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          {{ fields.confirm === fields.password ? 'Passwords match' : 'Passwords don\'t match' }}
+        </div>
 
         <!-- All errors -->
         <div v-if="submitted && anyError" class="flex flex-col gap-0.5 px-1">
@@ -105,7 +116,6 @@
           <p v-if="errors.email"    class="text-[12px] text-red-500">{{ errors.email }}</p>
           <p v-if="errors.password" class="text-[12px] text-red-500">{{ errors.password }}</p>
           <p v-if="errors.confirm"  class="text-[12px] text-red-500">{{ errors.confirm }}</p>
-          <p v-if="errors.terms"    class="text-[12px] text-red-500">{{ errors.terms }}</p>
         </div>
 
         <p v-if="submitError" class="text-[12px] text-red-500 text-center">{{ submitError }}</p>
@@ -147,35 +157,28 @@ const loading      = ref(false)
 const submitted    = ref(false)
 const submitError  = ref('')
 
-const fields = reactive({ name: '', email: '', password: '', confirm: '', terms: false })
-const errors = reactive({ name: '', email: '', password: '', confirm: '', terms: '' })
+const fields = reactive({ name: '', email: '', password: '', confirm: '' })
+const errors = reactive({ name: '', email: '', password: '', confirm: '' })
 
 const anyError = computed(() => Object.values(errors).some(e => e))
 
-const strength = computed(() => {
-  const p = fields.password
-  if (!p) return { score: 0, label: '', color: '' }
-  let score = 0
-  if (p.length >= 8)            score++
-  if (/[A-Z]/.test(p))          score++
-  if (/[0-9]/.test(p))          score++
-  if (/[^A-Za-z0-9]/.test(p))  score++
-  const map = [
-    { score: 1, label: 'Weak',   color: '#ef4444' },
-    { score: 2, label: 'Fair',   color: '#f59e0b' },
-    { score: 3, label: 'Good',   color: '#3b82f6' },
-    { score: 4, label: 'Strong', color: '#22c55e' },
-  ]
-  return { score, ...(map[score - 1] ?? map[0]) }
-})
+const requirements = computed(() => [
+  { label: '8+ characters',      met: fields.password.length >= 8 },
+  { label: 'Uppercase letter',   met: /[A-Z]/.test(fields.password) },
+  { label: 'Lowercase letter',   met: /[a-z]/.test(fields.password) },
+  { label: 'Number',             met: /[0-9]/.test(fields.password) },
+  { label: 'Special character',  met: /[^A-Za-z0-9]/.test(fields.password) },
+])
+
+const allRequirementsMet = computed(() => requirements.value.every(r => r.met))
 
 function validate() {
-  errors.name = errors.email = errors.password = errors.confirm = errors.terms = ''
+  errors.name = errors.email = errors.password = errors.confirm = ''
 
   if (!fields.name.trim())
-    errors.name = 'Full name is required.'
-  else if (fields.name.trim().split(/\s+/).length < 2)
-    errors.name = 'Please enter your first and last name.'
+    errors.name = 'Username is required.'
+  else if (fields.name.trim().length < 3)
+    errors.name = 'Username must be at least 3 characters.'
 
   if (!fields.email.trim())
     errors.email = 'Email is required.'
@@ -184,20 +187,15 @@ function validate() {
 
   if (!fields.password)
     errors.password = 'Password is required.'
-  else if (fields.password.length < 8)
-    errors.password = 'Password must be at least 8 characters.'
-  else if (strength.value.score < 2)
-    errors.password = 'Password is too weak. Add uppercase letters, numbers, or symbols.'
+  else if (!allRequirementsMet.value)
+    errors.password = 'Password must meet all requirements.'
 
   if (!fields.confirm)
     errors.confirm = 'Please confirm your password.'
   else if (fields.confirm !== fields.password)
     errors.confirm = 'Passwords do not match.'
 
-  if (!fields.terms)
-    errors.terms = 'You must agree to the Terms of Service to continue.'
-
-  return !errors.name && !errors.email && !errors.password && !errors.confirm && !errors.terms
+  return !errors.name && !errors.email && !errors.password && !errors.confirm
 }
 
 async function submit() {

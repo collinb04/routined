@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useSessionStore } from '@/stores/session'
+import { useRoute } from 'vue-router'
 import ProblemSpace from '@/components/ProblemSpace.vue'
 
-const store = useSessionStore()
-
-onMounted(() => store.initLens(0))
+const route = useRoute()
+const problemId = route.params.id as string
 </script>
 
 <template>
-  <ProblemSpace />
+  <ProblemSpace :problem-id="problemId" />
 </template>
