@@ -59,6 +59,7 @@ function advancePhase(data: unknown) {
 interface ClueState {
   status: 'locked' | 'active' | 'solved'
   selectedOption: number | null
+  lastWrongOption: number | null
   attempts: number
   feedbackVisible: boolean
   feedbackCorrect: boolean
@@ -70,6 +71,7 @@ const clueStates = reactive<ClueState[]>(
   props.clues.map((_, i) => ({
     status: i === 0 ? 'active' : 'locked',
     selectedOption: null,
+    lastWrongOption: null,
     attempts: 0,
     feedbackVisible: false,
     feedbackCorrect: false,
@@ -98,6 +100,7 @@ function submitClue(ci: number) {
     if (ci + 1 < clueStates.length) clueStates[ci + 1].status = 'active'
   } else {
     s.attempts++
+    s.lastWrongOption = s.selectedOption
     s.flashError = true
     s.feedbackCorrect = false
     s.feedbackVisible = true
@@ -288,7 +291,9 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
                 <span>{{
                   clueStates[ci].feedbackCorrect
                     ? clue.correctFeedback
-                    : clue.wrongFeedback[Math.min(clueStates[ci].attempts - 1, clue.wrongFeedback.length - 1)]
+                    : (clueStates[ci].lastWrongOption !== null && clue.options[clueStates[ci].lastWrongOption!].feedback)
+                      ? clue.options[clueStates[ci].lastWrongOption!].feedback
+                      : clue.wrongFeedback[Math.min(clueStates[ci].attempts - 1, clue.wrongFeedback.length - 1)]
                 }}</span>
                 <button
                   v-if="clueStates[ci].feedbackCorrect"

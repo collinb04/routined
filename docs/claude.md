@@ -1,0 +1,1 @@
+Dissect content authoring: follow docs/dissect-authoring.md
