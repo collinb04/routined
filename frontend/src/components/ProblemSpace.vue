@@ -83,13 +83,8 @@
     <div class="flex flex-col flex-1 overflow-hidden">
       <PhasedLearningPanel
         :clues="problem?.clues ?? []"
-        :brute-seed-messages="bruteSeedMessages"
-        :optimize-seed-messages="optimizeSeedMessages"
-        :brute-hint="problem?.bruteHint"
-        :optimize-hint="problem?.optimizeHint"
-        :brute-phase-complete="brutePhaseComplete"
-        :optimize-phase-complete="optimizePhaseComplete"
-        :on-send-message="onSendMessage"
+        :struggle="problem?.struggle"
+        :problem-id="problem?.id ?? ''"
         @reveal-highlight="onRevealHighlight"
         @advance-phase="onAdvancePhase"
       >
@@ -287,23 +282,6 @@ const examples    = computed(() => problem.value?.examples    ?? [])
 const constraints = computed(() => problem.value?.constraints ?? [])
 
 // ── Phased learning panel ──────────────────────────────────────────────────
-
-const bruteSeedMessages    = computed(() => [
-  { role: 'bot', text: problem.value?.bruteSeedMessage ?? "Good. Now let's think brute force — what's the most straightforward solution, even if it's slow?" }
-])
-const optimizeSeedMessages = computed(() => [
-  { role: 'bot', text: problem.value?.optimizeSeedMessage ?? "You've got a working solution. Now let's push it. What's the bottleneck, and what data structure might help you eliminate it?" }
-])
-
-const brutePhaseComplete   = ref(false)
-const optimizePhaseComplete = ref(false)
-
-async function onSendMessage(text, phase) {
-  await new Promise(r => setTimeout(r, 750))
-  return phase === 'brute'
-    ? "That's a start. What's the time complexity, and can we do better?"
-    : "Right direction. What data structure gives you O(1) lookup so you can drop the inner loop?"
-}
 
 function onRevealHighlight(clueId) {
   // TODO: highlight matching span in left panel once problem descriptions include data-clue-id spans

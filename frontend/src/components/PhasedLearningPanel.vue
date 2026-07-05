@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick, watch } from 'vue'
-import type { ClueCard } from '@/data/problems'
+import { ref, reactive, computed } from 'vue'
+import type { ClueCard, StruggleContent } from '@/data/problems'
+import StrugglePanel from '@/components/StrugglePanel.vue'
 
 export interface ChatMessage {
   role: 'bot' | 'user'
@@ -11,16 +12,10 @@ export interface ChatMessage {
 
 const props = withDefaults(defineProps<{
   clues: ClueCard[]
-  bruteSeedMessages: ChatMessage[]
-  optimizeSeedMessages: ChatMessage[]
-  bruteHint?: string
-  optimizeHint?: string
-  brutePhaseComplete: boolean
-  optimizePhaseComplete: boolean
-  onSendMessage: (text: string, phase: 'brute' | 'optimize') => Promise<string>
+  struggle?: StruggleContent
+  problemId?: string
 }>(), {
-  bruteHint: 'Describe the naive solution and its cost',
-  optimizeHint: 'Name the pattern and derive the optimization',
+  problemId: '',
 })
 
 const emit = defineEmits<{
@@ -30,7 +25,7 @@ const emit = defineEmits<{
 
 // ─── Phase Navigation ───────────────────────────────────────────────────────
 
-const PHASE_NAMES = ['Dissect', 'Brute Force', 'Optimize', 'Attack'] as const
+const PHASE_NAMES = ['Dissect', 'Struggle & Optimize', 'Attack'] as const
 
 const activePhase = ref(0)
 const highestUnlocked = ref(0)
@@ -130,65 +125,11 @@ function continueDissect() {
   })
 }
 
-// ─── Chat (Phases 1 & 2) ───────────────────────────────────────────────────
+// ─── Struggle & Optimize (Phase 1) ─────────────────────────────────────────
 
-type ChatPhaseKey = 'brute' | 'optimize'
-
-const chatMessages = reactive<Record<ChatPhaseKey, ChatMessage[]>>({
-  brute: props.bruteSeedMessages.map(m => ({ ...m })),
-  optimize: props.optimizeSeedMessages.map(m => ({ ...m })),
-})
-
-const chatPhase = computed<ChatPhaseKey>(() =>
-  activePhase.value === 1 ? 'brute' : 'optimize'
-)
-
-const chatInput = ref('')
-const chatLoading = ref(false)
-const chatScrollEl = ref<HTMLElement | null>(null)
-const chatTextareaEl = ref<HTMLTextAreaElement | null>(null)
-
-async function scrollToBottom() {
-  await nextTick()
-  if (chatScrollEl.value) chatScrollEl.value.scrollTop = chatScrollEl.value.scrollHeight
+function onStruggleComplete() {
+  advancePhase({ struggle: true })
 }
-
-async function sendMessage() {
-  const text = chatInput.value.trim()
-  if (!text || chatLoading.value) return
-  const phase = chatPhase.value
-  chatMessages[phase].push({ role: 'user', text })
-  chatInput.value = ''
-  if (chatTextareaEl.value) chatTextareaEl.value.style.height = 'auto'
-  chatLoading.value = true
-  await scrollToBottom()
-  try {
-    const reply = await props.onSendMessage(text, phase)
-    chatMessages[phase].push({ role: 'bot', text: reply })
-  } catch {
-    chatMessages[phase].push({ role: 'bot', text: 'Something went wrong. Try again.' })
-  } finally {
-    chatLoading.value = false
-    await scrollToBottom()
-  }
-}
-
-function autoResize(e: Event) {
-  const el = e.target as HTMLTextAreaElement
-  el.style.height = 'auto'
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px'
-}
-
-const currentPhaseComplete = computed(() =>
-  activePhase.value === 1 ? props.brutePhaseComplete : props.optimizePhaseComplete
-)
-
-function continueChat() {
-  if (!currentPhaseComplete.value) return
-  advancePhase({ messages: [...chatMessages[chatPhase.value]] })
-}
-
-watch(activePhase, () => nextTick(() => scrollToBottom()))
 </script>
 
 <template>
@@ -213,7 +154,7 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
         @click="clickTab(i)"
         :title="tabStatus(i) === 'locked' ? 'Complete the previous step first' : ''"
       >
-        <span class="text-[11px] font-medium shrink-0" :class="tabStatus(i) === 'done' ? 'text-green' : 'text-text-muted'">
+        <span class="text-[11px] font-medium shrink-0 mt-0.5 w-4 text-center" :class="tabStatus(i) === 'done' ? 'text-green' : 'text-text-muted'">
           <svg v-if="tabStatus(i) === 'done'" width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline">
             <polyline points="2 6 5 9 10 3"/>
           </svg>
@@ -226,26 +167,21 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
     <!-- ── Content ────────────────────────────────────────────────────────── -->
     <div class="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-      <!-- ── Phase 0: Dissect / Clue Decoder ──────────────────────────── -->
+      <!-- ── Phase 0: Dissect ─────────────────────────────────────────── -->
       <template v-if="activePhase === 0">
 
-        <!-- Clue list -->
         <div class="flex-1 min-h-0 overflow-y-auto flex flex-col">
-
-          <!-- Header -->
           <div class="flex items-center justify-between px-5 py-3 shrink-0 border-b border-gray-100">
             <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Clue Decoder</span>
             <span class="text-[12px] text-text-muted">submit each clue to advance</span>
           </div>
 
-          <!-- Clue items -->
           <div
             v-for="(clue, ci) in clues"
             :key="clue.id"
             class="flex flex-col px-5 py-4 border-b border-gray-100 transition-opacity"
             :class="clueStates[ci].status === 'locked' ? 'opacity-35' : ''"
           >
-            <!-- Question row -->
             <div class="flex items-start gap-3 mb-3">
               <span class="text-[11px] font-medium shrink-0 mt-0.5 w-4 text-center" :class="clueStates[ci].status === 'solved' ? 'text-green' : 'text-text-muted'">
                 <svg v-if="clueStates[ci].status === 'solved'" width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline">
@@ -260,7 +196,6 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
             </div>
 
             <template v-if="clueStates[ci].status !== 'locked'">
-              <!-- Option pills -->
               <div class="flex flex-wrap gap-2 mb-3 pl-8">
                 <button
                   v-for="(opt, oi) in clue.options"
@@ -282,7 +217,6 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
                 >{{ opt.label }}</button>
               </div>
 
-              <!-- Feedback -->
               <div
                 v-if="clueStates[ci].feedbackVisible"
                 class="flex items-start justify-between gap-3 rounded-xl px-3.5 py-2.5 mb-3 ml-8 text-[13px] leading-relaxed"
@@ -306,7 +240,6 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
                 >{{ clueStates[ci].revealClicked ? 'Shown ✓' : 'Show in problem' }}</button>
               </div>
 
-              <!-- Submit -->
               <div v-if="clueStates[ci].status === 'active'" class="flex justify-end">
                 <button
                   class="px-4 py-1.5 rounded-lg text-[13px] font-medium border transition-all"
@@ -348,7 +281,7 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
               :disabled="!canContinueDissect"
               @click="continueDissect"
             >
-              Continue to brute force
+              Continue to Struggle
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <path d="M5 12h14m-7-7 7 7-7 7"/>
               </svg>
@@ -358,98 +291,24 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
 
       </template>
 
-      <!-- ── Phases 1 & 2: Chat ────────────────────────────────────────── -->
-      <template v-else-if="activePhase === 1 || activePhase === 2">
-
-        <!-- Messages -->
-        <div ref="chatScrollEl" class="flex-1 min-h-0 overflow-y-auto px-5 py-5 flex flex-col gap-3 bg-[#f5f5f2]">
-          <div
-            v-for="(msg, mi) in chatMessages[chatPhase]"
-            :key="mi"
-            class="flex items-end gap-2"
-            :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-          >
-            <div
-              v-if="msg.role === 'bot'"
-              class="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"
-            >R</div>
-
-            <div
-              class="max-w-[78%] px-4 py-2.5 text-sm leading-relaxed"
-              :class="msg.role === 'user'
-                ? 'bg-black text-white rounded-2xl rounded-br-sm'
-                : 'bg-white text-text-dim shadow-sm rounded-2xl rounded-bl-sm border border-gray-100'"
-            >{{ msg.text }}</div>
-
-            <div
-              v-if="msg.role === 'user'"
-              class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0 mb-0.5"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="text-text-muted">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Typing indicator -->
-          <div v-if="chatLoading" class="flex items-end gap-2 justify-start">
-            <div class="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5">R</div>
-            <div class="px-4 py-3 bg-white rounded-2xl rounded-bl-sm border border-gray-100 shadow-sm">
-              <div class="flex gap-1 items-center">
-                <span class="typing-dot" style="animation-delay: 0ms" />
-                <span class="typing-dot" style="animation-delay: 150ms" />
-                <span class="typing-dot" style="animation-delay: 300ms" />
-              </div>
-            </div>
-          </div>
+      <!-- ── Phase 1: Struggle & Optimize ─────────────────────────────── -->
+      <template v-else-if="activePhase === 1">
+        <StrugglePanel
+          v-if="struggle && problemId"
+          :struggle="struggle"
+          :problem-id="problemId"
+          class="flex-1 min-h-0"
+          @complete="onStruggleComplete"
+        />
+        <div
+          v-else
+          class="flex-1 flex items-center justify-center text-sm text-text-muted italic bg-[#f5f5f2]"
+        >
+          No struggle content for this problem yet.
         </div>
-
-        <!-- Input -->
-        <div class="shrink-0 border-t border-gray-100 bg-white px-4 py-3">
-          <div class="flex items-end gap-2 bg-surface rounded-xl border border-border px-3 py-2">
-            <textarea
-              ref="chatTextareaEl"
-              v-model="chatInput"
-              class="flex-1 resize-none text-sm text-text-dim bg-transparent outline-none leading-relaxed"
-              style="max-height: 120px; min-height: 20px"
-              placeholder="Type your answer…"
-              rows="1"
-              @input="autoResize"
-              @keydown.enter.exact.prevent="sendMessage"
-            />
-            <button
-              class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-white shrink-0 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-              :disabled="!chatInput.trim() || chatLoading"
-              @click="sendMessage"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <path d="M12 19V5m-7 7 7-7 7 7"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Bottom bar -->
-        <div class="shrink-0 border-t border-gray-100 bg-white px-5 py-3 flex items-center justify-between">
-          <span class="text-[12px] text-text-muted">
-            {{ activePhase === 1 ? bruteHint : optimizeHint }}
-          </span>
-          <button
-            class="flex items-center gap-1.5 text-[13px] font-semibold transition-opacity"
-            :class="currentPhaseComplete ? 'text-text hover:opacity-70 cursor-pointer' : 'text-text-muted opacity-40 cursor-not-allowed'"
-            :disabled="!currentPhaseComplete"
-            @click="continueChat"
-          >
-            {{ activePhase === 1 ? 'Continue to Optimize' : 'Continue to Attack' }}
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <path d="M5 12h14m-7-7 7 7-7 7"/>
-            </svg>
-          </button>
-        </div>
-
       </template>
 
-      <!-- ── Phase 3: Attack ───────────────────────────────────────────── -->
+      <!-- ── Phase 2: Attack ──────────────────────────────────────────── -->
       <template v-else>
         <slot name="attack">
           <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8 bg-[#f5f5f2]">
@@ -474,21 +333,5 @@ watch(activePhase, () => nextTick(() => scrollToBottom()))
 .phased-panel {
   --accent-color: var(--color-accent, #4a7cf7);
   --success-color: var(--color-green, #16a34a);
-  --danger-color: #ef4444;
-}
-
-.typing-dot {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: var(--color-text-muted, #6b7280);
-  opacity: 0.4;
-  animation: typing-bounce 1.2s infinite ease-in-out;
-}
-
-@keyframes typing-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-4px); opacity: 0.8; }
 }
 </style>

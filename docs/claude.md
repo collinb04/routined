@@ -1,6 +1,6 @@
 # Routined
 
-DSA learning platform teaching pattern recognition, not solution memorization. Users work each problem through four sequential phases: **Dissect** (clue decoder — multiple-choice questions about problem signals) → **Brute Force** (Socratic chat) → **Optimize** (Socratic chat) → **Attack** (code editor, Python via Pyodide in-browser).
+DSA learning platform teaching pattern recognition, not solution memorization. Users work each problem through three sequential phases: **Dissect** (clue decoder — multiple-choice questions about problem signals) → **Struggle & Optimize** (commit → Socratic chat → revise with insight) → **Attack** (code editor, Python via Pyodide in-browser).
 
 ## Stack
 
@@ -28,7 +28,24 @@ DSA learning platform teaching pattern recognition, not solution memorization. U
 ## Content authoring
 
 - **Dissect clue authoring: follow `docs/dissect-authoring.md`.** Read that spec and the target problem file only — nothing else. Edit the file directly; do not print the content in chat; reply with a one-line summary.
+- **Struggle & Optimize authoring: follow `docs/struggle-authoring.md`.** Same discipline: spec + problem file only. Validate the generated block against the Zod schema in `scripts/struggle-schema.mjs` before checking off in `docs/struggle-todo.md`.
 - When locating a problem in a large file, grep for its `id` and read only the surrounding ~200 lines. Never read an entire multi-thousand-line content file.
+
+## Struggle & Optimize phase — hard rules
+
+1. **Commitment before chat**: the Flask backend returns 400 if `/chat` or `/evaluate-insight` is called without a prior `/commit`. Never add a frontend bypass.
+2. **Learner states the insight, AI never reveals it**: `targetInsight` lives in the Flask system prompt as a "do not state verbatim" constraint. It must not appear in any response text or UI label.
+3. After 2 failed insight evaluations, the third attempt is forced-passed — backend-controlled, no frontend override.
+
+## Struggle & Optimize phase — API
+
+All endpoints require a logged-in Flask session (`session["user"]`).
+
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | `/api/problems/<id>/struggle/commit` | Body: `{strategyId, timeComplexity, spaceComplexity, planSteps[]}` |
+| POST | `/api/problems/<id>/struggle/chat` | Body: `{messages[], targetInsight}` — 400 if no prior commit |
+| POST | `/api/problems/<id>/struggle/evaluate-insight` | Body: `{insight, insightRubric[]}` — 400 if no prior commit |
 
 ## Token discipline
 

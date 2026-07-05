@@ -24,6 +24,23 @@ export interface ClueCard {
   wrongFeedback: string[]
 }
 
+export type Viability = 'optimal' | 'viable_suboptimal' | 'trap' | 'inapplicable'
+
+export interface StrategyOption {
+  strategyId: string
+  viability: Viability
+  complexity: { time: string; space: string }
+  rationale: string
+  planSteps: string[]
+  socraticSeeds: string[]
+}
+
+export interface StruggleContent {
+  options: StrategyOption[]
+  targetInsight: string
+  insightRubric: string[]
+}
+
 export interface Problem {
   id: string
   title: string
@@ -37,6 +54,7 @@ export interface Problem {
   conceptId: string
   runnerSetup?: string
   clues?: ClueCard[]
+  struggle?: StruggleContent
   bruteSeedMessage?: string
   optimizeSeedMessage?: string
   bruteHint?: string

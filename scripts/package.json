@@ -1,0 +1,9 @@
+{
+  "name": "routined-scripts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "zod": "^3.23.8"
+  }
+}
