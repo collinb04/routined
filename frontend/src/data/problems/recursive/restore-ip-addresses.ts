@@ -17,4 +17,66 @@ export default {
     { label: 'All zeros', args: ['0000'], expected: ['0.0.0.0'] },
     { label: 'Too short', args: ['1'], expected: [] },
   ],
+  clues: [
+    {
+      id: 'constraint-structure',
+      question: 's.length ≤ 20 and a valid IP always has exactly 4 octets. What does this tell you about the search space?',
+      options: [
+        { label: 'Exponentially large — try every split of s', isCorrect: false, feedback: 'The search space is actually tiny. Each octet is 1–3 digits, and there are exactly 4 octets. At most 3 choices per octet × 4 octets = 81 possible splits — all enumerable in microseconds.' },
+        { label: 'At most 3^4 = 81 total splits to check', isCorrect: true },
+        { label: 'O(n²) — try all pairs of split points', isCorrect: false, feedback: 'O(n²) overcounts. You do not need to try all pairs of positions — each octet takes 1, 2, or 3 digits, and there are exactly 4 octets. That is at most 3^4 = 81 combinations regardless of string length.' },
+        { label: 'O(n!) — digits can be rearranged freely', isCorrect: false, feedback: 'Digits are not rearranged — they must appear in their original order. You only decide where to place the three dots. That is a fixed 4-part split, not a permutation problem.' },
+      ],
+      correctFeedback: 'Each of the 4 octets takes 1, 2, or 3 digits — 3 choices each. That is at most 3^4 = 81 candidate splits. Backtracking over this tiny space is trivially fast regardless of s.length up to 20.',
+      wrongFeedback: [
+        'Each octet can be 1, 2, or 3 digits. How many total combinations are there across all 4 octets?',
+        '3 choices per octet × 4 octets = 3^4 = 81 possible splits. That is the entire search space — very small.',
+      ],
+    },
+    {
+      id: 'octet-validity-signal',
+      question: 'A valid octet is 0–255 with no leading zeros. What two conditions must you check for each segment?',
+      options: [
+        { label: 'Value ≤ 255 only', isCorrect: false, feedback: 'Value ≤ 255 is necessary but not sufficient. "00", "01", "001" are all ≤ 255 but contain leading zeros, which are invalid. You must also reject any multi-digit segment starting with "0".' },
+        { label: 'Value ≤ 255 and no leading zeros', isCorrect: true },
+        { label: 'Segment is exactly 3 digits', isCorrect: false, feedback: 'Valid octets can be 1, 2, or 3 digits — "0", "25", "255" are all valid. Requiring exactly 3 digits would reject most valid IPs.' },
+        { label: 'Segment contains only odd digits', isCorrect: false, feedback: 'Digit parity is irrelevant to IP address validity. The octet must be a decimal value 0–255 with no leading zeros — digit content beyond that does not matter.' },
+      ],
+      correctFeedback: 'Two checks: int(segment) ≤ 255, and if len(segment) > 1 then segment[0] != "0". Together these accept "0", "25", "255" and reject "256", "00", "01".',
+      wrongFeedback: [
+        'The test case "0000" → ["0.0.0.0"]. What makes "0" valid but "00" invalid?',
+        '"0" is valid (single zero). "00" has a leading zero and is invalid. Check: len(segment) > 1 and segment[0] == "0" → reject. Also reject any segment where int(segment) > 255.',
+      ],
+    },
+    {
+      id: 'four-octet-constraint',
+      question: 'A valid IP has exactly 4 octets. How do you use this to prune your backtracking?',
+      options: [
+        { label: 'Stop when the string is exhausted', isCorrect: false, feedback: 'Exhausting the string is one condition, but not the only one. You also need exactly 4 octets. Stopping at exhaustion without checking the count might accept partial IPs or reject valid ones.' },
+        { label: 'Accept only when 4 octets are placed and the full string is used', isCorrect: true },
+        { label: 'Stop after placing 3 octets — the fourth is the remainder', isCorrect: false, feedback: 'The fourth octet as the remainder is a valid optimization, but you still need to validate it (≤ 255, no leading zeros). Treating the remainder as automatically valid misses that check.' },
+        { label: 'Prune when any octet exceeds 3 digits', isCorrect: false, feedback: 'An octet longer than 3 digits would exceed 255 and be invalid — that is a valid pruning condition. But the "exactly 4 octets" constraint is the more fundamental one: accept only when count == 4 and position == len(s).' },
+      ],
+      correctFeedback: 'At each recursive call, if you have 4 octets and the current position equals len(s), you have a valid IP — add it to results. If you have 4 octets but haven\'t consumed all of s, the split is invalid. If you exhaust s with fewer than 4 octets, also invalid.',
+      wrongFeedback: [
+        'What two things must be true simultaneously for a split to be a valid IP?',
+        'Exactly 4 parts placed AND all characters of s consumed. Either condition alone is insufficient — check both at the base case.',
+      ],
+    },
+    {
+      id: 'remaining-length-pruning',
+      question: 'With k octets still to place and r digits remaining, what early-exit conditions can you add?',
+      options: [
+        { label: 'Continue regardless — validity is checked at the base case', isCorrect: false, feedback: 'Waiting for the base case misses obvious pruning. If r > 3*k, there are too many digits to fit in k octets (max 3 digits each). If r < k, there are too few (min 1 digit each). Both are dead ends you can prune immediately.' },
+        { label: 'Prune when remaining digits cannot fit in remaining octets', isCorrect: true },
+        { label: 'Only prune when r > 12', isCorrect: false, feedback: 'r > 12 is a special case of the general condition. The tighter bound is r > 3*k (too many digits for k octets) or r < k (too few digits for k octets). Both must be checked as you recurse.' },
+        { label: 'Prune when the current octet value is 0', isCorrect: false, feedback: '"0" is a valid single-digit octet (see test case "0000" → ["0.0.0.0"]). Pruning on zero values would incorrectly reject valid IPs.' },
+      ],
+      correctFeedback: 'Two pruning conditions: if remaining digits > 3 × remaining octets, impossible to fit. If remaining digits < remaining octets, not enough digits for one per octet. Both let you skip entire branches early.',
+      wrongFeedback: [
+        'If you have 2 octets left but 8 digits remaining, can you form a valid IP? What if you have 2 octets left but 1 digit remaining?',
+        'r > 3*k means too many digits (each octet holds at most 3). r < k means too few digits (each octet needs at least 1). Prune both cases immediately.',
+      ],
+    },
+  ],
 }

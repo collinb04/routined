@@ -15,16 +15,11 @@ Dissect trains users to read a problem the way an expert does: constraints, voca
 ```ts
 interface DissectClue {
   id: string;                    // kebab-case, describes the signal: 'constraint-complexity', 'output-structure'
-  category: ClueCategory;        // drives legend color + highlight style
   question: string;              // quotes or paraphrases the signal, then asks what it implies
   options: ClueOption[];         // exactly 4; exactly one isCorrect: true
   correctFeedback: string;       // shown on correct answer
   wrongFeedback: string[];       // per-attempt escalation, 1–3 entries (see Escalation)
-  decoded: string;               // one-line takeaway for the "Decoded so far" box
-  spanIds: string[];             // highlight span(s) revealed by "Show in problem" — one-to-many allowed
 }
-
-type ClueCategory = 'input-size' | 'output-type' | 'key-language' | 'constraint';
 
 interface ClueOption {
   label: string;                 // short — under ~8 words
@@ -37,7 +32,7 @@ interface ClueOption {
 
 1. Wrong answer, and the chosen option has `feedback` → show it.
 2. Wrong answer, no option feedback (or repeat miss) → show `wrongFeedback[min(missCount - 1, wrongFeedback.length - 1)]`.
-3. Correct answer → show `correctFeedback`, add `decoded` to the Decoded box, enable "Show in problem" which reveals every span in `spanIds`.
+3. Correct answer → show `correctFeedback`.
 
 ---
 
@@ -47,7 +42,6 @@ interface ClueOption {
 
 - **3–5 clues per problem.** Every clue must be a signal an expert would actually notice. Do not pad.
 - Order clues in the sequence an expert reads the problem: constraints/input size first, then output type, then key vocabulary, then guarantees or special conditions.
-- Each clue maps to at least one highlight span in the problem text. If two spans carry the same signal (e.g., "string s" and "longest substring" both signal contiguous sequence), one clue covers both via `spanIds`.
 
 ### Question stems
 
@@ -82,10 +76,6 @@ interface ClueOption {
 - If written, it must name the **specific misconception** the distractor represents and why it fails — not restate the escalation hint. Example: `'Sorting scrambles the original indices, which is exactly what you need to return.'`
 - Skip it when the escalation hints cover the ground adequately. It is enrichment, not a requirement.
 
-### decoded
-
-- One compressed line for the Decoded box, in signal → implication form: `'n ≤ 10⁴ → O(n) or better'`, `'output = indices → map value → index'`. Under ~50 characters.
-
 ### Voice
 
 - Second person, direct, concrete. Use real numbers from the problem's constraints.
@@ -102,7 +92,6 @@ Distractor variety, concrete numbers in feedback, Socratic escalation, and guara
 clues: [
   {
     id: 'constraint-complexity',
-    category: 'input-size',
     question: 'n ≤ 10,000 tells you…',
     options: [
       { label: 'O(n²) is fine',           isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations. Python handles roughly 10 million simple ops per second — that\'s 10 seconds for a single test case. Think about what the constraint is ruling out.' },
@@ -115,12 +104,9 @@ clues: [
       'Think about worst case: with n = 10,000, how many pairs would you check with two nested loops?',
       'A nested loop checks every pair — that\'s n² of them. What does the bound say about whether that finishes in time?',
     ],
-    decoded: 'n ≤ 10⁴ → O(n) or better',
-    spanIds: ['constraint-n'],
   },
   {
     id: 'output-structure',
-    category: 'output-type',
     question: 'The output is two indices, not values. This means you need to…',
     options: [
       { label: 'Store values in a set',            isCorrect: false, feedback: 'A set tells you whether a value exists — but not where. The output requires indices. You need a structure that maps a value back to its position.' },
@@ -133,12 +119,9 @@ clues: [
       'The output asks for indices. What structure lets you look up "I\'ve seen this value — at what index?"',
       'You need value → position lookup, and you need it fast. One structure does that in O(1).',
     ],
-    decoded: 'output = indices → map value → index',
-    spanIds: ['output-indices'],
   },
   {
     id: 'one-solution-guarantee',
-    category: 'key-language',
     question: 'Exactly one valid answer exists. This means…',
     options: [
       { label: 'You must handle the no-solution case',     isCorrect: false, feedback: 'The problem explicitly guarantees a solution always exists. Handling the no-solution case would be dead code — the constraint is telling you what you can skip.' },
@@ -151,8 +134,6 @@ clues: [
       'The problem guarantees a solution always exists. What does that let you skip?',
       'Guarantees in problem statements are permissions. This one permits an early exit — from what?',
     ],
-    decoded: 'exactly one answer → return on first hit',
-    spanIds: ['guarantee-one'],
   },
 ],
 ```
@@ -162,7 +143,6 @@ clues: [
 ## Authoring checklist (verify before finishing)
 
 - [ ] 3–5 clues, ordered as an expert would read the problem
-- [ ] Every clue has a `category`, `decoded` line, and at least one `spanId` that exists in the problem markup
 - [ ] Exactly 4 options per clue, exactly one correct, correct position varies across clues
 - [ ] Every distractor maps to a named misconception type from this spec
 - [ ] `wrongFeedback` has 1–3 entries; entry 1 is a Socratic redirect, later entries narrow without revealing

@@ -17,4 +17,51 @@ export default {
     { label: 'Extra spaces', args: ['  hello world  '], expected: 'world hello' },
     { label: 'Single word', args: ['a'], expected: 'a' },
   ],
+  clues: [
+    {
+      id: 'output-word-order',
+      question: 'The output reverses word order, not character order. What must you preserve?',
+      options: [
+        { label: 'The original character positions', isCorrect: false, feedback: 'Character positions change entirely when words are reversed. What must stay intact is each word\'s internal letter order — "sky" must remain "sky", not "yks".' },
+        { label: 'Each word\'s internal character order', isCorrect: true },
+        { label: 'The original spacing between words', isCorrect: false, feedback: 'The output explicitly requires single spaces between words regardless of original spacing. You discard original spacing and rebuild with single spaces.' },
+        { label: 'The position of each space', isCorrect: false, feedback: 'Spaces are not preserved — the output normalizes to single spaces with no leading or trailing whitespace. Only the word content and reversed order are kept.' },
+      ],
+      correctFeedback: 'You reverse the sequence of words, but each word\'s characters stay in their original order. "the sky is blue" → ["the","sky","is","blue"] reversed → "blue is sky the".',
+      wrongFeedback: [
+        'Compare "the sky is blue" and "blue is sky the". What changed, and what stayed the same within each word?',
+        'Word order is reversed; each individual word is unchanged. The operation is on the list of words, not on the characters within a word.',
+      ],
+    },
+    {
+      id: 'whitespace-normalization',
+      question: '"No leading/trailing spaces and only single spaces between words." What does this require you to handle?',
+      options: [
+        { label: 'Only trim the final output string', isCorrect: false, feedback: 'Trimming handles leading/trailing spaces, but does not collapse multiple spaces between words into one. Both problems must be handled.' },
+        { label: 'Strip and split on any whitespace, then rejoin with single spaces', isCorrect: true },
+        { label: 'Replace all spaces with a single space character', isCorrect: false, feedback: 'A single global replace would collapse internal spaces but may still leave a leading or trailing space. Splitting on whitespace handles all three cases at once.' },
+        { label: 'Count spaces and insert corrected ones manually', isCorrect: false, feedback: 'Manual space counting is error-prone and unnecessary. Splitting on whitespace with a filter removes all excess spaces in one step.' },
+      ],
+      correctFeedback: 'Splitting on whitespace and filtering empty strings handles multiple spaces, leading spaces, and trailing spaces simultaneously. Rejoin the resulting words with a single space.',
+      wrongFeedback: [
+        'What happens when you split "  hello world  " on whitespace? How many empty strings appear, and how do you remove them?',
+        'Splitting on one or more spaces gives only the non-empty word tokens. Joining those with " " gives the correctly normalized output with no extra work.',
+      ],
+    },
+    {
+      id: 'at-least-one-word',
+      question: '"At least one word exists." What edge case does this guarantee eliminate?',
+      options: [
+        { label: 'You do not need to handle empty words', isCorrect: false, feedback: 'Empty words are an artifact of splitting on spaces, not an independent input case. The guarantee is about whether the input can yield zero words after splitting.' },
+        { label: 'You do not need to handle an all-spaces input', isCorrect: true },
+        { label: 'You do not need to handle single-character strings', isCorrect: false, feedback: 'Single-character strings are valid and must be handled — they contain one word. The guarantee removes the all-spaces case, not short strings.' },
+        { label: 'You do not need to check if s is empty', isCorrect: false, feedback: 's.length ≥ 1 means s is never empty, but that alone does not prevent all-spaces input. "At least one word" is a stronger guarantee that a valid word always exists.' },
+      ],
+      correctFeedback: 'An all-spaces string like "   " would split into zero words, making reversal undefined and output empty. The guarantee means your logic always produces at least one word to join.',
+      wrongFeedback: [
+        'What would happen if s = "   " (all spaces) after you split and filter? What does "at least one word" prevent?',
+        'Without this guarantee, you would need to handle the case where splitting yields an empty list. The guarantee makes that branch dead code — you always have words to reverse.',
+      ],
+    },
+  ],
 }

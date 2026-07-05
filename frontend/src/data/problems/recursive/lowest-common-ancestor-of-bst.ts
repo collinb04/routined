@@ -44,4 +44,51 @@ def lca_bst_run(arr, p, q):
     { label: 'p=2,q=8', args: [[6,2,8,0,4,7,9,null,null,3,5], 2, 8], expected: 6 },
     { label: 'p=2,q=4', args: [[6,2,8,0,4,7,9,null,null,3,5], 2, 4], expected: 2 },
   ],
+  clues: [
+    {
+      id: 'bst-ordering-signal',
+      question: 'This is a BST, not a generic binary tree. What property does that give you for finding the LCA?',
+      options: [
+        { label: 'Left children are always larger than the root', isCorrect: false, feedback: 'In a BST, left children are smaller, not larger, than the parent. The ordering is: left subtree < node < right subtree.' },
+        { label: 'Navigate by comparing node value to p and q', isCorrect: true },
+        { label: 'The LCA is always the root', isCorrect: false, feedback: 'The LCA is only the root when p and q fall on opposite sides of it. Example 2 shows p=2 is the LCA because q=4 is in 2\'s subtree — no need to go to the root.' },
+        { label: 'You must still visit every node', isCorrect: false, feedback: 'The BST ordering lets you prune entire subtrees. If both p and q are smaller than the current node, you know to go left — no right subtree visit needed.' },
+      ],
+      correctFeedback: 'In a BST, if both p and q are less than the current node, the LCA is in the left subtree. If both are greater, go right. The first node where they split is the LCA — no exhaustive search needed.',
+      wrongFeedback: [
+        'In a BST, values are ordered: left < node < right. If both p and q are smaller than the current node, which subtree must their LCA be in?',
+        'The split point — where p goes left and q goes right, or vice versa — is the LCA. You can navigate directly without exploring both subtrees.',
+      ],
+    },
+    {
+      id: 'constraint-complexity',
+      question: 'Up to 10⁵ nodes, but the tree is a BST. What does BST ordering do to the complexity of finding the LCA?',
+      options: [
+        { label: 'Still requires O(n) — ordering does not help', isCorrect: false, feedback: 'BST ordering lets you eliminate half the remaining tree at each step, giving O(h) where h is the tree height. In a balanced BST of 10⁵ nodes, h ≈ 17 — far better than visiting all 100,000 nodes.' },
+        { label: 'O(h) where h is tree height — not O(n)', isCorrect: true },
+        { label: 'O(log n) guaranteed regardless of tree shape', isCorrect: false, feedback: 'O(log n) is only guaranteed for a balanced BST. An unbalanced BST can degenerate into a linked list (h = n), making it O(n). The constraint does not specify that the tree is balanced.' },
+        { label: 'O(1) because you compare values directly', isCorrect: false, feedback: 'Each comparison tells you which subtree to enter, but you still need to traverse from root to the LCA — that is O(h) steps, not O(1).' },
+      ],
+      correctFeedback: 'BST ordering lets you navigate directly toward the LCA in O(h) time. For a balanced BST with 10⁵ nodes, h ≈ log₂(100,000) ≈ 17 — a single root-to-LCA path, no backtracking.',
+      wrongFeedback: [
+        'At each node in a BST, you can decide which subtree to enter without checking the other. How many decisions do you need to make to reach the LCA?',
+        'You travel from root to the LCA, making one left/right decision per level. That is O(h) — the height of the tree, not the total number of nodes.',
+      ],
+    },
+    {
+      id: 'split-point-signal',
+      question: 'The LCA is the "lowest" (deepest) ancestor of both nodes. In BST terms, what identifies that node?',
+      options: [
+        { label: 'The first node where one of p or q is found', isCorrect: false, feedback: 'Finding p or q is not the split criterion. Example 2: you find p=2 before you encounter q=4, but 2 is still the LCA because 4 is in 2\'s subtree. The split point is the key, not the first match.' },
+        { label: 'The first node where p and q go to different subtrees', isCorrect: true },
+        { label: 'The node whose value is between p and q', isCorrect: false, feedback: 'A value between p and q is a necessary but not sufficient condition. The LCA must also be the deepest such node — meaning you navigate as far down as you can before the paths split.' },
+        { label: 'The deepest node in the tree', isCorrect: false, feedback: 'The deepest node is a leaf — not the LCA unless one of p or q is that leaf. The LCA is the deepest node that is an ancestor of both, which depends on where p and q are, not how deep the tree goes.' },
+      ],
+      correctFeedback: 'Walk down the BST: as long as both p.val and q.val are on the same side of the current node, keep going. The moment they diverge — or one equals the current node — you have found the LCA.',
+      wrongFeedback: [
+        'Follow both p and q down the tree. When do their paths first diverge?',
+        'If p.val < node.val and q.val > node.val, then p goes left and q goes right — they split here. That node is the LCA.',
+      ],
+    },
+  ],
 }

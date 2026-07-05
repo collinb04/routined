@@ -18,4 +18,66 @@ export default {
     { label: '"226"', args: ['226'], expected: 3 },
     { label: '"06"', args: ['06'], expected: 0 },
   ],
+  clues: [
+    {
+      id: 'constraint-complexity',
+      question: 's.length ≤ 100 tells you…',
+      options: [
+        { label: 'O(2^n) is fine — n is small',    isCorrect: false, feedback: 'At n = 100, O(2^100) is astronomical. Small n in DP problems permits polynomial slowness, not exponential — naive recursion without memoization will time out.' },
+        { label: 'Any polynomial approach works',   isCorrect: true },
+        { label: 'O(n log n) is required',          isCorrect: false, feedback: 'O(n log n) would work, but the constraint doesn\'t demand it. At n = 100, even O(n²) is only 10,000 operations — there\'s no pressure to go below linear.' },
+        { label: 'Input size is irrelevant',        isCorrect: false, feedback: 'Input size matters even for small n. O(2^100) fails here — you need to spot the overlapping subproblems and memoize.' },
+      ],
+      correctFeedback: 'At n = 100, O(n) is 100 operations and O(n²) is 10,000. Any polynomial approach is trivially fast — the challenge is structuring the recurrence, not performance.',
+      wrongFeedback: [
+        'At n = 100, how does O(2^100) compare to O(100)? What does that tell you about naive recursion?',
+        'O(2^100) is infeasible. O(n) or O(n²) is fine. The constraint says polynomial, not exponential.',
+      ],
+    },
+    {
+      id: 'zero-handling',
+      question: '"s may contain leading zeros" is explicitly stated. What does this signal about edge cases?',
+      options: [
+        { label: 'Strip leading zeros before decoding',    isCorrect: false, feedback: 'Stripping zeros would change the string\'s meaning. "06" is not decodable at all — "0" has no valid single-digit mapping (A=1, not A=0). You must handle zeros in-place.' },
+        { label: 'A \'0\' digit can never be decoded alone', isCorrect: true },
+        { label: 'Zeros always double the number of ways',  isCorrect: false, feedback: 'A standalone zero actually kills all ways through that position — no letter maps to 0. Only a two-digit number like "10" or "20" uses a zero validly.' },
+        { label: 'Zeros are ignored in the count',          isCorrect: false, feedback: '"06" returns 0, not 1. A zero that can\'t be paired with a valid preceding digit terminates all decoding paths through it.' },
+      ],
+      correctFeedback: 'No letter maps to 0. A standalone "0" is invalid. "10" maps to J (10) and "20" to T (20), but "30", "40", etc. are also invalid as two-digit codes. Your DP must check both single and two-digit validity at each position.',
+      wrongFeedback: [
+        'What letter does 0 map to? What does that mean when you try to decode a "0" by itself?',
+        'Letters map from 1 to 26. A bare "0" has no match — it terminates every decoding path that reaches it.',
+      ],
+    },
+    {
+      id: 'two-choices-at-each-step',
+      question: 'At each position, you can decode one digit or two digits. What does this imply about subproblem structure?',
+      options: [
+        { label: 'dp[i] depends only on dp[i-1]',                isCorrect: false, feedback: 'If you take a two-digit step, you skip back two positions, not one. dp[i] can depend on both dp[i-1] (one-digit decode) and dp[i-2] (two-digit decode).' },
+        { label: 'dp[i] can depend on dp[i-1] and dp[i-2]',     isCorrect: true },
+        { label: 'You need to try all possible split points',    isCorrect: false, feedback: 'Only one- and two-digit groupings are valid (codes range from 1 to 26). You never need to look back more than 2 positions.' },
+        { label: 'Process the string right to left',             isCorrect: false, feedback: 'The direction doesn\'t change the recurrence. Whether you go left-to-right or right-to-left, each position looks at a window of size 1 or 2.' },
+      ],
+      correctFeedback: 'dp[i] = ways to decode s[0..i]. One-digit decode: if s[i] != "0", add dp[i-1]. Two-digit decode: if s[i-1..i] is between "10" and "26", add dp[i-2]. Both can contribute simultaneously.',
+      wrongFeedback: [
+        'For "12", position 1 can be decoded as "1"+"2" or as "12". Which previous dp value does each choice reach back to?',
+        'One-digit: use s[i] alone, look back to dp[i-1]. Two-digit: use s[i-1..i], look back to dp[i-2]. Both may apply at the same position.',
+      ],
+    },
+    {
+      id: 'valid-two-digit-range',
+      question: 'Two-digit codes are valid only from 10 to 26. What does this bound rule out?',
+      options: [
+        { label: 'Any two-digit number is a valid code',         isCorrect: false, feedback: '"27" through "99" have no letter mapping — only 1–26 are valid. And "01", "02" etc. are invalid because no letter maps to a code with a leading zero.' },
+        { label: 'Codes starting with 0, or above 26, are invalid', isCorrect: true },
+        { label: 'Only "10" through "19" are valid two-digit codes', isCorrect: false, feedback: '"20" through "26" are also valid — T through Z. The range is 10–26, not just 10–19.' },
+        { label: 'Two-digit codes are always valid if the first digit is 1', isCorrect: false, feedback: '"10" through "19" are all valid. But "1" alone can also be decoded as A — the first digit being 1 doesn\'t force a two-digit grouping.' },
+      ],
+      correctFeedback: 'Valid two-digit codes: 10–26. Below 10 means a leading zero (invalid); above 26 means no letter mapping. This check gates whether dp[i-2] contributes to dp[i].',
+      wrongFeedback: [
+        'What\'s the largest letter? Z = 26. What does that mean for two-digit codes above 26?',
+        'Range is 10–26. "09" starts with 0 (invalid). "27" and above have no matching letter. Only 10–26 unlock the two-digit path.',
+      ],
+    },
+  ],
 }

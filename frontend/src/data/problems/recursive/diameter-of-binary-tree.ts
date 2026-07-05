@@ -37,4 +37,51 @@ def diameter_of_binary_tree_run(arr):
     { label: '[1,2,3,4,5]', args: [[1,2,3,4,5]], expected: 3 },
     { label: '[1,2]', args: [[1,2]], expected: 1 },
   ],
+  clues: [
+    {
+      id: 'path-not-through-root',
+      question: '"This path may or may not pass through the root." What does this tell you about where to look for the diameter?',
+      options: [
+        { label: 'Compute left depth + right depth at the root only', isCorrect: false, feedback: 'The example shows path 4→2→1→3 which does pass through root 1, but the problem warns you the diameter might not. Computing only at the root misses paths entirely within a subtree.' },
+        { label: 'The diameter must be checked at every node', isCorrect: true },
+        { label: 'Only leaf-to-leaf paths matter', isCorrect: false, feedback: 'The diameter is the longest path between any two nodes — not exclusively leaves. Any node can be an endpoint, and the path can turn at any internal node.' },
+        { label: 'The root is never part of the diameter', isCorrect: false, feedback: 'The problem says the path "may or may not" pass through the root — not that it never does. The example path 4→2→1→3 passes through root 1.' },
+      ],
+      correctFeedback: 'At every node, the longest path through that node is left_depth + right_depth. You track the maximum of these values across all nodes — not just the root.',
+      wrongFeedback: [
+        'If the diameter could be entirely within the left subtree, how do you find it without checking the root?',
+        'You need to evaluate "left_depth + right_depth" at every node and keep a running maximum. The answer might come from any level of the tree.',
+      ],
+    },
+    {
+      id: 'diameter-as-depth-sum',
+      question: 'The path 4→2→1→3 has length 3. How is that length expressed in terms of subtree depths?',
+      options: [
+        { label: 'Max depth of the tree minus 1', isCorrect: false, feedback: 'Max depth only measures one arm from the root. The diameter through node 1 uses both arms: left depth (2, going through nodes 2 and 4) plus right depth (1, going through node 3).' },
+        { label: 'Number of nodes on the path', isCorrect: false, feedback: 'The length is measured in edges, not nodes. Path 4→2→1→3 has 4 nodes but length 3 (three edges). Counting nodes would overcount by 1.' },
+        { label: 'Left depth + right depth at the turning node', isCorrect: true },
+        { label: 'Height of left subtree × height of right subtree', isCorrect: false, feedback: 'Multiplying heights has no geometric meaning for path length. The diameter through a node is the sum of the depths of its two arms, not their product.' },
+      ],
+      correctFeedback: 'At node 1: left depth is 2 (path 1→2→4), right depth is 1 (path 1→3). Sum = 3 = diameter. Every node is a candidate turning point; you want the maximum such sum.',
+      wrongFeedback: [
+        'A path that "turns" at a node goes as far left and as far right as it can. How many edges does each arm contribute?',
+        'The left arm contributes left_depth edges and the right arm contributes right_depth edges. The path length through that node is their sum.',
+      ],
+    },
+    {
+      id: 'recursive-depth-and-diameter',
+      question: 'To check the diameter at every node efficiently, what computation should each recursive call return?',
+      options: [
+        { label: 'The diameter found so far in the subtree', isCorrect: false, feedback: 'Returning the diameter from a subtree doesn\'t give the parent enough information to compute the diameter through the parent. The parent needs each child\'s depth, not a pre-computed diameter.' },
+        { label: 'The depth of the subtree', isCorrect: true },
+        { label: 'The number of nodes in the subtree', isCorrect: false, feedback: 'Node count doesn\'t tell you how deep the subtree goes, and depth is what you need to compute left_depth + right_depth at each node.' },
+        { label: 'Both depth and diameter as a tuple', isCorrect: false, feedback: 'Passing the diameter up through return values works but is unnecessary. A single nonlocal or instance variable tracks the running maximum; each call only needs to return depth.' },
+      ],
+      correctFeedback: 'Each call returns the depth of its subtree. Before returning, it updates a global maximum with left_depth + right_depth. This gives you O(n) — one pass, every node visited once.',
+      wrongFeedback: [
+        'The parent node needs both children\'s depths to compute the diameter candidate through itself. What is the simplest value each recursive call can return to enable that?',
+        'Return depth; update a maximum variable with left + right before returning. The maximum variable accumulates the answer across all nodes.',
+      ],
+    },
+  ],
 }

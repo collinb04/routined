@@ -46,4 +46,66 @@ def invert_tree_run(arr):
     { label: '[4,2,7,1,3,6,9]', args: [[4,2,7,1,3,6,9]], expected: [4,7,2,9,6,3,1] },
     { label: '[2,1,3]', args: [[2,1,3]], expected: [2,3,1] },
   ],
+  clues: [
+    {
+      id: 'what-invert-means',
+      question: 'Input [4,2,7,1,3,6,9] produces [4,7,2,9,6,3,1]. At every node, what operation produces this mirror?',
+      options: [
+        { label: 'Swap the values of left and right children', isCorrect: false, feedback: 'Swapping values without swapping subtrees would change the root-level numbers but leave the subtree structures unreflected. [4,7,2,...] is correct at the root, but the full subtrees of 2 and 7 also need to be swapped — not just their values.' },
+        { label: 'Swap the left and right child pointers', isCorrect: true },
+        { label: 'Reverse the level-order sequence', isCorrect: false, feedback: 'Reversing level-order gives [9,6,3,1,7,2,4] — the whole array backwards. Inversion mirrors at every node independently, not just at the outermost level.' },
+        { label: 'Sort children in descending order at each node', isCorrect: false, feedback: 'Sorting by value would produce a different tree that depends on node values, not a structural mirror. Inversion is purely a pointer swap — values never move, only the left/right links change.' },
+      ],
+      correctFeedback: 'At every node: node.left, node.right = node.right, node.left. Then recurse into both children. Values stay in place; the left/right pointers are mirrored at every level.',
+      wrongFeedback: [
+        'In the output, node 4\'s children changed from (2,7) to (7,2). Then 7\'s children changed from (6,9) to (9,6). What operation at each node produces this?',
+        'Swap the child pointers at every node. The recursive calls ensure this happens at every level of the tree, not just the root.',
+      ],
+    },
+    {
+      id: 'null-base-case',
+      question: 'The constraint allows 0 nodes (empty tree). What base case does your recursion need?',
+      options: [
+        { label: 'if root.left is None and root.right is None: return root', isCorrect: false, feedback: 'This stops recursion only at leaf nodes, but null nodes (children of leaves) are what actually terminate the recursion. A null child still gets passed to the recursive call — you need to catch None, not just leaves.' },
+        { label: 'if root is None: return None', isCorrect: true },
+        { label: 'if len(tree) == 0: return []', isCorrect: false, feedback: 'There is no "len" of a tree node in a recursive approach. The base case is a null pointer check on the current node, not a length check on the whole tree.' },
+        { label: 'No base case needed — Python handles None automatically', isCorrect: false, feedback: 'Accessing root.left on a None node raises AttributeError. You must explicitly return before dereferencing a null node.' },
+      ],
+      correctFeedback: 'Return None immediately when root is None. Every recursive call can pass a null child — this check prevents AttributeError and correctly returns None for the parent to link to.',
+      wrongFeedback: [
+        'When you recurse into node.left, what happens if node.left is None? What must you check before accessing root.left or root.right?',
+        'if root is None: return None is the guard. Without it, the first null child causes an AttributeError when you try root.left on None.',
+      ],
+    },
+    {
+      id: 'return-root',
+      question: 'The function returns the root. Why is this necessary?',
+      options: [
+        { label: 'To allow the caller to chain calls', isCorrect: false, feedback: 'Method chaining is a style concern, not the reason. The structural reason is that if the input is an empty tree (None), the caller needs to receive None — without a return value there is no way to communicate that.' },
+        { label: 'So the caller can access the (possibly null) result', isCorrect: true },
+        { label: 'Because in-place modification does not work on trees', isCorrect: false, feedback: 'In-place modification does work — you are modifying the original nodes. But the root pointer itself does not change. The return exists to handle the empty-tree case and to make the recursive structure work cleanly.' },
+        { label: 'To enable iterative rather than recursive solutions', isCorrect: false, feedback: 'Both iterative and recursive solutions return the root for the same reason: the caller needs a reference to the (possibly unchanged) root node.' },
+      ],
+      correctFeedback: 'With up to 100 nodes, the root itself is never replaced — but returning root is the correct contract. When root is None, returning None tells the caller the result is an empty tree.',
+      wrongFeedback: [
+        'What does the caller of invert_tree need to do with the result? What if the input tree is empty?',
+        'The function must return the root so the caller can assign and use the result. For an empty tree (root=None), the return value is None — the caller has no other way to receive it.',
+      ],
+    },
+    {
+      id: 'traversal-order',
+      question: 'Does the order in which you recurse — preorder (swap then recurse) vs. postorder (recurse then swap) — affect correctness?',
+      options: [
+        { label: 'Yes — you must swap before recursing (preorder only)', isCorrect: false, feedback: 'Swapping after recursing (postorder) works equally well. The children are swapped at each node regardless of when during the visit — the final tree is the same either way.' },
+        { label: 'No — both preorder and postorder produce the same result', isCorrect: true },
+        { label: 'Yes — you must swap after recursing (postorder only)', isCorrect: false, feedback: 'Swapping before recursing (preorder) also works. The recursive calls invert the subtrees independently, and swapping the pointers at the current node is valid at any point in the visit.' },
+        { label: 'Only inorder traversal produces a valid mirror', isCorrect: false, feedback: 'Inorder visits left child, then root, then right child. Swapping mid-traversal in inorder would recurse into the original left, swap pointers, then recurse into the original left again (now in the right slot) — incorrect. Pre- or postorder both work cleanly.' },
+      ],
+      correctFeedback: 'Swapping pointers before or after the recursive calls both produce a correct mirror. What matters is that every node gets its children swapped exactly once.',
+      wrongFeedback: [
+        'If you swap left and right at the root first, then recurse — do the subtrees still get inverted correctly? What if you recurse first and swap after?',
+        'Either order works because each subtree is fully inverted by its own recursive call, independently of when the parent swaps its pointers.',
+      ],
+    },
+  ],
 }

@@ -18,4 +18,51 @@ export default {
     { label: 'All same', args: [[1,1,1]], expected: 1 },
     { label: 'Single', args: [[3]], expected: 3 },
   ],
+  clues: [
+    {
+      id: 'duplicates-impact',
+      question: '"May contain duplicates" — this is the harder follow-up to the no-duplicates version. What specifically makes duplicates harder?',
+      options: [
+        { label: 'Duplicates increase the array size past what binary search can handle', isCorrect: false, feedback: 'n ≤ 5000 is well within binary search range regardless of duplicates. The difficulty is about ambiguity in decision-making, not scale.' },
+        { label: 'When nums[mid] == nums[right], you can\'t tell which half contains the minimum', isCorrect: true },
+        { label: 'Duplicates mean the array may not be rotated', isCorrect: false, feedback: 'An array can be rotated whether or not it has duplicates. The issue with duplicates is that the standard binary search comparison breaks down in a specific case.' },
+        { label: 'Duplicates require counting occurrences before searching', isCorrect: false, feedback: 'You don\'t need to count duplicates — you need to find the minimum. The challenge is that equal values at the boundaries prevent you from eliminating a half safely.' },
+      ],
+      correctFeedback: 'Without duplicates, nums[mid] < nums[right] tells you the minimum is in the left half. With duplicates, nums[mid] == nums[right] leaves both halves possible — you can only safely shrink by one: right -= 1.',
+      wrongFeedback: [
+        'In the no-duplicates version, comparing nums[mid] to nums[right] always tells you which half to search. What happens when nums[mid] == nums[right] and there are duplicates?',
+        'When nums[mid] == nums[right], the minimum could be in either half. You can\'t eliminate an entire half — what\'s the safest move?',
+      ],
+    },
+    {
+      id: 'worst-case-complexity',
+      question: 'Because of duplicates, the worst-case complexity degrades. What is it?',
+      options: [
+        { label: 'Still O(log n) in all cases', isCorrect: false, feedback: 'That\'s true for the no-duplicates version. With duplicates, consider [2,2,2,…,2,0,2]: you can only shrink by 1 per step when nums[mid] == nums[right], leading to O(n) in the worst case.' },
+        { label: 'O(n) in the worst case', isCorrect: true },
+        { label: 'O(n log n) due to repeated comparisons', isCorrect: false, feedback: 'O(n log n) would suggest a sort-like process, but the algorithm is simpler than that. Each step either halves the range or shrinks it by one — worst case is O(n), not O(n log n).' },
+        { label: 'O(n²) because duplicates require nested checks', isCorrect: false, feedback: 'No nested loops are involved. Each iteration does O(1) work and either halves the range or decrements right by 1. The worst case is linear, not quadratic.' },
+      ],
+      correctFeedback: 'On an array like [2,2,2,2,0,2], every step hits the ambiguous case nums[mid] == nums[right] and can only decrement right by 1. That\'s O(n) steps — the guarantee of O(log n) breaks down.',
+      wrongFeedback: [
+        'Imagine [2,2,2,2,2,0,2] with n = 7. How many times does the algorithm decrement right by 1 before it can make a binary jump?',
+        'When every element is a duplicate except one, the algorithm degrades to stepping one element at a time. That\'s O(n) in the worst case.',
+      ],
+    },
+    {
+      id: 'handling-ambiguity',
+      question: 'When nums[mid] == nums[right], the safe move is right -= 1. Why not left += 1?',
+      options: [
+        { label: 'right -= 1 is arbitrary; left += 1 works equally well', isCorrect: false, feedback: 'They\'re not equivalent. The minimum could be at right itself — decrementing left could skip a position that was never the minimum anyway, but incrementing left might skip the minimum.' },
+        { label: 'Incrementing left could skip the minimum if it\'s at left', isCorrect: true },
+        { label: 'right -= 1 is faster because the minimum is always in the right half', isCorrect: false, feedback: 'The minimum is not always in the right half — the rotation pivot can be anywhere. right -= 1 is safe because nums[right] is a duplicate of nums[mid], so the minimum isn\'t lost by shrinking from the right.' },
+        { label: 'left += 1 would make the loop infinite', isCorrect: false, feedback: 'left += 1 terminates the loop just as fast. The problem is correctness: if the minimum happens to be at the current left, incrementing left skips it.' },
+      ],
+      correctFeedback: 'When nums[mid] == nums[right], you know nums[right] is a duplicate of nums[mid]. The minimum is still somewhere in [left, right−1] because removing one duplicate from the right end can\'t remove the minimum.',
+      wrongFeedback: [
+        'When nums[mid] == nums[right], is it possible that right itself is the minimum? What would left += 1 risk?',
+        'You can safely remove nums[right] because nums[mid] has the same value — the minimum is still represented. Removing nums[left] isn\'t guaranteed safe because left might be the unique minimum.',
+      ],
+    },
+  ],
 }

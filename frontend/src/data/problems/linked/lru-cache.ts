@@ -28,4 +28,66 @@ export default {
   testCases: [
     { label: 'eviction', args: [2, ['put','put','get','put','get','put','get','get','get'], [[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]], expected: [1,-1,-1,3,4] },
   ],
+  clues: [
+    {
+      id: 'constraint-o1-operations',
+      question: '"Both operations must run in O(1) average time." With up to 2 × 10^5 calls, this rules out…',
+      options: [
+        { label: 'Scanning a list to find the LRU item', isCorrect: true },
+        { label: 'Using a hash map for key lookup', isCorrect: false, feedback: 'A hash map gives O(1) average lookup — that\'s exactly what you need. The constraint rules out linear scans, not hash-based lookup.' },
+        { label: 'Storing key-value pairs at all', isCorrect: false, feedback: 'You must store key-value pairs — that\'s the core of a cache. The O(1) constraint is about how quickly you access and evict them, not whether you store them.' },
+        { label: 'Tracking which item was used most recently', isCorrect: false, feedback: 'Tracking recency is required — the eviction policy depends on it. The constraint is that tracking and evicting must happen in O(1), not that they should be skipped.' },
+      ],
+      correctFeedback: 'At 200,000 calls, an O(n) scan per operation is up to 600 million steps — far too slow. O(1) for both get and put means you need a data structure that can find any key instantly and move it to "most recently used" in constant time.',
+      wrongFeedback: [
+        'If finding the LRU item requires scanning up to capacity = 3,000 nodes per eviction, and there are 2 × 10^5 puts, how many total steps is that?',
+        'Linear scan per operation is O(n) — 3,000 steps × 200,000 calls = 600 million. You need a structure where eviction and access are both O(1).',
+      ],
+    },
+    {
+      id: 'eviction-policy',
+      question: '"Evict the least recently used key before inserting." This means recency must be tracked…',
+      options: [
+        { label: 'By insertion order only', isCorrect: false, feedback: 'Insertion order is only correct for newly inserted keys. A get operation also counts as a "use" and must promote that key to most-recently-used — which insertion order alone doesn\'t capture.' },
+        { label: 'By both get and put operations', isCorrect: true },
+        { label: 'By frequency of access', isCorrect: false, feedback: 'Frequency is LFU (Least Frequently Used) policy, not LRU. LRU tracks recency of the last access — a key used once yesterday is evicted before a key used once today, regardless of count.' },
+        { label: 'Only when the cache is full', isCorrect: false, feedback: 'Recency must be updated on every get and put — not just when the cache is full. If you skip updates when there\'s space, the eviction order will be wrong when capacity is eventually reached.' },
+      ],
+      correctFeedback: 'Every get and every put makes a key "most recently used." The LRU item is the one not touched for the longest time. Your data structure must support moving any key to the "recently used" end in O(1).',
+      wrongFeedback: [
+        'After a successful get, is the accessed key now the most recently used?',
+        'Yes — get promotes a key to the front. So recency order changes on every access, not just insertions. What structure lets you move any node to the front in O(1)?',
+      ],
+    },
+    {
+      id: 'two-structure-insight',
+      question: 'O(1) get requires instant key lookup; O(1) eviction requires instant access to the least-recently-used node. No single standard structure does both. This implies…',
+      options: [
+        { label: 'Use a sorted array updated on each access', isCorrect: false, feedback: 'Maintaining a sorted array requires shifting elements on each update — O(n) per operation at capacity 3,000. That defeats the O(1) requirement.' },
+        { label: 'Combine a hash map with a doubly linked list', isCorrect: true },
+        { label: 'Use a heap ordered by access timestamp', isCorrect: false, feedback: 'A heap gives O(log n) access to the minimum — not O(1). Updating priority in a heap is also O(log n). Close but not O(1).' },
+        { label: 'Use a single hash map with timestamps', isCorrect: false, feedback: 'A hash map with timestamps gives O(1) lookup but O(n) eviction — you\'d need to scan all keys to find the minimum timestamp. That\'s O(n) per put when the cache is full.' },
+      ],
+      correctFeedback: 'Hash map: O(1) lookup of any key\'s node. Doubly linked list: O(1) move-to-front (just rewire prev/next) and O(1) evict-from-tail. Together they give O(1) for both operations.',
+      wrongFeedback: [
+        'You need O(1) lookup by key AND O(1) removal of the least-recently-used node. Which structure gives each of those?',
+        'Hash map → O(1) lookup. Doubly linked list → O(1) node removal and insertion when you already have a pointer to the node. Combine them: the map stores pointers into the list.',
+      ],
+    },
+    {
+      id: 'capacity-constraint',
+      question: '1 ≤ capacity ≤ 3000 and up to 2 × 10^5 calls. This means…',
+      options: [
+        { label: 'You must evict on every put regardless', isCorrect: false, feedback: 'You only evict when the cache is at capacity — if there is still room, just insert. Evicting unnecessarily would lose valid cached entries.' },
+        { label: 'Eviction only triggers when at capacity and a new key is inserted', isCorrect: true },
+        { label: 'The cache never needs to store more than 3000 entries', isCorrect: false, feedback: 'That\'s true by definition of capacity, but it\'s not the signal here. The key read is that eviction only happens when inserting a new key into a full cache — updating an existing key doesn\'t trigger eviction.' },
+        { label: 'get must also evict to stay under capacity', isCorrect: false, feedback: 'get never adds entries — it only reads. Eviction only happens during put when a new key is inserted into a full cache. A get just updates recency order.' },
+      ],
+      correctFeedback: 'Two distinct put cases: (1) key already exists — update value and move to front, no eviction; (2) key is new and cache is full — evict LRU from the tail, then insert new key at the front.',
+      wrongFeedback: [
+        'If you put a key that\'s already in the cache, does the size change?',
+        'Updating an existing key changes its value and promotes it — no eviction needed. Eviction only fires when a brand-new key is inserted and the cache is already at capacity.',
+      ],
+    },
+  ],
 }

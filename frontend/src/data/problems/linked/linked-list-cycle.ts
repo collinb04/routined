@@ -41,4 +41,66 @@ def has_cycle(vals, pos):
     { label: 'No cycle', args: [[1], -1], expected: false },
     { label: 'Longer no cycle', args: [[1, 2, 3, 4], -1], expected: false },
   ],
+  clues: [
+    {
+      id: 'output-boolean',
+      question: 'The output is true or false — just whether a cycle exists. This means you…',
+      options: [
+        { label: 'Must find where the cycle starts', isCorrect: false, feedback: 'Finding the cycle entry point is a harder variant of this problem. Here you only need to detect presence — true or false — which is simpler and allows earlier termination.' },
+        { label: 'Only need to detect presence, not location', isCorrect: true },
+        { label: 'Must return the length of the cycle', isCorrect: false, feedback: 'Cycle length is not asked for. The output is a boolean — stop as soon as you have enough information to say yes or no.' },
+        { label: 'Must count how many nodes are in the cycle', isCorrect: false, feedback: 'Node count is irrelevant to a boolean output. Detection is the only goal — you can return true the moment you confirm a cycle exists.' },
+      ],
+      correctFeedback: 'Detection only — you can return true the instant you confirm a cycle, without knowing where it starts or how long it is.',
+      wrongFeedback: [
+        'The return type is a boolean. What is the minimum information you need to produce that output?',
+        'You need to answer "does a cycle exist?" — not "where does it start" or "how big is it." The simplest confirmation of a cycle is enough.',
+      ],
+    },
+    {
+      id: 'constraint-no-end',
+      question: 'In a cyclic list, following next pointers never reaches null. This means a simple traversal…',
+      options: [
+        { label: 'Terminates when it revisits a value', isCorrect: false, feedback: 'Node values are not unique — a list can have repeated values without a cycle. You need to detect revisiting a node by identity, not by value.' },
+        { label: 'Loops forever without a termination condition', isCorrect: true },
+        { label: 'Terminates at the tail node automatically', isCorrect: false, feedback: 'A cyclic list has no tail — the last node points back into the list. There is no null to terminate on, which is exactly why naive traversal is insufficient.' },
+        { label: 'Can use index bounds to stop', isCorrect: false, feedback: 'A linked list has no index bounds — you follow pointers, not indices. With n ≤ 10,000 nodes and a cycle, you\'d traverse indefinitely unless you add a cycle check.' },
+      ],
+      correctFeedback: 'Without a stopping condition, following next in a cycle never terminates. You need a mechanism that detects revisiting — either tracking seen nodes or using two pointers that catch each other.',
+      wrongFeedback: [
+        'If the list has a cycle, what does following next pointers eventually do?',
+        'There\'s no null to land on in a cycle. You need a way to notice you\'re going in circles — without storing every visited node.',
+      ],
+    },
+    {
+      id: 'floyd-algorithm-signal',
+      question: 'The problem explicitly says "use Floyd\'s fast and slow pointer algorithm." This implies the intended space complexity is…',
+      options: [
+        { label: 'O(n) — store all visited nodes', isCorrect: false, feedback: 'Storing visited nodes in a set detects cycles in O(n) time but O(n) space. Floyd\'s algorithm achieves O(n) time with O(1) space — two pointers, no storage.' },
+        { label: 'O(1) — two pointers, no extra storage', isCorrect: true },
+        { label: 'O(log n) — binary search on positions', isCorrect: false, feedback: 'Binary search doesn\'t apply to cycle detection in a linked list — there\'s no random access or sorted order to exploit. Floyd\'s is a linear scan with two pointers.' },
+        { label: 'O(n²) — compare every pair of nodes', isCorrect: false, feedback: 'Comparing every pair of nodes would be O(n²) time and O(1) space, but Floyd\'s is O(n) time — it only needs two passes at most around the cycle to detect a meeting point.' },
+      ],
+      correctFeedback: 'Floyd\'s algorithm uses exactly two pointers — slow moves one step, fast moves two. They meet inside the cycle if and only if one exists. O(1) space, O(n) time.',
+      wrongFeedback: [
+        'Floyd\'s algorithm uses only two variables — slow and fast. What does that tell you about extra space usage?',
+        'Two integer pointers is O(1) space. Floyd\'s trades the set of visited nodes for a mathematical guarantee: in a cycle, a faster pointer always laps the slower one.',
+      ],
+    },
+    {
+      id: 'pos-guarantee',
+      question: 'pos is -1 or a valid node index. pos = -1 means no cycle. This guarantees…',
+      options: [
+        { label: 'You must handle corrupted lists with invalid pointers', isCorrect: false, feedback: 'pos is always -1 or a valid index — there are no invalid pointer values in the input. The guarantee simplifies the problem: null means no cycle, and any non-null tail connection is valid.' },
+        { label: 'Null termination is the only no-cycle signal', isCorrect: true },
+        { label: 'The cycle always begins at the head', isCorrect: false, feedback: 'pos can be any valid index — the cycle can start anywhere, not just at index 0. The example with pos = 1 shows a cycle that starts mid-list.' },
+        { label: 'Fast pointer always reaches null in two steps', isCorrect: false, feedback: 'The fast pointer only reaches null when there is no cycle. In a cyclic list it never reaches null — it keeps moving through the cycle indefinitely until it catches the slow pointer.' },
+      ],
+      correctFeedback: 'When there is no cycle (pos = -1), the tail\'s next is null. The fast pointer reaches null and you return false. When there is a cycle, null is unreachable — the pointers loop until they meet.',
+      wrongFeedback: [
+        'What does it mean for a linked list to have no cycle in terms of pointer values?',
+        'No cycle means the tail\'s next is null — that\'s the termination signal. A cycle means null is never reached, so fast and slow meeting each other is your only termination signal.',
+      ],
+    },
+  ],
 }
