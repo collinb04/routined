@@ -18,6 +18,8 @@ export default {
     { label: 'Single element 0', args: [[0]], expected: 1 },
     { label: 'Missing first', args: [[1,2,3]], expected: 0 },
   ],
+  bruteHint: 'Describe checking each value in [0, n] against a set of nums, and its time or space cost',
+  optimizeHint: 'Name the arithmetic property that finds the missing value in one pass without extra storage',
   clues: [
     {
       id: 'range-guarantee',

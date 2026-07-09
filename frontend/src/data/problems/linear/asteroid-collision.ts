@@ -19,6 +19,8 @@ export default {
     { label: '10 survives', args: [[10,2,-5]], expected: [10] },
     { label: 'No collision', args: [[1,2,3]], expected: [1,2,3] },
   ],
+  bruteHint: 'Describe simulating collisions by repeatedly rescanning the array until no more collisions occur, and its time complexity',
+  optimizeHint: 'Name the data structure that processes asteroids in a single pass while holding onto unresolved ones',
   clues: [
     {
       id: 'collision-condition',

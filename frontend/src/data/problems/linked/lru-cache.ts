@@ -28,6 +28,8 @@ export default {
   testCases: [
     { label: 'eviction', args: [2, ['put','put','get','put','get','put','get','get','get'], [[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]], expected: [1,-1,-1,3,4] },
   ],
+  bruteHint: 'Describe using a plain list or dict where finding and evicting the least-recently-used entry needs an O(n) scan',
+  optimizeHint: 'Name the combined data structure — a hash map paired with a doubly linked list — that gets O(1) get and put',
   clues: [
     {
       id: 'constraint-o1-operations',

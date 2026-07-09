@@ -9,7 +9,10 @@ export interface TestResult {
   error?: string
 }
 
-const TIMEOUT_MS = 5000
+// Pyodide's first load downloads ~10MB WASM — give it plenty of runway.
+// Once the worker signals ready, pending timers are reset to the tighter exec limit.
+const COLD_START_TIMEOUT_MS = 45_000
+const EXEC_TIMEOUT_MS = 8_000
 
 const isReady = ref(false)
 const isLoading = ref(false)
@@ -21,13 +24,18 @@ function createWorker(): Worker {
   isReady.value = false
   isLoading.value = true
 
-  const w = new Worker('/pyodide.worker.ts')
+  const w = new Worker('/pyodide.worker.js')
 
   w.onmessage = (e) => {
     const { type, id, result, error } = e.data
     if (type === 'ready') {
       isReady.value = true
       isLoading.value = false
+      // Pyodide is loaded — reset every pending request to the tighter exec timeout
+      pending.forEach(req => {
+        clearTimeout(req.timer)
+        req.timer = setTimeout(killAndReset, EXEC_TIMEOUT_MS)
+      })
       return
     }
     if (type === 'error') {
@@ -60,7 +68,7 @@ function killAndReset() {
   worker = null
   pending.forEach(req => {
     clearTimeout(req.timer)
-    req.reject(new Error('Execution timed out after 5s — check for infinite loops.'))
+    req.reject(new Error('Execution timed out after 8s — check for infinite loops or very slow code.'))
   })
   pending.clear()
   worker = createWorker()
@@ -69,7 +77,9 @@ function killAndReset() {
 function send(type: string, payload: object): Promise<string> {
   return new Promise((resolve, reject) => {
     const id = Math.random().toString(36).slice(2)
-    const timer = setTimeout(killAndReset, TIMEOUT_MS)
+    // Use the cold-start budget until Pyodide signals ready, then the timer
+    // gets reset to EXEC_TIMEOUT_MS via the onmessage handler above.
+    const timer = setTimeout(killAndReset, isReady.value ? EXEC_TIMEOUT_MS : COLD_START_TIMEOUT_MS)
     pending.set(id, { resolve, reject, timer })
     getWorker().postMessage({ id, type, payload })
   })

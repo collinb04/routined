@@ -17,6 +17,8 @@ export default {
     { label: 'Single row', args: [[[1,2,3,4]]], expected: [1,2,3,4] },
     { label: 'Single column', args: [[[1],[2],[3]]], expected: [1,2,3] },
   ],
+  bruteHint: 'Describe tracking visited cells with a visited matrix or set as you traverse in spiral order, and its extra space cost',
+  optimizeHint: 'Name the technique that maintains four shrinking boundary pointers (top, bottom, left, right) instead of tracking visited cells',
   clues: [
     {
       id: 'output-structure',

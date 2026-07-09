@@ -30,6 +30,8 @@ class Trie:
     { label: 'Insert and search', args: [['insert','search','search','startsWith','insert','search'],['apple','apple','app','app','app','app']], expected: [null,true,false,true,null,true] },
     { label: 'Prefix check', args: [['insert','startsWith','search'],['hello','hel','hel']], expected: [null,true,false] },
   ],
+  bruteHint: 'Describe storing all inserted words in a list or set and scanning through them character by character for every search or startsWith call',
+  optimizeHint: 'Explain how a trie\'s per-character nodes give lookups proportional to word length rather than to how many words are stored',
   clues: [
     {
       id: 'search-vs-startswith',

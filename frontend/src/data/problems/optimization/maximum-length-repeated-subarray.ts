@@ -17,6 +17,8 @@ export default {
     { label: 'All same', args: [[0,0,0,0,0],[0,0,0,0,0]], expected: 5 },
     { label: 'No overlap', args: [[1,2],[3,4]], expected: 0 },
   ],
+  bruteHint: 'Describe the naive approach that checks every pair of starting positions and extends the match character by character from scratch each time',
+  optimizeHint: 'Name the 2D state (ending position in nums1, ending position in nums2) you\'d memoize so each run length is built from the previous one instead of recomputed',
   clues: [
     {
       id: 'constraint-complexity',

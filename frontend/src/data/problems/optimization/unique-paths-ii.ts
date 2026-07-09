@@ -17,6 +17,8 @@ export default {
     { label: 'Right obstacle', args: [[[0,1],[0,0]]], expected: 1 },
     { label: 'Blocked', args: [[[1,0]]], expected: 0 },
   ],
+  bruteHint: 'Describe the naive recursion that tries moving right or down from every cell, and why the same cells get revisited by different paths',
+  optimizeHint: 'Name the 2D grid DP that caches the path count at each cell, zeroing out obstacles as it goes',
   clues: [
     {
       id: 'obstacle-zero-rule',

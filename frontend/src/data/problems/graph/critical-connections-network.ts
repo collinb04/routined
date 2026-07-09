@@ -15,6 +15,8 @@ export default {
     { label: 'One bridge', args: [4,[[0,1],[1,2],[2,0],[1,3]]], expected: [[1,3]] },
     { label: 'All bridges', args: [3,[[0,1],[1,2]]], expected: [[0,1],[1,2]] },
   ],
+  bruteHint: 'Describe removing each connection one at a time and re-running a full connectivity check, and why that is too slow here',
+  optimizeHint: 'Name the single-pass DFS algorithm that finds every bridge using discovery times and low-link values',
   clues: [
     {
       id: 'bridge-definition',

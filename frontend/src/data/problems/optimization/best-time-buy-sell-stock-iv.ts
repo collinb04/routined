@@ -17,6 +17,8 @@ export default {
     { label: 'k=2, standard', args: [2,[3,2,6,5,0,3]], expected: 7 },
     { label: 'k=0', args: [0,[1,2,3]], expected: 0 },
   ],
+  bruteHint: 'Describe the recursive approach that branches into buy/sell/skip at every day up to k times, re-exploring the same day/transaction combinations, and why that\'s exponential.',
+  optimizeHint: 'Name the two things the DP state needs to track — day and transactions used (plus holding status) — to memoize away the repeated subproblems.',
   clues: [
     {
       id: 'constraint-complexity',

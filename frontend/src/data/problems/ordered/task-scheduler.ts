@@ -16,6 +16,8 @@ export default {
     { label: 'n=2', args: [['A','A','A','B','B','B'], 2], expected: 8 },
     { label: 'n=0', args: [['A','A','A','B','B','B'], 0], expected: 6 },
   ],
+  bruteHint: 'Describe a naive simulation that rescans all task counts to find the most frequent remaining task at every single interval.',
+  optimizeHint: 'Name the data structure that gives log-time access to the most frequent eligible task at each interval.',
   clues: [
     {
       id: 'cooldown-constraint',

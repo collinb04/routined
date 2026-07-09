@@ -17,6 +17,8 @@ export default {
     { label: 'All same', args: [[2,2,2,2,2]], expected: 5 },
     { label: 'Single', args: [[1]], expected: 1 },
   ],
+  bruteHint: 'Describe the naive recursive approach that tries every subsequence to find the longest increasing one, and why the number of subsequences is exponential',
+  optimizeHint: 'Name the DP state that tracks both the LIS length and the count of subsequences ending at each index',
   clues: [
     {
       id: 'constraint-complexity',

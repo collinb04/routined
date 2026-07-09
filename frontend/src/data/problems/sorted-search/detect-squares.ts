@@ -25,6 +25,8 @@ export default {
     { label: 'One square', args: [['add','add','add','count'],[[3,10],[11,2],[3,2],[11,10]]], expected: [null,null,null,1] },
     { label: 'No square', args: [['add','add','count'],[[0,0],[1,1],[2,2]]], expected: [null,null,0] },
   ],
+  bruteHint: 'Describe checking all triplets of stored points for each query and its time complexity',
+  optimizeHint: 'Name the technique that fixes a diagonal point and derives the other two corners arithmetically instead of searching',
   clues: [
     {
       id: 'axis-aligned-constraint',

@@ -19,6 +19,8 @@ export default {
     { label: 'Missing 1', args: [[7,8,9,11,12]], expected: 1 },
     { label: 'Sequential', args: [[1,2,3]], expected: 4 },
   ],
+  bruteHint: 'Describe sorting the array or using a hash set to check for each positive integer, and its space complexity',
+  optimizeHint: 'Describe how you could place each value at its corresponding index in place to avoid extra space',
   clues: [
     {
       id: 'constraint-o1-space',

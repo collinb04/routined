@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[1,2,1,2,6,7,5,1],2], expected: [0,3,5] },
     { label: 'k=1', args: [[1,2,3],1], expected: [0,1,2] },
   ],
+  bruteHint: 'Describe trying every combination of 3 non-overlapping windows and its time complexity',
+  optimizeHint: 'Name what you would precompute once for every window sum, then explain how tracking the best window to the left and right of each position helps',
   clues: [
     {
       id: 'constraint-complexity',

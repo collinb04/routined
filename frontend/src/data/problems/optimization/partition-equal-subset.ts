@@ -24,6 +24,8 @@ export default {
     { label: 'Odd sum', args: [[1,2]], expected: false },
     { label: 'Larger', args: [[1,2,5,5,11]], expected: true },
   ],
+  bruteHint: 'Describe the naive recursion that tries including or excluding each number, and why the number of subsets it explores is exponential',
+  optimizeHint: 'Name the classic problem this reduces to — subset sum / 0-1 knapsack — and the DP state that tracks which sums are reachable',
   clues: [
     {
       id: 'odd-sum-early-exit',

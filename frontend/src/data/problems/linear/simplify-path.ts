@@ -19,6 +19,8 @@ export default {
     { label: 'Parent dir', args: ['/home/user/Documents/../Pictures'], expected: '/home/user/Pictures' },
     { label: 'Go to root', args: ['/../'], expected: '/' },
   ],
+  bruteHint: 'Describe repeatedly rescanning the path string to resolve "." and ".." tokens, and explain why that is inefficient',
+  optimizeHint: 'Name the structure that processes path segments split by "/", popping on ".."',
   clues: [
     {
       id: 'dotdot-implies-stack',

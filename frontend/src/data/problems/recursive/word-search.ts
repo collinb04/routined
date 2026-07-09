@@ -16,6 +16,8 @@ export default {
     { label: 'ABCCED', args: [[['A','B','C','E'],['S','F','C','S'],['A','D','E','E']], 'ABCCED'], expected: true },
     { label: 'ABCB false', args: [[['A','B','C','E'],['S','F','C','S'],['A','D','E','E']], 'ABCB'], expected: false },
   ],
+  bruteHint: 'Describe launching a DFS from every possible starting cell and matching the word character by character, and name the branching factor and word length that bound its worst-case cost',
+  optimizeHint: 'Name the in-place technique for marking a cell as used during the current path and restoring it on backtrack, avoiding a separate visited-set data structure',
   clues: [
     {
       id: 'constraint-board-size',

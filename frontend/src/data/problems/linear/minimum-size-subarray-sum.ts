@@ -18,6 +18,8 @@ export default {
     { label: 'No solution', args: [11,[1,1,1,1,1]], expected: 0 },
     { label: 'Whole array', args: [7,[2,3,2]], expected: 3 },
   ],
+  bruteHint: 'Describe checking every subarray and its time complexity',
+  optimizeHint: 'Name the two-pointer technique that shrinks the window from the left once the sum condition is met',
   clues: [
     {
       id: 'constraint-complexity',

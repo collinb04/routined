@@ -16,6 +16,8 @@ export default {
     { label: 'valid tree', args: [5, [[0,1],[0,2],[0,3],[1,4]]], expected: true },
     { label: 'has cycle', args: [5, [[0,1],[1,2],[2,3],[1,3],[1,4]]], expected: false },
   ],
+  bruteHint: 'Describe testing connectivity by checking reachability between every pair of nodes, and its time complexity',
+  optimizeHint: 'Name the technique that combines an edge-count check with Union-Find to detect cycles in a single pass',
   clues: [
     {
       id: 'constraint-complexity',

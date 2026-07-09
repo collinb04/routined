@@ -32,6 +32,8 @@ def merge_k_lists_run(arrs):
     { label: '3 lists', args: [[[1,4,5],[1,3,4],[2,6]]], expected: [1,1,2,3,4,4,5,6] },
     { label: 'empty', args: [[]], expected: [] },
   ],
+  bruteHint: 'Describe collecting every value into one array, sorting it, and rebuilding the list, and the extra time that costs',
+  optimizeHint: 'Name the data structure that yields the smallest of the k current heads in O(log k)',
   clues: [
     {
       id: 'constraint-total-nodes',

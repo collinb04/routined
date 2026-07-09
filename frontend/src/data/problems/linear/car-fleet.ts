@@ -15,6 +15,8 @@ export default {
     { label: 'target=12', args: [12, [10,8,0,5,3], [2,4,1,1,3]], expected: 3 },
     { label: 'single', args: [10, [3], [3]], expected: 1 },
   ],
+  bruteHint: 'Describe simulating each car pair-by-pair and repeatedly rescanning to resolve merges, and its time complexity',
+  optimizeHint: 'Name the data structure that processes cars from back to front in a single pass while holding onto unresolved fleets',
   clues: [
     {
       id: 'no-passing-rule',

@@ -14,6 +14,8 @@ export default {
   testCases: [
     { label: 'Perfect tree', args: [[1,2,3,4,5,6,7]], expected: [1,null,2,3,null,4,5,6,7,null] },
   ],
+  bruteHint: 'Describe traversing level by level with a queue to link siblings, and the extra space that requires',
+  optimizeHint: 'Name the technique of using the next pointers already set on the current level to reach into the next level without any extra storage',
   clues: [
     {
       id: 'perfect-tree-guarantee',

@@ -17,6 +17,8 @@ export default {
     { label: 'Sequential k=2', args: [[1,2,3,4,5],2], expected: 9 },
     { label: 'k=1', args: [[1,2,3],1], expected: 6 },
   ],
+  bruteHint: 'Describe trying every possible way to partition the array into k subarrays and its exponential time complexity',
+  optimizeHint: 'Name the technique that binary searches over the possible answer values, using a greedy feasibility check at each step',
   clues: [
     {
       id: 'search-space',

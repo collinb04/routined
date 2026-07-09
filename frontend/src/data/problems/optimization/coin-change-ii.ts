@@ -17,6 +17,8 @@ export default {
     { label: 'No solution', args: [3,[2]], expected: 0 },
     { label: 'amount=0', args: [0,[1,2,3]], expected: 1 },
   ],
+  bruteHint: 'Describe the recursive approach that tries every combination of coins (with repetition) toward the amount, and explain why the same remaining amounts get re-explored many times.',
+  optimizeHint: 'Name the 2D state — which coin you\'re considering and how much amount remains — you can tabulate so each subproblem is solved once.',
   clues: [
     {
       id: 'constraint-complexity',

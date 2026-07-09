@@ -37,6 +37,8 @@ def diameter_of_binary_tree_run(arr):
     { label: '[1,2,3,4,5]', args: [[1,2,3,4,5]], expected: 3 },
     { label: '[1,2]', args: [[1,2]], expected: 1 },
   ],
+  bruteHint: 'Describe recomputing the depth of the left and right subtree from scratch at every node, and why that repeated work is costly',
+  optimizeHint: 'Name what a single DFS pass could return upward so each node\'s depth is computed once, while a separate running value tracks the best diameter seen',
   clues: [
     {
       id: 'path-not-through-root',

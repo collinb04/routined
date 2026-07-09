@@ -17,6 +17,8 @@ export default {
     { label: 'One duplicate', args: [[1,1,2]], expected: [1] },
     { label: 'No duplicates', args: [[1,2,3]], expected: [] },
   ],
+  bruteHint: 'Describe using a hash set or count array to track seen values, and its space complexity',
+  optimizeHint: 'Describe how you could mark a value as seen using the array itself instead of extra space',
   clues: [
     {
       id: 'values-as-indices',

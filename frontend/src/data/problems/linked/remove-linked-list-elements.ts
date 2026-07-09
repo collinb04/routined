@@ -50,6 +50,8 @@ def remove_elements(values, val):
     { label: 'Remove head', args: [[1, 1, 2, 3], 1], expected: [2, 3] },
     { label: 'Not found', args: [[1, 2, 3], 4], expected: [1, 2, 3] },
   ],
+  bruteHint: 'Describe collecting the non-matching values into a new array and rebuilding a fresh list from it',
+  optimizeHint: 'Name the technique of walking the list with a trailing previous pointer (aided by a dummy head) to remove matching nodes in place',
   clues: [
     {
       id: 'head-removal-challenge',

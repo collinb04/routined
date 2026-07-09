@@ -37,6 +37,8 @@ def is_same_tree_run(p, q):
     { label: 'same', args: [[1,2,3],[1,2,3]], expected: true },
     { label: 'different structure', args: [[1,2],[1,null,2]], expected: false },
   ],
+  bruteHint: 'Describe converting both trees into flattened traversal lists first and then comparing those lists element by element, and note the extra space this requires',
+  optimizeHint: 'Name the technique that walks both trees simultaneously and stops the instant a mismatch is found, avoiding any extra traversal or storage',
   clues: [
     {
       id: 'input-two-roots',

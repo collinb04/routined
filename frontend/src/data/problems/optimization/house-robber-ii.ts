@@ -16,6 +16,8 @@ export default {
     { label: '[2,3,2]', args: [[2,3,2]], expected: 3 },
     { label: '[1,2,3,1]', args: [[1,2,3,1]], expected: 4 },
   ],
+  bruteHint: 'Describe the naive recursion that tries robbing or skipping each house, and why it recomputes the same suffix repeatedly',
+  optimizeHint: 'Name how splitting the circle into two linear runs (excluding house 0, then excluding house n-1) lets you reuse the standard House Robber DP',
   clues: [
     {
       id: 'circular-constraint',

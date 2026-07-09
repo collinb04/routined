@@ -17,6 +17,8 @@ export default {
     { label: 'All zeros', args: ['0000'], expected: ['0.0.0.0'] },
     { label: 'Too short', args: ['1'], expected: [] },
   ],
+  bruteHint: 'Describe generating every way to place three dots in the string and filtering afterward for the splits where all four segments are valid octets',
+  optimizeHint: 'Name the technique of rejecting an invalid or oversized segment the moment it\'s chosen, instead of completing all four before checking',
   clues: [
     {
       id: 'constraint-structure',

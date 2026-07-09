@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { StruggleContent } from '@/data/problems'
 
-export type StruggleStep = 'commit' | 'chat' | 'revise'
+export type StruggleStep = 'commit' | 'chat' | 'revise' | 'done'
 
 export type ApiMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -18,6 +18,7 @@ export const useStruggleStore = defineStore('struggle', () => {
   const problemId = ref('')
   const targetInsight = ref('')
   const insightRubric = ref<string[]>([])
+  const synthesisText = ref('')
 
   // Navigation
   const step = ref<StruggleStep>('commit')
@@ -27,6 +28,7 @@ export const useStruggleStore = defineStore('struggle', () => {
   const timeComplexity = ref('')
   const spaceComplexity = ref('')
   const planSteps = ref<string[]>([])
+  const stepOrderNote = ref<string | null>(null)
 
   // Chat
   const messages = ref<ApiMessage[]>([])
@@ -37,20 +39,24 @@ export const useStruggleStore = defineStore('struggle', () => {
   const insightResult = ref<InsightResult | null>(null)
   const evaluating = ref(false)
 
-  function init(pid: string, content: StruggleContent) {
+  function init(pid: string, content: StruggleContent, saved?: Record<string, any> | null) {
     problemId.value = pid
     targetInsight.value = content.targetInsight
     insightRubric.value = content.insightRubric
-    step.value = 'commit'
-    strategyId.value = ''
-    timeComplexity.value = ''
-    spaceComplexity.value = ''
-    planSteps.value = []
-    messages.value = []
-    insightText.value = ''
+
+    const commitment = saved?.commitment
+    step.value = (saved?.step as StruggleStep) ?? 'commit'
+    strategyId.value = commitment?.strategyId ?? ''
+    timeComplexity.value = commitment?.timeComplexity ?? ''
+    spaceComplexity.value = commitment?.spaceComplexity ?? ''
+    planSteps.value = commitment?.planSteps ?? []
+    stepOrderNote.value = saved?.stepOrderNote ?? null
+    messages.value = saved?.chatMessages ?? []
+    insightText.value = saved?.insightText ?? ''
     insightResult.value = null
     chatLoading.value = false
     evaluating.value = false
+    synthesisText.value = saved?.synthesisText ?? ''
   }
 
   async function submitCommit(): Promise<void> {
@@ -63,6 +69,8 @@ export const useStruggleStore = defineStore('struggle', () => {
         timeComplexity: timeComplexity.value,
         spaceComplexity: spaceComplexity.value,
         planSteps: planSteps.value,
+        synthesisText: synthesisText.value,
+        stepOrderNote: stepOrderNote.value,
       }),
     })
     if (!res.ok) {
@@ -116,9 +124,9 @@ export const useStruggleStore = defineStore('struggle', () => {
 
   return {
     // state
-    problemId, targetInsight, insightRubric,
+    problemId, targetInsight, insightRubric, synthesisText,
     step,
-    strategyId, timeComplexity, spaceComplexity, planSteps,
+    strategyId, timeComplexity, spaceComplexity, planSteps, stepOrderNote,
     messages, chatLoading,
     insightText, insightResult, evaluating,
     // actions

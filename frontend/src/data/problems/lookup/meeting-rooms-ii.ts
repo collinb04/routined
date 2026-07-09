@@ -18,6 +18,8 @@ export default {
     { label: 'All at same time', args: [[[1,5],[1,5],[1,5]]], expected: 3 },
     { label: 'Sequential', args: [[[1,2],[2,3],[3,4]]], expected: 1 },
   ],
+  bruteHint: 'Describe comparing every meeting against every other meeting to count overlaps, and its time complexity',
+  optimizeHint: 'Name the data structure that tracks the earliest-ending active meeting so a freed room can be reused',
   clues: [
     {
       id: 'constraint-complexity',

@@ -41,6 +41,8 @@ def has_cycle(vals, pos):
     { label: 'No cycle', args: [[1], -1], expected: false },
     { label: 'Longer no cycle', args: [[1, 2, 3, 4], -1], expected: false },
   ],
+  bruteHint: 'Describe using a hash set to track visited nodes, and the O(n) space that costs',
+  optimizeHint: 'Name the two-pointer technique that detects a cycle in O(1) space',
   clues: [
     {
       id: 'output-boolean',

@@ -18,6 +18,8 @@ export default {
     { label: 'Two elements', args: [[1,10000000]], expected: 9999999 },
     { label: 'Consecutive', args: [[1,2,3,4,5]], expected: 1 },
   ],
+  bruteHint: 'Describe sorting the array with a comparison sort and scanning adjacent pairs, and why that\'s O(n log n) rather than O(n)',
+  optimizeHint: 'Name the technique — bucket-style sorting that exploits the pigeonhole principle — that achieves O(n)',
   clues: [
     {
       id: 'time-constraint',

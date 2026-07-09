@@ -16,6 +16,8 @@ export default {
     { label: 'Single', args: [[1]], expected: 1 },
     { label: 'Two', args: [[1,5]], expected: 10 },
   ],
+  bruteHint: 'Describe the brute-force approach of trying every possible order of bursting balloons and explain why that\'s factorial in the number of balloons.',
+  optimizeHint: 'Name the trick of choosing which balloon is burst last within a range so its subproblem depends only on the range\'s two boundaries, enabling a DP table indexed by interval.',
   clues: [
     {
       id: 'constraint-complexity',

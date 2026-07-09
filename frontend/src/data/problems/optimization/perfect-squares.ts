@@ -18,6 +18,8 @@ export default {
     { label: 'Perfect square', args: [4], expected: 1 },
     { label: 'n=1', args: [1], expected: 1 },
   ],
+  bruteHint: 'Describe the naive recursion that tries every perfect square ≤ n as the first term and recurses on the remainder, and why it recomputes the same remaining values repeatedly',
+  optimizeHint: 'Name the technique that caches the minimum count for each value from 0 up to n so each value is computed only once',
   clues: [
     {
       id: 'constraint-complexity',

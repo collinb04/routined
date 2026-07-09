@@ -19,6 +19,8 @@ export default {
     { label: 'Remove all', args: ['10',2], expected: '0' },
     { label: 'Already min', args: ['123',1], expected: '12' },
   ],
+  bruteHint: 'Describe trying every combination of k digit removals and comparing the results, and explain why that is exponential',
+  optimizeHint: 'Name the structure that maintains increasing digits, popping larger ones when a smaller digit appears and removals remain',
   clues: [
     {
       id: 'constraint-input-size',

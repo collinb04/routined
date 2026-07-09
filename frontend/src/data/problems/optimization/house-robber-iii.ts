@@ -16,6 +16,8 @@ export default {
     { label: 'Depth 3', args: [[3,2,3,null,3,null,1]], expected: 7 },
     { label: 'Depth 3 v2', args: [[3,4,5,1,3,null,1]], expected: 9 },
   ],
+  bruteHint: 'Describe the naive recursion that tries robbing or skipping each node, and why it re-explores the same subtrees repeatedly without caching',
+  optimizeHint: 'Name the two values each node must return to its parent — one for "robbed," one for "not robbed" — so the tree DP is computed bottom-up in a single pass',
   clues: [
     {
       id: 'structure-signal',

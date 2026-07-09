@@ -17,6 +17,8 @@ export default {
     { label: '1 row', args: [1], expected: [[1]] },
     { label: '3 rows', args: [3], expected: [[1],[1,1],[1,2,1]] },
   ],
+  bruteHint: 'Describe recomputing each row from scratch using combinatorics formulas and why that repeats work',
+  optimizeHint: 'Name what relationship between a row and the row before it lets you build each value directly instead',
   clues: [
     {
       id: 'output-structure',

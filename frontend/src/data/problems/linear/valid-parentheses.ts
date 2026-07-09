@@ -23,6 +23,8 @@ export default {
     { label: 'Wrong order', args: ['([)]'], expected: false },
     { label: 'Nested', args: ['{[]}'], expected: true },
   ],
+  bruteHint: 'Describe repeatedly scanning for and removing matched adjacent pairs until none remain, and its time complexity',
+  optimizeHint: 'Name the data structure that validates the string in one pass by matching each closing bracket against the top',
   clues: [
     {
       id: 'last-in-first-out',

@@ -16,6 +16,8 @@ export default {
     { label: 'ABAB k=2', args: ['ABAB', 2], expected: 4 },
     { label: 'AABABBA k=1', args: ['AABABBA', 1], expected: 4 },
   ],
+  bruteHint: 'Describe checking every substring and counting replacements needed, and the time complexity',
+  optimizeHint: 'Name the sliding window technique that expands and shrinks based on how many replacements the window currently needs',
   clues: [
     {
       id: 'validity-condition',

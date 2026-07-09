@@ -16,6 +16,8 @@ export default {
     { label: '"abc"', args: ['abc'], expected: 3 },
     { label: '"aaa"', args: ['aaa'], expected: 6 },
   ],
+  bruteHint: 'Describe the naive approach of checking every substring for the palindrome property, and its resulting O(n³) time complexity',
+  optimizeHint: 'Name the technique that reuses a shorter palindrome\'s result to check a longer one in O(1), whether via a DP table or expanding around centers',
   clues: [
     {
       id: 'constraint-complexity',

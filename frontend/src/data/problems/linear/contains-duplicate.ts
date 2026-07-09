@@ -21,6 +21,8 @@ export default {
     { label: 'Single element', args: [[1]], expected: false },
     { label: 'Multiple duplicates', args: [[1, 1, 1, 3, 3, 4, 3, 2, 4, 2]], expected: true },
   ],
+  bruteHint: 'Describe comparing every pair of elements and its time complexity',
+  optimizeHint: 'Name the data structure that gives O(1) membership checks as you scan',
   clues: [
     {
       id: 'constraint-complexity',

@@ -18,6 +18,8 @@ export default {
     { label: 'Single string', args: [['alone']], expected: 'alone' },
     { label: 'All same', args: [['aa','aa','aa']], expected: 'aa' },
   ],
+  bruteHint: 'Describe comparing every string against every other string pairwise, and why that\'s wasteful',
+  optimizeHint: 'Name the scanning technique that checks all strings character-by-character together, or the divide-and-conquer alternative',
   clues: [
     {
       id: 'prefix-is-constrained-by-shortest',

@@ -19,6 +19,8 @@ export default {
     { label: 'n=0', args: [5.0, 0], expected: 1.0 },
     { label: 'n=1', args: [3.0, 1], expected: 3.0 },
   ],
+  bruteHint: 'Describe multiplying x by itself n times in a loop and its time complexity',
+  optimizeHint: 'Name the technique that repeatedly squares the base and halves the exponent to compute the result in O(log n)',
   clues: [
     {
       id: 'constraint-complexity',

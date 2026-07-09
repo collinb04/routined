@@ -16,6 +16,8 @@ export default {
     { label: 'No chain', args: [[[1,1,1],[2,2,1]]], expected: 1 },
     { label: 'Single', args: [[[5,5,5]]], expected: 1 },
   ],
+  bruteHint: 'Describe simulating the chain reaction from each bomb by rescanning every other bomb at each step, and its complexity',
+  optimizeHint: 'Name the traversal that counts how many bombs are reachable from a given starting bomb in a directed graph',
   clues: [
     {
       id: 'directed-reach',

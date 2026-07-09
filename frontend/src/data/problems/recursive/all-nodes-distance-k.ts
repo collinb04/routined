@@ -15,6 +15,8 @@ export default {
     { label: 'Three nodes', args: [[3,5,1,6,2,0,8,null,null,7,4],5,2], expected: [1,4,7] },
     { label: 'k=0 returns target', args: [[1],1,0], expected: [1] },
   ],
+  bruteHint: 'Describe why DFS from the target using only child pointers can\'t reach nodes above it in the tree',
+  optimizeHint: 'Name what you need to build first so the tree can be traversed in both directions, then the traversal that works outward from the target',
   clues: [
     {
       id: 'upward-traversal-constraint',

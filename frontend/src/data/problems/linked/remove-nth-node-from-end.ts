@@ -33,6 +33,8 @@ def remove_nth_from_end_run(arr, n):
     { label: 'single n=1', args: [[1], 1], expected: [] },
     { label: '[1,2] n=1', args: [[1,2], 1], expected: [1] },
   ],
+  bruteHint: 'Describe counting the list length in one pass, then walking to the node before the target in a second pass',
+  optimizeHint: 'Name the two-pointer technique that keeps a fixed gap of n nodes to find the target in one pass',
   clues: [
     {
       id: 'end-relative-position',

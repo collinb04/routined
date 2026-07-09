@@ -16,6 +16,8 @@ export default {
     { label: 'Unreachable', args: [[[1,2,1]],2,2], expected: -1 },
     { label: 'Single node', args: [[],1,1], expected: 0 },
   ],
+  bruteHint: 'Describe trying every possible path from k to each node and comparing total travel times, and why that\'s inefficient',
+  optimizeHint: 'Name the shortest-path algorithm that greedily finalizes each node\'s minimum distance using a priority queue',
   clues: [
     {
       id: 'positive-weights',

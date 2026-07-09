@@ -18,6 +18,8 @@ export default {
     { label: 'No overlap', args: [[[1,2],[3,4]]], expected: [[1,2],[3,4]] },
     { label: 'All overlap', args: [[[1,10],[2,3],[4,7]]], expected: [[1,10]] },
   ],
+  bruteHint: 'Describe repeatedly comparing every pair of intervals to find and merge overlaps, and its time complexity',
+  optimizeHint: 'Name what sorting the intervals by start time lets you do in a single pass',
   clues: [
     {
       id: 'output-structure',

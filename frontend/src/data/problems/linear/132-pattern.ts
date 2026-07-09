@@ -18,6 +18,8 @@ export default {
     { label: 'Has pattern v2', args: [[-1,3,2,0]], expected: true },
     { label: 'All same', args: [[1,1,1]], expected: false },
   ],
+  bruteHint: 'Describe the triple nested loop that checks every i, j, k triplet and its time complexity',
+  optimizeHint: 'Name the data structure that lets you scan from the right while tracking candidate values for the pattern',
   clues: [
     {
       id: 'constraint-complexity',

@@ -33,6 +33,8 @@ def merge_two_lists_run(l1, l2):
     { label: 'both empty', args: [[],[]], expected: [] },
     { label: 'one empty', args: [[], [0]], expected: [0] },
   ],
+  bruteHint: 'Describe collecting all values into an array, sorting them, and rebuilding a new list',
+  optimizeHint: 'Name the two-pointer technique that merges by comparing the current heads of both lists',
   clues: [
     {
       id: 'sorted-lists-signal',

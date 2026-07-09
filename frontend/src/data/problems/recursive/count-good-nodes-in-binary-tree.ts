@@ -37,6 +37,8 @@ def good_nodes_run(arr):
     { label: '[3,1,4,3,null,1,5]', args: [[3,1,4,3,null,1,5]], expected: 4 },
     { label: '[3,3,null,4,2]', args: [[3,3,null,4,2]], expected: 3 },
   ],
+  bruteHint: 'Describe checking each node by walking back up to re-examine every ancestor, and the complexity that repeated work adds up to',
+  optimizeHint: 'Name the single value you could carry downward through one DFS pass so each node is checked in O(1) without revisiting ancestors',
   clues: [
     {
       id: 'good-node-definition',

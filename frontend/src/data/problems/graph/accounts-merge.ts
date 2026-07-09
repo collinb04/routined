@@ -14,6 +14,8 @@ export default {
   testCases: [
     { label: 'Merge John', args: [[['John','j1','j2'],['John','j1','j3'],['Mary','m1']]], expected: [['John','j1','j2','j3'],['Mary','m1']] },
   ],
+  bruteHint: 'Describe comparing every pair of accounts for a shared email and repeatedly re-merging groups, and why that is slow',
+  optimizeHint: 'Name the data structure that tracks which group each email belongs to and merges groups in near-constant time',
   clues: [
     {
       id: 'merge-condition',

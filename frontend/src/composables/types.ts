@@ -97,4 +97,13 @@ export interface UnionFindFrame {
   highlights: Record<number, CellKind>
 }
 
-export type Frame = ArrayFrame | StackFrame | TreeFrame | LinkedListFrame | GraphFrame | IntervalFrame | UnionFindFrame
+export interface GridFrame {
+  step: number
+  message: string
+  phase: 'init' | 'compare' | 'update' | 'done'
+  grid: (string | number)[][]
+  highlights: CellKind[][]
+  pointers: Record<string, [number, number]>
+}
+
+export type Frame = ArrayFrame | StackFrame | TreeFrame | LinkedListFrame | GraphFrame | IntervalFrame | UnionFindFrame | GridFrame

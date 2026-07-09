@@ -17,6 +17,8 @@ export default {
     { label: '2 operations', args: [6,[[0,1],[0,2],[0,3],[1,2],[1,3]]], expected: 2 },
     { label: 'Impossible', args: [4,[[0,1]]], expected: -1 },
   ],
+  bruteHint: 'Describe a brute-force approach that checks each edge by rerunning a full connectivity traversal to see if its endpoints are already connected, and the time complexity that results',
+  optimizeHint: 'Name the data structure that lets you detect redundant edges and count components in near-O(1) per edge',
   clues: [
     {
       id: 'impossibility-condition',

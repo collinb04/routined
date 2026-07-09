@@ -18,6 +18,8 @@ export default {
     { label: '"bbbbb"', args: ['bbbbb'], expected: 1 },
     { label: '"pwwkew"', args: ['pwwkew'], expected: 3 },
   ],
+  bruteHint: 'Describe checking every substring for repeated characters, and the resulting time complexity',
+  optimizeHint: 'Name the two-pointer technique that expands and shrinks the window based on whether a repeat is found',
   clues: [
     {
       id: 'constraint-complexity',

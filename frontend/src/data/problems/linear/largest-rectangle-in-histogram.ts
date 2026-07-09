@@ -16,6 +16,8 @@ export default {
     { label: '[2,1,5,6,2,3]', args: [[2,1,5,6,2,3]], expected: 10 },
     { label: '[2,4]', args: [[2,4]], expected: 4 },
   ],
+  bruteHint: 'Describe expanding outward from every bar to find its maximum width, and the resulting time complexity',
+  optimizeHint: 'Name the data structure that tracks bars in increasing height order to find boundaries in O(n)',
   clues: [
     {
       id: 'constraint-complexity',

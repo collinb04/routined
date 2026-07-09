@@ -23,6 +23,8 @@ export default {
     { label: 'Linear chain', args: [4, [[1,0],[2,1],[3,2]]], expected: true },
     { label: 'Diamond cycle', args: [4, [[1,0],[2,1],[3,2],[1,3]]], expected: false },
   ],
+  bruteHint: 'Describe checking every pair of courses directly for a circular dependency, and why that does not scale',
+  optimizeHint: 'Name the algorithm that detects a cycle by repeatedly removing nodes that have no remaining prerequisites',
   clues: [
     {
       id: 'boolean-output',

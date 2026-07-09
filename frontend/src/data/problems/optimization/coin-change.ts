@@ -17,6 +17,8 @@ export default {
     { label: 'impossible', args: [[2], 3], expected: -1 },
     { label: 'amount=0', args: [[1], 0], expected: 0 },
   ],
+  bruteHint: 'Describe the recursive approach that tries every coin at every remaining amount, and explain why it revisits the same remaining amounts repeatedly.',
+  optimizeHint: 'Name the technique for caching the minimum coins needed for each remaining amount so it\'s computed only once.',
   clues: [
     {
       id: 'constraint-complexity',

@@ -17,6 +17,8 @@ export default {
     { label: 'Invalid interleave', args: ['aabcc','dbbca','aadbbbaccc'], expected: false },
     { label: 'Empty strings', args: ['','',''], expected: true },
   ],
+  bruteHint: 'Describe the naive recursion that branches on taking the next character from s1 or s2 at every step, and why the same (i, j) position gets revisited many times',
+  optimizeHint: 'Name the 2D state (index into s1, index into s2) you\'d memoize to avoid recomputing overlapping subproblems',
   clues: [
     {
       id: 'length-constraint',

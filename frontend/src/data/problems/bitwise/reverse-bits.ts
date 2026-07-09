@@ -18,6 +18,8 @@ export default {
     { label: 'Zero', args: [0], expected: 0 },
     { label: 'One', args: [1], expected: 2147483648 },
   ],
+  bruteHint: 'Describe converting to a padded binary string, reversing it, and parsing it back',
+  optimizeHint: 'Name the bitwise operations that extract and place each bit without string conversion',
   clues: [
     {
       id: 'fixed-width-constraint',

@@ -18,6 +18,8 @@ export default {
     { label: 'n=4', args: [4], expected: 4 },
     { label: 'n=3', args: [3], expected: 2 },
   ],
+  bruteHint: 'Describe the naive recursion that tries every split j + (n-j) for each n, and why the same smaller n values get recomputed repeatedly',
+  optimizeHint: 'Name what you\'d cache — the best product for each integer up to n — to avoid recomputing smaller subproblems',
   clues: [
     {
       id: 'constraint-complexity',

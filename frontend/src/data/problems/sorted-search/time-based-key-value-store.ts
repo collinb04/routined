@@ -28,6 +28,8 @@ export default {
   testCases: [
     { label: 'set/get', args: [['set','get','get','set','get','get','get'],[[['foo','bar',1]],[['foo',1]],[['foo',3]],[['foo','bar2',4]],[['foo',4]],[['foo',5]],[['foo',0]]]], expected: ['bar','bar','bar2','bar2',''] },
   ],
+  bruteHint: 'Describe scanning through all stored values for a key to find the largest timestamp ≤ the query, and its time complexity',
+  optimizeHint: 'Name the search technique that exploits the timestamps being stored in sorted order to find the answer in O(log n)',
   clues: [
     {
       id: 'strictly-increasing-timestamps',

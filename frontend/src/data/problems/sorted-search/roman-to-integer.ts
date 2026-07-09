@@ -19,6 +19,8 @@ export default {
     { label: 'MCMXCIV', args: ['MCMXCIV'], expected: 1994 },
     { label: 'IX', args: ['IX'], expected: 9 },
   ],
+  bruteHint: 'Describe summing the integer value of each symbol one by one without considering subtractive pairs, and why that gives wrong answers like IV = 6 instead of 4',
+  optimizeHint: 'Name the technique of building the symbol-to-value lookup once and comparing each symbol to the next to detect subtractive pairs in a single pass',
   clues: [
     {
       id: 'subtractive-notation',

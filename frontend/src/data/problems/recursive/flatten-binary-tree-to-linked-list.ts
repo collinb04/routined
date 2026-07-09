@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[1,2,5,3,4,null,6]], expected: [1,2,3,4,5,6] },
     { label: 'Already flat', args: [[1,null,2,null,3]], expected: [1,2,3] },
   ],
+  bruteHint: 'Describe flattening node by node while walking all the way to the end of the growing chain each time to reattach the next subtree, and why that repeated walk is costly',
+  optimizeHint: 'Name the traversal order — working from the bottom of the tree upward — that lets each subtree be reattached in O(1) without ever re-walking the chain',
   clues: [
     {
       id: 'traversal-order',

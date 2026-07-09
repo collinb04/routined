@@ -37,6 +37,8 @@ export default {
     { label: 'push/get_min/pop', args: [['push','push','push','get_min','pop','top','get_min'],[-2,0,-3,0,0,0,0]], expected: [-3,0,-2] },
     { label: 'simple', args: [['push','push','get_min','pop','get_min'],[5,3,0,0,0]], expected: [3,5] },
   ],
+  bruteHint: 'Describe scanning the whole stack to find the minimum on every get_min() call and its time complexity',
+  optimizeHint: 'Name what extra structure you could maintain alongside the stack so the minimum is always available in O(1)',
   clues: [
     {
       id: 'get-min-complexity',

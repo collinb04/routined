@@ -18,6 +18,8 @@ export default {
     { label: 'Speed 3', args: [[1,3,2],2.7], expected: 3 },
     { label: 'Impossible', args: [[1,3,2],1.9], expected: -1 },
   ],
+  bruteHint: 'Describe trying every integer speed starting from 1 upward and checking feasibility for each, and why that could be slow',
+  optimizeHint: 'Name the search technique that exploits the fact that feasibility is monotone in speed',
   clues: [
     {
       id: 'monotone-feasibility',

@@ -17,6 +17,8 @@ export default {
     { label: 'Length 4', args: [[[0,0,0],[1,1,0],[1,1,0]]], expected: 4 },
     { label: 'Blocked start', args: [[[1,0],[0,0]]], expected: -1 },
   ],
+  bruteHint: 'Describe a brute-force DFS that explores every possible path to the bottom-right, and why it can\'t guarantee the shortest one',
+  optimizeHint: 'Name the traversal that explores the grid level by level to guarantee the shortest path in an unweighted graph',
   clues: [
     {
       id: 'output-shortest-path',

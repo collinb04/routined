@@ -15,6 +15,8 @@ export default {
     { label: 'Verify wiggle property', args: [[1,5,1,1,6,4]], expected: null },
     { label: '[1,3,2,2,3,1]', args: [[1,3,2,2,3,1]], expected: null },
   ],
+  bruteHint: 'Describe sorting the array and interleaving the smaller and larger halves directly at the midpoint, and the edge case where duplicate median values end up adjacent',
+  optimizeHint: 'Name the technique of reversing each half before interleaving to keep equal values (especially the median) from landing next to each other',
   clues: [
     {
       id: 'strict-inequalities',

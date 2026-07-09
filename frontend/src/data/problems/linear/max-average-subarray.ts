@@ -21,6 +21,8 @@ export default {
     { label: 'All same', args: [[3, 3, 3, 3], 2], expected: 3.0 },
     { label: 'k equals length', args: [[1, 2, 3, 4], 4], expected: 2.5 },
   ],
+  bruteHint: 'Describe checking every window of length k and summing it from scratch, and its time complexity',
+  optimizeHint: 'Name the sliding window technique that reuses the previous window\'s sum instead of recomputing it',
   clues: [
     {
       id: 'fixed-window-size',

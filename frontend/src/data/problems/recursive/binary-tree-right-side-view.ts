@@ -37,6 +37,8 @@ def right_side_view_run(arr):
     { label: '[1,2,3,null,5,null,4]', args: [[1,2,3,null,5,null,4]], expected: [1,3,4] },
     { label: '[1,null,3]', args: [[1,null,3]], expected: [1,3] },
   ],
+  bruteHint: 'Describe collecting every node into full level lists via BFS, then keeping only the last value from each list',
+  optimizeHint: 'Name the traversal order that lets you record just the last (or first) node seen at each depth directly',
   clues: [
     {
       id: 'output-structure',

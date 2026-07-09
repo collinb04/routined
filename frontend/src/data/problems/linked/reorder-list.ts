@@ -34,6 +34,8 @@ def reorder_list_run(arr):
     { label: '[1,2,3,4]', args: [[1,2,3,4]], expected: [1,4,2,3] },
     { label: '[1,2,3,4,5]', args: [[1,2,3,4,5]], expected: [1,5,2,4,3] },
   ],
+  bruteHint: 'Describe storing references to every node in an array so you can jump to indices from both ends',
+  optimizeHint: 'Name the combination of pointer techniques — finding the middle, reversing a half, and merging — that solves this in place',
   clues: [
     {
       id: 'interleaving-pattern',

@@ -18,6 +18,8 @@ export default {
     { label: 'With subtraction', args: [' 2-1 + 2 '], expected: 3 },
     { label: 'With parens', args: ['(1+(4+5+2)-3)+(6+8)'], expected: 23 },
   ],
+  bruteHint: 'Describe recursively re-parsing the substring inside each pair of parentheses, and why that repeats work',
+  optimizeHint: 'Name the data structure that lets you evaluate in a single pass, pushing the running result and sign whenever you enter a new parenthesis',
   clues: [
     {
       id: 'parentheses-nesting',

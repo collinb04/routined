@@ -16,6 +16,8 @@ export default {
     { label: 'Six roads', args: [5,[[0,1],[1,2],[2,3],[0,2],[1,3],[2,4]]], expected: 43 },
     { label: 'Three roads', args: [5,[[0,3],[2,4],[1,3]]], expected: 20 },
   ],
+  bruteHint: 'Describe trying every possible assignment of values to cities and evaluating each, and why that\'s computationally infeasible',
+  optimizeHint: 'Name the greedy strategy that ranks cities by degree and assigns the largest values to the highest-degree cities',
   clues: [
     {
       id: 'constraint-complexity',

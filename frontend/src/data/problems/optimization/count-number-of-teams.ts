@@ -17,6 +17,8 @@ export default {
     { label: 'Four teams', args: [[1,2,3,4]], expected: 4 },
     { label: 'No team', args: [[1,2]], expected: 0 },
   ],
+  bruteHint: 'Describe the brute-force approach of checking every triple of indices directly and its time complexity.',
+  optimizeHint: 'Name what you can precompute for each soldier — how many smaller and larger ratings sit on each side — to avoid the third nested loop.',
   clues: [
     {
       id: 'constraint-complexity',

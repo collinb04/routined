@@ -37,6 +37,8 @@ def is_subtree_run(root, sub):
     { label: 'is subtree', args: [[3,4,5,1,2],[4,1,2]], expected: true },
     { label: 'not subtree', args: [[3,4,5,1,2,null,null,null,null,0],[4,1,2]], expected: false },
   ],
+  bruteHint: 'Describe comparing subRoot against the tree rooted at every node of root using a same-tree check, and name the resulting time complexity in terms of both tree sizes',
+  optimizeHint: 'Name the technique that serializes both trees (with null markers) into strings or hashes so the subtree check becomes a single substring or hash lookup',
   clues: [
     {
       id: 'constraint-two-sizes',

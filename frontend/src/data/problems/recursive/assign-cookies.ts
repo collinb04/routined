@@ -24,6 +24,8 @@ export default {
     { label: 'None fit', args: [[10],[1,2,3]], expected: 0 },
     { label: 'Exact match', args: [[1,2,3],[1,2,3]], expected: 3 },
   ],
+  bruteHint: 'Describe the brute-force approach of trying every child-cookie pairing and its time complexity',
+  optimizeHint: 'Name the technique of sorting both arrays and matching greedily with two pointers',
   clues: [
     {
       id: 'constraint-complexity',

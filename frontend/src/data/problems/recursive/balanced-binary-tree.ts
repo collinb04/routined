@@ -37,6 +37,8 @@ def is_balanced_run(arr):
     { label: 'balanced', args: [[3,9,20,null,null,15,7]], expected: true },
     { label: 'unbalanced', args: [[1,2,2,3,3,null,null,4,4]], expected: false },
   ],
+  bruteHint: 'Describe what happens when you call a separate height function at every node, and why that repeats work',
+  optimizeHint: 'Name the technique of computing height and balance together in one bottom-up pass',
   clues: [
     {
       id: 'definition-scope',

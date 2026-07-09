@@ -18,6 +18,8 @@ export default {
     { label: 'Found in middle', args: ['hello','ll'], expected: 2 },
     { label: 'Empty needle', args: ['hello',''], expected: 0 },
   ],
+  bruteHint: 'Describe checking every starting position in haystack against needle, and its time complexity',
+  optimizeHint: 'Name a linear-time string-matching technique that avoids re-checking characters, or a built-in substring search',
   clues: [
     {
       id: 'constraint-complexity',

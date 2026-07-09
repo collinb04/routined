@@ -16,6 +16,8 @@ export default {
     { label: 'Two indices', args: ['barfoothefoobarman',['foo','bar']], expected: [0,9] },
     { label: 'No match', args: ['wordgoodgoodgoodbestword',['word','good','best','word']], expected: [] },
   ],
+  bruteHint: 'Describe checking every starting index against every permutation of words, and its time complexity',
+  optimizeHint: 'Name the technique that slides a fixed-length window with a word-frequency map, one word-length at a time',
   clues: [
     {
       id: 'fixed-word-length',

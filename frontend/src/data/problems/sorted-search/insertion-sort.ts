@@ -33,6 +33,8 @@ list.sort = lambda *a, **kw: __no_sort()
     { label: 'Duplicates', args: [[3, 1, 2, 1, 3]], expected: [1, 1, 2, 3, 3] },
     { label: 'Single element', args: [[7]], expected: [7] },
   ],
+  bruteHint: 'Describe insertion sort\'s core mechanism — shifting larger sorted elements right to insert each new one — and why it\'s O(n²) in the worst case',
+  optimizeHint: 'Explain insertion sort\'s O(n) best case on nearly-sorted input, contrasted with its O(n²) worst case',
   clues: [
     {
       id: 'constraint-complexity',

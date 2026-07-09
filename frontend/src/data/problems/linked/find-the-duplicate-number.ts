@@ -16,6 +16,8 @@ export default {
     { label: '[1,3,4,2,2]', args: [[1,3,4,2,2]], expected: 2 },
     { label: '[3,1,3,4,2]', args: [[3,1,3,4,2]], expected: 3 },
   ],
+  bruteHint: 'Describe checking every pair of elements for a duplicate, and its O(n²) time complexity',
+  optimizeHint: 'Name the pointer technique that treats array values as links to detect a cycle',
   clues: [
     {
       id: 'constraint-no-modification',

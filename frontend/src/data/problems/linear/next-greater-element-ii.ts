@@ -17,6 +17,8 @@ export default {
     { label: 'All same', args: [[1,1,1]], expected: [-1,-1,-1] },
     { label: 'Ascending', args: [[1,2,3]], expected: [2,3,-1] },
   ],
+  bruteHint: 'Describe scanning forward (and wrapping around) from each element and its time complexity',
+  optimizeHint: 'Name the kind of stack that lets you find every next-greater relationship in two passes over the array',
   clues: [
     {
       id: 'constraint-complexity',

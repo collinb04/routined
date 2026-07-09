@@ -16,6 +16,8 @@ export default {
     { label: 'Single', args: [[1]], expected: [[1]] },
     { label: 'Empty', args: [null], expected: [] },
   ],
+  bruteHint: 'Describe doing a standard level-order traversal first, then making a second pass to reverse every other level',
+  optimizeHint: 'Name the way to produce each zigzag level in the correct order during the same traversal pass',
   clues: [
     {
       id: 'output-structure',

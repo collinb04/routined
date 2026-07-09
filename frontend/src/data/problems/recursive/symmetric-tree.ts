@@ -17,6 +17,8 @@ export default {
     { label: 'Not symmetric', args: [[1,2,2,null,3,null,3]], expected: false },
     { label: 'Single node', args: [[1]], expected: true },
   ],
+  bruteHint: 'Describe collecting the left subtree and the right subtree into separate traversal lists (one mirrored) and comparing the two lists afterward',
+  optimizeHint: 'Name the technique that recursively compares two mirrored subtrees node by node, pairing outer and inner children, and short-circuits on the first mismatch',
   clues: [
     {
       id: 'mirror-definition',

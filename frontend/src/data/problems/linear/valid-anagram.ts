@@ -17,6 +17,8 @@ export default {
     { label: 'not anagram', args: ['rat', 'car'], expected: false },
     { label: 'different lengths', args: ['ab', 'a'], expected: false },
   ],
+  bruteHint: 'Describe sorting both strings and comparing them, and its time complexity',
+  optimizeHint: 'Name the data structure that counts letter frequencies in one pass instead of sorting',
   clues: [
     {
       id: 'length-check-first',

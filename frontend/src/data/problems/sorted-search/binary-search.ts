@@ -22,6 +22,8 @@ export default {
     { label: 'First element', args: [[1, 3, 5, 7], 1], expected: 0 },
     { label: 'Last element', args: [[1, 3, 5, 7], 7], expected: 3 },
   ],
+  bruteHint: 'Describe the linear-scan approach and its time complexity',
+  optimizeHint: 'Name the technique that halves the search space each step by exploiting sorted order',
   clues: [
     {
       id: 'sorted-input',

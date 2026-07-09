@@ -18,6 +18,8 @@ export default {
     { label: 'n=4', args: [4], expected: [['..Q.','Q...','...Q','.Q..'],['.Q..','...Q','Q...','..Q.']] },
     { label: 'n=1', args: [1], expected: [['Q']] },
   ],
+  bruteHint: 'Describe generating every possible placement of n queens and filtering for validity only after each placement is complete',
+  optimizeHint: 'Name the technique of abandoning a partial placement the moment a conflict appears, instead of completing it first',
   clues: [
     {
       id: 'constraint-complexity',

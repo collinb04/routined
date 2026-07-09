@@ -18,6 +18,8 @@ export default {
     { label: 'Empty s', args: ['','ahbgdc'], expected: true },
     { label: 'Empty t', args: ['a',''], expected: false },
   ],
+  bruteHint: 'Describe the two-pointer scan through both strings that already solves this in O(n) — there\'s no slower "brute force" here',
+  optimizeHint: 'Explain how you\'d handle many queries against the same t efficiently — what would you precompute about character positions to avoid rescanning t each time?',
   clues: [
     {
       id: 'subsequence-vs-substring',

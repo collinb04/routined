@@ -151,7 +151,7 @@
     <main class="flex-1 min-w-0">
 
       <!-- Top bar with sidebar toggle -->
-      <div class="sticky top-16 z-10 bg-[#f5f5f2] flex items-center gap-3 px-5 sm:px-10 pt-6 pb-2">
+      <div class="sticky top-16 z-10 bg-transparent flex items-center gap-3 px-5 sm:px-10 pt-6 pb-2">
         <button
           class="p-1.5 -ml-1.5 rounded-md text-text-muted hover:text-text hover:bg-black/5 transition-colors"
           @click="sidebarOpen = !sidebarOpen"
@@ -683,6 +683,33 @@
             <div class="flex items-start gap-3">
               <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Space complexity counts too</strong> — an O(n) space solution uses memory proportional to input size. O(1) means you only use a fixed number of extra variables, regardless of n.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amortized complexity -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+          <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Amortized complexity</h3>
+          <div class="h-px bg-gray-100" />
+          <p class="text-sm text-text-dim leading-relaxed">
+            Big O normally describes the cost of <strong class="text-text">one</strong> operation in the worst case. <strong class="text-text">Amortized</strong> complexity instead describes the <em>average</em> cost of an operation over a long sequence of calls — even when a few individual calls are much more expensive than the rest. It is not the same as "average case": average case is about the distribution of inputs, while amortized is a worst-case guarantee about a sequence of operations, regardless of input.
+          </p>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Dynamic array append is O(1) amortized</strong> — a Python list over-allocates capacity, so most <code class="text-[13px] bg-[#f5f5f2] rounded px-1">append()</code> calls just write into the spare space in O(1). Occasionally the buffer fills and the list must reallocate and copy every existing element — an O(n) operation. That expensive copy happens rarely enough (roughly every time the size doubles) that its cost, spread evenly across all the cheap appends that came before it, averages out to O(1) per call.</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Hash map insert/lookup is O(1) amortized</strong> — the same idea applies to the underlying bucket array: most insertions are O(1), but a resize-and-rehash of every existing key is O(n) and happens infrequently as the table grows. Averaged over many insertions, the cost per insertion is still O(1).</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">The usual proof technique is the "doubling" argument</strong> — if a resize costs O(n) and only happens after n operations have occurred since the last resize, the total resizing work across n operations is bounded by a constant multiple of n. Divide that total by n operations and the amortized cost per operation is O(1).</span>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">It still matters which operation you hit</strong> — "O(1) amortized" does not mean every single call is fast. If a problem is latency-sensitive per-call (like a real-time system), the rare O(n) spike can matter even though the long-run average is O(1). For typical interview analysis, amortized O(1) is treated the same as O(1).</span>
             </div>
           </div>
         </div>
@@ -2547,14 +2574,48 @@ const sectionVisualizer = {
   'bfs-dfs':             ['bfs-dfs', 'dfs'],
   'topological-sort':    'topo-sort',
   'union-find':          'union-find',
+  'bit-manipulation':    'bit-manipulation',
+  'xor-patterns':        'xor-patterns',
+  'bitmask-subset':      'bitmask-subset',
+  '2d-array-traversal':  'grid-traversal',
+  'grid-bfs-dfs':        'grid-flood-fill',
+  'matrix-rotation':     'matrix-rotate',
+  'multi-pass-patterns': 'grid-multi-pass',
+  'recursion-dp-bridge': 'recursion-memo-bridge',
 }
 
 const completed = ref(new Set())
 
+async function persistCompleted(sectionId, isCompleted) {
+  try {
+    await fetch('/api/learn/completed/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ sectionId, completed: isCompleted }),
+    })
+  } catch {
+    // best-effort — local toggle already reflects the user's action
+  }
+}
+
 function toggleCompleted(id) {
   const next = new Set(completed.value)
-  next.has(id) ? next.delete(id) : next.add(id)
+  const willBeCompleted = !next.has(id)
+  willBeCompleted ? next.add(id) : next.delete(id)
   completed.value = next
+  persistCompleted(id, willBeCompleted)
+}
+
+async function loadCompletedSections() {
+  try {
+    const res = await fetch('/api/learn/completed', { credentials: 'include' })
+    if (!res.ok) return
+    const { sectionIds } = await res.json()
+    completed.value = new Set(sectionIds)
+  } catch {
+    // best-effort — starts with nothing marked complete
+  }
 }
 
 function isCatCompleted(cat) {
@@ -2696,6 +2757,7 @@ watch(selectedSection, (section) => {
 })
 
 onMounted(() => {
+  loadCompletedSections()
   const id = route.query.section
   if (id) {
     const found = flatSections.value.find(s => s.id === id)
@@ -3791,11 +3853,318 @@ def dfs(graph, node, visited=None):
           },
         },
       },
-      { id: 'grid-intro', label: 'Intro to Grid & Matrix', content: {} },
-      { id: '2d-array-traversal', label: '2D Array Traversal', content: {} },
-      { id: 'grid-bfs-dfs', label: 'Grid BFS & DFS', content: {} },
-      { id: 'matrix-rotation', label: 'Matrix Rotation & Transformation', content: {} },
-      { id: 'multi-pass-patterns', label: 'Multi-pass Patterns', content: {} },
+      {
+        id: 'grid-intro',
+        label: 'Intro to Grid & Matrix',
+        content: {
+          what: 'The <strong>Grid & Matrix cluster</strong> is built on one primitive: the <strong>2D index</strong>. A grid is an array of arrays — every cell has a row r and a column c, and that (r, c) pair addresses it directly, the same O(1) guarantee a 1D array gives for a single index. What changes is that every cell now has up to four neighbors instead of two, and the techniques in this cluster are all different ways of moving through that 2D address space.',
+          why: 'Nearly every grid problem reduces to a small number of moves: sweep every cell in a fixed order (2D Array Traversal), explore outward from a cell following its neighbors (Grid BFS & DFS), rearrange the grid\'s cells in place (Matrix Rotation & Transformation), or sweep the grid more than once because a single pass cannot see enough context (Multi-pass Patterns). A grid is not a new data structure to learn from scratch — it is an array you already know, addressed with two indices instead of one, and a graph in disguise the moment you start asking "what can I reach from here?"',
+          isClusterIntro: true,
+          how: 'Before writing any grid code, fix two things: the <strong>index formula</strong> and the <strong>neighbor offsets</strong>. A cell at row r, column c in a grid with C columns can be flattened to a 1D index via r * C + c, and unflattened back via r = index // C, c = index % C. For 4-directional movement, the neighbor offsets are (-1, 0), (1, 0), (0, -1), (0, 1) — up, down, left, right. Add the diagonals (-1,-1), (-1,1), (1,-1), (1,1) for 8-directional movement. Every technique in this cluster is built from looping over rows and columns and applying these offsets, with a bounds check (0 ≤ r < rows and 0 ≤ c < cols) guarding every neighbor access.',
+          keyProperties: [
+            'A grid is an array of arrays — grid[r][c] is O(1) random access, same as any array',
+            'The 4-directional neighbor offsets (-1,0), (1,0), (0,-1), (0,1) cover the vast majority of grid problems',
+            'r * cols + c converts a 2D (row, col) index into a single 1D index, and back with // and %',
+            'Every bounds check follows the same shape: 0 <= r < rows and 0 <= c < cols',
+            'A grid is a graph where each cell is a node and edges connect a cell to its in-bounds neighbors',
+          ],
+          complexity: { time: 'O(rows × cols) to touch every cell once', space: 'O(rows × cols) for a visited grid, O(1) if modifying in place' },
+          useCases: [
+            'Sweeping every cell in a fixed pattern: row by row, column by column, or diagonally (2D Array Traversal)',
+            'Flood fill, counting connected regions, or finding the shortest path across a grid (Grid BFS & DFS)',
+            'Rotating an image 90 degrees or transposing a matrix in place (Matrix Rotation & Transformation)',
+            'Problems that need more than one sweep to resolve — like updating every cell "simultaneously" (Multi-pass Patterns)',
+          ],
+          connections: {
+            prereqs: ['Arrays', 'Intro to Data Structures'],
+            unlocks: ['2D Array Traversal', 'Grid BFS & DFS', 'Matrix Rotation & Transformation', 'Multi-pass Patterns'],
+            related: ['Intro to Graph'],
+          },
+        },
+      },
+      {
+        id: '2d-array-traversal',
+        label: '2D Array Traversal',
+        content: {
+          analogy: 'Reading a page of text: left to right, then drop down a line and repeat. That is row-major traversal. Reading the same page down each column instead is column-major. Reading it in a spiral from the outside in, or diagonal by diagonal, is the same grid — just a different rule for which cell comes next.',
+          what: '<strong>2D array traversal</strong> is the family of standard patterns for visiting the cells of a grid in a specific order: row by row (<strong>row-major</strong>), column by column (<strong>column-major</strong>), diagonally, or in a spiral. Each pattern is a nested loop (or a loop with a direction vector) whose shape encodes the order cells are visited in.',
+          why: 'A huge share of grid problems boil down to "visit every cell and do something," where the something is trivial but the order matters — printing a matrix in spiral order, summing each diagonal, rotating an image. Getting comfortable with the small number of standard traversal shapes means you can recognize which one a new problem needs instead of re-deriving loop bounds from scratch under time pressure.',
+          how: 'Row-major is the default: <strong>for r in range(rows): for c in range(cols)</strong>. Column-major swaps the loop order. Diagonal traversal exploits the fact that every cell on the same diagonal shares a constant r - c (for one diagonal direction) or r + c (for the other) — grouping cells by that constant visits one diagonal at a time. Spiral traversal tracks four shrinking boundaries (top, bottom, left, right) and walks right along the top, down the right side, left along the bottom, and up the left side, shrinking each boundary after its pass.',
+          complexity: { time: 'O(rows × cols) — every cell visited once', space: 'O(1) beyond the output, unless the traversal order must be stored' },
+          keyProperties: [
+            'Row-major (rows outer, columns inner) is the natural default and matches how grid is usually laid out',
+            'Cells with the same r - c lie on one diagonal (\\); cells with the same r + c lie on the other (/)',
+            'Spiral traversal is four simultaneous boundary sweeps that each shrink the remaining region by one row or column',
+            'A direction-vector array like [(0,1),(1,0),(0,-1),(-1,0)] lets a single loop rotate through right/down/left/up for spiral movement',
+          ],
+          useCases: [
+            'Printing or returning the elements of a matrix in spiral order',
+            'Summing every diagonal of a matrix',
+            'Transposing a matrix by swapping grid[r][c] with grid[c][r]',
+            'Any "process every cell" problem where visiting order changes the result, like Game of Life-style updates',
+          ],
+          code: `# Row-major traversal
+def row_major(grid):
+    for r in range(len(grid)):
+        for c in range(len(grid[0])):
+            visit(grid[r][c])
+
+# Diagonal traversal — group cells by r - c
+def diagonals(grid):
+    rows, cols = len(grid), len(grid[0])
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for r in range(rows):
+        for c in range(cols):
+            groups[r - c].append(grid[r][c])
+    return groups
+
+# Spiral traversal
+def spiral_order(grid):
+    result = []
+    top, bottom = 0, len(grid) - 1
+    left, right = 0, len(grid[0]) - 1
+    while top <= bottom and left <= right:
+        for c in range(left, right + 1): result.append(grid[top][c])
+        top += 1
+        for r in range(top, bottom + 1): result.append(grid[r][right])
+        right -= 1
+        if top <= bottom:
+            for c in range(right, left - 1, -1): result.append(grid[bottom][c])
+            bottom -= 1
+        if left <= right:
+            for r in range(bottom, top - 1, -1): result.append(grid[r][left])
+            left += 1
+    return result`,
+          keyInsight: {
+            heading: 'Every non-obvious traversal order is just a different grouping rule for the same cells — spiral is four shrinking boundaries, diagonal is a constant r - c or r + c.',
+            body: 'Rather than memorizing spiral traversal as a special algorithm, see it as row-major and column-major sweeps of shrinking sub-rectangles, alternating direction each side. Diagonal traversal is not a new idea either — it is grouping by an invariant (r - c or r + c) that happens to be constant along a diagonal. Once you see traversal orders as "what stays constant along this path," new orders become easy to derive instead of needing to be memorized.',
+          },
+          connections: {
+            prereqs: ['Intro to Grid & Matrix', 'Arrays'],
+            unlocks: ['Matrix Rotation & Transformation', 'Grid BFS & DFS'],
+            related: ['Matrix Rotation & Transformation'],
+          },
+        },
+      },
+      {
+        id: 'grid-bfs-dfs',
+        label: 'Grid BFS & DFS',
+        content: {
+          analogy: 'Spilling a drop of ink onto graph paper. It spreads outward, cell by cell, into every connected cell it touches — but stops the instant it reaches a boundary or a cell that is already inked. That spreading is exactly BFS or DFS on a grid: start at one cell, spread to its neighbors, and keep going until the connected region is fully explored.',
+          what: '<strong>Grid BFS & DFS</strong> is graph BFS and DFS applied to a grid, where each cell is an implicit node and its up-to-four neighbors are its edges — no adjacency list needs to be built explicitly, because the neighbor offsets generate it on the fly. BFS explores level by level using a queue (shortest path in an unweighted grid); DFS explores as deep as possible before backtracking, using recursion or an explicit stack.',
+          why: 'A huge class of grid problems — counting islands, flood fill, shortest path through a maze, checking if a region is enclosed — is really a graph connectivity or shortest-path question wearing a grid costume. Recognizing the grid as a graph means every technique you already know from BFS & DFS on explicit graphs transfers directly: you just generate neighbors from offsets instead of looking them up in an adjacency list.',
+          how: 'Maintain a <strong>visited</strong> set or grid (or mark cells directly on the input grid if mutation is allowed) to avoid revisiting. For BFS: push the start cell into a queue, then repeatedly pop a cell, visit its unvisited in-bounds neighbors, mark them visited, and push them. For DFS: recurse (or use an explicit stack) into each unvisited in-bounds neighbor before backtracking. In both cases, generate neighbors with the same four offsets every time: (r-1,c), (r+1,c), (r,c-1), (r,c+1), filtering out any that fall outside the grid or fail the problem\'s condition (like being water instead of land).',
+          complexity: { time: 'O(rows × cols) — each cell visited once', space: 'O(rows × cols) for the visited set and the queue/stack' },
+          signals: [
+            'The problem asks you to count connected regions, islands, or enclosed areas in a grid',
+            'You need the shortest path or minimum number of steps across a grid with obstacles',
+            'The problem describes something "spreading" — fire, water, infection — from one or more starting cells',
+            'You need to flood-fill or paint a connected region starting from a given cell',
+          ],
+          keyProperties: [
+            'A grid cell is a graph node; its up to 4 in-bounds neighbors are its edges — no explicit adjacency list needed',
+            'BFS with a queue finds the shortest path in an unweighted grid, exploring level by level',
+            'DFS with recursion or a stack explores one path fully before backtracking — natural for connectivity questions',
+            'A visited set (or in-place marking) is required — without it, cells get revisited and the traversal never terminates',
+            'Multi-source BFS starts with several cells already in the queue at distance 0, spreading from all of them simultaneously',
+          ],
+          useCases: [
+            'Number of Islands — count connected components of land cells',
+            'Flood Fill — repaint a connected region starting from one cell',
+            'Shortest Path in Binary Matrix — BFS gives the minimum number of steps',
+            'Rotting Oranges — multi-source BFS spreading from every already-rotten cell at once',
+          ],
+          code: `from collections import deque
+
+# BFS shortest path from (0,0) to (rows-1, cols-1)
+def shortest_path(grid):
+    rows, cols = len(grid), len(grid[0])
+    if grid[0][0] == 1:
+        return -1
+    queue = deque([(0, 0, 1)])   # row, col, distance
+    visited = {(0, 0)}
+    while queue:
+        r, c, dist = queue.popleft()
+        if (r, c) == (rows - 1, cols - 1):
+            return dist
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            nr, nc = r + dr, c + dc
+            if (0 <= nr < rows and 0 <= nc < cols
+                    and (nr, nc) not in visited and grid[nr][nc] == 0):
+                visited.add((nr, nc))
+                queue.append((nr, nc, dist + 1))
+    return -1
+
+# DFS flood fill / count islands
+def num_islands(grid):
+    rows, cols = len(grid), len(grid[0])
+
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] != '1':
+            return
+        grid[r][c] = '0'          # mark visited in place
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            dfs(r + dr, c + dc)
+
+    count = 0
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                count += 1
+                dfs(r, c)
+    return count`,
+          keyInsight: {
+            heading: 'A grid is a graph where neighbors are generated from offsets instead of looked up — everything you know about BFS and DFS applies unchanged.',
+            body: 'The only grid-specific work is the bounds check and the four-offset neighbor generation; the traversal logic itself (queue for BFS, recursion or stack for DFS, visited set to prevent revisits) is identical to graph traversal on an explicit adjacency list. When a problem spreads from more than one starting point at once (like rotting fruit spreading from every rotten cell), push all starting cells into the BFS queue before the first pop — that single change turns single-source BFS into multi-source BFS with no other code changes.',
+          },
+          connections: {
+            prereqs: ['Intro to Grid & Matrix', 'BFS & DFS', 'Graphs'],
+            unlocks: [],
+            related: ['BFS & DFS', 'Graphs', '2D Array Traversal'],
+          },
+        },
+      },
+      {
+        id: 'matrix-rotation',
+        label: 'Matrix Rotation & Transformation',
+        content: {
+          analogy: 'Rotating a square photograph 90 degrees is the same as flipping it along its diagonal (swapping every pixel at (r, c) with the one at (c, r)) and then flipping it left-to-right. Two simple, well-understood moves combine into a rotation — no need to compute a new position for every pixel from a rotation formula.',
+          what: '<strong>Matrix rotation and transformation</strong> covers rearranging a grid\'s cells according to a fixed geometric rule: rotating 90/180/270 degrees, transposing (swapping rows and columns), or reflecting across an axis. The distinguishing challenge in interviews is usually doing this <strong>in place</strong>, using O(1) extra space instead of building a brand-new grid.',
+          why: 'Building a new rotated grid from scratch is easy but costs O(rows × cols) extra space. The in-place version is the actual interview question, and it depends on recognizing that a 90-degree rotation decomposes into two simpler operations you can each do in place: <strong>transpose</strong> (swap grid[r][c] with grid[c][r]) followed by <strong>reverse each row</strong> (for clockwise) or reverse each column first then transpose (for counter-clockwise).',
+          how: 'For a 90-degree clockwise rotation in place: (1) transpose the matrix by swapping grid[r][c] with grid[c][r] for all r &lt; c, (2) reverse each row. For 90 degrees counter-clockwise: reverse each row first, then transpose (or equivalently, transpose then reverse each column). For an arbitrary-size (non-square) rotation where in-place is not possible, build the result directly: <strong>result[c][rows - 1 - r] = grid[r][c]</strong> for clockwise. For a full 180-degree rotation, reverse every row and then reverse the whole list of rows (or equivalently, reverse each row and each column).',
+          complexity: { time: 'O(rows × cols) — every cell touched a constant number of times', space: 'O(1) for in-place square rotation, O(rows × cols) if the matrix is not square and a new grid is required' },
+          keyProperties: [
+            'Transpose (swap grid[r][c] and grid[c][r] for r < c) plus reverse each row = 90° clockwise rotation, in place',
+            'Reverse each row first, then transpose = 90° counter-clockwise rotation, in place',
+            'In-place rotation only works directly for square matrices — non-square rotation needs a new grid of swapped dimensions',
+            'The direct index formula for 90° clockwise without transposing is result[c][rows - 1 - r] = grid[r][c]',
+            '180° rotation is just reversing every row and then reversing the order of the rows',
+          ],
+          useCases: [
+            'Rotate Image — rotate an n×n matrix 90 degrees in place',
+            'Transposing a matrix as a preprocessing step for another algorithm',
+            'Rotating a game board or image buffer without allocating a second buffer',
+            'Detecting whether one matrix is a rotation or reflection of another',
+          ],
+          code: `# Rotate an n x n matrix 90 degrees clockwise, in place
+def rotate(matrix):
+    n = len(matrix)
+    # Transpose
+    for r in range(n):
+        for c in range(r + 1, n):
+            matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
+    # Reverse each row
+    for row in matrix:
+        row.reverse()
+
+# Rotate 90 degrees counter-clockwise, in place
+def rotate_ccw(matrix):
+    n = len(matrix)
+    for row in matrix:
+        row.reverse()
+    for r in range(n):
+        for c in range(r + 1, n):
+            matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
+
+# Rotate a (possibly non-square) matrix into a new grid
+def rotate_new(grid):
+    rows, cols = len(grid), len(grid[0])
+    result = [[None] * rows for _ in range(cols)]
+    for r in range(rows):
+        for c in range(cols):
+            result[c][rows - 1 - r] = grid[r][c]
+    return result`,
+          keyInsight: {
+            heading: 'A 90-degree rotation is transpose + reverse — two operations you already know how to do in place, combined.',
+            body: 'Deriving the rotation from first principles under time pressure is slow. Recognizing that rotation decomposes into a transpose and a reversal — both of which are simple, well-known, in-place operations — turns "rotate a matrix" from a formula-memorization problem into an application of two tools you already have. The direction of rotation only changes the order (transpose-then-reverse-rows vs. reverse-rows-then-transpose) and which axis you reverse along.',
+          },
+          connections: {
+            prereqs: ['Intro to Grid & Matrix', '2D Array Traversal'],
+            unlocks: [],
+            related: ['2D Array Traversal', 'Arrays'],
+          },
+        },
+      },
+      {
+        id: 'multi-pass-patterns',
+        label: 'Multi-pass Patterns',
+        content: {
+          analogy: "Grading a stack of exams by reading through it once to record scores, and only afterward computing the class average — you can't compute the average correctly if you try to do it while you're still reading the first paper, because you don't yet know the total. Some grid problems have the same shape: you cannot correctly update a cell until you know something about the whole grid, which means one pass is not enough.",
+          what: '<strong>Multi-pass patterns</strong> cover grid (and array) problems that cannot be solved correctly in a single sweep, because a decision at one cell depends on information that is only available after looking at other cells — sometimes cells that come later in the sweep order, or the state of the entire grid at once. The fix is to split the work into two or more distinct passes, each with a narrower, well-defined job.',
+          why: "The most common trap is a problem that looks like it wants simultaneous, all-at-once updates — like Conway's Game of Life, where every cell's next state depends on its neighbors' current state, and updating a cell in place would corrupt the neighbor state that other cells still need to read. A single naive pass silently produces the wrong answer here. Recognizing the dependency (this cell needs information that a plain single sweep destroys or has not yet computed) is what tells you a second pass — or an encoding trick to fake simultaneity — is required.",
+          how: 'When a cell\'s correct new value depends on the <strong>original</strong> values of its neighbors (not their already-updated values), you have two standard fixes: (1) use a <strong>separate output grid</strong> so reads and writes never collide, or (2) encode both the old and new state into the same cell using extra bits or values, then do a second pass to strip the encoding back down. For prefix-sum-style grid problems, the two passes are directional: one pass left-to-right (or top-to-bottom) accumulates row sums, a second pass top-to-bottom (or left-to-right) accumulates those into full 2D prefix sums.',
+          complexity: { time: 'O(rows × cols) per pass, O(k × rows × cols) for k passes — still linear in grid size', space: 'O(1) extra with in-place encoding, O(rows × cols) with a separate output grid' },
+          signals: [
+            'The problem describes updates that should happen "simultaneously" across the whole grid or array',
+            'A cell\'s new value depends on its neighbors\' current (not yet updated) values',
+            'You need a running aggregate (sum, count, min) that depends on more than one direction through the grid',
+            'A single sweep would need to know something about the future that has not been computed yet',
+          ],
+          keyProperties: [
+            "If a cell's update depends on a neighbor's original value, in-place updates during a single pass will corrupt that value for other cells",
+            'A second output grid guarantees reads always see original values, at the cost of O(rows × cols) extra space',
+            'In-place multi-state encoding (e.g. using extra integer values to mean "was 1, now 0") avoids the extra grid at the cost of a required cleanup pass',
+            '2D prefix sums are built with two directional passes: accumulate along rows, then accumulate those results along columns',
+            'Two passes are still O(rows × cols) overall — multi-pass does not change the asymptotic complexity, only the constant factor',
+          ],
+          useCases: [
+            "Game of Life — every cell's next state depends on the current (not updated) state of its 8 neighbors",
+            'Building a 2D prefix sum array for O(1) rectangle-sum queries',
+            'Rotting Oranges-style problems where you first count all initial rotten cells before starting BFS',
+            'Any grid problem that needs a "look at everything once to gather context, then a second pass to act on it"',
+          ],
+          code: `# Game of Life — in-place using extra encoded states
+# 0 = dead->dead, 1 = live->live, 2 = live->dead, 3 = dead->live
+def game_of_life(board):
+    rows, cols = len(board), len(board[0])
+
+    def live_neighbors(r, c):
+        count = 0
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                if dr == 0 and dc == 0:
+                    continue
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and board[nr][nc] in (1, 2):
+                    count += 1
+        return count
+
+    # Pass 1: encode transitions without destroying original state
+    for r in range(rows):
+        for c in range(cols):
+            live = live_neighbors(r, c)
+            if board[r][c] == 1 and (live < 2 or live > 3):
+                board[r][c] = 2   # live -> dead
+            elif board[r][c] == 0 and live == 3:
+                board[r][c] = 3   # dead -> live
+
+    # Pass 2: strip the encoding down to final 0/1 values
+    for r in range(rows):
+        for c in range(cols):
+            board[r][c] = 1 if board[r][c] in (1, 2) else 0
+    return board
+
+# 2D prefix sum — two directional passes
+def build_prefix_sum(grid):
+    rows, cols = len(grid), len(grid[0])
+    prefix = [[0] * (cols + 1) for _ in range(rows + 1)]
+    for r in range(rows):
+        for c in range(cols):
+            prefix[r+1][c+1] = (grid[r][c] + prefix[r][c+1]
+                                 + prefix[r+1][c] - prefix[r][c])
+    return prefix`,
+          keyInsight: {
+            heading: 'If a cell needs information a single sweep has already overwritten or has not reached yet, split the work into passes with a narrower job each.',
+            body: 'The tell is always a dependency conflict: does computing this cell require the original value of something the sweep order will change before or after visiting it? If yes, either separate reads from writes (a second output grid) or separate the phases explicitly (gather in pass one, apply in pass two). This is the same idea behind 2D prefix sums — a single pass cannot accumulate in two directions at once, so the problem is split into a row-wise pass followed by a column-wise pass over the row-wise result.',
+          },
+          connections: {
+            prereqs: ['Intro to Grid & Matrix', '2D Array Traversal'],
+            unlocks: [],
+            related: ['Grid BFS & DFS', 'Prefix Sums'],
+          },
+        },
+      },
     ],
   },
   {
@@ -4422,7 +4791,57 @@ def can_jump(nums):
         id: 'recursion-dp-bridge',
         label: 'Recursion to DP Bridge',
         bridge: true,
-        content: {},
+        content: {
+          analogy: 'Two hikers set out to map every path down a mountain. One retraces the same forks over and over, forgetting each time she has already scouted that branch. The other carries a notebook — the moment she reaches a fork she has seen before, she reads the answer instead of re-exploring it. Same mountain, same recursive structure, wildly different amount of walking.',
+          what: 'This page is the hinge between two clusters. <strong>Recursion</strong> gives you a way to express a problem in terms of smaller versions of itself. <strong>Dynamic programming</strong> is what happens when that recursion revisits the same smaller version more than once — instead of redoing the work, you cache the result the first time and read it back every time after. The recursive structure does not change. Only whether you remember what you have already computed does.',
+          why: 'Every DP problem starts life as a recursive one. If you can write the brute-force recursive solution, you are most of the way to the DP solution — the only question left is whether subproblems repeat. Skipping straight to "DP" without first seeing the recursion tree is how DP starts feeling like memorized templates instead of a natural consequence of the recursive structure you already understand.',
+          how: 'Write the recursive solution first, ignoring efficiency entirely. Draw or imagine the call tree for a small input. Ask: does any node in that tree get computed more than once with the exact same arguments? If yes, those repeated calls are <strong>overlapping subproblems</strong> — add a cache (a dict, or <strong>@lru_cache</strong>) keyed on the arguments, and the exponential tree collapses into one call per distinct subproblem. That cached recursion IS dynamic programming, written top-down.',
+          complexity: { time: 'Exponential without a cache → polynomial with one', space: 'O(number of distinct subproblems) for the cache' },
+          keyProperties: [
+            'If the same (arguments) tuple appears more than once in the recursion tree, the subproblems overlap',
+            'A cache keyed on the function arguments turns repeated recursive calls into O(1) lookups',
+            '@lru_cache(maxsize=None) adds this caching to any pure recursive function in one line',
+            'The recursive structure and the DP recurrence are the same equation — only the bookkeeping changes',
+            'No overlap means no benefit from caching — plain divide & conquer (like merge sort) never repeats a subproblem',
+          ],
+          useCases: [
+            'Naive recursive Fibonacci — the textbook example of exponential blowup from overlapping subproblems',
+            'Any backtracking search where the same partial state is reached via different choice orders',
+            'Recognizing when a "just try every recursive branch" solution is one cache away from being fast enough',
+          ],
+          code: `# Naive recursion — recomputes fib(2) exponentially many times
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+# Same recursive structure, now with a cache — this IS dynamic programming
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib_memo(n):
+    if n <= 1:
+        return n
+    return fib_memo(n - 1) + fib_memo(n - 2)
+
+# Without the decorator, the cache is just a dict you manage yourself
+def fib_cached(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 1:
+        return n
+    memo[n] = fib_cached(n - 1, memo) + fib_cached(n - 2, memo)
+    return memo[n]`,
+          keyInsight: {
+            heading: 'DP is not a different technique from recursion — it is recursion where you stop re-answering questions you have already answered.',
+            body: 'The transformation from a slow recursive solution to a fast DP one is almost always mechanical: identify the arguments that uniquely define a subproblem, and cache on those. If you find yourself reaching for a DP table without first being able to write the recursive brute force, back up — the recursion is where the recurrence relation actually comes from. Tabulation (building the answer bottom-up in a table) is the same idea running in the opposite direction, once you know which order to fill it in.',
+          },
+          connections: {
+            prereqs: ['Recursion & D&C', 'Backtracking'],
+            unlocks: ['Dynamic Programming'],
+            related: ['Recursion & D&C', 'Dynamic Programming', 'Backtracking'],
+          },
+        },
       },
       {
         id: 'backtracking',
@@ -5455,10 +5874,230 @@ def merge_k_lists(lists):
           },
         },
       },
-      { id: 'bitwise-intro', label: 'Intro to Bitwise', content: {} },
-      { id: 'bit-manipulation', label: 'Bit Manipulation', content: {} },
-      { id: 'xor-patterns', label: 'XOR Patterns', content: {} },
-      { id: 'bitmask-subset', label: 'Bitmask & Subset Enumeration', content: {} },
+      {
+        id: 'bitwise-intro',
+        label: 'Intro to Bitwise',
+        content: {
+          what: 'The <strong>Bitwise cluster</strong> is built on one primitive: the <strong>bit</strong>. Every integer is already a sequence of binary digits sitting in a machine register — bitwise techniques operate directly on that representation instead of treating the number as an opaque value. No arithmetic in the usual sense, just masks, shifts, and boolean combinations of 0s and 1s.',
+          why: 'Bit manipulation gives you O(1) operations (AND, OR, XOR, shifts) for things that would otherwise take a loop — checking if a number is a power of two, counting how many bits are set, isolating the lowest set bit. XOR patterns lean on one algebraic property (a value XORed with itself is 0) to solve "find the unique element" problems in O(n) time and O(1) space, where a hash set would cost O(n) space. Bitmask & subset enumeration goes a level higher: representing an entire subset of up to ~20 elements as a single integer, so "try every subset" becomes a loop from 0 to 2ⁿ − 1 instead of an explicit recursive enumeration.',
+          isClusterIntro: true,
+          how: 'Get comfortable with the handful of building blocks first: <strong>&</strong> (AND, keeps bits set in both), <strong>|</strong> (OR, keeps bits set in either), <strong>^</strong> (XOR, keeps bits set in exactly one), <strong>~</strong> (NOT, flips every bit), <strong>&lt;&lt;</strong> / <strong>&gt;&gt;</strong> (shift left/right, multiply/divide by 2 per shift). From those, the three topics in this cluster follow: Bit Manipulation covers the standard toolkit of tricks built from these operators, XOR Patterns covers the specific algebraic identity that makes XOR unusually powerful for "find the odd one out" problems, and Bitmask & Subset Enumeration covers using an integer as a compact stand-in for a whole subset.',
+          keyProperties: [
+            'A bit at position i has value 2^i — shifting left by i is the same as multiplying by 2^i',
+            'n & (n - 1) clears the lowest set bit — a one-line test for "is n a power of two?"',
+            'a ^ a = 0 and a ^ 0 = a for any a — the core identity behind every XOR trick in this cluster',
+            'An n-bit integer can represent any subset of n items — bit i set means item i is included',
+            'These operations are all O(1) per bit and O(word size) overall — dramatically faster than loop-based equivalents',
+          ],
+          complexity: { time: 'O(1) per operation, O(n) to scan all bits of an n-bit number', space: 'O(1)' },
+          useCases: [
+            'Counting set bits, checking powers of two, isolating or toggling a specific bit (Bit Manipulation)',
+            'Finding the single non-duplicate element in an array where every other value appears twice (XOR Patterns)',
+            'Enumerating every subset of a small set for brute-force or DP-over-subsets solutions (Bitmask & Subset Enumeration)',
+            'Compact state representation in DP — "which items have been used" as one integer instead of a set',
+          ],
+          connections: {
+            prereqs: ['Intro to Data Structures'],
+            unlocks: ['Bit Manipulation', 'XOR Patterns', 'Bitmask & Subset Enumeration'],
+            related: ['Intro to Optimization'],
+          },
+        },
+      },
+      {
+        id: 'bit-manipulation',
+        label: 'Bit Manipulation',
+        content: {
+          analogy: 'A row of light switches on a wall, one per bit. Flipping a single switch (toggle), checking whether it is up (test), forcing it up or down (set/clear) — none of these require touching any other switch on the wall. Bit manipulation is exactly that: addressing one switch, or a pattern of switches, directly.',
+          what: '<strong>Bit manipulation</strong> is the set of standard techniques for reading and modifying individual bits (or groups of bits) of an integer using the bitwise operators <strong>&</strong>, <strong>|</strong>, <strong>^</strong>, <strong>~</strong>, <strong>&lt;&lt;</strong>, and <strong>&gt;&gt;</strong>. It replaces loops and conditionals that would otherwise inspect a number digit by digit with a single O(1) expression.',
+          why: 'Many "check a property of this number" or "modify this number in place" problems have an O(1) bitwise solution where the naive approach loops over digits or converts to a string. Interviewers use these as a quick check for comfort with how numbers are actually represented in memory — and the tricks themselves (clear the lowest bit, isolate the lowest bit, count set bits) recur across a wide range of problems.',
+          how: 'Memorize the shape of each trick rather than deriving it from scratch under pressure: <strong>get bit i</strong> — (n &gt;&gt; i) & 1. <strong>set bit i</strong> — n | (1 &lt;&lt; i). <strong>clear bit i</strong> — n & ~(1 &lt;&lt; i). <strong>toggle bit i</strong> — n ^ (1 &lt;&lt; i). <strong>clear the lowest set bit</strong> — n & (n - 1). <strong>isolate the lowest set bit</strong> — n & -n. Each of these is a single expression — no loop needed unless you are processing every bit (e.g. counting them).',
+          complexity: { time: 'O(1) per bit operation, O(log n) to touch every bit of n', space: 'O(1)' },
+          signals: [
+            'The problem asks whether a number is a power of two, or to find the next/previous power of two',
+            'You need to count how many bits are set (the "population count" or Hamming weight)',
+            'The problem talks about "flags" or a fixed small set of boolean properties packed into one number',
+            'You are asked to do something "without using extra space" on an array of small integers',
+          ],
+          keyProperties: [
+            'n & (n - 1) removes the lowest set bit — looping this counts set bits in O(popcount) instead of O(bit width)',
+            'n & (n - 1) == 0 (for n > 0) tests "is n a power of two?" in O(1)',
+            'n & -n isolates the lowest set bit as its own value — useful for splitting problems by that bit',
+            'Left shift by k multiplies by 2^k; right shift by k divides by 2^k (careful with negative numbers)',
+            "Python integers have arbitrary precision — there's no fixed word size, so watch for infinite-looking right shifts on negative numbers",
+          ],
+          useCases: [
+            'Counting the number of 1 bits in an integer (Hamming weight)',
+            'Checking whether a number is a power of two in O(1)',
+            'Finding the lowest set bit to split numbers into two groups (used in the two-XOR problem)',
+            'Toggling or querying individual flags packed into a single integer instead of a list of booleans',
+          ],
+          code: `# Count set bits (Brian Kernighan's algorithm)
+def count_bits(n):
+    count = 0
+    while n:
+        n &= n - 1   # clears the lowest set bit
+        count += 1
+    return count
+
+# Is n a power of two?
+def is_power_of_two(n):
+    return n > 0 and (n & (n - 1)) == 0
+
+# Get / set / clear / toggle bit i
+def get_bit(n, i):   return (n >> i) & 1
+def set_bit(n, i):   return n | (1 << i)
+def clear_bit(n, i): return n & ~(1 << i)
+def toggle_bit(n, i): return n ^ (1 << i)
+
+# Isolate the lowest set bit
+def lowest_set_bit(n):
+    return n & -n`,
+          keyInsight: {
+            heading: 'n & (n - 1) clears the lowest set bit — that one expression powers most of the classic bit-manipulation tricks.',
+            body: 'Subtracting 1 from n flips every bit from the lowest set bit downward (the lowest set bit becomes 0, everything below it becomes 1). ANDing with the original n keeps only the bits that were unchanged above that point — net effect: the lowest set bit is gone. Loop that until n is 0 and you have counted the set bits in O(popcount) iterations instead of O(bit width). The same idea, applied once, gives you the power-of-two check for free.',
+          },
+          connections: {
+            prereqs: ['Intro to Bitwise'],
+            unlocks: ['XOR Patterns'],
+            related: ['XOR Patterns', 'Bitmask & Subset Enumeration'],
+          },
+        },
+      },
+      {
+        id: 'xor-patterns',
+        label: 'XOR Patterns',
+        content: {
+          analogy: 'Pair up socks from a laundry basket and toss each matched pair aside. If the basket has an even number of every sock except one, the sock left standing at the end is the unmatched one. XOR does exactly this pairing-and-cancellation, but on bits: identical values cancel each other out, and whatever is left over is the odd one out.',
+          what: '<strong>XOR patterns</strong> exploit one algebraic identity of the XOR operator: <strong>a ^ a = 0</strong> for any value a, and <strong>a ^ 0 = a</strong>. XOR is also <strong>commutative</strong> and <strong>associative</strong>, so a long chain of XORs can be reordered and grouped freely. Together these properties mean that XORing a sequence of values causes every value that appears an even number of times to cancel out, leaving only what appears an odd number of times.',
+          why: 'A problem that says "every element appears twice except one — find it" has an obvious O(n) time, O(n) space solution with a hash set. XOR solves the same problem in O(n) time and <strong>O(1) space</strong>, because it never needs to remember which values it has already seen — cancellation happens automatically as you go. Whenever a problem is built around "everything appears in pairs except for a specific set of exceptions," XOR is worth checking before reaching for a hash structure.',
+          how: 'XOR every element of the input together in a single pass. If exactly one value appears an odd number of times, the running XOR at the end IS that value — every paired value cancelled itself out along the way. For variants with two unique values (instead of one), first XOR everything to get x ^ y, then use any bit that is set in that result to split the array into two groups — one containing x, the other y — and XOR each group separately.',
+          complexity: { time: 'O(n)', space: 'O(1)' },
+          signals: [
+            'Every element in the array appears exactly twice except for one (or a small, fixed number of) elements',
+            'The problem explicitly forbids extra space, ruling out a hash set',
+            'You need to find a missing number from a range without sorting or a set',
+            'You need to swap two values without a temporary variable',
+          ],
+          keyProperties: [
+            'a ^ a = 0 — any value XORed with itself cancels to zero',
+            'a ^ 0 = a — XOR with zero is the identity operation',
+            'XOR is commutative and associative — order and grouping never change the result',
+            'XORing 0 through n and separately XORing all elements of an n-element array missing one value reveals the missing value',
+            "To split two unique values apart, use n & -n on their combined XOR to find a bit where they differ",
+          ],
+          useCases: [
+            'Single Number — find the one element that appears once while all others appear twice',
+            'Missing Number — find the missing value in a range of 0..n given n numbers',
+            'Single Number III — find two unique elements when every other value appears exactly twice',
+            'Swapping two variables in place without a temporary variable',
+          ],
+          code: `# Single Number — every element appears twice except one
+def single_number(nums):
+    result = 0
+    for n in nums:
+        result ^= n     # duplicates cancel to 0, the unique value survives
+    return result
+
+# Missing Number — array of n numbers from range [0, n]
+def missing_number(nums):
+    n = len(nums)
+    result = n
+    for i, num in enumerate(nums):
+        result ^= i ^ num
+    return result
+
+# Single Number III — two unique values, everything else appears twice
+def single_number_iii(nums):
+    xor_all = 0
+    for n in nums:
+        xor_all ^= n
+    # a bit that differs between the two unique values
+    diff_bit = xor_all & -xor_all
+    a = 0
+    for n in nums:
+        if n & diff_bit:
+            a ^= n
+    b = xor_all ^ a
+    return [a, b]`,
+          keyInsight: {
+            heading: 'XOR every element together and everything that appears an even number of times vanishes — whatever survives is your answer.',
+            body: 'This works because XOR pairs cancel in any order, not just adjacent ones — you never need to track which values you have already seen. The two-unique-values variant is the same idea one level deeper: XOR everything to get x ^ y (which is nonzero since x ≠ y), then pick any bit set in that result to partition the array so x and y land in different groups, and XOR each group independently to recover them.',
+          },
+          connections: {
+            prereqs: ['Bit Manipulation'],
+            unlocks: ['Bitmask & Subset Enumeration'],
+            related: ['Bit Manipulation', 'Hash Maps & Sets'],
+          },
+        },
+      },
+      {
+        id: 'bitmask-subset',
+        label: 'Bitmask & Subset Enumeration',
+        content: {
+          analogy: 'A row of n light switches, where "up" means an item is included and "down" means it is excluded. Every possible on/off combination across all n switches is one subset — and reading that row of switches as a binary number gives every subset a unique integer name, from 0 (all off) to 2ⁿ − 1 (all on).',
+          what: 'A <strong>bitmask</strong> represents a subset of n items as a single integer, where bit i is 1 if item i is included and 0 if it is not. <strong>Subset enumeration</strong> is the technique of looping over every integer from 0 to 2ⁿ − 1 to visit every possible subset of an n-item set — the loop counter itself IS the subset, encoded in binary.',
+          why: 'For small n (roughly n ≤ 20), representing a subset as an integer is dramatically cheaper than representing it as a Python set or list: membership testing, union, and intersection all become O(1) bitwise operations instead of O(n) set operations. This matters most in DP-over-subsets problems (like variants of the traveling salesman problem) where the DP state itself is "which items have I used so far" — a bitmask lets that state be a single hashable integer instead of a frozenset.',
+          how: 'To enumerate all subsets of n items: loop mask from 0 to (1 &lt;&lt; n) - 1. For a given mask, item i is in the subset if <strong>mask & (1 &lt;&lt; i)</strong> is nonzero. To build the actual subset list from a mask, loop i from 0 to n - 1 and check that bit. To add item i to a mask, use <strong>mask | (1 &lt;&lt; i)</strong>; to remove it, <strong>mask & ~(1 &lt;&lt; i)</strong>. For bitmask DP, the state is typically <strong>dp[mask]</strong> or <strong>dp[mask][last]</strong>, transitioning by trying to add one more unused item to the mask at each step.',
+          complexity: { time: 'O(2^n) to enumerate all subsets, O(3^n) for common submask-enumeration DP', space: 'O(2^n) for a DP table indexed by mask' },
+          signals: [
+            'n is explicitly small (roughly n ≤ 20) — a strong hint that an O(2^n) solution is intended',
+            'The problem is phrased in terms of "which subset of items" rather than "which single item"',
+            'A DP state needs to track "which items have been used so far" as part of what makes two states different',
+            'The problem resembles a small-scale traveling salesman or assignment problem',
+          ],
+          keyProperties: [
+            'An n-bit mask represents exactly one of the 2^n possible subsets of n items',
+            'mask & (1 << i) tests membership of item i; mask | (1 << i) adds it; mask & ~(1 << i) removes it',
+            'The full-set mask (all items included) is (1 << n) - 1',
+            'Iterating mask from 0 to (1 << n) - 1 visits every subset exactly once, in numeric order',
+            'Bitmask DP states are hashable integers, making them usable directly as list or dict indices',
+          ],
+          useCases: [
+            'Traveling salesman on a small number of cities — dp[mask][last city]',
+            'Counting or finding subsets that satisfy a sum or product constraint when n is small',
+            'Assignment problems: matching n workers to n tasks, tracking which tasks are already assigned',
+            'Any brute-force "try every subset" problem where n is too small for the subset count to matter',
+          ],
+          code: `# Enumerate every subset of items
+def all_subsets(items):
+    n = len(items)
+    result = []
+    for mask in range(1 << n):
+        subset = [items[i] for i in range(n) if mask & (1 << i)]
+        result.append(subset)
+    return result
+
+# Bitmask DP: minimum cost to visit all cities (traveling salesman, small n)
+def tsp(dist):
+    n = len(dist)
+    FULL = (1 << n) - 1
+    # dp[mask][i] = min cost to have visited exactly the cities in mask, ending at city i
+    dp = [[float('inf')] * n for _ in range(1 << n)]
+    dp[1][0] = 0   # start at city 0, only city 0 visited
+
+    for mask in range(1 << n):
+        for last in range(n):
+            if dp[mask][last] == float('inf'):
+                continue
+            for nxt in range(n):
+                if mask & (1 << nxt):
+                    continue   # already visited
+                new_mask = mask | (1 << nxt)
+                new_cost = dp[mask][last] + dist[last][nxt]
+                dp[new_mask][nxt] = min(dp[new_mask][nxt], new_cost)
+
+    return min(dp[FULL][i] + dist[i][0] for i in range(n))`,
+          keyInsight: {
+            heading: 'The loop variable IS the subset — iterating mask from 0 to 2ⁿ − 1 visits every possible combination without any explicit recursion.',
+            body: 'Where backtracking builds subsets by explicitly recursing on include/exclude choices, a bitmask sidesteps the recursion entirely: each integer in [0, 2ⁿ) already encodes one unique combination of choices in its binary digits. This is why bitmask DP states fit naturally as array indices — dp[mask] just works. The tradeoff is that this only stays practical while 2ⁿ is small; past n ≈ 20 the state space explodes and backtracking with pruning becomes the better tool.',
+          },
+          connections: {
+            prereqs: ['Bit Manipulation', 'XOR Patterns'],
+            unlocks: [],
+            related: ['Dynamic Programming', 'Backtracking'],
+          },
+        },
+      },
     ],
   },
   {

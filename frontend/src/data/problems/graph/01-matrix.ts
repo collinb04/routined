@@ -16,6 +16,8 @@ export default {
     { label: 'Center 1', args: [[[0,0,0],[0,1,0],[0,0,0]]], expected: [[0,0,0],[0,1,0],[0,0,0]] },
     { label: 'Corner 1s', args: [[[0,0,0],[0,1,0],[1,1,1]]], expected: [[0,0,0],[0,1,0],[1,2,1]] },
   ],
+  bruteHint: 'Describe running a fresh search from every 1-cell out to its nearest 0, and the complexity that results',
+  optimizeHint: 'Name the traversal that starts from all 0-cells at once instead of searching outward from each 1',
   clues: [
     {
       id: 'constraint-complexity',

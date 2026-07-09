@@ -16,6 +16,8 @@ export default {
     { label: 'k=3', args: [[1,3,-1,-3,5,3,6,7], 3], expected: [3,3,5,5,6,7] },
     { label: 'k=1', args: [[1], 1], expected: [1] },
   ],
+  bruteHint: 'Describe scanning all k elements in every window to find its max, and name the overall time complexity',
+  optimizeHint: 'Name the structure that maintains a monotonic decreasing order of indices as the window slides',
   clues: [
     {
       id: 'input-size-complexity',

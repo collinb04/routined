@@ -18,6 +18,8 @@ export default {
     { label: 'All zeros', args: [[0,0]], expected: '0' },
     { label: 'Single', args: [[5]], expected: '5' },
   ],
+  bruteHint: 'Describe sorting the numbers by plain numeric value and why that produces the wrong order',
+  optimizeHint: 'Name the technique — a custom pairwise comparator based on concatenation order — that produces the correct arrangement',
   clues: [
     {
       id: 'comparison-key',

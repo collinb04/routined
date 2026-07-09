@@ -18,6 +18,8 @@ export default {
     { label: 'n=8', args: [8], expected: 92 },
     { label: 'n=3', args: [3], expected: 0 },
   ],
+  bruteHint: 'Describe generating every possible placement of n queens and filtering for validity only after each placement is complete',
+  optimizeHint: 'Name the technique of rejecting an invalid partial placement as soon as a conflict appears, instead of completing it first',
   clues: [
     {
       id: 'constraint-complexity',

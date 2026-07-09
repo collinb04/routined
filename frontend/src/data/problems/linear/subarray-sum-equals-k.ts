@@ -18,6 +18,8 @@ export default {
     { label: 'Negative values', args: [[1,-1,1],1], expected: 3 },
     { label: 'No match', args: [[1,2,3],7], expected: 0 },
   ],
+  bruteHint: 'Describe checking every subarray\'s sum directly, and its time complexity',
+  optimizeHint: 'Name the data structure that tracks running prefix sums and how often each has occurred',
   clues: [
     {
       id: 'constraint-complexity',

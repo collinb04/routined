@@ -17,6 +17,8 @@ export default {
     { label: 'One part', args: ['eccbbbbdec'], expected: [10] },
     { label: 'All different', args: ['abc'], expected: [1,1,1] },
   ],
+  bruteHint: 'Describe trying every possible way to split the string and checking which splits keep each letter confined to a single part',
+  optimizeHint: 'Name the single-pass technique of tracking each letter\'s last occurrence to know how far the current part must extend',
   clues: [
     {
       id: 'constraint-complexity',

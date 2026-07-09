@@ -16,6 +16,8 @@ export default {
     { label: '3 days', args: [[3,2,2,4,1,4],3], expected: 6 },
     { label: '1 day', args: [[1,2,3,1,1],1], expected: 8 },
   ],
+  bruteHint: 'Describe testing every possible capacity one by one and why that\'s too slow',
+  optimizeHint: 'Name the technique that binary searches over the range of possible capacities',
   clues: [
     {
       id: 'search-space',

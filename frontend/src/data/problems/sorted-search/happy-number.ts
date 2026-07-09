@@ -19,6 +19,8 @@ export default {
     { label: '7 is happy', args: [7], expected: true },
     { label: '4 is not happy', args: [4], expected: false },
   ],
+  bruteHint: 'Describe repeating the digit-square-sum process with no way to know when to stop, and why that risks looping forever',
+  optimizeHint: 'Name the technique that detects a repeated value to identify a cycle',
   clues: [
     {
       id: 'termination-condition',

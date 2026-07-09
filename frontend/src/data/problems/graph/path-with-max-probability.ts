@@ -15,6 +15,8 @@ export default {
     { label: 'Path via 1', args: [3,[[0,1],[1,2],[0,2]],[0.5,0.5,0.2],0,2], expected: 0.25 },
     { label: 'Direct path better', args: [3,[[0,1],[1,2],[0,2]],[0.5,0.5,0.2+0.05],0,2], expected: 0.3 },
   ],
+  bruteHint: 'Describe a brute-force DFS that explores every possible path from start to end, and why that blows up combinatorially',
+  optimizeHint: 'Name the shortest-path algorithm you can adapt with a max-heap to maximize a product instead of minimizing a sum',
   clues: [
     {
       id: 'constraint-complexity',

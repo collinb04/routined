@@ -7,6 +7,7 @@ import type { StruggleContent } from '@/data/problems'
 const props = defineProps<{
   struggle: StruggleContent
   problemId: string
+  savedState?: Record<string, any> | null
 }>()
 
 const emit = defineEmits<{ complete: [] }>()
@@ -15,7 +16,7 @@ const store = useStruggleStore()
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
-store.init(props.problemId, props.struggle)
+store.init(props.problemId, props.struggle, props.savedState)
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,23 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+// Derives a lightweight note on how the learner's step order compares to the
+// reference plan for their chosen strategy — passed to the tutor as optional
+// context, not used to grade the ordering itself.
+function stepOrderNoteFor(strategyId: string, submitted: string[]): string | null {
+  const canonical = props.struggle.options.find(o => o.strategyId === strategyId)?.planSteps
+  if (!canonical || canonical.length !== submitted.length) return null
+  if (canonical.every((step, i) => step === submitted[i])) return null
+
+  for (let i = 0; i < canonical.length - 1; i++) {
+    const [a, b] = [canonical[i], canonical[i + 1]]
+    if (submitted.indexOf(b) < submitted.indexOf(a)) {
+      return `The learner ordered "${b}" before "${a}" — the reverse of the plan's logical sequence.`
+    }
+  }
+  return "The learner's step order differs from the reference plan, though no directly dependent steps were reversed."
 }
 
 // ── Commit / Revise form ──────────────────────────────────────────────────────
@@ -50,12 +68,28 @@ watch(
   },
 )
 
-function moveStep(i: number, dir: -1 | 1) {
-  const j = i + dir
-  if (j < 0 || j >= orderedSteps.value.length) return
-  const a = [...orderedSteps.value];
-  [a[i], a[j]] = [a[j], a[i]]
-  orderedSteps.value = a
+// ── Drag-to-reorder ─────────────────────────────────────────────────────────
+
+const dragIndex = ref<number | null>(null)
+
+function onStepDragStart(i: number) {
+  dragIndex.value = i
+}
+
+// `target` picks which ref to mutate — Vue auto-unwraps refs referenced
+// directly in templates, so the ref itself can't be passed in as an argument.
+function onStepDragOver(target: 'commit' | 'revise', i: number) {
+  if (dragIndex.value === null || dragIndex.value === i) return
+  const list = target === 'commit' ? orderedSteps : reviseSteps
+  const arr = [...list.value]
+  const [moved] = arr.splice(dragIndex.value, 1)
+  arr.splice(i, 0, moved)
+  list.value = arr
+  dragIndex.value = i
+}
+
+function onStepDragEnd() {
+  dragIndex.value = null
 }
 
 const canCommit = computed(() =>
@@ -69,6 +103,7 @@ async function handleCommit() {
   committing.value = true
   commitError.value = ''
   store.planSteps = orderedSteps.value
+  store.stepOrderNote = stepOrderNoteFor(store.strategyId, orderedSteps.value)
   try {
     await store.submitCommit()
     // Kick off the conversation with a synthetic opener so the chat starts with a bot message
@@ -76,7 +111,7 @@ async function handleCommit() {
     await store.sendMessage(`I want to approach this with ${store.strategyId}.`)
     scrollToBottom()
   } catch (e: any) {
-    commitError.value = e.message || 'Failed to commit'
+    commitError.value = 'Could not reach the server — make sure the backend is running.'
     store.step = 'commit'
   } finally {
     committing.value = false
@@ -126,18 +161,20 @@ function autoResize(e: Event) {
 
 const reviseSteps = ref<string[]>([])
 
+// Hydration: the strategyId watcher above only fires on a *change*, so it
+// never runs when strategyId is seeded from saved state at setup time (it's
+// set once, synchronously, not "changed"). Seed the ordered lists directly
+// from the restored plan order instead of re-shuffling.
+if (store.step === 'chat' || store.step === 'revise') {
+  prevStrategyId.value = store.strategyId
+  orderedSteps.value = [...store.planSteps]
+  reviseSteps.value = [...store.planSteps]
+}
+
 function enterRevise() {
   const opt = props.struggle.options.find(o => o.strategyId === store.strategyId)
   reviseSteps.value = opt ? shuffle(opt.planSteps) : []
   store.step = 'revise'
-}
-
-function moveReviseStep(i: number, dir: -1 | 1) {
-  const j = i + dir
-  if (j < 0 || j >= reviseSteps.value.length) return
-  const a = [...reviseSteps.value];
-  [a[i], a[j]] = [a[j], a[i]]
-  reviseSteps.value = a
 }
 
 const canEvaluate = computed(() =>
@@ -152,6 +189,7 @@ const evaluateError = ref('')
 async function handleEvaluate() {
   evaluateError.value = ''
   store.planSteps = reviseSteps.value
+  store.stepOrderNote = stepOrderNoteFor(store.strategyId, reviseSteps.value)
   try {
     await store.submitCommit()
     const result = await store.evaluateInsight()
@@ -222,36 +260,41 @@ async function handleEvaluate() {
         <!-- Plan ordering -->
         <div v-if="orderedSteps.length > 0" class="flex flex-col gap-2">
           <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Order the Plan Steps</label>
-          <p class="text-[12px] text-text-muted -mt-1">Drag or use arrows to arrange in execution order.</p>
+          <p class="text-[12px] text-text-muted -mt-1">Drag to arrange in execution order.</p>
           <div class="flex flex-col gap-1.5 mt-1">
             <div
               v-for="(step, i) in orderedSteps"
               :key="step"
-              class="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5"
+              draggable="true"
+              class="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5 cursor-grab active:cursor-grabbing transition-opacity"
+              :class="dragIndex === i ? 'opacity-40' : ''"
+              @dragstart="onStepDragStart(i)"
+              @dragover.prevent="onStepDragOver('commit', i)"
+              @dragend="onStepDragEnd"
             >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="shrink-0 text-text-muted">
+                <circle cx="8" cy="6" r="1.4"/><circle cx="8" cy="12" r="1.4"/><circle cx="8" cy="18" r="1.4"/>
+                <circle cx="16" cy="6" r="1.4"/><circle cx="16" cy="12" r="1.4"/><circle cx="16" cy="18" r="1.4"/>
+              </svg>
               <span class="text-[11px] font-mono text-text-muted w-4 shrink-0 text-center">{{ i + 1 }}</span>
               <span class="flex-1 text-[13px] text-text-dim leading-snug">{{ step }}</span>
-              <div class="flex flex-col gap-0.5 shrink-0">
-                <button
-                  class="p-0.5 rounded hover:bg-gray-200 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-                  :disabled="i === 0"
-                  @click="moveStep(i, -1)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 15 12 9 6 15"/></svg>
-                </button>
-                <button
-                  class="p-0.5 rounded hover:bg-gray-200 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-                  :disabled="i === orderedSteps.length - 1"
-                  @click="moveStep(i, 1)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9 12 15 18 9"/></svg>
-                </button>
-              </div>
             </div>
           </div>
         </div>
 
         <p v-if="commitError" class="text-[12.5px] text-red-500 px-1">{{ commitError }}</p>
+
+        <!-- Your read on this problem (optional) -->
+        <div class="flex flex-col gap-2">
+          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Your Read on This Problem <span class="normal-case font-normal">(optional)</span></label>
+          <p class="text-[12px] text-text-muted -mt-1">Summarize what the clues tell you — this gets passed to the tutor as extra context, not graded.</p>
+          <textarea
+            v-model="store.synthesisText"
+            class="resize-none text-sm text-text-dim leading-relaxed bg-surface rounded-xl p-3 border border-border focus:outline-none focus:border-accent/50 transition-colors"
+            placeholder="Structure, constraints, and what approach might work…"
+            rows="2"
+          />
+        </div>
       </div>
 
       <!-- Footer -->
@@ -410,30 +453,24 @@ async function handleEvaluate() {
         <!-- Plan ordering -->
         <div v-if="reviseSteps.length > 0" class="flex flex-col gap-2">
           <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Order the Plan Steps</label>
+          <p class="text-[12px] text-text-muted -mt-1">Drag to arrange in execution order.</p>
           <div class="flex flex-col gap-1.5 mt-1">
             <div
               v-for="(s, i) in reviseSteps"
               :key="s"
-              class="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5"
+              draggable="true"
+              class="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5 cursor-grab active:cursor-grabbing transition-opacity"
+              :class="dragIndex === i ? 'opacity-40' : ''"
+              @dragstart="onStepDragStart(i)"
+              @dragover.prevent="onStepDragOver('revise', i)"
+              @dragend="onStepDragEnd"
             >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="shrink-0 text-text-muted">
+                <circle cx="8" cy="6" r="1.4"/><circle cx="8" cy="12" r="1.4"/><circle cx="8" cy="18" r="1.4"/>
+                <circle cx="16" cy="6" r="1.4"/><circle cx="16" cy="12" r="1.4"/><circle cx="16" cy="18" r="1.4"/>
+              </svg>
               <span class="text-[11px] font-mono text-text-muted w-4 shrink-0 text-center">{{ i + 1 }}</span>
               <span class="flex-1 text-[13px] text-text-dim leading-snug">{{ s }}</span>
-              <div class="flex flex-col gap-0.5 shrink-0">
-                <button
-                  class="p-0.5 rounded hover:bg-gray-200 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-                  :disabled="i === 0"
-                  @click="moveReviseStep(i, -1)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 15 12 9 6 15"/></svg>
-                </button>
-                <button
-                  class="p-0.5 rounded hover:bg-gray-200 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-                  :disabled="i === reviseSteps.length - 1"
-                  @click="moveReviseStep(i, 1)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9 12 15 18 9"/></svg>
-                </button>
-              </div>
             </div>
           </div>
         </div>

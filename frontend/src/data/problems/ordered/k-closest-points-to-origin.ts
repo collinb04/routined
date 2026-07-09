@@ -19,6 +19,8 @@ export default {
     { label: '[[1,3],[-2,2]] k=1', args: [[[1,3],[-2,2]], 1], expected: [[-2,2]] },
     { label: 'k=2', args: [[[3,3],[5,-1],[-2,4]], 2], expected: [[-2,4],[3,3]] },
   ],
+  bruteHint: 'Describe the approach of computing every point\'s distance and sorting the whole array, and its time complexity.',
+  optimizeHint: 'Name the bounded-size data structure that tracks the k closest points seen so far without a full sort.',
   clues: [
     {
       id: 'constraint-complexity',

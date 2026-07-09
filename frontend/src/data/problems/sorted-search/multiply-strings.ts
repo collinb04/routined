@@ -18,6 +18,8 @@ export default {
     { label: 'Multiply by zero', args: ['0','52'], expected: '0' },
     { label: '99×99', args: ['99','99'], expected: '9801' },
   ],
+  bruteHint: 'Describe the tempting approach of converting both strings to integers, multiplying, and converting back — and why the constraints forbid it',
+  optimizeHint: 'Name the digit-by-digit simulation technique that avoids built-in integer conversion and correctly handles carries and leading zeros',
   clues: [
     {
       id: 'no-integer-conversion',

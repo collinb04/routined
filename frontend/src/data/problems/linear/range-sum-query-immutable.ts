@@ -18,6 +18,8 @@ export default {
     { label: 'Multiple queries', args: [[-2,0,3,-5,2,-1],[[0,2],[2,5],[0,5]]], expected: [1,-1,-3] },
     { label: 'Single query', args: [[1,2,3,4],[[1,3]]], expected: [9] },
   ],
+  bruteHint: 'Describe summing the elements in the range from scratch on every query, and name its time complexity per query',
+  optimizeHint: 'Name the precomputed structure that answers each query in O(1)',
   clues: [
     {
       id: 'multiple-queries',

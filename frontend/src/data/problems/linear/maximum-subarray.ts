@@ -19,6 +19,8 @@ export default {
     { label: 'All positive', args: [[5,4,-1,7,8]], expected: 23 },
     { label: 'All negative', args: [[-1,-2,-3]], expected: -1 },
   ],
+  bruteHint: 'Describe checking every subarray and summing it, and the resulting time complexity',
+  optimizeHint: 'Name the single-pass technique that tracks a running max-ending-here value as it scans',
   clues: [
     {
       id: 'constraint-complexity',

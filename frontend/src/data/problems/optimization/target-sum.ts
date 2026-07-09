@@ -17,6 +17,8 @@ export default {
     { label: '1 way', args: [[1],1], expected: 1 },
     { label: 'No way', args: [[1],2], expected: 0 },
   ],
+  bruteHint: 'Describe the naive recursion that branches on assigning + or - to each number, and why the number of sign assignments is exponential',
+  optimizeHint: 'Name the DP state — index plus running sum, or equivalently a subset-sum/knapsack reformulation — that collapses repeated sums into one entry',
   clues: [
     {
       id: 'counting-not-boolean',

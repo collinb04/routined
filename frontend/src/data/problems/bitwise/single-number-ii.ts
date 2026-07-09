@@ -18,6 +18,8 @@ export default {
     { label: 'Single element', args: [[7]], expected: 7 },
     { label: 'Negatives', args: [-2,-2,-3,-2], expected: -3 },
   ],
+  bruteHint: 'Describe using a hash map to count each element\'s frequency, and its space complexity',
+  optimizeHint: 'Name the bitwise technique that tracks bit counts modulo 3 without space proportional to n',
   clues: [
     {
       id: 'space-constraint',

@@ -15,6 +15,8 @@ export default {
     { label: 'k=1', args: [4,[[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]],0,3,1], expected: 700 },
     { label: 'k=2', args: [4,[[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]],0,3,2], expected: 400 },
   ],
+  bruteHint: 'Describe exploring every possible route within k stops via DFS and recomputing the cost of each one from scratch',
+  optimizeHint: 'Name the shortest-path technique that relaxes all edges in rounds, bounded to a fixed number of rounds',
   clues: [
     {
       id: 'stop-constraint',

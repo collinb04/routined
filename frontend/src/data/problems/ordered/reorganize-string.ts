@@ -17,6 +17,8 @@ export default {
     { label: 'Impossible', args: ['aaab'], expected: '' },
     { label: 'Single', args: ['a'], expected: 'a' },
   ],
+  bruteHint: 'Describe a naive approach that repeatedly rescans character counts to pick a safe next placement, and why that doesn\'t scale well.',
+  optimizeHint: 'Name the data structure that always surfaces the most frequent remaining character in log time.',
   clues: [
     {
       id: 'feasibility-condition',

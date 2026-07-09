@@ -21,6 +21,8 @@ export default {
     { label: 'Single space', args: [' '], expected: true },
     { label: 'Pure alpha', args: ['racecar'], expected: true },
   ],
+  bruteHint: 'Describe building a cleaned, lowercased copy of the string and comparing it to its reverse, and its space cost',
+  optimizeHint: 'Name the technique that checks the palindrome in place with two pointers, skipping non-alphanumeric characters',
   clues: [
     {
       id: 'preprocessing-signal',

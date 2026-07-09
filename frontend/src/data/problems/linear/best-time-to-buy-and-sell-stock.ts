@@ -17,6 +17,8 @@ export default {
     { label: 'decreasing', args: [[7,6,4,3,1]], expected: 0 },
     { label: '[2,4,1]', args: [[2,4,1]], expected: 2 },
   ],
+  bruteHint: 'Describe checking every pair of buy and sell days and its time complexity',
+  optimizeHint: 'Name the single-pass technique that tracks one running value as you scan through the prices',
   clues: [
     {
       id: 'constraint-complexity',

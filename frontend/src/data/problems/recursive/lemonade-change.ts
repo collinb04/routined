@@ -18,6 +18,8 @@ export default {
     { label: 'All fives', args: [[5,5,5,5]], expected: true },
     { label: 'First $10', args: [[10]], expected: false },
   ],
+  bruteHint: 'Describe trying every combination of bills you could hand back at each step to see which choice keeps the rest of the sequence working',
+  optimizeHint: 'Name the greedy preference for which bills to give back first, and the two running counts that fully describe your register',
   clues: [
     {
       id: 'only-three-denominations',

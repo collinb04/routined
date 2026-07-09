@@ -17,6 +17,8 @@ export default {
     { label: 'Missing 2', args: [[1,1]], expected: [2] },
     { label: 'None missing', args: [[1,2,3]], expected: [] },
   ],
+  bruteHint: 'Describe using a hash set or count array to track which values appear, and its space complexity',
+  optimizeHint: 'Describe how you could mark seen values in place using the array itself instead of extra space',
   clues: [
     {
       id: 'on-time-constraint',

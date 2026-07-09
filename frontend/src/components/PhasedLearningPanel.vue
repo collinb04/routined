@@ -10,41 +10,67 @@ export interface ChatMessage {
 
 // ─── Props & Emits ─────────────────────────────────────────────────────────
 
+interface DissectProgress {
+  clues: Array<{ id: string; status: string; attempts: number; selectedOption: number | null }>
+}
+
+interface StruggleProgress {
+  state: Record<string, any>
+  completed: boolean
+  completedAt: string | null
+  updatedAt: string | null
+}
+
+interface PhaseCompletion {
+  dissect: boolean
+  struggle: boolean
+  attack: boolean
+}
+
 const props = withDefaults(defineProps<{
   clues: ClueCard[]
   struggle?: StruggleContent
   problemId?: string
+  dissectProgress?: DissectProgress | null
+  struggleProgress?: StruggleProgress | null
+  phaseCompletion?: PhaseCompletion
 }>(), {
   problemId: '',
+  dissectProgress: null,
+  struggleProgress: null,
+  phaseCompletion: () => ({ dissect: false, struggle: false, attack: false }),
 })
 
 const emit = defineEmits<{
   'reveal-highlight': [clueId: string]
   'advance-phase': [payload: { phase: number; data: unknown }]
+  'reset-problem': []
 }>()
 
 // ─── Phase Navigation ───────────────────────────────────────────────────────
 
 const PHASE_NAMES = ['Dissect', 'Struggle & Optimize', 'Attack'] as const
 
-const activePhase = ref(0)
-const highestUnlocked = ref(0)
-const completedPhases = reactive(new Set<number>())
+const completedPhases = reactive(new Set<number>(
+  ([props.phaseCompletion.dissect, props.phaseCompletion.struggle, props.phaseCompletion.attack] as const)
+    .map((done, i) => (done ? i : -1))
+    .filter(i => i >= 0)
+))
 
-function tabStatus(i: number): 'locked' | 'done' | 'unlocked' {
-  if (completedPhases.has(i)) return 'done'
-  if (i > highestUnlocked.value) return 'locked'
-  return 'unlocked'
+const activePhase = ref(
+  !props.phaseCompletion.dissect ? 0 : !props.phaseCompletion.struggle ? 1 : 2
+)
+
+function tabStatus(i: number): 'done' | 'unlocked' {
+  return completedPhases.has(i) ? 'done' : 'unlocked'
 }
 
 function clickTab(i: number) {
-  if (tabStatus(i) === 'locked') return
   activePhase.value = i
 }
 
 function advancePhase(data: unknown) {
   completedPhases.add(activePhase.value)
-  highestUnlocked.value = Math.max(highestUnlocked.value, activePhase.value + 1)
   emit('advance-phase', { phase: activePhase.value, data })
   activePhase.value++
 }
@@ -63,16 +89,31 @@ interface ClueState {
 }
 
 const clueStates = reactive<ClueState[]>(
-  props.clues.map((_, i) => ({
-    status: i === 0 ? 'active' : 'locked',
-    selectedOption: null,
-    lastWrongOption: null,
-    attempts: 0,
-    feedbackVisible: false,
-    feedbackCorrect: false,
-    flashError: false,
-    revealClicked: false,
-  }))
+  props.clues.map((clue, i) => {
+    const saved = props.dissectProgress?.clues?.find(c => c.id === clue.id)
+    if (saved) {
+      return {
+        status: saved.status as ClueState['status'],
+        selectedOption: saved.selectedOption ?? null,
+        lastWrongOption: null,
+        attempts: saved.attempts ?? 0,
+        feedbackVisible: false,
+        feedbackCorrect: saved.status === 'solved',
+        flashError: false,
+        revealClicked: false,
+      }
+    }
+    return {
+      status: i === 0 ? 'active' : 'locked',
+      selectedOption: null,
+      lastWrongOption: null,
+      attempts: 0,
+      feedbackVisible: false,
+      feedbackCorrect: false,
+      flashError: false,
+      revealClicked: false,
+    }
+  })
 )
 
 const solvedCount = computed(() => clueStates.filter(s => s.status === 'solved').length)
@@ -82,6 +123,28 @@ function selectOption(ci: number, oi: number) {
   const s = clueStates[ci]
   if (s.status !== 'active' || s.flashError) return
   s.selectedOption = s.selectedOption === oi ? null : oi
+}
+
+async function persistDissect(completed = false) {
+  if (!props.problemId) return
+  try {
+    await fetch(`/api/problems/${props.problemId}/dissect/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        clues: props.clues.map((c, i) => ({
+          id: c.id,
+          status: clueStates[i].status,
+          attempts: clueStates[i].attempts,
+          selectedOption: clueStates[i].selectedOption,
+        })),
+        completed,
+      }),
+    })
+  } catch {
+    // best-effort — nothing actionable client-side if this fails
+  }
 }
 
 function submitClue(ci: number) {
@@ -101,6 +164,7 @@ function submitClue(ci: number) {
     s.feedbackVisible = true
     setTimeout(() => { s.flashError = false; s.selectedOption = null }, 600)
   }
+  persistDissect()
 }
 
 function revealHighlight(clueId: string, ci: number) {
@@ -108,10 +172,7 @@ function revealHighlight(clueId: string, ci: number) {
   emit('reveal-highlight', clueId)
 }
 
-const synthesisText = ref('')
-const canContinueDissect = computed(
-  () => allCluesSolved.value && synthesisText.value.trim().length > 15
-)
+const canContinueDissect = computed(() => allCluesSolved.value)
 
 function continueDissect() {
   if (!canContinueDissect.value) return
@@ -121,8 +182,8 @@ function continueDissect() {
       solved: clueStates[i].status === 'solved',
       attempts: clueStates[i].attempts,
     })),
-    synthesisText: synthesisText.value,
   })
+  persistDissect(true)
 }
 
 // ─── Struggle & Optimize (Phase 1) ─────────────────────────────────────────
@@ -130,38 +191,153 @@ function continueDissect() {
 function onStruggleComplete() {
   advancePhase({ struggle: true })
 }
+
+// ─── Utility bar: bug report + reset ───────────────────────────────────────
+
+const bugReportOpen = ref(false)
+const bugReportText = ref('')
+const bugReportSubmitting = ref(false)
+const bugReportSent = ref(false)
+
+async function submitBugReport() {
+  if (!bugReportText.value.trim() || !props.problemId) return
+  bugReportSubmitting.value = true
+  try {
+    await fetch(`/api/problems/${props.problemId}/bug-report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        phase: PHASE_NAMES[activePhase.value],
+        description: bugReportText.value.trim(),
+      }),
+    })
+  } catch {
+    // best-effort — nothing actionable client-side if this fails
+  } finally {
+    bugReportSubmitting.value = false
+    bugReportSent.value = true
+    bugReportText.value = ''
+    setTimeout(() => {
+      bugReportOpen.value = false
+      bugReportSent.value = false
+    }, 1200)
+  }
+}
+
+async function resetProblem() {
+  if (!confirm('Reset all progress on this problem? This cannot be undone.')) return
+
+  activePhase.value = 0
+  completedPhases.clear()
+  clueStates.forEach((s, i) => {
+    s.status = i === 0 ? 'active' : 'locked'
+    s.selectedOption = null
+    s.lastWrongOption = null
+    s.attempts = 0
+    s.feedbackVisible = false
+    s.feedbackCorrect = false
+    s.flashError = false
+    s.revealClicked = false
+  })
+
+  if (props.problemId) {
+    try {
+      await fetch(`/api/problems/${props.problemId}/struggle/reset`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // best-effort — local state is already reset regardless
+    }
+  }
+
+  emit('reset-problem')
+}
 </script>
 
 <template>
-  <div class="phased-panel flex flex-col h-full bg-white">
+  <div class="phased-panel relative flex flex-col h-full bg-white">
 
     <!-- ── Phase Nav ──────────────────────────────────────────────────────── -->
-    <div class="flex border-b border-gray-100 px-4 pt-3 gap-0.5 shrink-0">
-      <button
-        v-for="(name, i) in PHASE_NAMES"
-        :key="i"
-        class="flex items-center gap-1 px-3 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px"
-        :class="[
-          i === activePhase ? 'border-accent' : 'border-transparent',
-          tabStatus(i) === 'locked'
-            ? 'text-text-muted opacity-35 cursor-not-allowed'
-            : tabStatus(i) === 'done'
+    <div class="flex items-center justify-between border-b border-gray-100 pl-4 pr-3 pt-3 shrink-0">
+      <div class="flex gap-0.5">
+        <button
+          v-for="(name, i) in PHASE_NAMES"
+          :key="i"
+          class="flex items-center gap-1 px-3 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px"
+          :class="[
+            i === activePhase ? 'border-accent' : 'border-transparent',
+            tabStatus(i) === 'done'
               ? 'text-green cursor-pointer'
               : i === activePhase
                 ? 'text-text cursor-pointer'
                 : 'text-text-muted hover:text-text cursor-pointer',
-        ]"
-        @click="clickTab(i)"
-        :title="tabStatus(i) === 'locked' ? 'Complete the previous step first' : ''"
-      >
-        <span class="text-[11px] font-medium shrink-0 mt-0.5 w-4 text-center" :class="tabStatus(i) === 'done' ? 'text-green' : 'text-text-muted'">
-          <svg v-if="tabStatus(i) === 'done'" width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline">
-            <polyline points="2 6 5 9 10 3"/>
+          ]"
+          @click="clickTab(i)"
+        >
+          <span class="text-[11px] font-medium shrink-0 mt-0.5 w-4 text-center" :class="tabStatus(i) === 'done' ? 'text-green' : 'text-text-muted'">
+            <svg v-if="tabStatus(i) === 'done'" width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline">
+              <polyline points="2 6 5 9 10 3"/>
+            </svg>
+            <span v-else>{{ i + 1 }}</span>
+          </span>
+          {{ name }}
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 mb-2.5 shrink-0">
+        <button
+          class="flex items-center gap-1 text-[11.5px] font-medium text-text-muted hover:text-text transition-colors cursor-pointer"
+          @click="bugReportOpen = true"
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8" y="6" width="8" height="12" rx="4"/><path d="M8 10H4m16 0h-4M8 15H5m14 0h-3M12 6V4m-3 2 1-2m5 2-1-2"/>
           </svg>
-          <span v-else>{{ i + 1 }}</span>
-        </span>
-        {{ name }}
-      </button>
+          Report a bug
+        </button>
+        <span class="w-px h-3 bg-gray-200" />
+        <button
+          class="flex items-center gap-1 text-[11.5px] font-medium text-text-muted hover:text-red-500 transition-colors cursor-pointer"
+          @click="resetProblem"
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/>
+          </svg>
+          Reset problem
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Bug report modal ───────────────────────────────────────────────── -->
+    <div
+      v-if="bugReportOpen"
+      class="absolute inset-0 z-20 flex items-center justify-center bg-black/30"
+      @click.self="bugReportOpen = false"
+    >
+      <div class="bg-white rounded-2xl shadow-lg w-90 p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-[13px] font-semibold text-text">Report a bug</span>
+          <button class="text-text-muted hover:text-text transition-colors cursor-pointer" @click="bugReportOpen = false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <textarea
+          v-model="bugReportText"
+          rows="4"
+          placeholder="What went wrong?"
+          class="resize-none text-sm text-text-dim leading-relaxed bg-surface rounded-xl p-3 border border-border focus:outline-none focus:border-accent/50 transition-colors"
+        />
+        <div class="flex items-center justify-between">
+          <span v-if="bugReportSent" class="text-[12px] text-green">Thanks — logged for the team.</span>
+          <span v-else />
+          <button
+            class="flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg bg-accent text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+            :disabled="!bugReportText.trim() || bugReportSubmitting"
+            @click="submitBugReport"
+          >{{ bugReportSubmitting ? 'Sending…' : 'Send' }}</button>
+        </div>
+      </div>
     </div>
 
     <!-- ── Content ────────────────────────────────────────────────────────── -->
@@ -208,7 +384,7 @@ function onStruggleComplete() {
                         : 'bg-surface border-border text-text-muted opacity-40 cursor-default'
                       : clueStates[ci].selectedOption === oi
                         ? clueStates[ci].flashError
-                          ? 'bg-red-50 text-red-500 border-red-200'
+                          ? 'bg-red-500 text-white border-red-500'
                           : 'bg-gray-900 text-white border-gray-900'
                         : 'bg-surface border-border text-text-dim hover:border-gray-300 cursor-pointer'
                   "
@@ -254,39 +430,23 @@ function onStruggleComplete() {
           </div>
         </div>
 
-        <!-- Synthesis footer -->
+        <!-- Continue footer -->
         <div
-          class="shrink-0 border-t border-gray-100 px-5 py-4 flex flex-col gap-3 transition-opacity"
+          class="shrink-0 border-t border-gray-100 px-5 py-4 flex items-center justify-between transition-opacity"
           :class="allCluesSolved ? '' : 'pointer-events-none opacity-50'"
-          style="min-height: 130px"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold uppercase tracking-widest" :class="allCluesSolved ? 'text-accent' : 'text-text-muted'">
-              Your read on this problem
-            </span>
-            <span v-if="!allCluesSolved" class="text-[12px] text-text-muted">complete all clues first</span>
-          </div>
-          <textarea
-            v-model="synthesisText"
-            :disabled="!allCluesSolved"
-            class="flex-1 resize-none text-sm text-text-dim leading-relaxed bg-surface rounded-xl p-3 border border-border focus:outline-none focus:border-accent/50 transition-colors"
-            placeholder="Summarize what the clues tell you — structure, constraints, and what approach might work."
-            rows="2"
-          />
-          <div class="flex items-center justify-between">
-            <span class="text-[12px] text-text-muted">{{ solvedCount }} of {{ clues.length }} clues decoded</span>
-            <button
-              class="flex items-center gap-1.5 text-[13px] font-semibold transition-opacity"
-              :class="canContinueDissect ? 'text-text hover:opacity-70 cursor-pointer' : 'text-text-muted opacity-40 cursor-not-allowed'"
-              :disabled="!canContinueDissect"
-              @click="continueDissect"
-            >
-              Continue to Struggle
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <path d="M5 12h14m-7-7 7 7-7 7"/>
-              </svg>
-            </button>
-          </div>
+          <span class="text-[12px] text-text-muted">{{ solvedCount }} of {{ clues.length }} clues decoded</span>
+          <button
+            class="flex items-center gap-1.5 text-[13px] font-semibold transition-opacity"
+            :class="canContinueDissect ? 'text-text hover:opacity-70 cursor-pointer' : 'text-text-muted opacity-40 cursor-not-allowed'"
+            :disabled="!canContinueDissect"
+            @click="continueDissect"
+          >
+            Continue to Struggle
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M5 12h14m-7-7 7 7-7 7"/>
+            </svg>
+          </button>
         </div>
 
       </template>
@@ -297,6 +457,7 @@ function onStruggleComplete() {
           v-if="struggle && problemId"
           :struggle="struggle"
           :problem-id="problemId"
+          :saved-state="struggleProgress?.state ?? null"
           class="flex-1 min-h-0"
           @complete="onStruggleComplete"
         />

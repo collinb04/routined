@@ -36,6 +36,8 @@ export default {
   testCases: [
     { label: 'basic feed', args: [['post_tweet','post_tweet','follow','post_tweet','get_news_feed'],[[1,5],[1,3],[1,2],[2,6],[1]]], expected: [[6,3,5]] },
   ],
+  bruteHint: 'Describe the naive approach of gathering every followee\'s tweets and re-sorting the whole combined list on every get_news_feed call.',
+  optimizeHint: 'Name the data structure that merges each followee\'s tweet stream and extracts just the 10 most recent without sorting everything.',
   clues: [
     {
       id: 'feed-output-count',

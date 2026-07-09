@@ -17,6 +17,8 @@ export default {
     { label: '4+(13/5)', args: [['4','13','5','/','+']],  expected: 6 },
     { label: 'negative', args: [['10','6','9','3','+','-11','*','/','+','17','+','5','+']], expected: 22 },
   ],
+  bruteHint: 'Describe recursively re-scanning the expression to evaluate it, and why that approach is awkward here',
+  optimizeHint: 'Name the data structure that lets you evaluate the expression in a single left-to-right pass',
   clues: [
     {
       id: 'rpn-operand-order',

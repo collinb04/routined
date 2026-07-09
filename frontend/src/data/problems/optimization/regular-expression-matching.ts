@@ -19,6 +19,8 @@ export default {
     { label: 'Dot star', args: ['ab','.*'], expected: true },
     { label: 'Complex', args: ['aab','c*a*b'], expected: true },
   ],
+  bruteHint: 'Describe the naive recursion that branches on every possible interpretation of each "*" in the pattern, and why the same (i, j) position pairs get re-explored',
+  optimizeHint: 'Name the 2D DP state that caches whether s[:i] matches p[:j], avoiding re-solving the same prefix pair',
   clues: [
     {
       id: 'two-string-state',

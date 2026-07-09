@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[1,0,1,2,1,1,7,5],[0,1,0,1,0,1,0,1],3], expected: 16 },
     { label: 'Never grumpy', args: [[1,2,3],[0,0,0],1], expected: 6 },
   ],
+  bruteHint: 'Describe checking every window of `minutes` consecutive minutes by recomputing its gain from scratch, and the resulting time complexity',
+  optimizeHint: 'Name the technique that slides the window across the array, updating the gain in O(1) per step',
   clues: [
     {
       id: 'fixed-window-size',

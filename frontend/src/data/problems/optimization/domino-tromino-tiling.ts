@@ -18,6 +18,8 @@ export default {
     { label: 'n=2', args: [2], expected: 2 },
     { label: 'n=4', args: [4], expected: 11 },
   ],
+  bruteHint: 'Describe the recursive approach that tries every way to place the next piece at each column, re-exploring the same remaining board widths repeatedly.',
+  optimizeHint: 'Name the small set of column states (fully filled, or partially filled by a tromino) you can tabulate so each column is solved only once.',
   clues: [
     {
       id: 'constraint-complexity',

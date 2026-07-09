@@ -16,6 +16,8 @@ export default {
     { label: '"babgbag"', args: ['babgbag','bag'], expected: 5 },
     { label: 'Exact match', args: ['a','a'], expected: 1 },
   ],
+  bruteHint: 'Describe the recursive approach that, at each character of s, branches into matching it against t or skipping it, and explain why the same (s position, t position) pairs get re-explored exponentially.',
+  optimizeHint: 'Name the two things the DP state needs to track — your position in s and your position in t — so each pair of prefixes is memoized once.',
   clues: [
     {
       id: 'constraint-complexity',

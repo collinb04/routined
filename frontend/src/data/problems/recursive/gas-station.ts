@@ -17,6 +17,8 @@ export default {
     { label: 'Impossible', args: [[2,3,4],[3,4,3]], expected: -1 },
     { label: 'Single station', args: [[5],[4]], expected: 0 },
   ],
+  bruteHint: 'Describe simulating the full circuit starting from every possible station to see whether the tank ever goes negative',
+  optimizeHint: 'Name the greedy quantity you could track in a single pass, and what it means the moment that quantity goes negative',
   clues: [
     {
       id: 'feasibility-check',

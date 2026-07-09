@@ -32,6 +32,7 @@ onMounted(() => loadPyodide())
           <span>© 2026 Routined. All rights reserved.</span>
         </div>
         <div class="flex gap-6">
+          <RouterLink to="/learn" class="hover:text-text transition-colors">Learn</RouterLink>
           <RouterLink to="/#problems" class="hover:text-text transition-colors">Problems</RouterLink>
           <RouterLink to="/pricing" class="hover:text-text transition-colors">Pricing</RouterLink>
           <a href="#" class="hover:text-text transition-colors">Get Started</a>

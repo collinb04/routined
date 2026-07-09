@@ -17,6 +17,8 @@ export default {
     { label: '[0,1,0,3,2,3]', args: [[0,1,0,3,2,3]], expected: 4 },
     { label: '[7,7,7,7]', args: [[7,7,7,7]], expected: 1 },
   ],
+  bruteHint: 'Describe the O(n²) DP approach: for each position, look back at every earlier position to see which shorter subsequences it can extend',
+  optimizeHint: 'Name the O(n log n) technique (patience-sorting / binary search on tails) that improves past the O(n²) DP',
   clues: [
     {
       id: 'constraint-complexity',

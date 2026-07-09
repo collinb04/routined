@@ -16,6 +16,8 @@ export default {
     { label: '[1,2,3,4]', args: [[1,2,3,4]], expected: [24,12,8,6] },
     { label: 'with zero', args: [[-1,1,0,-3,3]], expected: [0,0,9,0,0] },
   ],
+  bruteHint: 'Describe the nested-loop approach that multiplies all other elements for each index, and explain why dividing by nums[i] out of the total product fails here',
+  optimizeHint: 'Name the technique that precomputes prefix and suffix product arrays in two passes',
   clues: [
     {
       id: 'no-division-constraint',

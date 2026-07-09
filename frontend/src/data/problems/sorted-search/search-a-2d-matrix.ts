@@ -16,6 +16,8 @@ export default {
     { label: 'found', args: [[[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3], expected: true },
     { label: 'not found', args: [[[1,3,5,7],[10,11,16,20],[23,30,34,60]], 13], expected: false },
   ],
+  bruteHint: 'Describe scanning every cell of the matrix to check for the target, and its time complexity',
+  optimizeHint: 'Name the technique that treats the matrix as a single flattened sorted array to enable binary search',
   clues: [
     {
       id: 'constraint-complexity',

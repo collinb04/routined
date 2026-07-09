@@ -16,6 +16,8 @@ export default {
     { label: 'LCA is root', args: [[3,5,1,6,2,0,8,null,null,7,4],5,1], expected: 3 },
     { label: 'LCA is ancestor', args: [[3,5,1,6,2,0,8,null,null,7,4],5,4], expected: 5 },
   ],
+  bruteHint: 'Describe finding the full root-to-node path for p and for q separately, then comparing the two paths for their last shared node',
+  optimizeHint: 'Name the traversal where each recursive call reports what it found in its own subtree, so paths never need to be stored separately',
   clues: [
     {
       id: 'constraint-complexity',

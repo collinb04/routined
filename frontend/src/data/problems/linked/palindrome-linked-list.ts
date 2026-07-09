@@ -23,6 +23,8 @@ export default {
     { label: 'Single', args: [[1]], expected: true },
     { label: 'Odd palindrome', args: [[1,2,1]], expected: true },
   ],
+  bruteHint: 'Describe copying all values into an array and checking it reads the same forwards and backwards',
+  optimizeHint: 'Name the technique of finding the middle and reversing the second half in place to compare without extra space',
   clues: [
     {
       id: 'constraint-large-n',

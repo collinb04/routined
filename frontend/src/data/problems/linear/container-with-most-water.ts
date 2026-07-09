@@ -16,6 +16,8 @@ export default {
     { label: '[1,8,6,2,5,4,8,3,7]', args: [[1,8,6,2,5,4,8,3,7]], expected: 49 },
     { label: '[1,1]', args: [[1,1]], expected: 1 },
   ],
+  bruteHint: 'Describe checking every pair of walls and computing the area for each, and its time complexity',
+  optimizeHint: 'Name the two-pointer technique that starts at both ends and always moves the pointer at the shorter wall inward',
   clues: [
     {
       id: 'area-formula',

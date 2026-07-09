@@ -19,6 +19,8 @@ export default {
     { label: 'No zeros', args: [[1,2,3]], expected: [1,2,3] },
     { label: 'All zeros', args: [[0,0,0]], expected: [0,0,0] },
   ],
+  bruteHint: 'Describe building a new array to hold non-zero elements followed by zeros and its space cost',
+  optimizeHint: 'Name the in-place technique that swaps elements using two pointers in a single pass',
   clues: [
     {
       id: 'in-place-constraint',

@@ -23,6 +23,8 @@ export default {
     { label: 'Adjacent overlap', args: [[[1,3],[2,5]]], expected: false },
     { label: 'Empty', args: [[[]]], expected: true },
   ],
+  bruteHint: 'Describe checking every pair of meetings for overlap and its time complexity',
+  optimizeHint: 'Identify what sorting by start time lets you check using only adjacent pairs',
   clues: [
     {
       id: 'output-type',

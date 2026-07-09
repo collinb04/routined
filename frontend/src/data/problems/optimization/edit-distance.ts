@@ -16,6 +16,8 @@ export default {
     { label: '"intention"→"execution"', args: ['intention','execution'], expected: 5 },
     { label: 'Empty to word', args: ['','abc'], expected: 3 },
   ],
+  bruteHint: 'Describe the recursive approach that, at each pair of positions, branches into insert/delete/replace/match, and explain why the same (word1 position, word2 position) pairs get re-explored exponentially.',
+  optimizeHint: 'Name the two things the DP state needs to track — your position in word1 and your position in word2 — so each pair of prefixes is memoized once.',
   clues: [
     {
       id: 'constraint-complexity',

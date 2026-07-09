@@ -14,6 +14,8 @@ export default {
   testCases: [
     { label: 'Single level', args: [[1,2,3]], expected: [1,2,3] },
   ],
+  bruteHint: 'Describe collecting all nodes into a flat array during traversal, then rebuilding the pointers afterward',
+  optimizeHint: 'Name the traversal order that lets you splice each child list in place during a single pass',
   clues: [
     {
       id: 'output-single-level',

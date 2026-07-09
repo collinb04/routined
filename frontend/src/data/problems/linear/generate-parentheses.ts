@@ -18,6 +18,8 @@ export default {
     { label: 'n=3', args: [3], expected: ['((()))','(()())','(())()','()(())','()()()'] },
     { label: 'n=1', args: [1], expected: ['()'] },
   ],
+  bruteHint: 'Describe generating all 2^(2n) sequences of parentheses and filtering the valid ones, and why that wastes work',
+  optimizeHint: 'Name the technique that only adds a parenthesis when doing so keeps the sequence valid so far',
   clues: [
     {
       id: 'small-n-constraint',

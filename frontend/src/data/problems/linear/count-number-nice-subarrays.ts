@@ -17,6 +17,8 @@ export default {
     { label: 'No nice', args: [[2,4,6],1], expected: 0 },
     { label: 'All odd', args: [[1,3,5],2], expected: 2 },
   ],
+  bruteHint: 'Describe checking every subarray and counting its odd numbers, and the resulting time complexity',
+  optimizeHint: 'Name the technique that counts nice subarrays in a single pass — a sliding window, or a running count paired with a hash map',
   clues: [
     {
       id: 'odd-as-one-even-as-zero',

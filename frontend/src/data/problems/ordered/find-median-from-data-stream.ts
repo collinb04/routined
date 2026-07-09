@@ -29,6 +29,8 @@ export default {
     { label: 'odd/even', args: [['add_num','add_num','find_median','add_num','find_median'],[[1],[2],[],[3],[]]], expected: [1.5,2.0] },
     { label: 'single', args: [['add_num','find_median'],[[6],[]]], expected: [6.0] },
   ],
+  bruteHint: 'Describe what re-sorting (or inserting into a sorted list) the entire stream on every add_num call would cost.',
+  optimizeHint: 'Name the pair of structures that track the boundary elements between the lower and upper halves of the stream.',
   clues: [
     {
       id: 'streaming-structure',

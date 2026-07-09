@@ -66,6 +66,11 @@ def test_evaluate_requires_auth(client):
     assert res.status_code == 401
 
 
+def test_reset_requires_auth(client):
+    res = client.post('/api/problems/two-sum/struggle/reset')
+    assert res.status_code == 401
+
+
 # ── Commitment-before-chat guard ──────────────────────────────────────────────
 
 def test_chat_requires_prior_commit(client):

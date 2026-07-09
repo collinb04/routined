@@ -16,6 +16,8 @@ export default {
     { label: 'Simple trim', args: [[1,0,2],1,2], expected: [1,null,2] },
     { label: 'Multi-level trim', args: [[3,0,4,null,2,null,null,1],1,3], expected: [3,2,null,1] },
   ],
+  bruteHint: 'Describe collecting all in-range values via a full traversal into a list and then rebuilding a brand new BST from that filtered list',
+  optimizeHint: 'Name the technique that uses the BST ordering property to discard an entire subtree at once when a node falls outside the range, instead of visiting every descendant',
   clues: [
     {
       id: 'bst-property',

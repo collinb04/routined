@@ -1,45 +1,10 @@
 import json
 from os import environ as env
 from flask import request, Blueprint, session, jsonify
-from sqlalchemy import text
-from app.extensions import db
 import anthropic
+from app.routes.progress import _current_user, _persist_attempt, _mark_phase_complete, _reset_all_progress
 
 struggle_bp = Blueprint('struggle', __name__, url_prefix='/api/problems')
-
-
-def _current_user():
-    return session.get("user")
-
-
-def _persist_attempt(user_sub, problem_id, *, jsonb=None, plain=None):
-    """Upsert a phase_attempts row, setting JSONB and/or plain column values."""
-    if not user_sub:
-        return
-    jsonb = jsonb or {}
-    plain = plain or {}
-    parts = []
-    params = {"sub": user_sub, "problem_id": problem_id}
-    for k, v in jsonb.items():
-        parts.append(f"{k} = :{k}::jsonb")
-        params[k] = json.dumps(v)
-    for k, v in plain.items():
-        parts.append(f"{k} = :{k}")
-        params[k] = v
-    if not parts:
-        return
-    set_clause = ", ".join(parts + ["updated_at = NOW()"])
-    with db.engine.connect() as conn:
-        conn.execute(text("""
-            INSERT INTO phase_attempts (user_sub, problem_id, phase, created_at, updated_at)
-            VALUES (:sub, :problem_id, 'struggle', NOW(), NOW())
-            ON CONFLICT (user_sub, problem_id, phase) DO NOTHING
-        """), {"sub": user_sub, "problem_id": problem_id})
-        conn.execute(text(f"""
-            UPDATE phase_attempts SET {set_clause}
-            WHERE user_sub = :sub AND problem_id = :problem_id AND phase = 'struggle'
-        """), params)
-        conn.commit()
 
 
 # ── /commit ──────────────────────────────────────────────────────────────────
@@ -68,32 +33,56 @@ def commit(problem_id):
         "planSteps": plan_steps,
     }
 
+    synthesis_text = (data.get("synthesisText") or "").strip()
+    if synthesis_text:
+        session[f"struggle_{problem_id}_synthesis"] = synthesis_text
+
+    step_order_note = (data.get("stepOrderNote") or "").strip()
+    if step_order_note:
+        session[f"struggle_{problem_id}_step_order_note"] = step_order_note
+    else:
+        session.pop(f"struggle_{problem_id}_step_order_note", None)
+
     commit_key = f"struggle_{problem_id}_commitment"
     is_revise = bool(session.get(commit_key))
     session[commit_key] = commitment
     session.modified = True
 
-    db_field = "commitment2" if is_revise else "commitment1"
-    _persist_attempt(user.get("sub"), problem_id, jsonb={db_field: commitment})
+    _persist_attempt(user["sub"], problem_id, "struggle", state_patch={
+        "commitment": commitment,
+        "step": "chat",
+        "synthesisText": synthesis_text or None,
+        "stepOrderNote": step_order_note or None,
+    })
 
     return jsonify({"ok": True, "revise": is_revise})
 
 
 # ── /chat ─────────────────────────────────────────────────────────────────────
 
-def _socratic_system_prompt(problem_id, commitment, target_insight):
+def _socratic_system_prompt(problem_id, commitment, target_insight, synthesis, step_order_note):
     strategy = commitment.get("strategyId", "unknown")
     time_c = commitment.get("timeComplexity", "unknown")
     insight_line = (
         f"\nNever state or directly imply this insight: \"{target_insight}\"\n"
         if target_insight else ""
     )
+    synthesis_line = (
+        f"\nThe learner's own read on this problem before committing:\n\"{synthesis}\"\n"
+        "Reference or gently challenge this if it reveals a gap — but do not simply validate it.\n"
+        if synthesis else ""
+    )
+    step_order_line = (
+        f"\nNote on the learner's submitted step order: {step_order_note}\n"
+        "Only bring this up if it naturally helps illuminate a gap — do not make step ordering the focus of the conversation.\n"
+        if step_order_note else ""
+    )
     return f"""You are a Socratic coding tutor for the problem "{problem_id}".
 
 The learner has committed to:
 - Strategy: {strategy}
 - Time complexity: {time_c}
-{insight_line}
+{synthesis_line}{insight_line}{step_order_line}
 Your job: ask probing questions that help the learner discover weaknesses or improvements WITHOUT naming a better strategy or stating the key insight.
 
 Rules:
@@ -122,7 +111,9 @@ def chat(problem_id):
     if not messages:
         return jsonify({"error": "messages array is required"}), 400
 
-    system_prompt = _socratic_system_prompt(problem_id, commitment, target_insight)
+    synthesis = session.get(f"struggle_{problem_id}_synthesis", "")
+    step_order_note = session.get(f"struggle_{problem_id}_step_order_note", "")
+    system_prompt = _socratic_system_prompt(problem_id, commitment, target_insight, synthesis, step_order_note)
 
     client = anthropic.Anthropic(api_key=env.get("ANTHROPIC_API_KEY"))
     response = client.messages.create(
@@ -133,12 +124,24 @@ def chat(problem_id):
     )
     assistant_text = response.content[0].text
 
-    _persist_attempt(
-        user.get("sub"), problem_id,
-        jsonb={"chat_turns": messages + [{"role": "assistant", "content": assistant_text}]},
-    )
+    _persist_attempt(user["sub"], problem_id, "struggle", state_patch={
+        "chatMessages": messages + [{"role": "assistant", "content": assistant_text}],
+    })
 
     return jsonify({"content": assistant_text})
+
+
+# ── /reset ───────────────────────────────────────────────────────────────────
+
+@struggle_bp.route("/<problem_id>/struggle/reset", methods=["POST"])
+def reset(problem_id):
+    user = _current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    _clear_struggle_session(problem_id)
+    _reset_all_progress(user["sub"], problem_id)
+    return jsonify({"ok": True})
 
 
 # ── /evaluate-insight ─────────────────────────────────────────────────────────
@@ -166,7 +169,7 @@ def evaluate_insight(problem_id):
     fail_count = session.get(fail_key, 0)
 
     if fail_count >= 2:
-        _finish_struggle(problem_id, user.get("sub"), insight_text, passed=True)
+        _finish_struggle(problem_id, user["sub"], insight_text, passed=True)
         return jsonify({"pass": True, "forced": True})
 
     client = anthropic.Anthropic(api_key=env.get("ANTHROPIC_API_KEY"))
@@ -193,15 +196,19 @@ Respond ONLY with valid JSON — no markdown fences, no explanation:
     try:
         result = json.loads(raw)
     except (json.JSONDecodeError, ValueError):
-        result = {"pass": True}  # malformed response — be generous
+        result = {"pass": True}
 
     if result.get("pass"):
-        _finish_struggle(problem_id, user.get("sub"), insight_text, passed=True)
+        _finish_struggle(problem_id, user["sub"], insight_text, passed=True)
         return jsonify({"pass": True, "feedback": None})
 
     session[fail_key] = fail_count + 1
     session.modified = True
-    _persist_attempt(user.get("sub"), problem_id, plain={"insight_attempts": session[fail_key]})
+
+    _persist_attempt(user["sub"], problem_id, "struggle", state_patch={
+        "insightText": insight_text,
+        "insightFailCount": session[fail_key],
+    })
 
     return jsonify({
         "pass": False,
@@ -210,27 +217,19 @@ Respond ONLY with valid JSON — no markdown fences, no explanation:
     })
 
 
-def _finish_struggle(problem_id, user_sub, insight_text, passed):
-    for suffix in ("_commitment", "_insight_fails"):
+def _clear_struggle_session(problem_id):
+    for suffix in ("_commitment", "_insight_fails", "_synthesis", "_step_order_note"):
         session.pop(f"struggle_{problem_id}{suffix}", None)
     session.modified = True
 
+
+def _finish_struggle(problem_id, user_sub, insight_text, passed):
+    _clear_struggle_session(problem_id)
     if not user_sub:
         return
-    with db.engine.connect() as conn:
-        conn.execute(text("""
-            UPDATE phase_attempts
-            SET insight_text = :insight, insight_passed = :passed, updated_at = NOW()
-            WHERE user_sub = :sub AND problem_id = :problem_id AND phase = 'struggle'
-        """), {
-            "sub": user_sub,
-            "problem_id": problem_id,
-            "insight": insight_text,
-            "passed": passed,
-        })
-        conn.execute(text("""
-            INSERT INTO learn_progress (user_sub, problem_id, phase_completed, completed_at)
-            VALUES (:sub, :problem_id, 'struggle', NOW())
-            ON CONFLICT (user_sub, problem_id, phase_completed) DO NOTHING
-        """), {"sub": user_sub, "problem_id": problem_id})
-        conn.commit()
+    _persist_attempt(user_sub, problem_id, "struggle", state_patch={
+        "insightText": insight_text,
+        "insightPassed": passed,
+        "step": "done",
+    })
+    _mark_phase_complete(user_sub, problem_id, "struggle")

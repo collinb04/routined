@@ -34,6 +34,8 @@ def build_tree_run(pre, ino):
     { label: 'classic', args: [[3,9,20,15,7],[9,3,15,20,7]], expected: [3,9,20,null,null,15,7] },
     { label: 'single', args: [[-1],[-1]], expected: [-1] },
   ],
+  bruteHint: 'Describe scanning the inorder array for the root\'s value at every recursive call, and what that costs across all n nodes',
+  optimizeHint: 'Name the data structure that gives you the root\'s split point in O(1) instead of scanning',
   clues: [
     {
       id: 'preorder-root-signal',

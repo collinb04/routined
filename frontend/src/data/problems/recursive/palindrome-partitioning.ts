@@ -19,6 +19,8 @@ export default {
     { label: '"aab"', args: ['aab'], expected: [['a','a','b'],['aa','b']] },
     { label: '"a"', args: ['a'], expected: [['a']] },
   ],
+  bruteHint: 'Describe generating every possible way to split the string and checking afterward which splits consist entirely of palindromes',
+  optimizeHint: 'Name the technique of only extending a partition with a substring once you\'ve confirmed it\'s a palindrome, rather than checking at the end',
   clues: [
     {
       id: 'constraint-complexity',

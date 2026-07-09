@@ -17,6 +17,8 @@ export default {
     { label: 'Cannot reach', args: [[3,0,2,1,2],2], expected: false },
     { label: 'Start is zero', args: [[0],0], expected: true },
   ],
+  bruteHint: 'Describe what happens if you recurse on both jump directions without remembering which indices you\'ve already tried — why can it loop forever or redo the same work?',
+  optimizeHint: 'Name the structure that records which indices have already been explored so each one is visited only once',
   clues: [
     {
       id: 'constraint-complexity',

@@ -17,6 +17,8 @@ export default {
     { label: 'Three 3s', args: [[2,2,3,3,3,4]], expected: 9 },
     { label: 'Single', args: [[1]], expected: 1 },
   ],
+  bruteHint: 'Describe the recursive approach that, for each distinct value, branches into taking it (which forbids its neighbors) or skipping it, re-exploring the same remaining values repeatedly.',
+  optimizeHint: 'Name the classic pattern this reduces to, whose per-value DP state lets you avoid recomputing those overlapping subproblems.',
   clues: [
     {
       id: 'deletion-rule',

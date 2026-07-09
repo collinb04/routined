@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: ['a'], expected: 1 },
     { label: 'All same', args: ['aaaa'], expected: 4 },
   ],
+  bruteHint: 'Describe trying every subsequence and checking if it\'s a palindrome, and why that\'s exponential',
+  optimizeHint: 'Name the DP approach that compares characters from both ends of a substring inward',
   clues: [
     {
       id: 'subsequence-not-substring',

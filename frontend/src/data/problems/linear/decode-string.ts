@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: ['2[abc]'], expected: 'abcabc' },
     { label: 'No brackets', args: ['abc'], expected: 'abc' },
   ],
+  bruteHint: 'Describe repeatedly re-parsing and concatenating substrings at each bracket, and why that grows costly with nesting',
+  optimizeHint: 'Name the data structure that tracks the string built so far and the repeat count at each open bracket',
   clues: [
     {
       id: 'nesting-implies-stack',

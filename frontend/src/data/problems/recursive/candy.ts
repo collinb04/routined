@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: [[5]], expected: 1 },
     { label: 'Ascending', args: [[1,2,3]], expected: 6 },
   ],
+  bruteHint: 'Describe repeatedly scanning the array and bumping any child that violates a neighbor rule until no violations remain, and why that can take many passes',
+  optimizeHint: 'Name the technique of two one-directional scans, left-to-right then right-to-left, that resolves both neighbor constraints',
   clues: [
     {
       id: 'constraint-two-directions',

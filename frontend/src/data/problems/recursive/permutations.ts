@@ -18,6 +18,8 @@ export default {
     { label: '[1,2,3]', args: [[1,2,3]], expected: [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]] },
     { label: '[0,1]', args: [[0,1]], expected: [[0,1],[1,0]] },
   ],
+  bruteHint: 'Describe generating every length-n sequence of the elements (allowing repeats) and filtering for the ones that use each element exactly once',
+  optimizeHint: 'Name the technique of tracking which elements are already placed so every partial sequence you build stays a valid permutation',
   clues: [
     {
       id: 'constraint-complexity',

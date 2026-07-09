@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: [[1]], expected: [1] },
     { label: 'Already sorted', args: [[1,2,3]], expected: [1,2,3] },
   ],
+  bruteHint: 'Describe an O(n²) sorting approach like bubble or insertion sort and why it\'s too slow here',
+  optimizeHint: 'Name the divide-and-conquer sorting technique that achieves O(n log n) time',
   clues: [
     {
       id: 'constraint-complexity',

@@ -17,6 +17,8 @@ export default {
     { label: '1 turn', args: [['8888'],'0009'], expected: 1 },
     { label: 'Already there', args: [[],  '0000'], expected: 0 },
   ],
+  bruteHint: 'Describe a brute-force DFS that tries turning wheels in every order, and why it can\'t guarantee the fewest turns',
+  optimizeHint: 'Name the graph-search technique that explores the lock\'s combinations level by level to guarantee the minimum number of turns',
   clues: [
     {
       id: 'output-minimum',

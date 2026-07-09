@@ -17,6 +17,8 @@ export default {
     { label: 'Three points', args: [[[3,12],[-2,5],[-4,1]]], expected: 18 },
     { label: 'Single point', args: [[[0,0]]], expected: 0 },
   ],
+  bruteHint: 'Describe trying every possible set of edges that connects all points, and its exponential complexity',
+  optimizeHint: 'Name the algorithm (Prim\'s or Kruskal\'s) that builds a Minimum Spanning Tree to connect all points at minimum total cost',
   clues: [
     {
       id: 'constraint-complexity',

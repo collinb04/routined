@@ -19,6 +19,8 @@ export default {
   testCases: [
     { label: '4x4', args: [[[2147483647,-1,0,2147483647],[2147483647,2147483647,2147483647,-1],[2147483647,-1,2147483647,-1],[0,-1,2147483647,2147483647]]], expected: [[3,-1,0,1],[2,2,1,-1],[1,-1,2,-1],[0,-1,3,4]] },
   ],
+  bruteHint: 'Describe a brute-force approach that runs a separate traversal from every empty room to find its nearest gate, and its time complexity',
+  optimizeHint: 'Name the traversal technique that starts from all gates simultaneously instead of searching outward from each room',
   clues: [
     {
       id: 'nearest-gate-implies-bfs',

@@ -18,6 +18,8 @@ export default {
     { label: 'Negatives', args: [-1,-2], expected: -3 },
     { label: 'One negative', args: [5,-3], expected: 2 },
   ],
+  bruteHint: 'Describe how XOR and a shifted AND combine to simulate addition with carry',
+  optimizeHint: 'Name the fix needed so this terminates correctly for negative numbers given arbitrary-precision integers',
   clues: [
     {
       id: 'xor-as-addition',

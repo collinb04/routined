@@ -16,6 +16,8 @@ export default {
     { label: 'No replacement', args: [['a'],'b c d'], expected: 'b c d' },
     { label: 'Multiple roots', args: [['a','b','ab'],'ab ac bc'], expected: 'a a b' },
   ],
+  bruteHint: 'Describe checking every prefix length of each sentence word against the dictionary roots, and the cost across all words',
+  optimizeHint: 'Name the structure that lets you find a word\'s shortest matching root in a single O(length) walk',
   clues: [
     {
       id: 'constraint-complexity',

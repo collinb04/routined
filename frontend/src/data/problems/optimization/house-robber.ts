@@ -16,6 +16,8 @@ export default {
     { label: '[1,2,3,1]', args: [[1,2,3,1]], expected: 4 },
     { label: '[2,7,9,3,1]', args: [[2,7,9,3,1]], expected: 12 },
   ],
+  bruteHint: 'Describe the naive recursion that tries robbing or skipping each house, and why the same suffix gets recomputed exponentially many times',
+  optimizeHint: 'Name the DP state (best total up to house i) that lets each subproblem be solved once instead of recomputed',
   clues: [
     {
       id: 'adjacency-constraint',

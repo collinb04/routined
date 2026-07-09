@@ -46,6 +46,8 @@ def invert_tree_run(arr):
     { label: '[4,2,7,1,3,6,9]', args: [[4,2,7,1,3,6,9]], expected: [4,7,2,9,6,3,1] },
     { label: '[2,1,3]', args: [[2,1,3]], expected: [2,3,1] },
   ],
+  bruteHint: 'Describe collecting all node values into a separate structure and building an entirely new mirrored tree instead of modifying the existing one',
+  optimizeHint: 'Name the single operation you can perform at each node, using only its own left and right pointers, to mirror the tree in place during one pass',
   clues: [
     {
       id: 'what-invert-means',

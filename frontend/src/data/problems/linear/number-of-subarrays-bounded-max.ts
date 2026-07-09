@@ -15,6 +15,8 @@ export default {
     { label: 'Three subarrays', args: [[2,1,4,3],2,3], expected: 3 },
     { label: 'All in range', args: [[1,2,3],1,3], expected: 6 },
   ],
+  bruteHint: 'Describe checking every subarray and its time complexity',
+  optimizeHint: 'Name the two single-pass counts (each with a threshold) whose difference gives you subarrays with max in [left, right]',
   clues: [
     {
       id: 'input-size-complexity',

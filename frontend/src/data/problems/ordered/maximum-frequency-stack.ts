@@ -21,6 +21,8 @@ export default {
   testCases: [
     { label: 'Standard', args: [[[5,7,5,7,4,5]]], expected: [5,7,5,4] },
   ],
+  bruteHint: 'Describe what a linear scan through the whole collection on every pop, to find the most frequent and most recent element, would cost.',
+  optimizeHint: 'Name the structure that groups elements by frequency so the most recent element in the max-frequency group is instantly accessible.',
   clues: [
     {
       id: 'pop-priority-rule',

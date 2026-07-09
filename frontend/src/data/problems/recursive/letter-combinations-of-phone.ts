@@ -19,6 +19,8 @@ export default {
     { label: '"23"', args: ['23'], expected: ['ad','ae','af','bd','be','bf','cd','ce','cf'] },
     { label: 'empty', args: [''], expected: [] },
   ],
+  bruteHint: 'Describe building up the combinations iteratively, using a nested loop per digit to expand a growing list of partial strings at every step',
+  optimizeHint: 'Name the recursive technique that builds one combination at a time, one character per digit, undoing each choice before trying the next',
   clues: [
     {
       id: 'output-count',

@@ -16,6 +16,8 @@ export default {
     { label: '[10,15,20]', args: [[10,15,20]], expected: 15 },
     { label: 'longer', args: [[1,100,1,1,1,100,1,1,100,1]], expected: 6 },
   ],
+  bruteHint: 'Describe the naive recursion that tries one-step and two-step moves from every position, and why it recomputes the same positions repeatedly',
+  optimizeHint: 'Name the technique for caching each position\'s minimum cost, and how few previous values you need to keep',
   clues: [
     {
       id: 'constraint-complexity',

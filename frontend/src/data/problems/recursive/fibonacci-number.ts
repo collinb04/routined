@@ -20,6 +20,8 @@ export default {
     { label: 'F(10)', args: [10], expected: 55 },
     { label: 'F(20)', args: [20], expected: 6765 },
   ],
+  bruteHint: 'Describe the plain double-recursive definition fib(n) = fib(n-1) + fib(n-2) and why it recomputes the same smaller values many times over',
+  optimizeHint: 'Name the technique that stores each computed value the first time so it never needs to be recomputed',
   clues: [
     {
       id: 'constraint-complexity',

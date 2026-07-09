@@ -18,6 +18,8 @@ export default {
     { label: 'k=7', args: [[1,2,3,4,5,6],7], expected: true },
     { label: 'k=10', args: [[1,2,3,4,5,6],10], expected: false },
   ],
+  bruteHint: 'Describe checking every pair of elements for divisibility by k and its time complexity',
+  optimizeHint: 'Name the structure that lets you count how many elements fall into each remainder class mod k',
   clues: [
     {
       id: 'remainder-insight',

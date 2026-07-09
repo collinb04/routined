@@ -17,6 +17,8 @@ export default {
     { label: 'Invalid', args: [[1,2,3,4,5],4], expected: false },
     { label: 'Single group', args: [[1,2,3],3], expected: true },
   ],
+  bruteHint: 'Describe exhaustively trying every way to partition the cards into groups and why the number of possibilities explodes',
+  optimizeHint: 'Name the greedy rule about which card is forced to start a new group, and the structure that tracks how many of each card value remain',
   clues: [
     {
       id: 'divisibility-check',

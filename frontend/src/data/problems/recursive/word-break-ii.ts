@@ -15,6 +15,8 @@ export default {
     { label: 'Two sentences', args: ['catsanddog',['cat','cats','and','sand','dog']], expected: ['cat sand dog','cats and dog'] },
     { label: 'No solution', args: ['a',['b']], expected: [] },
   ],
+  bruteHint: 'Describe trying every possible split point recursively without caching results, and name the exponential blowup from re-solving the same suffix repeatedly',
+  optimizeHint: 'Name the technique that caches the list of valid sentences for each starting index so overlapping suffixes are only solved once',
   clues: [
     {
       id: 'constraint-small-string',

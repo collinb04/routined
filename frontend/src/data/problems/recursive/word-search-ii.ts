@@ -16,6 +16,8 @@ export default {
     { label: 'Single cell', args: [[['a']],['a']], expected: ['a'] },
     { label: 'No matches', args: [[['a','b'],['c','d']],['xyz']], expected: [] },
   ],
+  bruteHint: 'Describe running an independent word-search DFS over the entire board once for every word in the dictionary, and name why that repeats the same board traversal many times over',
+  optimizeHint: 'Name the data structure that lets you combine all dictionary words into a single DFS over the board, pruning a branch the moment no word shares that prefix',
   clues: [
     {
       id: 'constraint-many-words',

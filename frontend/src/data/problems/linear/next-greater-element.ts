@@ -22,6 +22,8 @@ export default {
     { label: 'All descending', args: [[1, 3, 5], [5, 4, 3, 2, 1]], expected: [-1, -1, -1] },
     { label: 'Single element', args: [[1], [1, 2]], expected: [2] },
   ],
+  bruteHint: 'Describe scanning forward from each element to find its next greater and its time complexity',
+  optimizeHint: 'Name the kind of stack that lets you find every next-greater relationship in a single pass',
   clues: [
     {
       id: 'constraint-complexity',

@@ -150,7 +150,8 @@ function insertStruggleBlock(src, struggle) {
   const before = src.slice(0, lastBrace).trimEnd()
   const after = src.slice(lastBrace)
 
-  return before + ',\n' + json + '\n' + after
+  const sep = before.endsWith(',') ? '\n' : ',\n'
+  return before + sep + json + '\n' + after
 }
 
 // ── Dry run (single problem, synchronous) ────────────────────────────────────
@@ -188,7 +189,7 @@ async function dryRun(targetId) {
   console.log('\n--- GENERATING ---')
 
   const message = await client.messages.create({
-    model: 'claude-opus-4-8-20251101',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2048,
     messages: [{ role: 'user', content: prompt }],
   })
@@ -240,7 +241,7 @@ async function runBatch() {
     return {
       custom_id: meta.id,
       params: {
-        model: 'claude-opus-4-8-20251101',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2048,
         messages: [{ role: 'user', content: buildPrompt(meta, cluster) }],
       },

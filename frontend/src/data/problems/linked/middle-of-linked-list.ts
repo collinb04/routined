@@ -21,6 +21,8 @@ export default {
     { label: 'Even length', args: [[1,2,3,4,5,6]], expected: [4,5,6] },
     { label: 'Single', args: [[1]], expected: [1] },
   ],
+  bruteHint: 'Describe counting the list length in one pass, then walking to the middle in a second pass',
+  optimizeHint: 'Name the two-pointer technique that finds the middle node in a single pass',
   clues: [
     {
       id: 'no-random-access',

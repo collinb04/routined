@@ -19,6 +19,8 @@ export default {
     { label: 'Mixed', args: [' 3+5 / 2 '], expected: 5 },
     { label: 'Subtraction', args: ['10-3*2+1'], expected: 5 },
   ],
+  bruteHint: 'Describe evaluating the expression naively from left to right without respecting operator precedence, and why that breaks on * and /',
+  optimizeHint: 'Name the data structure that lets you evaluate in a single pass by tracking the last number and the operator that precedes it',
   clues: [
     {
       id: 'operator-precedence',

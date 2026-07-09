@@ -17,6 +17,8 @@ export default {
     { label: 'All same', args: [[2,2,2,2,2],8], expected: [[2,2,2,2]] },
     { label: 'No solution', args: [[1,2,3,4],100], expected: [] },
   ],
+  bruteHint: 'Describe the quadruple nested loop over all combinations of four numbers and its time complexity',
+  optimizeHint: 'Name the technique that sorts the array first, fixes two elements with nested loops, then uses two pointers converging from both ends for the remaining pair',
   clues: [
     {
       id: 'constraint-complexity',

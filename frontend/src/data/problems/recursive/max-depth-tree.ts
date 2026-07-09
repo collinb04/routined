@@ -23,6 +23,8 @@ export default {
     { label: 'Empty tree', args: [[]], expected: 0 },
     { label: 'Left skewed', args: [[1, 2, null, 3]], expected: 3 },
   ],
+  bruteHint: 'Describe recomputing the distance from the root to each node independently, rather than reusing work already done for its subtrees',
+  optimizeHint: 'Name the recursive pattern where each node\'s depth is computed once, directly from its children\'s already-computed depths',
   clues: [
     {
       id: 'constraint-complexity',

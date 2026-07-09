@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: [[0]], expected: 0 },
     { label: 'Three jumps', args: [[1,1,1,1]], expected: 3 },
   ],
+  bruteHint: 'Describe trying every possible jump length from each position recursively (or checking reachability from every index with DP) and the complexity that results',
+  optimizeHint: 'Name the greedy idea of tracking the farthest index reachable within your current "jump window," and what event tells you it\'s time to use another jump',
   clues: [
     {
       id: 'always-reachable-guarantee',

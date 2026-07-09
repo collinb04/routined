@@ -17,6 +17,8 @@ export default {
     { label: 'Four separate', args: [[[1,2],[3,4],[5,6],[7,8]]], expected: 4 },
     { label: 'All overlap', args: [[[1,10],[2,9],[3,8]]], expected: 1 },
   ],
+  bruteHint: 'Describe checking every pair of balloons to group overlapping ones, and its time complexity',
+  optimizeHint: 'Name the greedy strategy — sorting by end coordinate — that lets you pick shot points in one pass',
   clues: [
     {
       id: 'constraint-complexity',

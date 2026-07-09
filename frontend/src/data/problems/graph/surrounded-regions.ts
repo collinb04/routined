@@ -19,6 +19,8 @@ export default {
   testCases: [
     { label: 'classic', args: [[['X','X','X','X'],['X','O','O','X'],['X','X','O','X'],['X','O','X','X']]], expected: [['X','X','X','X'],['X','X','X','X'],['X','X','X','X'],['X','O','X','X']] },
   ],
+  bruteHint: 'Describe a brute-force approach that, for every open cell, runs a traversal to check whether it can reach the border, and its time complexity',
+  optimizeHint: 'Name the traversal strategy that starts from the border cells and works inward instead of checking each region individually',
   clues: [
     {
       id: 'border-rule',

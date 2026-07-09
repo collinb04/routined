@@ -19,6 +19,8 @@ export default {
     { label: 'target=8', args: [[10,1,2,7,6,1,5], 8], expected: [[1,1,6],[1,2,5],[1,7],[2,6]] },
     { label: 'target=5', args: [[2,5,2,1,2], 5], expected: [[1,2,2],[5]] },
   ],
+  bruteHint: 'Describe generating every subset of candidates and filtering for ones that sum to target without duplicates',
+  optimizeHint: 'Name the technique of building combinations incrementally and skipping a branch as soon as it can\'t lead to a valid, unique combination',
   clues: [
     {
       id: 'duplicate-input-signal',

@@ -50,6 +50,8 @@ def codec_run(arr):
     { label: '[1,2,3,null,null,4,5]', args: [[1,2,3,null,null,4,5]], expected: [1,2,3,null,null,4,5] },
     { label: 'empty', args: [[]], expected: [] },
   ],
+  bruteHint: 'Describe why storing just node values (e.g. a level-order list without null markers) makes the serialization ambiguous and unable to reconstruct the exact tree shape',
+  optimizeHint: 'Name the traversal order and marker convention that lets deserialize rebuild the tree unambiguously in one pass',
   clues: [
     {
       id: 'constraint-node-count',

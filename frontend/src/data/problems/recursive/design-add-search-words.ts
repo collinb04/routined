@@ -21,6 +21,8 @@ export default {
   testCases: [
     { label: 'Wildcard search', args: [['addWord','addWord','addWord','search','search','search','search'],['bad','dad','mad','pad','bad','.ad','b..']], expected: [null,null,null,false,true,true,true] },
   ],
+  bruteHint: 'Describe storing every added word in a list and, for each search call, scanning through all of them and comparing characters (including the \'.\' wildcard) one by one',
+  optimizeHint: 'Explain how a trie\'s per-character nodes let you match position by position instead of scanning every stored word, and describe how you would explore multiple branches when you hit a \'.\' in the pattern',
   clues: [
     {
       id: 'prefix-sharing-structure',

@@ -22,6 +22,8 @@ export default {
     { label: 'Full array', args: [[-2, 0, 3, -5, 2, -1], 0, 5], expected: -3 },
     { label: 'Single element', args: [[3, 5, 2], 1, 1], expected: 5 },
   ],
+  bruteHint: 'Describe summing the elements in the range from scratch, and name its time complexity',
+  optimizeHint: 'Name the precomputed structure that turns each query into an O(1) lookup',
   clues: [
     {
       id: 'o1-query-requirement',

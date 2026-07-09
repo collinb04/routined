@@ -54,6 +54,8 @@ def level_order(vals):
     { label: 'Empty', args: [[]], expected: [] },
     { label: 'Two levels', args: [[1,2,3]], expected: [[1],[2,3]] },
   ],
+  bruteHint: 'Describe traversing the entire tree once per depth level to collect the values at that depth, and why repeating a full traversal for every level is wasteful',
+  optimizeHint: 'Name the single-pass traversal order and data structure that naturally groups nodes level by level without revisiting the tree',
   clues: [
     {
       id: 'output-structure',

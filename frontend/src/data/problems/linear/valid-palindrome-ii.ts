@@ -19,6 +19,8 @@ export default {
     { label: 'Not possible', args: ['abc'], expected: false },
     { label: 'Empty-like', args: ['a'], expected: true },
   ],
+  bruteHint: 'Describe trying to remove each character one at a time and re-checking, and its time complexity',
+  optimizeHint: 'Explain how allowing one mismatch by skipping either the left or right character extends a two-pointer check',
   clues: [
     {
       id: 'two-pointer-palindrome-check',

@@ -1,13 +1,22 @@
 <template>
-  <div class="flex overflow-hidden" style="height: calc(100vh - 4rem); background: #111215">
+  <div class="flex" style="background: #111215">
 
-    <!-- Sidebar -->
+    <!-- Mobile backdrop (tap outside to close) -->
+    <div
+      v-if="sidebarOpen"
+      class="fixed inset-0 z-30 bg-black/40 lg:hidden"
+      @click="sidebarOpen = false"
+    />
+
+    <!-- Sidebar / mobile dropdown -->
     <aside
-      class="flex flex-col transition-all duration-300 shrink-0 overflow-hidden border-r"
+      class="z-40 fixed lg:sticky top-16 left-0 right-0 lg:right-auto lg:self-start lg:h-[calc(100vh-4rem)] flex flex-col transition-all duration-300 shrink-0 border-b lg:border-b-0 lg:border-r"
       style="border-color: rgba(255,255,255,0.07); background: #0d0f11"
-      :class="sidebarOpen ? 'w-56' : 'w-0'"
+      :class="sidebarOpen
+        ? 'max-h-[70vh] overflow-y-auto shadow-xl lg:shadow-none lg:overflow-hidden lg:max-h-none lg:w-56'
+        : 'max-h-0 overflow-hidden lg:max-h-none lg:w-0'"
     >
-      <div class="w-56 flex items-center justify-between px-4 pt-6 pb-3">
+      <div class="w-full lg:w-56 flex items-center justify-between px-4 pt-6 pb-3">
         <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(255,255,255,0.3)">Topics</span>
         <button class="p-1 rounded-md transition-colors" style="color:rgba(255,255,255,0.3)" @click="sidebarOpen = false">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -16,7 +25,7 @@
         </button>
       </div>
 
-      <nav class="w-56 flex-1 overflow-y-auto pb-6 px-2">
+      <nav class="topics-nav w-full lg:w-56 flex-1 overflow-y-auto pb-6 px-2">
         <button
           v-for="(topic, i) in topics"
           :key="topic.id"
@@ -40,10 +49,10 @@
     </aside>
 
     <!-- Main -->
-    <main ref="mainEl" class="flex-1 overflow-y-auto relative" style="background: #111215">
+    <main ref="mainEl" class="flex-1 min-h-[calc(100vh-4rem)] relative" style="background: #111215">
 
       <!-- Top bar -->
-      <div class="flex items-center gap-3 px-6 pt-5 pb-2">
+      <div class="sticky top-16 z-10 flex items-center gap-3 px-6 pt-5 pb-2 bg-transparent">
         <button
           class="p-1.5 -ml-1.5 rounded-md transition-colors"
           style="color:rgba(255,255,255,0.35)"
@@ -81,6 +90,49 @@
             {{ selectedTopic.subtitle }}
           </h1>
 
+          <!-- Problem set dropdown -->
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-[11px] font-medium" style="color:rgba(255,255,255,0.35)">Problem set</span>
+            <div class="relative">
+              <button
+                class="flex items-center justify-between gap-2 w-36 text-[12px] font-medium rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                style="background:rgba(255,255,255,0.06); color:#f5f5f2; border:1px solid rgba(255,255,255,0.1)"
+                @click="problemFilterOpen = !problemFilterOpen"
+              >
+                <span>{{ problemFilter === 'select' ? 'Select problems' : 'All problems' }}</span>
+                <svg
+                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="shrink-0 transition-transform duration-150"
+                  :style="{ transform: problemFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"
+                >
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </button>
+
+              <div v-if="problemFilterOpen" class="fixed inset-0 z-10" @click="problemFilterOpen = false" />
+
+              <div
+                v-if="problemFilterOpen"
+                class="absolute top-full left-0 mt-1.5 w-36 rounded-lg overflow-hidden z-20"
+                style="background:#15171a; border:1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 28px rgba(0,0,0,0.45)"
+              >
+                <button
+                  v-for="opt in [{ value: 'select', label: 'Select problems' }, { value: 'all', label: 'All problems' }]"
+                  :key="opt.value"
+                  class="w-full text-left px-2.5 py-2 text-[12px] font-medium transition-colors cursor-pointer"
+                  :class="problemFilter === opt.value ? '' : 'hover:bg-white/5'"
+                  :style="problemFilter === opt.value
+                    ? 'background:rgba(255,255,255,0.08); color:#f5f5f2'
+                    : 'color:rgba(255,255,255,0.5)'"
+                  @click="setProblemFilter(opt.value)"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Progress -->
           <div class="flex items-center gap-3 mt-0.5">
             <div class="flex-1 h-0.75 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07)">
@@ -90,7 +142,7 @@
               />
             </div>
             <span class="text-[12px] tabular-nums shrink-0" style="color:rgba(255,255,255,0.3)">
-              {{ doneCount }} / {{ selectedTopic.problems.length }}
+              {{ doneCount }} / {{ visibleProblems.length }}
             </span>
           </div>
         </div>
@@ -107,7 +159,7 @@
 
           <!-- Rows -->
           <div
-            v-for="problem in selectedTopic.problems"
+            v-for="problem in visibleProblems"
             :key="problem.id"
             class="flex items-center px-4 py-3.5 cursor-pointer border-b last:border-0 transition-colors relative"
             :style="problem.done
@@ -166,19 +218,99 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 
 const router = useRouter()
-const sidebarOpen = ref(true)
+const sidebarOpen = ref(window.innerWidth >= 1024)
 const selectedTopic = ref(null)
 const mainEl = ref(null)
 
-const doneCount = computed(() => selectedTopic.value?.problems.filter(p => p.done).length ?? 0)
+// 'select' shows only the most crucial problem per topic (the platform's original
+// curated list, ids below each topic's later bonus-expansion range); 'all' shows
+// every problem, including the expansion batch appended after the original set.
+const PROBLEM_FILTER_KEY = 'routined:problemFilter'
+
+function loadProblemFilter() {
+  try {
+    const saved = localStorage.getItem(PROBLEM_FILTER_KEY)
+    return saved === 'select' || saved === 'all' ? saved : 'all'
+  } catch {
+    return 'all'
+  }
+}
+
+const problemFilter = ref(loadProblemFilter())
+const problemFilterOpen = ref(false)
+
+function setProblemFilter(value) {
+  problemFilter.value = value
+  problemFilterOpen.value = false
+  try {
+    localStorage.setItem(PROBLEM_FILTER_KEY, value)
+  } catch {
+    // best-effort — falls back to session-only if storage is unavailable
+  }
+}
+
+const ESSENTIAL_IDS = new Set([
+  // Arrays & Hashing
+  1, 2, 3, 4, 5, 6, 7, 8,
+  // Two Pointers
+  9, 10, 11, 12, 13,
+  // Sliding Window
+  14, 15, 16, 17, 18, 19,
+  // Stack
+  20, 21, 22, 23, 24, 25, 26,
+  // Binary Search
+  27, 28, 29, 30, 31, 32, 33,
+  // Linked List
+  34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+  // Trees
+  45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+  // Heap / Priority Queue
+  60, 61, 62, 63, 64, 65, 66,
+  // Backtracking
+  67, 68, 69, 70, 71, 72, 73, 74, 75,
+  // Graphs
+  76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
+  // 1D Dynamic Programming
+  89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
+  // Tries — Implement Trie, Design Add and Search Words, Word Search II
+  101, 102, 103,
+  // Intervals — Merge, Insert, Non-Overlapping, Meeting Rooms II, Min Arrows, Employee Free Time
+  106, 107, 108, 109, 110, 111,
+  // Greedy — Jump Game(s), Gas Station, Hand of Straights, Merge Triplets, Partition Labels, Valid Parenthesis String
+  114, 115, 116, 117, 118, 119, 120,
+  // Advanced Graphs — Reconstruct Itinerary, Min Cost to Connect Points, Network Delay Time, Swim in Rising Water, Cheapest Flights
+  124, 125, 126, 127, 128,
+  // 2D Dynamic Programming — LCS, Stock w/ Cooldown, Coin Change II, Target Sum, Longest Increasing Path, Edit Distance
+  133, 134, 135, 136, 138, 140,
+  // Bit Manipulation — Single Number, Number of 1 Bits, Counting Bits, Missing Number, Sum of Two Integers
+  144, 145, 146, 148, 149,
+  // Math & Geometry — Rotate Image, Spiral Matrix, Set Matrix Zeroes, Happy Number, Plus One, Pow(x,n), Multiply Strings, Detect Squares
+  152, 153, 154, 155, 156, 157, 158, 159,
+  // Monotonic Stack — Next Greater Element II, Online Stock Span, Sum of Subarray Minimums, 132 Pattern, Remove Duplicate Letters
+  163, 164, 165, 166, 167,
+  // String Manipulation — Valid Palindrome II, Longest Palindromic Subsequence, Reverse Words, atoi, Encode/Decode Strings, Longest Common Prefix
+  171, 172, 173, 174, 176, 182,
+  // Sorting — Sort an Array, Merge Sorted Array, H-Index, Largest Number
+  183, 184, 185, 186,
+  // Prefix Sum — Running Sum, Range Sum Query - Immutable, Contiguous Array, Find Pivot Index
+  189, 190, 191, 192,
+])
+
+const visibleProblems = computed(() => {
+  if (!selectedTopic.value) return []
+  if (problemFilter.value === 'all') return selectedTopic.value.problems
+  return selectedTopic.value.problems.filter(p => ESSENTIAL_IDS.has(p.id))
+})
+
+const doneCount = computed(() => visibleProblems.value.filter(p => p.done).length)
 const progressPct = computed(() => {
-  if (!selectedTopic.value) return 0
-  return Math.round((doneCount.value / selectedTopic.value.problems.length) * 100)
+  if (!visibleProblems.value.length) return 0
+  return Math.round((doneCount.value / visibleProblems.value.length) * 100)
 })
 
 function isTopicComplete(topic) {
@@ -193,9 +325,40 @@ function fireGoldConfetti() {
   setTimeout(() => burst({ origin: { x: 0.5, y: 0.5 }, angle: 90, particleCount: 50 }), 300)
 }
 
+async function persistChecklist(topicId, problemId, done) {
+  try {
+    await fetch('/api/checklist/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ topicId, problemId, done }),
+    })
+  } catch {
+    // best-effort — local toggle already reflects the user's action
+  }
+}
+
 function toggleDone(topic, problem) {
   problem.done = !problem.done
   if (problem.done && isTopicComplete(topic)) fireGoldConfetti()
+  persistChecklist(topic.id, problem.id, problem.done)
+}
+
+async function loadChecklist() {
+  try {
+    const res = await fetch('/api/checklist', { credentials: 'include' })
+    if (!res.ok) return
+    const saved = await res.json()
+    for (const topic of topics) {
+      const doneIds = saved[topic.id]
+      if (!doneIds) continue
+      for (const problem of topic.problems) {
+        if (doneIds[String(problem.id)]) problem.done = true
+      }
+    }
+  } catch {
+    // best-effort — checklist just starts unchecked
+  }
 }
 
 function scrollDown() {
@@ -1001,5 +1164,57 @@ const topics = reactive([
   },
 ])
 
-onMounted(() => { selectedTopic.value = topics[0] })
+onMounted(() => {
+  selectedTopic.value = topics[0]
+  loadChecklist()
+  document.body.classList.add('product-page-scroll')
+})
+
+onUnmounted(() => {
+  document.body.classList.remove('product-page-scroll')
+})
 </script>
+
+<style>
+/* Page-level scrollbar (the whole dark Problems page now scrolls under the
+   sticky sidebar) — force a light thumb instead of the browser's default grey,
+   scoped to this page only via a body class toggled on mount/unmount. */
+body.product-page-scroll {
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+body.product-page-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+body.product-page-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.product-page-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+}
+body.product-page-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+</style>
+
+<style scoped>
+/* Sidebar topic list scrollbar — dark thumb so it sits quietly against the
+   sidebar's near-black background instead of the browser's default light one. */
+.topics-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.55) transparent;
+}
+.topics-nav::-webkit-scrollbar {
+  width: 8px;
+}
+.topics-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.topics-nav::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 6px;
+}
+.topics-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+</style>

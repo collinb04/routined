@@ -18,6 +18,8 @@ export default {
     { label: 'All same', args: ['aaa'], expected: 0 },
     { label: 'Single', args: ['a'], expected: 1 },
   ],
+  bruteHint: 'Describe repeatedly rescanning the string to remove adjacent matching pairs and why that\'s wasteful',
+  optimizeHint: 'Name the structure that removes the top element whenever the current character matches it',
   clues: [
     {
       id: 'constraint-complexity',

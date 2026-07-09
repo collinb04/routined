@@ -16,6 +16,8 @@ export default {
     { label: 'k=3', args: [3,0,[1,2,3],[0,1,2]], expected: 6 },
     { label: 'k=0', args: [0,5,[1,2],[0,0]], expected: 5 },
   ],
+  bruteHint: 'Describe the naive approach of scanning every project each round to find the best one you can currently afford, and its time complexity.',
+  optimizeHint: 'Name the data structure that quickly surfaces the highest-profit project among those currently affordable.',
   clues: [
     {
       id: 'constraint-k-projects',

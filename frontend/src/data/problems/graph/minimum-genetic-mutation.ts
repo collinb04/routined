@@ -17,6 +17,8 @@ export default {
     { label: '2 mutations', args: ['AACCGGTT','AAACGGTA',['AACCGGTA','AACCGCTA','AAACGGTA']], expected: 2 },
     { label: 'Impossible', args: ['AACCGGTT','AAACGGTA',['AACCGGTA']], expected: -1 },
   ],
+  bruteHint: 'Describe exploring mutation sequences with DFS without tracking path length, and why that doesn\'t guarantee the fewest mutations',
+  optimizeHint: 'Name the traversal technique that expands one mutation at a time to guarantee the shortest path',
   clues: [
     {
       id: 'minimum-mutations',

@@ -41,6 +41,7 @@ let pyodide: PyodideInterface | null = null
 
 const initPromise = loadPyodide({
   indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.0/full/',
+  fullStdLib: false,
 }).then((p: PyodideInterface) => {
   pyodide = p
   self.postMessage({ type: 'ready' })
@@ -78,8 +79,12 @@ for __t in __test_data:
     try:
         __out = ${functionName}(*__t['args'])
         __exp = __t['expected']
-        __passed = __out == __exp
-        __results.append({'label': __t['label'], 'passed': __passed, 'actual': __out, 'expected': __exp})
+        # Round-trip through JSON before comparing so type differences that
+        # don't matter for the problem's I/O contract (e.g. a returned tuple
+        # vs. the expected list) don't fail an otherwise-correct answer.
+        __out_norm = __json.loads(__json.dumps(__out, default=str))
+        __passed = __out_norm == __exp
+        __results.append({'label': __t['label'], 'passed': __passed, 'actual': __out_norm, 'expected': __exp})
     except Exception as __e:
         __results.append({'label': __t['label'], 'passed': False, 'actual': None, 'expected': __t['expected'], 'error': str(__e)})
 

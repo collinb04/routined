@@ -17,6 +17,8 @@ export default {
     { label: 'Three provinces', args: [[[1,0,0],[0,1,0],[0,0,1]]], expected: 3 },
     { label: 'One province', args: [[[1,1,1],[1,1,1],[1,1,1]]], expected: 1 },
   ],
+  bruteHint: 'Describe checking reachability between every pair of cities individually using the matrix, and its time complexity',
+  optimizeHint: 'Name the technique (Union-Find or repeated DFS/BFS) that groups cities into provinces by visiting each unvisited city exactly once',
   clues: [
     {
       id: 'input-format',

@@ -32,6 +32,8 @@ def reverse_k_group_run(arr, k):
     { label: 'k=2', args: [[1,2,3,4,5], 2], expected: [2,1,4,3,5] },
     { label: 'k=3', args: [[1,2,3,4,5], 3], expected: [3,2,1,4,5] },
   ],
+  bruteHint: 'Describe collecting each group\'s values into an array, reversing it, and writing the values back into the nodes',
+  optimizeHint: 'Name the technique of reversing each k-sized group\'s pointers in place, then reconnecting neighboring groups',
   clues: [
     {
       id: 'remainder-unchanged',

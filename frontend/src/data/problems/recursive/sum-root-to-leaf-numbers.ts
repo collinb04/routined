@@ -17,6 +17,8 @@ export default {
     { label: 'Three paths', args: [[4,9,0,5,1]], expected: 1026 },
     { label: 'Single node', args: [[5]], expected: 5 },
   ],
+  bruteHint: 'Describe collecting each full root-to-leaf path into a list first, converting each completed path into a number, and summing them afterward',
+  optimizeHint: 'Name the technique that carries a running accumulated number down through the recursion so each leaf can contribute its total without ever storing the full path',
   clues: [
     {
       id: 'node-val-range',

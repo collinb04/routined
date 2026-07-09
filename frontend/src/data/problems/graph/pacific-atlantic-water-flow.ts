@@ -17,6 +17,8 @@ export default {
   testCases: [
     { label: '5x5', args: [[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]], expected: [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]] },
   ],
+  bruteHint: 'Describe the brute-force approach of running a traversal from every single cell to check if it can reach both oceans, and its time complexity',
+  optimizeHint: 'Name the technique of starting the traversal from both ocean borders and working inward instead of outward from each cell',
   clues: [
     {
       id: 'constraint-grid-size',

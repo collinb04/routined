@@ -16,6 +16,8 @@ export default {
     { label: '[2,3,-2,4]', args: [[2,3,-2,4]], expected: 6 },
     { label: '[-2,0,-1]', args: [[-2,0,-1]], expected: 0 },
   ],
+  bruteHint: 'Describe the naive approach that checks every subarray\'s product from scratch, and why that\'s O(n²) or worse',
+  optimizeHint: 'Name the second running value you must track alongside the max product — and why a negative number makes it necessary',
   clues: [
     {
       id: 'negative-numbers',

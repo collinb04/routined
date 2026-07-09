@@ -33,6 +33,8 @@ def copy_random_list(head):
     { label: '5 nodes', args: [[[7,null],[13,0],[11,4],[10,2],[1,0]]], expected: [7,13,11,10,1] },
     { label: 'single null', args: [[[1,null]]], expected: [1] },
   ],
+  bruteHint: 'Describe scanning the list to locate each random pointer\'s target node, and the O(n²) that costs across all nodes',
+  optimizeHint: 'Name the data structure that maps each original node to its copy for O(1) lookup',
   clues: [
     {
       id: 'output-deep-copy',

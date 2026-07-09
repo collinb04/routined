@@ -14,6 +14,8 @@ export default {
   testCases: [
     { label: 'Delete leaf', args: [[5,3,6,2,4,null,7],2], expected: [5,3,6,null,4,null,7] },
   ],
+  bruteHint: 'Describe searching for the key by checking every node in the tree instead of using the BST\'s ordering to decide which way to go at each step',
+  optimizeHint: 'Name the property of a BST that lets you discard half the remaining tree at each node while searching for the key',
   clues: [
     {
       id: 'constraint-complexity',

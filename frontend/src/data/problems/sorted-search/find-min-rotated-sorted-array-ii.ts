@@ -18,6 +18,8 @@ export default {
     { label: 'All same', args: [[1,1,1]], expected: 1 },
     { label: 'Single', args: [[3]], expected: 3 },
   ],
+  bruteHint: 'Describe the linear-scan approach and its time complexity',
+  optimizeHint: 'Name the modified binary search technique needed to handle duplicates, and explain why it can degrade to O(n) in the worst case',
   clues: [
     {
       id: 'duplicates-impact',

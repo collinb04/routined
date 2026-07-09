@@ -18,6 +18,8 @@ export default {
     { label: 'exact match', args: ['a', 'a'], expected: 'a' },
     { label: 'no match', args: ['a', 'aa'], expected: '' },
   ],
+  bruteHint: 'Describe checking every substring with a frequency check each time and its time complexity',
+  optimizeHint: 'Name the two-pointer technique that expands and shrinks a window while tracking how many required characters are currently satisfied',
   clues: [
     {
       id: 'constraint-complexity',

@@ -48,6 +48,8 @@ def reverse_list(values):
     { label: 'Empty list', args: [[]], expected: [] },
     { label: 'Single node', args: [[1]], expected: [1] },
   ],
+  bruteHint: 'Describe collecting values into an array in reverse order and building a brand-new list from it',
+  optimizeHint: 'Name the in-place technique of reversing next pointers one node at a time',
   clues: [
     {
       id: 'pointer-direction',

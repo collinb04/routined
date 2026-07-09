@@ -17,6 +17,8 @@ export default {
     { label: 'Length 4 v2', args: [[[3,4,5],[3,2,6],[2,2,1]]], expected: 4 },
     { label: 'Single', args: [[[1]]], expected: 1 },
   ],
+  bruteHint: 'Describe the naive DFS from every cell with no caching, and why the longest path from a shared cell gets recomputed by each ancestor that reaches it',
+  optimizeHint: 'Name what you\'d cache per cell so its longest increasing path is computed only once, no matter how many neighbors lead to it',
   clues: [
     {
       id: 'constraint-complexity',

@@ -15,6 +15,8 @@ export default {
     { label: 'Two paths', args: [[5,4,8,11,null,13,4,7,2,null,null,5,1],22], expected: [[5,4,11,2],[5,8,4,5]] },
     { label: 'No paths', args: [[1,2],5], expected: [] },
   ],
+  bruteHint: 'Describe generating every root-to-leaf path first, then filtering afterward for the ones that sum to the target',
+  optimizeHint: 'Name the technique of carrying the running sum and path forward through a single DFS, recording a match only at a leaf',
   clues: [
     {
       id: 'output-structure',

@@ -18,6 +18,8 @@ export default {
     { label: 'No removal', args: [[[1,2],[2,3]]], expected: 0 },
     { label: 'All overlap', args: [[[1,4],[1,4],[1,4]]], expected: 2 },
   ],
+  bruteHint: 'Describe comparing every pair of intervals (or trying combinations) to determine which to remove, and its time complexity',
+  optimizeHint: 'Name the greedy strategy — sorting by end time — that lets you keep the maximum non-overlapping set in one pass',
   clues: [
     {
       id: 'constraint-complexity',

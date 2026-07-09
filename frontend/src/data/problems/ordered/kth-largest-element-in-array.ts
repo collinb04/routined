@@ -16,6 +16,8 @@ export default {
     { label: 'k=2', args: [[3,2,1,5,6,4], 2], expected: 5 },
     { label: 'k=4', args: [[3,2,3,1,2,4,5,5,6], 4], expected: 4 },
   ],
+  bruteHint: 'Describe the approach of sorting the whole array and indexing into it, and why that violates the required time complexity.',
+  optimizeHint: 'Name the partition-based selection technique that finds the k-th largest without fully sorting.',
   clues: [
     {
       id: 'constraint-o-n-required',

@@ -17,6 +17,8 @@ export default {
     { label: '2 is majority', args: [[2,2,1,1,1,2,2]], expected: 2 },
     { label: 'Single', args: [[1]], expected: 1 },
   ],
+  bruteHint: 'Describe counting occurrences of every element, and the time and space complexity of doing so',
+  optimizeHint: 'Name the O(1)-space technique that tracks a candidate and a counter as you scan',
   clues: [
     {
       id: 'constraint-complexity',

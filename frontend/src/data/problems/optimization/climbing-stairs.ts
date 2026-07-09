@@ -21,6 +21,8 @@ export default {
     { label: 'n = 1', args: [1], expected: 1 },
     { label: 'n = 10', args: [10], expected: 89 },
   ],
+  bruteHint: 'Describe the recursive approach that branches into a 1-step and a 2-step choice at every step, and explain why it recomputes the same smaller step counts repeatedly.',
+  optimizeHint: 'Name the technique for caching each step count once it\'s computed instead of recomputing it every time it recurs.',
   clues: [
     {
       id: 'constraint-complexity',

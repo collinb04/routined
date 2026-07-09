@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[[4,10,15,24,26],[0,9,12,20],[5,18,22,30]]], expected: [20,24] },
     { label: 'Two lists', args: [[[1,2,3],[1,2,3]]], expected: [1,1] },
   ],
+  bruteHint: 'Describe the approach of generating every combination of one element per list and checking the range, and why that\'s infeasible here.',
+  optimizeHint: 'Name the data structure that tracks the minimum among one pointer per list so you can advance it in log time.',
   clues: [
     {
       id: 'coverage-requirement',

@@ -16,6 +16,8 @@ export default {
     { label: 'Empty first', args: [[],[[1,2]]], expected: [] },
     { label: 'No intersection', args: [[[1,2]],[[3,4]]], expected: [] },
   ],
+  bruteHint: 'Describe comparing every interval in one list against every interval in the other, and its time complexity',
+  optimizeHint: 'Name the technique that walks both sorted lists with two pointers instead of nested loops',
   clues: [
     {
       id: 'two-pointer-structure',

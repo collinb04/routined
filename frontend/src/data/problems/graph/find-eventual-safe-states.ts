@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[[1,2],[2,3],[5],[0],[5],[],[]]], expected: [2,4,5,6] },
     { label: 'No cycles', args: [[[1],[2],[]]], expected: [0,1,2] },
   ],
+  bruteHint: 'Describe running an independent cycle check from every node without reusing any earlier results, and its complexity',
+  optimizeHint: 'Name the technique that classifies every node in one DFS pass by caching the result for already-resolved nodes',
   clues: [
     {
       id: 'safe-definition',

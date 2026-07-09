@@ -17,6 +17,8 @@ export default {
     { label: 'Mixed', args: [[-7,-3,2,3,11]], expected: [4,9,9,49,121] },
     { label: 'All negative', args: [[-3,-2,-1]], expected: [1,4,9] },
   ],
+  bruteHint: 'Describe squaring every element then sorting the result, and its time complexity',
+  optimizeHint: 'Name the technique that uses two pointers from both ends to fill the result from the back',
   clues: [
     {
       id: 'sorted-input-signal',

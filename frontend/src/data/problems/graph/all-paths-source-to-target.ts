@@ -15,6 +15,8 @@ export default {
   testCases: [
     { label: 'Two paths', args: [[[1,2],[3],[3],[]]], expected: [[0,1,3],[0,2,3]] },
   ],
+  bruteHint: 'Describe generating candidate node sequences and checking each one against the edge list, and why that wastes work',
+  optimizeHint: 'Name the traversal technique that builds a path by following real edges and undoes a step when a branch dead-ends',
   clues: [
     {
       id: 'dag-guarantee',

@@ -24,6 +24,8 @@ export default {
     { label: 'All same', args: ['aaaa'], expected: 4 },
     { label: '"agbdba"', args: ['agbdba'], expected: 5 },
   ],
+  bruteHint: 'Describe the naive recursion that tries matching or skipping s[i] and s[j] for every substring interval, and why the same interval gets recomputed repeatedly',
+  optimizeHint: 'Name the 2D state (interval start i, interval end j) you\'d memoize so each substring interval is solved once',
   clues: [
     {
       id: 'constraint-complexity',

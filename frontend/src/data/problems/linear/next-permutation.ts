@@ -19,6 +19,8 @@ export default {
     { label: '[1,1,5]', args: [[1,1,5]], expected: [1,5,1] },
     { label: 'Single', args: [[1]], expected: [1] },
   ],
+  bruteHint: 'Describe generating all permutations and finding the next one in sorted order, and why that\'s too slow',
+  optimizeHint: 'Name what you\'re looking for when scanning from the right to find where the sequence breaks',
   clues: [
     {
       id: 'in-place-constraint',

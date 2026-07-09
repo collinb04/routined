@@ -15,6 +15,8 @@ export default {
     { label: 'Three leaves', args: [[6,2,4]], expected: 32 },
     { label: 'Two leaves', args: [[3,5]], expected: 15 },
   ],
+  bruteHint: 'Describe trying every possible binary tree grouping of the leaves recursively and why that blows up',
+  optimizeHint: 'Name the kind of stack that lets you greedily merge the smallest adjacent leaves first',
   clues: [
     {
       id: 'constraint-size',

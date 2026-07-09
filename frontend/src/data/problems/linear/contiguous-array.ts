@@ -18,6 +18,8 @@ export default {
     { label: 'Balanced', args: [[0,0,1,0,0,0,1,1]], expected: 6 },
     { label: 'All zeros', args: [[0,0,0]], expected: 0 },
   ],
+  bruteHint: 'Describe checking every subarray\'s count of 0s and 1s and its time complexity',
+  optimizeHint: 'Name the structure that lets you track a running sum and spot when the same running value has occurred before',
   clues: [
     {
       id: 'transform-to-balance',

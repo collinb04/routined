@@ -18,6 +18,8 @@ export default {
     { label: 'Single nine', args: [[9]], expected: [1,0] },
     { label: 'No carry simple', args: [[4,3,2,1]], expected: [4,3,2,2] },
   ],
+  bruteHint: 'Describe converting the digit array to an integer, adding one, and converting back to a list of digits',
+  optimizeHint: 'Name the edge case where carries propagate through every digit (e.g., all 9s) that a direct array-based increment must handle correctly',
   clues: [
     {
       id: 'carry-propagation',

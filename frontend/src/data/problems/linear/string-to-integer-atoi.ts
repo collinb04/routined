@@ -20,6 +20,8 @@ export default {
     { label: 'Overflow', args: ['99999999999'], expected: 2147483647 },
     { label: 'Empty', args: [''], expected: 0 },
   ],
+  bruteHint: 'Describe a naive parse that skips careful validation of whitespace, sign, digits, and overflow in order',
+  optimizeHint: 'Explain how handling overflow clamping and invalid input robustly in one pass makes this correct',
   clues: [
     {
       id: 'sequential-parsing-steps',

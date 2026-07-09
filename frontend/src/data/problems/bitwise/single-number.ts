@@ -18,6 +18,8 @@ export default {
     { label: 'Single element', args: [[1]], expected: 1 },
     { label: 'Larger array', args: [[1,3,1,2,3]], expected: 2 },
   ],
+  bruteHint: 'Describe using a hash set to spot the non-duplicate element, and its space complexity',
+  optimizeHint: 'Name the bitwise operation that cancels duplicate pairs in a single pass',
   clues: [
     {
       id: 'space-constraint',

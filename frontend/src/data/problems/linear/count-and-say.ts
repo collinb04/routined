@@ -18,6 +18,8 @@ export default {
     { label: 'n=4', args: [4], expected: '1211' },
     { label: 'n=5', args: [5], expected: '111221' },
   ],
+  bruteHint: 'Describe simulating each term by scanning the previous term character by character to build the next one, and note what drives the complexity',
+  optimizeHint: 'Name the technique for building the next term in a single pass — collecting run-lengths into a list and joining once, rather than repeated string concatenation',
   clues: [
     {
       id: 'iterative-generation',

@@ -24,6 +24,8 @@ def min_eating_speed(piles, h):
     { label: 'Extra time', args: [[30,11,23,4,20], 6], expected: 23 },
     { label: 'Single pile', args: [[10], 3], expected: 4 },
   ],
+  bruteHint: 'Describe testing every possible eating speed one by one and why that\'s too slow',
+  optimizeHint: 'Name the technique that binary searches over the range of possible eating speeds',
   clues: [
     {
       id: 'search-space',

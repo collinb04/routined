@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[[1,0,1],[0,-2,3]],2], expected: 2 },
     { label: 'k=3', args: [[[2,2],[-1,-1]],3], expected: 3 },
   ],
+  bruteHint: 'Describe checking every possible rectangle directly, and the resulting time complexity',
+  optimizeHint: 'Explain how fixing a pair of rows to collapse the matrix into a 1D array lets you reuse a prefix-sum technique per column pair',
   clues: [
     {
       id: 'constraint-complexity',

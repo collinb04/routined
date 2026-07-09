@@ -16,6 +16,8 @@ export default {
     { label: 'Can cross', args: [[0,1,3,5,6,8,12,17]], expected: true },
     { label: 'Cannot cross', args: [[0,1,2,3,4,8,9,11]], expected: false },
   ],
+  bruteHint: 'Describe the naive recursive approach trying every jump size from each stone, and note why it revisits the same stone/jump-size pairs repeatedly',
+  optimizeHint: 'Name the two-part state to memoize so each stone/last-jump-size pair is computed once',
   clues: [
     {
       id: 'constraint-complexity',

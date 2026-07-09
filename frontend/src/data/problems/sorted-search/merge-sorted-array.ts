@@ -17,6 +17,8 @@ export default {
     { label: 'Empty second', args: [[1],1,[],0], expected: [1] },
     { label: 'Empty first', args: [[0],0,[1],1], expected: [1] },
   ],
+  bruteHint: 'Describe combining both arrays into one list and sorting it, and its time complexity',
+  optimizeHint: 'Name the technique that merges from the back using the empty slots in nums1 to avoid overwriting unread elements',
   clues: [
     {
       id: 'in-place-constraint',

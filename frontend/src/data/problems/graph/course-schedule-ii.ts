@@ -23,6 +23,8 @@ export default {
     { label: '4 courses', args: [4, [[1,0],[2,0],[3,1],[3,2]]], expected: [0,1,2,3] },
     { label: 'single', args: [1, []], expected: [0] },
   ],
+  bruteHint: 'Describe repeatedly scanning every course for one whose prerequisites are already satisfied, restarting the scan each time',
+  optimizeHint: 'Name the algorithm that processes courses in order as their prerequisite counts drop to zero',
   clues: [
     {
       id: 'output-vs-course-schedule-i',

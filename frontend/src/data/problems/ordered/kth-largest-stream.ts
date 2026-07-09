@@ -27,6 +27,8 @@ def kth_in_stream(k, nums, stream):
     { label: 'k=1', args: [1, [1], [2,3]], expected: [2,3] },
     { label: 'Single add', args: [2, [3,1], [2]], expected: [2] },
   ],
+  bruteHint: 'Describe what re-sorting every value seen so far would cost if you did it after each addition.',
+  optimizeHint: 'Explain why a bounded-size heap of exactly k elements is enough to answer each query in log time.',
   clues: [
     {
       id: 'streaming-constraint',

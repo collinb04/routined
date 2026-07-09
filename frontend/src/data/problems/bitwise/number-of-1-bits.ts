@@ -18,6 +18,8 @@ export default {
     { label: 'Max 32-bit', args: [2147483647], expected: 31 },
     { label: 'Zero bits... n=1', args: [1], expected: 1 },
   ],
+  bruteHint: 'Describe checking all 32 bit positions one by one, and why it\'s already fairly efficient',
+  optimizeHint: 'Name the bit trick that lets each iteration jump straight to the next set bit',
   clues: [
     {
       id: 'constraint-range',

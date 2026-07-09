@@ -16,6 +16,8 @@ export default {
     { label: '[2,7,4,1,8,1]', args: [[2,7,4,1,8,1]], expected: 1 },
     { label: 'single', args: [[1]], expected: 1 },
   ],
+  bruteHint: 'Describe the approach of sorting the array before every round to find the two heaviest stones, and its repeated cost.',
+  optimizeHint: 'Name the data structure that gives log-time access to the current heaviest stone as the collection changes.',
   clues: [
     {
       id: 'repeated-max-access',

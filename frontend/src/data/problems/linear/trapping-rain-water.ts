@@ -16,6 +16,8 @@ export default {
     { label: 'classic', args: [[0,1,0,2,1,0,1,3,2,1,2,1]], expected: 6 },
     { label: '[4,2,0,3,2,5]', args: [[4,2,0,3,2,5]], expected: 9 },
   ],
+  bruteHint: 'Describe rescanning left and right for the max height at each index, and its time complexity',
+  optimizeHint: 'Name the technique that tracks running left-max and right-max simultaneously to avoid rescanning',
   clues: [
     {
       id: 'water-at-each-position',

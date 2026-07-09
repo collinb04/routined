@@ -19,6 +19,8 @@ export default {
     { label: 'target=7', args: [[2,3,6,7], 7], expected: [[2,2,3],[7]] },
     { label: 'target=6', args: [[2,3,4], 6], expected: [[2,2,2],[2,4],[3,3]] },
   ],
+  bruteHint: 'Describe generating every possible multiset of candidates and filtering for those summing to target, and why that\'s wasteful',
+  optimizeHint: 'Name the technique of backtracking one number at a time, stopping a branch once the running sum can\'t reach target',
   clues: [
     {
       id: 'unlimited-reuse',

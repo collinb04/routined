@@ -17,6 +17,8 @@ export default {
     { label: 'impossible', args: [[[2,1,1],[0,1,1],[1,0,1]]], expected: -1 },
     { label: 'all rotten', args: [[[0,2]]], expected: 0 },
   ],
+  bruteHint: 'Describe a brute-force simulation that rescans the entire grid minute by minute looking for newly adjacent fresh oranges, and its time complexity',
+  optimizeHint: 'Name the traversal technique that starts from all rotten oranges at once instead of spreading from just one',
   clues: [
     {
       id: 'output-minimum-time',

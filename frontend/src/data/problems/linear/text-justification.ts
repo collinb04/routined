@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [['This','is','an','example','of','text','justification.'],16], expected: ['This    is    an','example  of text','justification.  '] },
     { label: 'Single word', args: [['What','must','be','acknowledgment','shall','be'],16], expected: ['What   must   be','acknowledgment  ','shall be        '] },
   ],
+  bruteHint: 'Describe a naive greedy word-packing approach that doesn\'t carefully distribute extra spaces',
+  optimizeHint: 'Explain how computing exact space distribution to the leftmost gaps in one pass per line gets this right',
   clues: [
     {
       id: 'greedy-line-packing',

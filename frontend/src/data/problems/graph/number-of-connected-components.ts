@@ -16,6 +16,8 @@ export default {
     { label: '2 components', args: [5, [[0,1],[1,2],[3,4]]], expected: 2 },
     { label: '1 component', args: [5, [[0,1],[1,2],[2,3],[3,4]]], expected: 1 },
   ],
+  bruteHint: 'Describe checking reachability between every pair of nodes to group them into components, and its time complexity',
+  optimizeHint: 'Name the technique (Union-Find or repeated DFS/BFS) that groups nodes into components by visiting each unvisited node exactly once',
   clues: [
     {
       id: 'constraint-complexity',

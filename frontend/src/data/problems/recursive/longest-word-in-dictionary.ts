@@ -17,6 +17,8 @@ export default {
     { label: 'Tie break', args: [['a','banana','app','appl','ap','apply','apple']], expected: 'apple' },
     { label: 'Single char', args: [['a','b','c']], expected: 'a' },
   ],
+  bruteHint: 'Describe testing whether each prefix of a candidate word exists in the word set, and the total cost across all words',
+  optimizeHint: 'Name the structure that encodes shared prefixes so a word\'s entire prefix chain can be verified in a single walk',
   clues: [
     {
       id: 'constraint-complexity',

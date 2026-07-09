@@ -36,6 +36,8 @@ def clone_graph(node):
     { label: '4-cycle', args: [[[2,4],[1,3],[2,4],[1,3]]], expected: [[2,4],[1,3],[2,4],[1,3]] },
     { label: 'single', args: [[[]]], expected: [[]] },
   ],
+  bruteHint: 'Describe what goes wrong if you allocate a new node every time you encounter one while traversing a cyclic graph',
+  optimizeHint: 'Name the structure that lets you recognize a node you have already cloned and reuse that clone',
   clues: [
     {
       id: 'deep-copy-requirement',

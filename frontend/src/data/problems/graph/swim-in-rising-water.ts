@@ -15,6 +15,8 @@ export default {
     { label: '2×2', args: [[[0,2],[1,3]]], expected: 3 },
     { label: '1×1', args: [[[0]]], expected: 0 },
   ],
+  bruteHint: 'Describe a brute-force approach that explores every possible path via DFS and tracks the maximum elevation along each one, and why that is exponential in the worst case',
+  optimizeHint: 'Name the shortest-path algorithm you can adapt to minimize the maximum elevation on a path instead of the sum of edge weights',
   clues: [
     {
       id: 'objective-minimize-max',

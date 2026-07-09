@@ -20,6 +20,8 @@ export default {
     { label: '4', args: [4], expected: 'IV' },
     { label: '9', args: [9], expected: 'IX' },
   ],
+  bruteHint: 'Describe handling each subtractive case (4, 9, 40, 90, 400, 900) with individual conditionals, and why that\'s clunky',
+  optimizeHint: 'Name the technique — a single ordered value-to-symbol table applied greedily — that avoids special-casing',
   clues: [
     {
       id: 'subtractive-notation',

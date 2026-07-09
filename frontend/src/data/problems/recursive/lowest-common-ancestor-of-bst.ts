@@ -44,6 +44,8 @@ def lca_bst_run(arr, p, q):
     { label: 'p=2,q=8', args: [[6,2,8,0,4,7,9,null,null,3,5], 2, 8], expected: 6 },
     { label: 'p=2,q=4', args: [[6,2,8,0,4,7,9,null,null,3,5], 2, 4], expected: 2 },
   ],
+  bruteHint: 'Describe finding the full root-to-node path for p and for q via a general traversal, then comparing the two paths for their last shared node',
+  optimizeHint: 'Name the property of the tree\'s ordering that lets you decide, at each node, which single subtree must contain the answer',
   clues: [
     {
       id: 'bst-ordering-signal',

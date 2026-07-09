@@ -15,6 +15,8 @@ export default {
     { label: 'Alice wins', args: [[5,3,4,5]], expected: true },
     { label: 'Alice wins always', args: [[1,2,3,4]], expected: true },
   ],
+  bruteHint: 'Describe the naive recursion where each player tries taking from either end of the remaining piles, and why the same subintervals get re-evaluated by different move sequences',
+  optimizeHint: 'Name the interval DP state — the score advantage over piles[i..j] — that caches results for each subinterval',
   clues: [
     {
       id: 'even-length-guarantee',

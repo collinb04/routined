@@ -37,6 +37,8 @@ def kth_smallest_run(arr, k):
     { label: 'k=1', args: [[3,1,4,null,2], 1], expected: 1 },
     { label: 'k=3', args: [[5,3,6,2,4,null,null,1], 3], expected: 3 },
   ],
+  bruteHint: 'Describe collecting every node\'s value into a list, sorting it, and indexing to the kth position',
+  optimizeHint: 'Name the traversal order that visits BST nodes in sorted order automatically, and what lets you stop as soon as you\'ve counted k nodes',
   clues: [
     {
       id: 'bst-inorder-sorted',

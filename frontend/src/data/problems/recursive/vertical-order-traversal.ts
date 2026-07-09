@@ -15,6 +15,8 @@ export default {
     { label: 'Standard tree', args: [[3,9,20,null,null,15,7]], expected: [[9],[3,15],[20],[7]] },
     { label: 'Single', args: [[1]], expected: [[1]] },
   ],
+  bruteHint: 'Describe running a separate traversal of the whole tree for each possible column instead of gathering column, row, and value information in a single pass',
+  optimizeHint: 'Name the technique that collects (column, row, value) for every node in one traversal into a dictionary keyed by column, then sorts each group afterward',
   clues: [
     {
       id: 'column-coordinate',

@@ -17,6 +17,8 @@ export default {
     { label: 'Extra spaces', args: ['  hello world  '], expected: 'world hello' },
     { label: 'Single word', args: ['a'], expected: 'a' },
   ],
+  bruteHint: 'Describe splitting on spaces and manually re-joining the words, and note the extra passes or extra space it costs',
+  optimizeHint: 'Name the in-place technique that reverses the whole string first, then reverses each word, using O(1) extra space',
   clues: [
     {
       id: 'output-word-order',

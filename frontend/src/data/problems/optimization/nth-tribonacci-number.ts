@@ -18,6 +18,8 @@ export default {
     { label: 'n=1', args: [1], expected: 1 },
     { label: 'n=25', args: [25], expected: 1389537 },
   ],
+  bruteHint: 'Describe the naive triple recursion T(n) = T(n-1) + T(n-2) + T(n-3) without caching, and why its call tree grows exponentially',
+  optimizeHint: 'Name the bottom-up approach that iterates forward while keeping only the last three values in O(1) space',
   clues: [
     {
       id: 'constraint-small-n',

@@ -17,6 +17,8 @@ export default {
     { label: 'Cannot visit all', args: [[[1,3],[3,0,1],[2],[0]]], expected: false },
     { label: 'Single room', args: [[[]]], expected: true },
   ],
+  bruteHint: 'Describe repeatedly re-scanning all rooms each round to find newly unlockable ones, and why that repeated scanning is wasteful',
+  optimizeHint: 'Name the traversal technique that visits each newly unlocked room exactly once starting from room 0',
   clues: [
     {
       id: 'constraint-complexity',

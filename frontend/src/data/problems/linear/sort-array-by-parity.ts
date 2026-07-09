@@ -16,6 +16,8 @@ export default {
     { label: 'All even', args: [[2,4,6]], expected: [2,4,6] },
     { label: 'All odd', args: [[1,3,5]], expected: [1,3,5] },
   ],
+  bruteHint: 'Describe building two new lists for evens and odds and concatenating them, and name the extra space it costs',
+  optimizeHint: 'Name the technique that swaps misplaced elements in place using two pointers from each end',
   clues: [
     {
       id: 'any-valid-arrangement',

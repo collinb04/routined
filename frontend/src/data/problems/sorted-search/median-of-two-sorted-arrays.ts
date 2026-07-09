@@ -16,6 +16,8 @@ export default {
     { label: '[1,3],[2]', args: [[1,3], [2]], expected: 2.0 },
     { label: '[1,2],[3,4]', args: [[1,2], [3,4]], expected: 2.5 },
   ],
+  bruteHint: 'Describe merging both sorted arrays and indexing into the middle, and its O(m+n) time complexity',
+  optimizeHint: 'Name the technique — binary searching for the correct partition point on the smaller array — that achieves O(log(min(m,n)))',
   clues: [
     {
       id: 'time-constraint',

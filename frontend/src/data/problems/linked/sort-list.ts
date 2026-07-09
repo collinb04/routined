@@ -18,6 +18,8 @@ export default {
     { label: 'Empty', args: [[]], expected: [] },
     { label: 'Already sorted', args: [[1,2,3]], expected: [1,2,3] },
   ],
+  bruteHint: 'Describe using an O(n²) sort like insertion sort, or copying values into an array to sort',
+  optimizeHint: 'Name the divide-and-conquer sort that splits the list at its midpoint and merges sorted halves',
   clues: [
     {
       id: 'constraint-complexity',

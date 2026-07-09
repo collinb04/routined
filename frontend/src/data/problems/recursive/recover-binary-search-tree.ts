@@ -15,6 +15,8 @@ export default {
   testCases: [
     { label: 'Swap at root', args: [[1,3,null,null,2]], expected: [3,1,null,null,2] },
   ],
+  bruteHint: 'Describe collecting all node values, sorting a copy, and comparing it against the original inorder sequence to locate the swapped pair',
+  optimizeHint: 'Name the traversal order where a single pass naturally exposes the point(s) where a value is smaller than the one just before it',
   clues: [
     {
       id: 'inorder-bst-signal',

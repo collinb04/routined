@@ -17,6 +17,8 @@ export default {
     { label: '[4,5,6,7,0,1,2]', args: [[4,5,6,7,0,1,2]], expected: 0 },
     { label: '[11,13,15,17]', args: [[11,13,15,17]], expected: 11 },
   ],
+  bruteHint: 'Describe the linear-scan approach and its time complexity',
+  optimizeHint: 'Name the technique that exploits the fact one half of the array is always fully sorted',
   clues: [
     {
       id: 'time-constraint',

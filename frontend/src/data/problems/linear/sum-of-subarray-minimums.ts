@@ -17,6 +17,8 @@ export default {
     { label: 'Single', args: [[1]], expected: 1 },
     { label: 'All same', args: [[2,2,2]], expected: 12 },
   ],
+  bruteHint: 'Describe checking every subarray and finding its minimum directly, and its time complexity',
+  optimizeHint: 'Name the data structure that tracks how many subarrays each element is the minimum of',
   clues: [
     {
       id: 'constraint-complexity',

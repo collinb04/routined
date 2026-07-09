@@ -37,6 +37,8 @@ def is_valid_bst_run(arr):
     { label: 'valid', args: [[2,1,3]], expected: true },
     { label: 'invalid', args: [[5,1,4,null,null,3,6]], expected: false },
   ],
+  bruteHint: 'Describe collecting all node values via an in-order traversal into a list and then checking whether that list comes out sorted',
+  optimizeHint: 'Name the technique that passes a valid (min, max) range down through each recursive call so every node is checked against its true ancestor-derived bounds in a single pass',
   clues: [
     {
       id: 'subtree-constraint',

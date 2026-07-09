@@ -23,6 +23,8 @@ export default {
     { label: 'Same node', args: [1, [], 0, 0], expected: true },
     { label: 'Direct edge', args: [3, [[0,1],[2,1]], 0, 2], expected: true },
   ],
+  bruteHint: 'Describe re-exploring every possible route without tracking visited nodes, and why that risks exponential blowup or infinite loops on a cyclic graph',
+  optimizeHint: 'Name the traversal technique that visits each node once using a visited set to guarantee linear time',
   clues: [
     {
       id: 'constraint-complexity',

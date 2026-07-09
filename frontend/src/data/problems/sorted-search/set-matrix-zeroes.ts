@@ -16,6 +16,8 @@ export default {
     { label: 'Corner zero', args: [[[0,1,2],[3,4,5],[6,7,8]]], expected: [[0,0,0],[0,4,5],[0,7,8]] },
     { label: 'No zeroes', args: [[[1,2],[3,4]]], expected: [[1,2],[3,4]] },
   ],
+  bruteHint: 'Describe recording the rows and columns that contain a zero in extra sets, then zeroing them in a second pass, and its space complexity',
+  optimizeHint: 'Name the technique that reuses the matrix\'s own first row and first column as markers to achieve O(1) extra space',
   clues: [
     {
       id: 'order-of-operations',

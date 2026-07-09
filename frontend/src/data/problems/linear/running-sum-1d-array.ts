@@ -17,6 +17,8 @@ export default {
     { label: 'All ones', args: [[1,1,1,1,1]], expected: [1,2,3,4,5] },
     { label: 'With negatives', args: [[3,-2,5]], expected: [3,1,6] },
   ],
+  bruteHint: 'Describe recomputing each sum from scratch by re-summing all prior elements, and name its time complexity',
+  optimizeHint: 'Name the technique that accumulates a running total in a single pass',
   clues: [
     {
       id: 'output-structure',

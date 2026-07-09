@@ -17,6 +17,8 @@ export default {
     { label: 'Two roots', args: [6,[[3,0],[3,1],[3,2],[3,4],[5,4]]], expected: [3,4] },
     { label: 'Single node', args: [1,[]], expected: [0] },
   ],
+  bruteHint: 'Describe computing the tree\'s height when rooted at every single node and comparing them, and its time complexity',
+  optimizeHint: 'Name the technique of iteratively trimming leaf nodes layer by layer until only the centroid(s) remain',
   clues: [
     {
       id: 'constraint-n-edges',

@@ -16,6 +16,8 @@ export default {
     { label: '2×2 matrix', args: [[[1,2],[3,4]]], expected: [[3,1],[4,2]] },
     { label: '1×1 matrix', args: [[[5]]], expected: [[5]] },
   ],
+  bruteHint: 'Describe creating a brand-new matrix and copying each element into its rotated position, and why that violates the in-place constraint',
+  optimizeHint: 'Name the two-step in-place technique that transposes the matrix and then reverses each row',
   clues: [
     {
       id: 'in-place-constraint',

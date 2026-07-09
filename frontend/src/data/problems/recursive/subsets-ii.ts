@@ -19,6 +19,8 @@ export default {
     { label: '[1,2,2]', args: [[1,2,2]], expected: [[],[1],[1,2],[1,2,2],[2],[2,2]] },
     { label: '[0]', args: [[0]], expected: [[],[0]] },
   ],
+  bruteHint: 'Describe generating every subset via bitmasking over all 2^n combinations and then filtering out duplicate subsets afterward',
+  optimizeHint: 'Name the backtracking approach that builds subsets incrementally and prunes duplicate branches after sorting the input, to avoid generating the same subset twice',
   clues: [
     {
       id: 'constraint-size',

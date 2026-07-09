@@ -17,6 +17,8 @@ export default {
     { label: 'Descending', args: [[3,2,1]], expected: 0 },
     { label: 'Two days', args: [[1,2]], expected: 1 },
   ],
+  bruteHint: 'Describe the recursive approach that branches into buy, sell, or rest on every day, re-exploring the same day/state combinations, and explain why it\'s exponential in the number of days.',
+  optimizeHint: 'Name the handful of states (holding stock, free to buy, cooling down) whose best value per day you can memoize to collapse the recursion.',
   clues: [
     {
       id: 'constraint-complexity',

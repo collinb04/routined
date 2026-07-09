@@ -17,6 +17,8 @@ export default {
     { label: 'All zeros', args: [[0,0,0],1], expected: 0 },
     { label: 'Exact match', args: [[1,2,3],6], expected: 6 },
   ],
+  bruteHint: 'Describe the triple nested loop over all combinations of three numbers and its time complexity',
+  optimizeHint: 'Name the technique that sorts the array first and then uses two pointers converging from both ends for each fixed element',
   clues: [
     {
       id: 'constraint-complexity',

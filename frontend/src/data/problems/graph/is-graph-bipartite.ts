@@ -16,6 +16,8 @@ export default {
     { label: 'Not bipartite', args: [[[1,2,3],[0,2],[0,1,3],[0,2]]], expected: false },
     { label: 'Is bipartite', args: [[[1,3],[0,2],[1,3],[0,2]]], expected: true },
   ],
+  bruteHint: 'Describe trying every possible 2-coloring assignment and checking it against all edges, and why that grows exponentially',
+  optimizeHint: 'Name the traversal technique that assigns alternating colors as it visits nodes and flags conflicts',
   clues: [
     {
       id: 'constraint-complexity',

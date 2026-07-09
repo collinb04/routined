@@ -16,6 +16,8 @@ export default {
     { label: 'Three pairs', args: [[1,7,11],[2,4,6],3], expected: [[1,2],[1,4],[1,6]] },
     { label: 'Duplicate values', args: [[1,1,2],[1,2,3],2], expected: [[1,1],[1,1]] },
   ],
+  bruteHint: 'Describe what happens if you generate every possible pair and sort them by sum, and why the constraints rule that out.',
+  optimizeHint: 'Name the data structure that lets you expand outward from the smallest pair without generating every combination.',
   clues: [
     {
       id: 'constraint-brute-force',

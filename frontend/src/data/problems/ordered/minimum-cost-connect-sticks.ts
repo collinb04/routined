@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: [[5]], expected: 0 },
     { label: 'Two sticks', args: [[1,2]], expected: 3 },
   ],
+  bruteHint: 'Describe the approach of scanning the whole list to find the two smallest sticks each round, and its repeated cost.',
+  optimizeHint: 'Name the data structure that gives log-time access to the current two smallest sticks as the collection shrinks.',
   clues: [
     {
       id: 'cost-counting',

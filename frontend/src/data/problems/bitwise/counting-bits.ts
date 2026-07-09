@@ -18,6 +18,8 @@ export default {
     { label: 'n=0', args: [0], expected: [0] },
     { label: 'n=4', args: [4], expected: [0,1,1,2,1] },
   ],
+  bruteHint: 'Describe computing each number\'s bit count from scratch, and its time complexity',
+  optimizeHint: 'Name the recurrence that lets each entry reuse an already-computed smaller result',
   clues: [
     {
       id: 'constraint-complexity',

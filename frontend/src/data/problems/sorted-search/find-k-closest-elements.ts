@@ -17,6 +17,8 @@ export default {
     { label: 'Left of range', args: [[1,2,3,4,5],4,-1], expected: [1,2,3,4] },
     { label: 'Right of range', args: [[1,2,3,4,5],4,100], expected: [2,3,4,5] },
   ],
+  bruteHint: 'Describe computing the distance from x for every element and sorting to find the k smallest, and its time complexity',
+  optimizeHint: 'Name the technique that binary searches for the window\'s starting position instead',
   clues: [
     {
       id: 'sorted-input',

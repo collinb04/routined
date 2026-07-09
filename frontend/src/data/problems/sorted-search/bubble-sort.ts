@@ -34,6 +34,8 @@ list.sort = lambda *a, **kw: __no_sort()
     { label: 'Duplicates', args: [[3, 1, 2, 1, 3]], expected: [1, 1, 2, 3, 3] },
     { label: 'Single element', args: [[42]], expected: [42] },
   ],
+  bruteHint: 'Describe bubble sort\'s core mechanism — repeated adjacent swaps — and why it\'s O(n²) in the worst case',
+  optimizeHint: 'Name the early-exit optimization and explain when bubble sort is actually competitive despite its O(n²) worst case',
   clues: [
     {
       id: 'constraint-complexity',

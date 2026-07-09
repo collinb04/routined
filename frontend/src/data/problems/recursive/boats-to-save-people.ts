@@ -18,6 +18,8 @@ export default {
     { label: 'All alone', args: [[3,3,3,3],3], expected: 4 },
     { label: 'All together', args: [[1,1,1,1],4], expected: 2 },
   ],
+  bruteHint: 'Describe trying every possible way to pair people into boats and its time complexity',
+  optimizeHint: 'Name the technique of sorting weights and using two pointers to pair the heaviest with the lightest',
   clues: [
     {
       id: 'constraint-boat-capacity',

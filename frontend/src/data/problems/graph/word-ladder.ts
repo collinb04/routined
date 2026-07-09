@@ -16,6 +16,8 @@ export default {
     { label: 'hit→cog', args: ['hit', 'cog', ['hot','dot','dog','lot','log','cog']], expected: 5 },
     { label: 'no path', args: ['hit', 'cog', ['hot','dot','dog','lot','log']], expected: 0 },
   ],
+  bruteHint: 'Describe a brute-force approach that compares every pair of words in the dictionary to build the transformation graph, and its time complexity',
+  optimizeHint: 'Name the traversal that explores one-letter-mutation transformations level by level to guarantee the shortest sequence',
   clues: [
     {
       id: 'output-shortest-sequence',

@@ -30,6 +30,8 @@ def top_k_frequent(nums, k):
     { label: 'All same freq', args: [[1,2], 2], expected: [1,2] },
     { label: 'k=3', args: [[4,1,1,2,2,3,3,4,4,4], 3], expected: [1,3,4] },
   ],
+  bruteHint: 'Describe the approach of sorting all unique elements by frequency and taking the first k, and its time complexity.',
+  optimizeHint: 'Name the bounded-size data structure that avoids fully sorting the frequency counts.',
   clues: [
     {
       id: 'constraint-complexity',

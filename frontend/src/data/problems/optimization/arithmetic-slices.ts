@@ -17,6 +17,8 @@ export default {
     { label: 'Single', args: [[1]], expected: 0 },
     { label: 'Not arithmetic', args: [[1,2,4]], expected: 0 },
   ],
+  bruteHint: 'Describe checking every subarray directly for the arithmetic property and the time complexity of that exhaustive scan.',
+  optimizeHint: 'Name the single running count you can carry forward in one pass instead of re-checking subarrays that share the same run.',
   clues: [
     {
       id: 'constraint-complexity',

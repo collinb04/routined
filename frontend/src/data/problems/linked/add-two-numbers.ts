@@ -33,6 +33,8 @@ def add_two_numbers_run(l1, l2):
     { label: '0+0', args: [[0],[0]], expected: [0] },
     { label: '999+99', args: [[9,9,9,9,9,9,9],[9,9,9,9]], expected: [8,9,9,9,0,0,0,1] },
   ],
+  bruteHint: 'Describe converting each list into an integer, summing, and converting the result back into a list',
+  optimizeHint: 'Name the technique that adds digits node-by-node with a running carry in a single pass',
   clues: [
     {
       id: 'reversed-storage',

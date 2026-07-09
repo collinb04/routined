@@ -15,6 +15,8 @@ export default {
     { label: 'classic', args: [[73,74,75,71,69,72,76,73]], expected: [1,1,4,2,1,1,0,0] },
     { label: '[30,40,50,60]', args: [[30,40,50,60]], expected: [1,1,1,0] },
   ],
+  bruteHint: 'Describe scanning forward from each day to find the next warmer day, and its time complexity',
+  optimizeHint: 'Name the data structure that tracks days still waiting for a warmer temperature',
   clues: [
     {
       id: 'next-greater-element',

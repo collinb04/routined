@@ -17,6 +17,8 @@ export default {
     { label: '4 rows', args: ['PAYPALISHIRING',4], expected: 'PINALSIGYAHRPI' },
     { label: '1 row', args: ['A',1], expected: 'A' },
   ],
+  bruteHint: 'Describe simulating the full 2D zigzag grid and reading it off afterward, and its space cost',
+  optimizeHint: 'Name the technique that appends each character to one of numRows buffers in a single pass, tracking direction',
   clues: [
     {
       id: 'simulate-with-row-buckets',

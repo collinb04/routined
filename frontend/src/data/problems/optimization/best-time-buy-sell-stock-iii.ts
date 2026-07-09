@@ -17,6 +17,8 @@ export default {
     { label: 'One transaction', args: [[1,2,3,4,5]], expected: 4 },
     { label: 'Descending', args: [[7,6,4,3,1]], expected: 0 },
   ],
+  bruteHint: 'Describe the recursive approach that tries every possible pair of non-overlapping buy/sell intervals and explain why exploring them all is too slow.',
+  optimizeHint: 'Name the two things the DP state needs to track at each day — how many transactions you\'ve used, and whether you\'re currently holding — so overlapping subproblems are solved once.',
   clues: [
     {
       id: 'constraint-complexity',

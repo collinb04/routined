@@ -32,6 +32,8 @@ list.sort = lambda *a, **kw: __no_sort()
     { label: 'Duplicates', args: [[3, 1, 2, 1, 3]], expected: [1, 1, 2, 3, 3] },
     { label: 'Single element', args: [[5]], expected: [5] },
   ],
+  bruteHint: 'Describe merge sort\'s core mechanism — recursively dividing in half and merging sorted halves — and why it guarantees O(n log n)',
+  optimizeHint: 'Explain merge sort\'s stability, contrasted with in-place alternatives like quicksort that risk O(n²) worst case',
   clues: [
     {
       id: 'constraint-complexity',

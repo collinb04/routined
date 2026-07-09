@@ -18,6 +18,8 @@ export default {
     { label: 'Valid', args: ['()'], expected: 0 },
     { label: 'Mixed', args: ['()))(('], expected: 4 },
   ],
+  bruteHint: 'Describe repeatedly rescanning the string to fix mismatched brackets and why that wastes work',
+  optimizeHint: 'Name what you could track with a running counter in a single pass to count unmatched brackets',
   clues: [
     {
       id: 'output-type',

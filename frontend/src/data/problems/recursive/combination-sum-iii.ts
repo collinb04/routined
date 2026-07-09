@@ -17,6 +17,8 @@ export default {
     { label: 'k=3, n=9', args: [3,9], expected: [[1,2,6],[1,3,5],[2,3,4]] },
     { label: 'Impossible', args: [3,1], expected: [] },
   ],
+  bruteHint: 'Describe generating every subset of digits 1-9 and filtering for those with exactly k numbers summing to n',
+  optimizeHint: 'Name the technique of backtracking digit by digit, abandoning a branch once the running sum or remaining digit count rules out success',
   clues: [
     {
       id: 'fixed-digit-pool',

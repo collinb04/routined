@@ -175,7 +175,7 @@ const storyData: StoryNode[] = [
     id: 'curiosity',
     label: 'Curiosity',
     labelLines: ['Curiosity'],
-    description: 'It started with pure curiosity — wanting to understand why certain solutions are elegant and others are not. Not just "how to code," but why ideas work.',
+    description: 'It started with pure curiosity. I wanted to understand why certain solutions are elegant and others are not. I knew there was a better way to learn, but not yet how.',
     impact: 'Curiosity is the prerequisite to learning anything deeply.',
   },
   {

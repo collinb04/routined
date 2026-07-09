@@ -19,6 +19,8 @@ def decode(s):
     { label: 'Empty strings', args: [['','']], expected: ['',''] },
     { label: 'Special chars', args: [['a/b','c#d']], expected: ['a/b','c#d'] },
   ],
+  bruteHint: 'Describe using a plain delimiter character to join strings, and why it can fail',
+  optimizeHint: 'Name the technique of encoding each string\'s length before its content so decoding stays unambiguous',
   clues: [
     {
       id: 'any-ascii-character',

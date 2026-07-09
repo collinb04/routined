@@ -18,6 +18,8 @@ export default {
     { label: 'Three types', args: [[1,2,3,2,2]], expected: 4 },
     { label: 'Single type', args: [[1,1,1]], expected: 3 },
   ],
+  bruteHint: 'Describe checking every subarray (or every start/end pair) for at most 2 distinct fruit types, and its time complexity',
+  optimizeHint: 'Name the technique that maintains a window with at most 2 distinct fruit types as you scan',
   clues: [
     {
       id: 'constraint-restatement',

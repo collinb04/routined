@@ -22,6 +22,8 @@ export default {
     { label: 'Negative numbers', args: [[-1, 0], -1], expected: [1, 2] },
     { label: 'Last two', args: [[1, 2, 3, 4, 5], 9], expected: [4, 5] },
   ],
+  bruteHint: 'Describe the nested-loop approach checking every pair, and its time complexity',
+  optimizeHint: 'Name the technique that exploits the array already being sorted to avoid nested loops',
   clues: [
     {
       id: 'sorted-input-signal',

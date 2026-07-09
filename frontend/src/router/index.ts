@@ -7,6 +7,9 @@ import Product from '@/views/Product.vue'
 import SessionView from '@/views/SessionView.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
+import Profile from '@/views/Profile.vue'
+import Settings from '@/views/Settings.vue'
+import FeedbackLibrary from '@/views/FeedbackLibrary.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -18,6 +21,9 @@ const routes = [
   { path: '/session/:id', component: SessionView, props: true, meta: { requiresAuth: true } },
   { path: '/login', component: Login },
   { path: '/signup', component: Signup },
+  { path: '/profile', component: Profile, meta: { requiresAuth: true } },
+  { path: '/settings', component: Settings, meta: { requiresAuth: true } },
+  { path: '/feedback', component: FeedbackLibrary, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

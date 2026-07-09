@@ -14,6 +14,8 @@ export default {
   testCases: [
     { label: 'Classic board', args: [[[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,35,-1,-1,13,-1],[-1,-1,-1,-1,-1,-1],[-1,15,-1,-1,-1,-1]]], expected: 4 },
   ],
+  bruteHint: 'Describe a brute-force DFS that tries every sequence of dice rolls, and why it can\'t guarantee the minimum',
+  optimizeHint: 'Name the traversal technique for finding the minimum rolls once you treat the board as a flattened 1D graph with snakes and ladders as extra edges',
   clues: [
     {
       id: 'output-minimum-rolls',

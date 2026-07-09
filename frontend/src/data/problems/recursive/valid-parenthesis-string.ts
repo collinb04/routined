@@ -19,6 +19,8 @@ export default {
     { label: 'Star as close', args: ['(*))'], expected: true },
     { label: 'Invalid', args: ['((('], expected: false },
   ],
+  bruteHint: 'Describe recursively trying all three interpretations of each star character and checking validity, and name the exponential time complexity this produces',
+  optimizeHint: 'Name the greedy technique that tracks a range of possible open-parenthesis counts as you scan, rather than branching on every star',
   clues: [
     {
       id: 'star-ambiguity',

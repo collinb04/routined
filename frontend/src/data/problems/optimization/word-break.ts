@@ -18,6 +18,8 @@ export default {
     { label: 'applepenapple', args: ['applepenapple', ['apple','pen']], expected: true },
     { label: 'catsandog', args: ['catsandog', ['cats','dog','sand','and','cat']], expected: false },
   ],
+  bruteHint: 'Describe the naive recursion that tries every prefix length as a candidate word at each position, and why the same suffixes of s get re-checked repeatedly',
+  optimizeHint: 'Name the 1D DP state — whether s[:i] is segmentable — that caches results per prefix instead of re-deriving them',
   clues: [
     {
       id: 'constraint-complexity',

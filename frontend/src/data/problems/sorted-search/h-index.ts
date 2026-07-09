@@ -18,6 +18,8 @@ export default {
     { label: 'All same', args: [[5,5,5,5,5]], expected: 5 },
     { label: 'All zeros', args: [[0,0]], expected: 0 },
   ],
+  bruteHint: 'Describe checking every candidate h by counting papers with at least h citations, and its time complexity',
+  optimizeHint: 'Name the technique — sorting citations and scanning by rank — that finds h more efficiently',
   clues: [
     {
       id: 'definition-signal',

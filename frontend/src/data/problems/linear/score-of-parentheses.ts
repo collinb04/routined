@@ -20,6 +20,8 @@ export default {
     { label: '()()', args: ['()()'], expected: 2 },
     { label: 'Nested', args: ['(()(()))'], expected: 6 },
   ],
+  bruteHint: 'Describe recursively re-parsing matched substrings to compute their scores, and explain why that repeats work',
+  optimizeHint: 'Name the structure that tracks accumulated scores at each nesting depth in a single pass',
   clues: [
     {
       id: 'nesting-structure',

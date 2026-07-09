@@ -20,6 +20,8 @@ export default {
     { label: '[0,1,1]', args: [[0,1,1]], expected: [] },
     { label: '[0,0,0]', args: [[0,0,0]], expected: [[0,0,0]] },
   ],
+  bruteHint: 'Describe the triple nested loop over all combinations of three numbers and its time complexity',
+  optimizeHint: 'Name the technique that sorts the array first and then uses two pointers converging from both ends for each fixed element',
   clues: [
     {
       id: 'constraint-complexity',

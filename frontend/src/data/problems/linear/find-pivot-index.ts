@@ -18,6 +18,8 @@ export default {
     { label: 'Left edge', args: [[2,1,-1]], expected: 0 },
     { label: 'Single', args: [[1]], expected: 0 },
   ],
+  bruteHint: 'Describe recomputing the left and right sums from scratch at every index, and its time complexity',
+  optimizeHint: 'Name the technique that lets you derive each side\'s sum in O(1) after a single upfront pass',
   clues: [
     {
       id: 'constraint-negative-values',

@@ -18,6 +18,8 @@ export default {
     { label: 'Empty list', args: [[],[5,7]], expected: [[5,7]] },
     { label: 'No overlap before', args: [[[3,5],[6,9]],[1,2]], expected: [[1,2],[3,5],[6,9]] },
   ],
+  bruteHint: 'Describe appending the new interval and re-sorting the whole list to merge overlaps, and its time complexity',
+  optimizeHint: 'Identify what already being sorted lets you do in a single linear pass',
   clues: [
     {
       id: 'sorted-input-guarantee',

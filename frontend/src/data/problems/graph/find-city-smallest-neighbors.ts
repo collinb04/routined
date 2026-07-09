@@ -15,6 +15,8 @@ export default {
     { label: 'City 3', args: [4,[[0,1,3],[1,2,1],[1,3,4],[2,3,1]],4], expected: 3 },
     { label: 'City 0', args: [5,[[0,1,2],[0,4,8],[1,2,3],[1,4,2],[2,3,1],[3,4,1]],2], expected: 0 },
   ],
+  bruteHint: 'Describe running an independent shortest-path search from every city with no shared work, and the resulting complexity',
+  optimizeHint: 'Name the all-pairs shortest-path algorithm that fills in a full distance matrix through intermediate nodes',
   clues: [
     {
       id: 'constraint-size',

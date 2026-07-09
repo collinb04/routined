@@ -15,6 +15,8 @@ export default {
     { label: 'Standard', args: [[1,4,6,7,8,20],[2,7,15]], expected: 11 },
     { label: 'Daily travel', args: [[1,2,3,4,5,6,7,8,9,10,30,31],[2,7,15]], expected: 17 },
   ],
+  bruteHint: 'Describe the naive recursion that branches on buying a 1-day, 7-day, or 30-day pass at each travel day, and why overlapping day ranges get recomputed',
+  optimizeHint: 'Name the DP state that avoids recomputation — one entry per calendar day (or per travel day)',
   clues: [
     {
       id: 'constraint-calendar',

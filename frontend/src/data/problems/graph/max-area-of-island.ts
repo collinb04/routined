@@ -15,6 +15,8 @@ export default {
     { label: 'max=4', args: [[[0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,1,1,0,1,0,0,0,0,0,0,0,0],[0,1,0,0,1,1,0,0,1,0,1,0,0],[0,1,0,0,1,1,0,0,1,1,1,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,0,1,1,0,0,0,0]]], expected: 6 },
     { label: 'no island', args: [[[0,0,0,0,0,0,0,0]]], expected: 0 },
   ],
+  bruteHint: 'Describe re-exploring an island\'s cells from scratch for every land cell without marking them visited, and the repeated work that causes',
+  optimizeHint: 'Name the technique that flood-fills each island once while tracking a running maximum size',
   clues: [
     {
       id: 'constraint-complexity',

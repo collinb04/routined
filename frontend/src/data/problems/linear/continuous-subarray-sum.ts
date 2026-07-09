@@ -17,6 +17,8 @@ export default {
     { label: 'Full array', args: [[23,2,6,4,7],6], expected: true },
     { label: 'No match', args: [[1,2,3],7], expected: false },
   ],
+  bruteHint: 'Describe checking every subarray\'s sum and its time complexity',
+  optimizeHint: 'Name the structure that lets you track a running sum mod k and spot when the same remainder has occurred before',
   clues: [
     {
       id: 'modular-prefix-sum',

@@ -15,6 +15,8 @@ export default {
     { label: 'Linear path', args: [[['MUC','LHR'],['JFK','MUC'],['SFO','SJC'],['LHR','SFO']]], expected: ['JFK','MUC','LHR','SFO','SJC'] },
     { label: 'Simple', args: [[['JFK','ATL'],['ATL','JFK'],['JFK','SFO']]], expected: ['JFK','ATL','JFK','SFO'] },
   ],
+  bruteHint: 'Describe a brute-force approach that tries every permutation of tickets and checks which forms a valid itinerary, and its time complexity',
+  optimizeHint: 'Name the classic algorithm for finding a path that uses every edge exactly once',
   clues: [
     {
       id: 'constraint-use-all-tickets',

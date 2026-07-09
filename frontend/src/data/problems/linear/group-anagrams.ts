@@ -19,6 +19,8 @@ export default {
     { label: 'single', args: [['a']], expected: [['a']] },
     { label: 'all same', args: [['','','']], expected: [['','','']] },
   ],
+  bruteHint: 'Describe comparing every pair of words to check whether they are anagrams, and its time complexity',
+  optimizeHint: 'Name the kind of key you could compute for each word so that anagrams map to the same group',
   clues: [
     {
       id: 'constraint-size',

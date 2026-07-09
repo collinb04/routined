@@ -17,6 +17,8 @@ export default {
     { label: 'Rotate by length', args: [[1,2],2], expected: [1,2] },
     { label: 'Rotate 1', args: [[1,2,3],1], expected: [3,1,2] },
   ],
+  bruteHint: 'Describe rotating one step at a time k times, or building a new array, and name their time and space costs',
+  optimizeHint: 'Name the in-place technique that reverses the array three times to achieve O(1) extra space',
   clues: [
     {
       id: 'k-mod-n',

@@ -18,6 +18,8 @@ export default {
     { label: 'Three values', args: [[2,0,1]], expected: [0,1,2] },
     { label: 'Already sorted', args: [[0,1,2]], expected: [0,1,2] },
   ],
+  bruteHint: 'Describe counting each color and overwriting the array (or using a library sort), and explain why that takes two passes or is disallowed',
+  optimizeHint: 'Name the three-pointer technique that partitions the array in a single in-place pass',
   clues: [
     {
       id: 'fixed-value-domain',

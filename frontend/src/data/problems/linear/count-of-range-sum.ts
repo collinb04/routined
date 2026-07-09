@@ -16,6 +16,8 @@ export default {
     { label: 'Single element', args: [[0],0,0], expected: 1 },
     { label: 'No valid range', args: [[5,5,5],1,4], expected: 0 },
   ],
+  bruteHint: 'Describe checking every subarray sum directly against the bounds, and its time complexity',
+  optimizeHint: 'Name the technique for counting valid prefix-sum pairs efficiently — merge-sort-based counting or a Binary Indexed Tree over prefix sums',
   clues: [
     {
       id: 'prefix-sum-reduction',

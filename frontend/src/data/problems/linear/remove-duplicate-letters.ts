@@ -17,6 +17,8 @@ export default {
     { label: '"cbacdcbc"', args: ['cbacdcbc'], expected: 'acdb' },
     { label: 'No duplicates', args: ['abc'], expected: 'abc' },
   ],
+  bruteHint: 'Describe trying every possible subsequence ordering and checking validity, and explain why that blows up combinatorially',
+  optimizeHint: 'Name the structure that greedily builds the result, using a "last occurrence" map to decide when to pop a character',
   clues: [
     {
       id: 'constraint-input-size',

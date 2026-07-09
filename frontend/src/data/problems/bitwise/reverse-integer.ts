@@ -19,6 +19,8 @@ export default {
     { label: 'Trailing zero', args: [120], expected: 21 },
     { label: 'Overflow', args: [1534236469], expected: 0 },
   ],
+  bruteHint: 'Describe reversing the digits via string conversion, and what edge cases that complicates',
+  optimizeHint: 'Name the arithmetic operations that extract and rebuild digits while making overflow and sign handling explicit',
   clues: [
     {
       id: 'overflow-condition',

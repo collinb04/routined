@@ -16,6 +16,8 @@ export default {
     { label: 'triangle', args: [[[1,2],[1,3],[2,3]]], expected: [2,3] },
     { label: 'longer cycle', args: [[[1,2],[2,3],[3,4],[1,4],[1,5]]], expected: [1,4] },
   ],
+  bruteHint: 'Describe a brute-force approach that removes each edge in turn and checks whether the remaining graph is a tree, and its time complexity',
+  optimizeHint: 'Name the data structure that detects a cycle-forming edge in near-O(1) as you process edges one by one',
   clues: [
     {
       id: 'constraint-exactly-one-extra-edge',

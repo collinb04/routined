@@ -14,6 +14,8 @@ export default {
   testCases: [
     { label: 'Standard', args: [[['a','b'],['b','c']],[2.0,3.0],[['a','c'],['b','a'],['a','e'],['a','a'],['x','x']]], expected: [6.0,0.5,-1.0,1.0,-1.0] },
   ],
+  bruteHint: 'Describe trying to algebraically substitute equations to answer each query from scratch, and why that gets unwieldy',
+  optimizeHint: 'Name the traversal that follows weighted edges from one variable to another, combining weights along the way',
   clues: [
     {
       id: 'graph-as-model',

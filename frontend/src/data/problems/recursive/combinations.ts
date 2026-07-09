@@ -16,6 +16,8 @@ export default {
     { label: 'n=4,k=2', args: [4,2], expected: [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]] },
     { label: 'n=1,k=1', args: [1,1], expected: [[1]] },
   ],
+  bruteHint: 'Describe generating all subsets of [1, n] and filtering for those of size k',
+  optimizeHint: 'Name the technique of backtracking in strictly increasing order to avoid generating the same combination twice',
   clues: [
     {
       id: 'output-all-combinations',

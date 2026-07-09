@@ -17,6 +17,8 @@ export default {
     { label: 'Cannot form', args: [[[3,4,5],[4,5,6]],[3,2,5]], expected: false },
     { label: 'Exact match', args: [[[1,2,3]],[1,2,3]], expected: true },
   ],
+  bruteHint: 'Describe trying every combination of triplets to merge and checking after the fact whether any sequence reaches the target',
+  optimizeHint: 'Name the single-pass technique of discarding unusable triplets and tracking a running element-wise maximum toward the target',
   clues: [
     {
       id: 'constraint-complexity',

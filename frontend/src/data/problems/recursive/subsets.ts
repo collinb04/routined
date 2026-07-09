@@ -32,6 +32,8 @@ def subsets(nums):
     { label: 'Single element', args: [[0]], expected: [[],[0]] },
     { label: 'Two elements', args: [[1,2]], expected: [[],[1],[1,2],[2]] },
   ],
+  bruteHint: 'Describe generating all subsets by iterating over every bitmask from 0 to 2^n - 1 and using each bit to decide whether to include the corresponding element',
+  optimizeHint: 'Name the technique that builds subsets incrementally via backtracking, recording each partial subset as you go rather than enumerating all masks upfront',
   clues: [
     {
       id: 'constraint-output-size',

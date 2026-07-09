@@ -17,6 +17,8 @@ export default {
     { label: 'Impossible', args: [3,[0,0,0,0]], expected: -1 },
     { label: 'Two taps', args: [3,[0,0,0,1]], expected: -1 },
   ],
+  bruteHint: 'Describe the naive recursive approach that tries every subset or ordering of taps to cover the garden, and why it explodes combinatorially',
+  optimizeHint: 'Name the interval-covering technique — DP or greedy with jump pointers — that avoids trying every subset of taps',
   clues: [
     {
       id: 'constraint-complexity',

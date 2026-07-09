@@ -66,11 +66,44 @@
               </li>
             </ul>
           </div>
-        </div>
 
-        <!-- Comments -->
-        <div v-else-if="activeLeftTab === 'comments'" class="p-6">
-          <p class="text-sm text-text-muted italic">No comments yet.</p>
+          <div v-if="problem?.bruteHint || problem?.optimizeHint" class="flex flex-col gap-2">
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Hints</p>
+            <div class="flex flex-col gap-2">
+              <div v-if="problem.bruteHint" class="border border-border rounded-xl overflow-hidden">
+                <button
+                  class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-[13px] font-medium text-text-dim hover:bg-[#f5f5f2] transition-colors"
+                  @click="hintsRevealed.brute = !hintsRevealed.brute"
+                >
+                  Brute force hint
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="shrink-0 text-text-muted transition-transform duration-200"
+                    :class="hintsRevealed.brute ? 'rotate-180' : ''">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+                <div v-if="hintsRevealed.brute" class="px-4 pb-3 pt-2.5 border-t border-border text-[13px] text-text-dim leading-relaxed">
+                  {{ problem.bruteHint }}
+                </div>
+              </div>
+              <div v-if="problem.optimizeHint" class="border border-border rounded-xl overflow-hidden">
+                <button
+                  class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-[13px] font-medium text-text-dim hover:bg-[#f5f5f2] transition-colors"
+                  @click="hintsRevealed.optimize = !hintsRevealed.optimize"
+                >
+                  Optimization hint
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="shrink-0 text-text-muted transition-transform duration-200"
+                    :class="hintsRevealed.optimize ? 'rotate-180' : ''">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+                <div v-if="hintsRevealed.optimize" class="px-4 pb-3 pt-2.5 border-t border-border text-[13px] text-text-dim leading-relaxed">
+                  {{ problem.optimizeHint }}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -81,12 +114,20 @@
 
     <!-- RIGHT PANEL -->
     <div class="flex flex-col flex-1 overflow-hidden">
+      <div v-if="!progressLoaded" class="flex-1 flex items-center justify-center text-sm text-text-muted">
+        Loading your progress…
+      </div>
       <PhasedLearningPanel
+        v-else
         :clues="problem?.clues ?? []"
         :struggle="problem?.struggle"
         :problem-id="problem?.id ?? ''"
+        :dissect-progress="progress?.dissect?.state ?? null"
+        :struggle-progress="progress?.struggle ?? null"
+        :phase-completion="phaseCompletion"
         @reveal-highlight="onRevealHighlight"
         @advance-phase="onAdvancePhase"
+        @reset-problem="resetCode"
       >
         <template #attack>
           <div class="flex-1 flex flex-col overflow-hidden" style="background:#1a1a1a">
@@ -197,18 +238,18 @@
                 <button
                   class="text-[13px] font-medium px-4 py-1.5 rounded-md transition-all disabled:opacity-40"
                   style="color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)"
-                  :disabled="runLoading || isSubmitting"
+                  :disabled="!pyodideReady || runLoading || isSubmitting"
                   @click="runCode"
                 >
-                  {{ runLoading ? 'Running…' : 'Run' }}
+                  {{ pyodideLoading ? 'Preparing Python…' : runLoading ? 'Running…' : 'Run' }}
                 </button>
                 <button
                   class="text-[13px] font-semibold px-4 py-1.5 rounded-md transition-all disabled:opacity-40"
                   style="background:#2cbb5d;color:#fff"
-                  :disabled="runLoading || isSubmitting"
+                  :disabled="!pyodideReady || runLoading || isSubmitting"
                   @click="submitCode"
                 >
-                  {{ isSubmitting ? 'Submitting…' : 'Submit' }}
+                  {{ pyodideLoading ? 'Preparing Python…' : isSubmitting ? 'Submitting…' : 'Submit' }}
                 </button>
               </div>
             </div>
@@ -223,7 +264,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import confetti from 'canvas-confetti'
 
 const props = defineProps({
@@ -262,24 +303,57 @@ const DEMO_CODE = `def two_sum(nums, target):
             return [seen[diff], i]
         seen[n] = i`
 
-const codeContent  = ref(props.embedded ? DEMO_CODE : (problem.value?.starterCode ?? ''))
-const hasRun       = ref(false)
+// ── Attack local cache (localStorage-first, DB is the durable backup) ──────
+
+function attackCacheKey(problemId) {
+  return `routined:${problemId}:attack`
+}
+
+function loadAttackCache(problemId) {
+  try {
+    const raw = localStorage.getItem(attackCacheKey(problemId))
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveAttackCache(problemId, data) {
+  try {
+    localStorage.setItem(attackCacheKey(problemId), JSON.stringify(data))
+  } catch {
+    // best-effort — localStorage may be unavailable (private mode, quota, etc.)
+  }
+}
+
+function clearAttackCache(problemId) {
+  try {
+    localStorage.removeItem(attackCacheKey(problemId))
+  } catch {
+    // best-effort
+  }
+}
+
+const attackCache = props.embedded ? null : loadAttackCache(problem.value?.id ?? '')
+
+const codeContent  = ref(props.embedded ? DEMO_CODE : (attackCache?.code ?? problem.value?.starterCode ?? ''))
+const hasRun       = ref(!!(attackCache?.lastRun?.results?.length || attackCache?.lastRun?.error))
 const runLoading   = ref(false)
-const runError     = ref(null)
+const runError     = ref(attackCache?.lastRun?.error ?? null)
 const consoleOpen  = ref(false)
 const consoleTab   = ref('testcase')
 const selectedCase = ref(0)
 
-const { runTests } = usePyodide()
+const { runTests, isReady: pyodideReady, isLoading: pyodideLoading } = usePyodide()
 
 const leftTabs = [
   { id: 'problem',  label: 'Problem',  locked: false },
   { id: 'solution', label: 'Solution', locked: false },
-  { id: 'comments', label: 'Comments', locked: false },
 ]
 
 const examples    = computed(() => problem.value?.examples    ?? [])
 const constraints = computed(() => problem.value?.constraints ?? [])
+const hintsRevealed = ref({ brute: false, optimize: false })
 
 // ── Phased learning panel ──────────────────────────────────────────────────
 
@@ -289,12 +363,65 @@ function onRevealHighlight(clueId) {
 }
 
 function onAdvancePhase({ phase, data }) {
-  console.log('advance-phase', phase, data)
+  // TODO: hook up phase-transition side effects as they're needed
 }
+
+// ── Progress persistence (Dissect + Struggle live server-side only; Attack
+//    also gets an instant localStorage-first cache — see below) ───────────
+
+const progress = ref(null)
+const progressLoaded = ref(false)
+
+const phaseCompletion = computed(() => ({
+  dissect: progress.value?.dissect?.completed ?? false,
+  struggle: progress.value?.struggle?.completed ?? false,
+  attack: progress.value?.attack?.completed ?? false,
+}))
+
+function reconcileAttackProgress(problemId, attack) {
+  if (!attack?.state) return
+  const local = loadAttackCache(problemId)
+  const serverNewer = attack.updatedAt &&
+    (!local?.savedAt || new Date(attack.updatedAt).getTime() > local.savedAt)
+  if (!serverNewer) return
+
+  if (attack.state.code != null) codeContent.value = attack.state.code
+  if (attack.state.lastRun) {
+    testResults.value = attack.state.lastRun.results ?? []
+    runError.value = attack.state.lastRun.error ?? null
+    hasRun.value = !!(testResults.value.length || runError.value)
+  }
+  saveAttackCache(problemId, {
+    code: codeContent.value,
+    lastRun: attack.state.lastRun ?? null,
+    savedAt: Date.now(),
+  })
+}
+
+async function fetchProgress() {
+  const id = problem.value?.id
+  if (!id || props.embedded) {
+    progressLoaded.value = true
+    return
+  }
+  try {
+    const res = await fetch(`/api/problems/${id}/progress`, { credentials: 'include' })
+    if (res.ok) {
+      progress.value = await res.json()
+      reconcileAttackProgress(id, progress.value.attack)
+    }
+  } catch {
+    // best-effort — treat as no saved progress (also covers a defensive 401)
+  } finally {
+    progressLoaded.value = true
+  }
+}
+
+onMounted(fetchProgress)
 
 // ── Code execution (Attack tab) ────────────────────────────────────────────
 
-const testResults = ref([])
+const testResults = ref(attackCache?.lastRun?.results ?? [])
 
 const RUN_TEST_CASES    = computed(() => (problem.value?.testCases ?? []).slice(0, 2))
 const SUBMIT_TEST_CASES = computed(() => problem.value?.testCases ?? [])
@@ -305,6 +432,25 @@ function fireConfetti() {
   const burst = (opts) => confetti({ particleCount: 60, spread: 70, ticks: 200, gravity: 1.1, scalar: 0.9, ...opts })
   burst({ origin: { x: 0.3, y: 0.6 }, angle: 60 })
   setTimeout(() => burst({ origin: { x: 0.7, y: 0.6 }, angle: 120 }), 120)
+}
+
+async function persistAttack(extra = {}) {
+  const id = problem.value?.id
+  if (!id || props.embedded) return
+  try {
+    await fetch(`/api/problems/${id}/attack/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        code: codeContent.value,
+        lastRun: { results: testResults.value, error: runError.value },
+        ...extra,
+      }),
+    })
+  } catch {
+    // best-effort — localStorage already has the latest copy regardless
+  }
 }
 
 async function execute(cases) {
@@ -322,6 +468,16 @@ async function execute(cases) {
       : `Error: ${msg}`
     hasRun.value = true
   }
+
+  const id = problem.value?.id
+  if (id && !props.embedded) {
+    saveAttackCache(id, {
+      code: codeContent.value,
+      lastRun: { results: testResults.value, error: runError.value },
+      savedAt: Date.now(),
+    })
+    await persistAttack()
+  }
 }
 
 async function runCode() {
@@ -333,7 +489,10 @@ async function runCode() {
 async function submitCode() {
   isSubmitting.value = true
   await execute(SUBMIT_TEST_CASES.value)
-  if (testResults.value.length && testResults.value.every(t => t.passed)) fireConfetti()
+  if (testResults.value.length && testResults.value.every(t => t.passed)) {
+    fireConfetti()
+    await persistAttack({ completed: true })
+  }
   isSubmitting.value = false
 }
 
@@ -345,7 +504,35 @@ function resetCode() {
   consoleOpen.value = false
   consoleTab.value = 'testcase'
   selectedCase.value = 0
+
+  const id = problem.value?.id
+  if (id && !props.embedded) {
+    clearAttackCache(id)
+    persistAttack()
+  }
 }
+
+// Debounced local save (instant, network-independent) + a longer-debounced
+// background sync to the DB, so plain typing never waits on either.
+let localSaveTimer = null
+let dbSyncTimer = null
+
+watch(codeContent, (val) => {
+  const id = problem.value?.id
+  if (!id || props.embedded) return
+
+  clearTimeout(localSaveTimer)
+  localSaveTimer = setTimeout(() => {
+    saveAttackCache(id, {
+      code: val,
+      lastRun: { results: testResults.value, error: runError.value },
+      savedAt: Date.now(),
+    })
+  }, 400)
+
+  clearTimeout(dbSyncTimer)
+  dbSyncTimer = setTimeout(() => { persistAttack() }, 2000)
+})
 </script>
 
 <style scoped>

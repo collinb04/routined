@@ -17,6 +17,8 @@ export default {
     { label: 'All ones', args: [[1,1,1],2], expected: 3 },
     { label: 'k=1', args: [[0,0,0],1], expected: 1 },
   ],
+  bruteHint: 'Describe checking every subarray and counting its zeros, and the resulting time complexity',
+  optimizeHint: 'Name the sliding window technique that expands and shrinks based on how many zeros are currently inside it',
   clues: [
     {
       id: 'constraint-complexity',

@@ -18,6 +18,8 @@ export default {
     { label: 'Descending', args: [[3,2,1]], expected: 0 },
     { label: 'Single ramp', args: [[1,2]], expected: 1 },
   ],
+  bruteHint: 'Describe checking every pair (i, j) and its time complexity',
+  optimizeHint: 'Name the structure that lets you scan from the right while tracking a monotonic decreasing set of candidate left indices',
   clues: [
     {
       id: 'constraint-complexity',

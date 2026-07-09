@@ -18,6 +18,8 @@ export default {
     { label: 'Same string', args: ['abc','abc'], expected: 3 },
     { label: 'No common', args: ['abc','def'], expected: 0 },
   ],
+  bruteHint: 'Describe the naive recursion that branches on matching or skipping characters in text1 and text2, and why the same (i, j) prefix pair recurs many times',
+  optimizeHint: 'Name the 2D state (prefix length of text1, prefix length of text2) you\'d memoize to eliminate repeated work',
   clues: [
     {
       id: 'constraint-complexity',

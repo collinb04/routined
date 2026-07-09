@@ -15,6 +15,8 @@ export default {
     { label: 'Five elements root', args: [[-10,-3,0,5,9]], expected: 0 },
     { label: 'Single', args: [[1]], expected: 1 },
   ],
+  bruteHint: 'Describe what happens to tree height if you insert elements in their given order one at a time, or always pick an endpoint as root',
+  optimizeHint: 'Name the divide-and-conquer root choice at each step that keeps the two resulting subtrees as close to equal size as possible',
   clues: [
     {
       id: 'sorted-input-bst-property',

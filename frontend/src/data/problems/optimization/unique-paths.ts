@@ -22,6 +22,8 @@ export default {
     { label: '7×3', args: [7, 3], expected: 28 },
     { label: '5×5', args: [5, 5], expected: 70 },
   ],
+  bruteHint: 'Describe the naive recursion that tries moving right or down from every cell, and why the same cells get revisited by different paths',
+  optimizeHint: 'Name the 2D grid DP that caches the number of ways to reach each cell from its top and left neighbors',
   clues: [
     {
       id: 'movement-constraint',

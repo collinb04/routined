@@ -17,6 +17,8 @@ export default {
     { label: 'Empty', args: [null], expected: 0 },
     { label: 'One node', args: [[1]], expected: 1 },
   ],
+  bruteHint: 'Describe visiting every node to count them, and its time complexity relative to the required O(log²n)',
+  optimizeHint: 'Name the structural property of complete trees that lets you count an entire perfect subtree with a formula instead of visiting each node',
   clues: [
     {
       id: 'complete-tree-definition',

@@ -18,6 +18,8 @@ export default {
     { label: 'Single', args: [[1],0], expected: false },
     { label: 'All same', args: [[1,1,1,1],1], expected: true },
   ],
+  bruteHint: 'Describe scanning the array linearly to check for the target, and its time complexity',
+  optimizeHint: 'Name the binary search adaptation that handles the case where duplicate values make it impossible to tell which half is sorted',
   clues: [
     {
       id: 'duplicates-break-binary-search',

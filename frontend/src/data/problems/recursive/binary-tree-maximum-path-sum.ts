@@ -37,6 +37,8 @@ def max_path_sum_run(arr):
     { label: '[1,2,3]', args: [[1,2,3]], expected: 6 },
     { label: '[-10,9,20,null,null,15,7]', args: [[-10,9,20,null,null,15,7]], expected: 42 },
   ],
+  bruteHint: 'Describe checking every pair of nodes as path endpoints and summing the path between them, and why that\'s expensive',
+  optimizeHint: 'Name the technique of a single post-order DFS that returns the best upward branch while tracking the best bent path in a running max',
   clues: [
     {
       id: 'path-definition',

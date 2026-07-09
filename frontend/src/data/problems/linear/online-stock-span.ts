@@ -18,6 +18,8 @@ export default {
   testCases: [
     { label: 'Standard sequence', args: [[[100,80,60,70,60,75,85]]], expected: [1,1,1,2,1,4,6] },
   ],
+  bruteHint: 'Describe scanning backward through all previous prices on every call to next() and its time complexity',
+  optimizeHint: 'Name the kind of stack that stores (price, span) pairs to skip over dominated days',
   clues: [
     {
       id: 'online-processing',

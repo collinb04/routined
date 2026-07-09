@@ -18,6 +18,8 @@ export default {
     { label: '"226"', args: ['226'], expected: 3 },
     { label: '"06"', args: ['06'], expected: 0 },
   ],
+  bruteHint: 'Describe the recursive approach that branches into a one-digit or two-digit decode at each position, and explain why the same remaining suffixes get re-explored exponentially.',
+  optimizeHint: 'Name the technique for caching the number of ways to decode each prefix so each position is computed only once.',
   clues: [
     {
       id: 'constraint-complexity',

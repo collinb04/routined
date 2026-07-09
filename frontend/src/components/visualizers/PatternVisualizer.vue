@@ -28,6 +28,14 @@ import { generateBfsDfsTraversal } from './generators/bfsDfsTraversal'
 import { generateDfsTraversal } from './generators/dfsTraversal'
 import { generateTopoSort } from './generators/topoSort'
 import { generateUnionFindOps } from './generators/unionFindOps'
+import { generateBitManipulation } from './generators/bitManipulation'
+import { generateXorPatterns } from './generators/xorPatterns'
+import { generateBitmaskSubset } from './generators/bitmaskSubset'
+import { generateGridTraversal } from './generators/gridTraversal'
+import { generateGridFloodFill } from './generators/gridFloodFill'
+import { generateMatrixRotate } from './generators/matrixRotate'
+import { generateGridMultiPass } from './generators/gridMultiPass'
+import { generateRecursionMemoBridge } from './generators/recursionMemoBridge'
 import ArrayRenderer from './renderers/ArrayRenderer.vue'
 import TreeRenderer from './renderers/TreeRenderer.vue'
 import StackRenderer from './renderers/StackRenderer.vue'
@@ -35,16 +43,17 @@ import LinkedListRenderer from './renderers/LinkedListRenderer.vue'
 import GraphRenderer from './renderers/GraphRenderer.vue'
 import IntervalRenderer from './renderers/IntervalRenderer.vue'
 import UnionFindRenderer from './renderers/UnionFindRenderer.vue'
+import GridRenderer from './renderers/GridRenderer.vue'
 import FrameControls from './shared/FrameControls.vue'
 import MessagePanel from './shared/MessagePanel.vue'
 import type {
   Frame, ArrayFrame, StackFrame, TreeFrame,
-  LinkedListFrame, GraphFrame, IntervalFrame, UnionFindFrame,
+  LinkedListFrame, GraphFrame, IntervalFrame, UnionFindFrame, GridFrame,
 } from '@/composables/types'
 
 const props = defineProps<{ pattern: string }>()
 
-type RendererKind = 'array' | 'stack' | 'tree' | 'list' | 'graph' | 'interval' | 'union-find'
+type RendererKind = 'array' | 'stack' | 'tree' | 'list' | 'graph' | 'interval' | 'union-find' | 'grid'
 
 const PATTERNS: Record<string, { frames: Frame[]; renderer: RendererKind }> = {
   'two-pointers':       { frames: generateTwoPointers(),        renderer: 'array' },
@@ -75,6 +84,14 @@ const PATTERNS: Record<string, { frames: Frame[]; renderer: RendererKind }> = {
   'dfs':                { frames: generateDfsTraversal(),        renderer: 'tree'  },
   'topo-sort':          { frames: generateTopoSort(),           renderer: 'graph' },
   'union-find':         { frames: generateUnionFindOps(),       renderer: 'union-find' },
+  'bit-manipulation':   { frames: generateBitManipulation(),    renderer: 'array' },
+  'xor-patterns':       { frames: generateXorPatterns(),        renderer: 'array' },
+  'bitmask-subset':     { frames: generateBitmaskSubset(),      renderer: 'array' },
+  'grid-traversal':     { frames: generateGridTraversal(),      renderer: 'grid'  },
+  'grid-flood-fill':    { frames: generateGridFloodFill(),      renderer: 'grid'  },
+  'matrix-rotate':      { frames: generateMatrixRotate(),       renderer: 'grid'  },
+  'grid-multi-pass':    { frames: generateGridMultiPass(),      renderer: 'grid'  },
+  'recursion-memo-bridge': { frames: generateRecursionMemoBridge(), renderer: 'tree' },
 }
 
 const config = PATTERNS[props.pattern]
@@ -97,6 +114,7 @@ const {
     <GraphRenderer      v-else-if="renderer === 'graph'"      :frame="(current as GraphFrame)" />
     <IntervalRenderer   v-else-if="renderer === 'interval'"   :frame="(current as IntervalFrame)" />
     <UnionFindRenderer  v-else-if="renderer === 'union-find'" :frame="(current as UnionFindFrame)" />
+    <GridRenderer       v-else-if="renderer === 'grid'"       :frame="(current as GridFrame)" />
     <MessagePanel :message="current.message" />
     <FrameControls
       :index="index"

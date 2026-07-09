@@ -18,6 +18,8 @@ export default {
     { label: 'All positive', args: [[1,2,3]], expected: 6 },
     { label: 'Single negative', args: [[-1,-1,-1,-1]], expected: -1 },
   ],
+  bruteHint: 'Describe checking every subarray with every possible deletion, and the resulting time complexity',
+  optimizeHint: 'Name the technique that tracks two running states as you scan — one without a deletion used and one with',
   clues: [
     {
       id: 'constraint-complexity',

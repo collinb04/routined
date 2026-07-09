@@ -21,6 +21,8 @@ export default {
   testCases: [
     { label: 'Overlap rejected', args: [[['book','book','book']],[[10,20],[15,25],[20,30]]], expected: [true,false,true] },
   ],
+  bruteHint: 'Describe scanning every existing booking on each new book() call to check for conflicts, and its time complexity',
+  optimizeHint: 'Name the structure that keeps bookings sorted so conflicts can be found by binary search instead of a full scan',
   clues: [
     {
       id: 'interval-semantics',

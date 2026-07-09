@@ -16,6 +16,8 @@ export default {
     { label: 'Ascending', args: [[1,2,3,4,5]], expected: 4 },
     { label: 'Descending', args: [[7,6,4,3,1]], expected: 0 },
   ],
+  bruteHint: 'Describe checking every pair of buy and sell days and its time complexity',
+  optimizeHint: 'Name the single-pass technique that captures profit from price movements without picking specific buy/sell days upfront',
   clues: [
     {
       id: 'unlimited-transactions',

@@ -27,6 +27,8 @@ def longest_palindrome_run(s):
     { label: '"racecar"', args: ['racecar'], expected: true },
     { label: '"babad"', args: ['babad'], expected: true },
   ],
+  bruteHint: 'Describe the naive approach that checks every substring by testing if it\'s a palindrome from scratch, and why so many overlapping sub-palindromes get rechecked',
+  optimizeHint: 'Name what a substring\'s palindrome status depends on that lets you build a DP table instead of rechecking each substring independently',
   clues: [
     {
       id: 'constraint-complexity',

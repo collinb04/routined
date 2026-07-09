@@ -17,6 +17,8 @@ export default {
     { label: '[0,3,7,2,5,8,4,6,0,1]', args: [[0,3,7,2,5,8,4,6,0,1]], expected: 9 },
     { label: 'empty', args: [[]], expected: 0 },
   ],
+  bruteHint: 'Describe sorting and scanning, or checking membership repeatedly for each number, and their time complexities',
+  optimizeHint: 'Name the data structure that gives O(1) lookups, and explain what check ensures you only start counting from the beginning of a sequence',
   clues: [
     {
       id: 'on-time-requirement',

@@ -16,6 +16,8 @@ export default {
     { label: '1 island', args: [[['1','1','1','1','0'],['1','1','0','1','0'],['1','1','0','0','0'],['0','0','0','0','0']]], expected: 1 },
     { label: '3 islands', args: [[['1','1','0','0','0'],['1','1','0','0','0'],['0','0','1','0','0'],['0','0','0','1','1']]], expected: 3 },
   ],
+  bruteHint: 'Describe re-scanning the grid for each land cell without marking visited cells, causing the same island to be explored repeatedly',
+  optimizeHint: 'Name the technique that flood-fills and marks each island\'s cells so every island is counted exactly once',
   clues: [
     {
       id: 'constraint-complexity',

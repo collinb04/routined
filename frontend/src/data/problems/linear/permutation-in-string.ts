@@ -16,6 +16,8 @@ export default {
     { label: 'ab in eidbaooo', args: ['ab', 'eidbaooo'], expected: true },
     { label: 'ab in eidboaoo', args: ['ab', 'eidboaoo'], expected: false },
   ],
+  bruteHint: 'Describe checking every length-len(s1) window in s2 by sorting or comparing characters, and name the resulting time complexity',
+  optimizeHint: 'Name the technique that slides a fixed-size window across s2 while comparing character frequency counts',
   clues: [
     {
       id: 'permutation-equivalence',

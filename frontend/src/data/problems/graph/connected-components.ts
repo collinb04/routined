@@ -23,6 +23,8 @@ export default {
     { label: 'No edges', args: [4, []], expected: 4 },
     { label: 'All isolated', args: [3, []], expected: 3 },
   ],
+  bruteHint: 'Describe testing connectivity between every pair of nodes independently, and the complexity that results',
+  optimizeHint: 'Name the structure that merges nodes into groups and lets you check group membership in near-constant time',
   clues: [
     {
       id: 'constraint-size',

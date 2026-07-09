@@ -18,6 +18,8 @@ export default {
     { label: 'Single element', args: [[0]], expected: true },
     { label: 'All zeros except first', args: [[2,0,0]], expected: true },
   ],
+  bruteHint: 'Describe trying every possible jump length from every position recursively and why the branching makes this blow up exponentially',
+  optimizeHint: 'Name the single running value you could update in one left-to-right pass that tells you the farthest index reachable so far',
   clues: [
     {
       id: 'max-reach-signal',

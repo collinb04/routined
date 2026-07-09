@@ -17,6 +17,8 @@ export default {
     { label: 'One pair', args: [[3,1,3,4,3],6], expected: 1 },
     { label: 'No pairs', args: [[1,2,3],10], expected: 0 },
   ],
+  bruteHint: 'Describe checking every pair of elements, and the resulting time complexity',
+  optimizeHint: 'Name the data structure that lets you look up how many complements are still available, or the sort-plus-two-pointers alternative',
   clues: [
     {
       id: 'constraint-complexity',

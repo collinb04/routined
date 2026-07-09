@@ -17,6 +17,8 @@ export default {
     { label: 'No path', args: [[1,2,3],5], expected: false },
     { label: 'Empty tree', args: [null,0], expected: false },
   ],
+  bruteHint: 'Describe generating every root-to-leaf path first, then checking afterward whether any of them sum to the target',
+  optimizeHint: 'Name the technique of tracking the running sum during a single DFS descent, without ever storing the full paths',
   clues: [
     {
       id: 'output-type',

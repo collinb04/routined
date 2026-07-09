@@ -17,6 +17,8 @@ export default {
     { label: 'not found', args: [[4,5,6,7,0,1,2], 3], expected: -1 },
     { label: 'single', args: [[1], 0], expected: -1 },
   ],
+  bruteHint: 'Describe scanning the array linearly to find the target, and why that fails the O(log n) requirement',
+  optimizeHint: 'Name the modified binary search technique that determines which half of the array is properly sorted at each step',
   clues: [
     {
       id: 'constraint-complexity',

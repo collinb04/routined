@@ -19,6 +19,8 @@ export default {
     { label: 'n=2', args: [2], expected: 0 },
     { label: 'n=20', args: [20], expected: 8 },
   ],
+  bruteHint: 'Describe testing each number individually for primality and the total cost across n numbers',
+  optimizeHint: 'Name the algorithm that marks composites in bulk instead of testing each number independently',
   clues: [
     {
       id: 'constraint-complexity',
