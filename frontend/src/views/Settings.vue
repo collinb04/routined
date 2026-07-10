@@ -46,13 +46,19 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { useAuth0 } from '@auth0/auth0-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth   = useAuthStore()
+const auth0  = useAuth0()
 
 async function handleLogout() {
   await auth.logout()
-  router.push('/')
+  if (auth0.isAuthenticated.value) {
+    auth0.logout({ logoutParams: { returnTo: window.location.origin } })
+  } else {
+    router.push('/')
+  }
 }
 </script>

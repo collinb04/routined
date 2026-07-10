@@ -11,8 +11,13 @@ interface User {
 
 function mapError(body: { error?: string }, fallbackCode: string) {
   const msg = (body.error || '').toLowerCase()
-  if (msg.includes('wrong email or password') || msg.includes('invalid')) return 'auth/invalid-credential'
+  // Check "already exists" phrasing before the generic "invalid" catch-all —
+  // Auth0's duplicate-signup wording can otherwise get misclassified.
+  if (msg.includes('username') && (msg.includes('already') || msg.includes('taken'))) return 'auth/username-already-in-use'
+  if (msg.includes('no account found')) return 'auth/social-account-not-found'
   if (msg.includes('already') || msg.includes('exists')) return 'auth/email-already-in-use'
+  if (msg.includes('invalid or expired token')) return 'auth/social-token-invalid'
+  if (msg.includes('wrong email or password') || msg.includes('invalid')) return 'auth/invalid-credential'
   if (msg.includes('weak') || msg.includes('password strength')) return 'auth/weak-password'
   return fallbackCode
 }
@@ -65,7 +70,28 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated.value = false
   }
 
+  async function forgotPassword(email: string) {
+    await fetch('/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+  }
+
+  async function loginWithSocialToken(accessToken: string, mode: 'login' | 'signup') {
+    const res = await fetch('/auth/social', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ access_token: accessToken, mode }),
+    })
+    const body = await res.json()
+    if (!res.ok) throw { code: mapError(body, 'auth/invalid-credential') }
+    user.value       = body
+    isAuthenticated.value = true
+  }
+
   init()
 
-  return { user, isAuthenticated, isLoading, init, login, signup, logout }
+  return { user, isAuthenticated, isLoading, init, login, signup, logout, forgotPassword, loginWithSocialToken }
 })

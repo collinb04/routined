@@ -6,6 +6,12 @@ export function authErrorMessage(code: string): string {
       return 'Invalid email or password.'
     case 'auth/email-already-in-use':
       return 'An account with this email already exists.'
+    case 'auth/username-already-in-use':
+      return 'This username is already taken.'
+    case 'auth/social-account-not-found':
+      return 'No account found for that email. Please sign up first.'
+    case 'auth/social-token-invalid':
+      return "Couldn't verify your Google sign-in — this can happen if your browser blocks third-party cookies. Please try again."
     case 'auth/invalid-email':
       return 'Please enter a valid email address.'
     case 'auth/weak-password':

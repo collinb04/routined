@@ -7,6 +7,8 @@ import Product from '@/views/Product.vue'
 import SessionView from '@/views/SessionView.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
+import ForgotPassword from '@/views/ForgotPassword.vue'
+import AuthCallback from '@/views/AuthCallback.vue'
 import Profile from '@/views/Profile.vue'
 import Settings from '@/views/Settings.vue'
 import FeedbackLibrary from '@/views/FeedbackLibrary.vue'
@@ -21,6 +23,8 @@ const routes = [
   { path: '/session/:id', component: SessionView, props: true, meta: { requiresAuth: true } },
   { path: '/login', component: Login },
   { path: '/signup', component: Signup },
+  { path: '/forgot-password', component: ForgotPassword },
+  { path: '/login/callback', component: AuthCallback },
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/settings', component: Settings, meta: { requiresAuth: true } },
   { path: '/feedback', component: FeedbackLibrary, meta: { requiresAuth: true } },

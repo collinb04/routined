@@ -346,14 +346,16 @@
         <div class="flex-1 flex flex-col gap-6">
           <h2 class="text-3xl sm:text-5xl font-medium leading-snug tracking-tight text-text text-center">Get in Touch</h2>
           <p class="text-text-dim">Questions, feedback, partnerships — reach out anytime.</p>
-          <form class="flex flex-col gap-4">
-            <input type="text" placeholder="Name" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-black/10" />
-            <input type="email" placeholder="Email" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-black/10" />
-            <textarea rows="4" placeholder="Message" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-black/10 resize-none" />
-            <button type="submit" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg hover:opacity-85 transition-opacity">
-              Send message
+          <form v-if="!contactSent" class="flex flex-col gap-4" @submit.prevent="submitContactForm">
+            <input v-model="contactName" type="text" placeholder="Name" required class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-black/10" />
+            <input v-model="contactEmail" type="email" placeholder="Email" required class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-black/10" />
+            <textarea v-model="contactMessage" rows="4" placeholder="Message" required class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-black/10 resize-none" />
+            <p v-if="contactError" class="text-sm text-red-500">{{ contactError }}</p>
+            <button type="submit" :disabled="contactSubmitting" class="bg-black text-white text-sm font-semibold px-7 py-3 rounded-lg hover:opacity-85 transition-opacity disabled:opacity-50">
+              {{ contactSubmitting ? 'Sending…' : 'Send message' }}
             </button>
           </form>
+          <p v-else class="text-sm text-text-dim">Thanks for reaching out — we'll get back to you soon.</p>
         </div>
 
       </div>
@@ -377,6 +379,35 @@
   }
 
   const openFaq = ref(null)
+  const contactName = ref('')
+  const contactEmail = ref('')
+  const contactMessage = ref('')
+  const contactSubmitting = ref(false)
+  const contactSent = ref(false)
+  const contactError = ref('')
+
+  async function submitContactForm() {
+    contactSubmitting.value = true
+    contactError.value = ''
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactName.value.trim(),
+          email: contactEmail.value.trim(),
+          message: contactMessage.value.trim(),
+        }),
+      })
+      if (!res.ok) throw new Error()
+      contactSent.value = true
+    } catch {
+      contactError.value = 'Something went wrong — please try again.'
+    } finally {
+      contactSubmitting.value = false
+    }
+  }
+
   const heroFlipped = ref(false)
   const clusterFlipped = ref(false)
   const patternsFlipped = ref(false)

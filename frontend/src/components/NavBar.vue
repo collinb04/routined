@@ -259,10 +259,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth0 } from '@auth0/auth0-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth   = useAuthStore()
+const auth0  = useAuth0()
 
 const userInitial = computed(() => {
   const name  = auth.user?.name
@@ -279,7 +281,15 @@ async function handleLogout() {
   openDropdown.value = null
   mobileOpen.value   = false
   await auth.logout()
-  router.push('/')
+  if (auth0.isAuthenticated.value) {
+    // Only relevant if this browser session ever went through the Google
+    // redirect flow — clears Auth0's own SSO cookie too (a full-page
+    // redirect through Auth0 and back), not just our Flask session.
+    // Skipped for password-only sessions to keep logout instant for them.
+    auth0.logout({ logoutParams: { returnTo: window.location.origin } })
+  } else {
+    router.push('/')
+  }
 }
 
 const openDropdown = ref(null)

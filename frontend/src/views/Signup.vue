@@ -12,6 +12,26 @@
 
       <h2 class="text-[22px] font-bold text-text text-center">Create Your Account</h2>
 
+      <button
+        type="button"
+        class="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg py-3 text-sm font-medium text-text hover:bg-[#f5f5f2] transition-colors"
+        @click="continueWithGoogle"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.46 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.1A11.997 11.997 0 0 0 12 24z"/>
+          <path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.26A11.997 11.997 0 0 0 0 12c0 1.94.46 3.77 1.26 5.38l4.01-3.1z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.26 6.62l4.01 3.1c.95-2.85 3.6-4.97 6.73-4.97z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div class="h-px flex-1 bg-gray-200" />
+        <span class="text-[11px] text-text-muted uppercase tracking-wider">or</span>
+        <div class="h-px flex-1 bg-gray-200" />
+      </div>
+
       <!-- Form -->
       <form class="flex flex-col gap-3.5" @submit.prevent="submit" novalidate>
 
@@ -143,19 +163,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuth0 } from '@auth0/auth0-vue'
 import { useAuthStore } from '@/stores/auth'
 import { authErrorMessage } from '@/lib/authErrors'
 
 const router = useRouter()
+const route  = useRoute()
 const auth   = useAuthStore()
+const auth0  = useAuth0()
+
+function continueWithGoogle() {
+  sessionStorage.setItem('authMode', 'signup')
+  auth0.loginWithRedirect({
+    authorizationParams: { connection: 'google-oauth2' },
+    appState: { target: '/login/callback' },
+  })
+}
 
 const showPassword = ref(false)
 const showConfirm  = ref(false)
 const loading      = ref(false)
 const submitted    = ref(false)
-const submitError  = ref('')
+const submitError  = ref(typeof route.query.error === 'string' ? authErrorMessage(route.query.error) : '')
+
+onMounted(() => {
+  if (route.query.error) router.replace({ path: route.path })
+})
 
 const fields = reactive({ name: '', email: '', password: '', confirm: '' })
 const errors = reactive({ name: '', email: '', password: '', confirm: '' })
@@ -175,14 +210,22 @@ const allRequirementsMet = computed(() => requirements.value.every(r => r.met))
 function validate() {
   errors.name = errors.email = errors.password = errors.confirm = ''
 
-  if (!fields.name.trim())
+  const name = fields.name.trim()
+  if (!name)
     errors.name = 'Username is required.'
-  else if (fields.name.trim().length < 3)
+  else if (name.length < 3)
     errors.name = 'Username must be at least 3 characters.'
+  else if (name.length > 20)
+    errors.name = 'Username must be 20 characters or fewer.'
+  else if (!/^[A-Za-z0-9_-]+$/.test(name))
+    errors.name = 'Username can only contain letters, numbers, underscores, and hyphens.'
 
-  if (!fields.email.trim())
+  const email = fields.email.trim()
+  if (!email)
     errors.email = 'Email is required.'
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email))
+  else if (email.length > 254)
+    errors.email = 'Email is too long.'
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     errors.email = 'Enter a valid email address.'
 
   if (!fields.password)
