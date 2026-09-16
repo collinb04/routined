@@ -7,35 +7,38 @@ export default {
     { input: 'customers=[1,0,1,2,1,1,7,5], grumpy=[0,1,0,1,0,1,0,1], minutes=3', output: '16', explanation: 'Suppress grumpiness minutes 3–5.' },
   ],
   constraints: ['n == customers.length == grumpy.length', '1 ≤ minutes ≤ n ≤ 2 × 10⁴', '0 ≤ customers[i] ≤ 1000'],
-  starterCode: `def max_satisfied(customers, grumpy, minutes):
-  pass`,
+  starterCode: `class Solution:
+    def max_satisfied(self, customers, grumpy, minutes):
+        pass`,
+  runnerSetup: 'max_satisfied = Solution().max_satisfied',
   functionName: 'max_satisfied',
   conceptId: 'sliding-window',
   testCases: [
     { label: 'Standard', args: [[1,0,1,2,1,1,7,5],[0,1,0,1,0,1,0,1],3], expected: 16 },
     { label: 'Never grumpy', args: [[1,2,3],[0,0,0],1], expected: 6 },
   ],
-  bruteHint: 'Describe checking every window of `minutes` consecutive minutes by recomputing its gain from scratch, and the resulting time complexity',
-  optimizeHint: 'Name the technique that slides the window across the array, updating the gain in O(1) per step',
+  bruteHint: 'The brute-force approach tries every possible starting position for the suppression window — for each one, sum the always-satisfied customers with whatever grumpy customers happen to fall inside that window, then keep the best total found. That works, but recomputing each window\'s sum from scratch means checking roughly n starting positions at O(n) work apiece, for O(n²) overall. At n up to 20,000, how many operations is that, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'fixed-window-size',
-      question: 'The suppression lasts exactly <code>minutes</code> consecutive minutes — a fixed duration. What sliding window variant does a fixed window length suggest?',
+      question: 'The exact wording of how a mechanism behaves often signals which variant of a technique applies. The suppression lasts exactly <code>minutes</code> consecutive minutes — a fixed duration. What sliding window variant does a fixed window length suggest?',
       options: [
-        { label: 'Variable-size window shrunk on a condition', isCorrect: false, feedback: 'Variable-size windows expand and contract based on a validity condition. Here the window size is fixed at exactly `minutes` — there\'s no condition that changes its size.' },
-        { label: 'Fixed-size window sliding across the array', isCorrect: true },
-        { label: 'Two pointers scanning from both ends', isCorrect: false, feedback: 'Two pointers from both ends work when you\'re looking for a pair that satisfies a condition. Here you\'re sliding a fixed-length window in one direction to find the best position.' },
-        { label: 'Prefix sums to query arbitrary ranges', isCorrect: false, feedback: 'Prefix sums can answer range-sum queries, but they don\'t identify the best window placement on their own. The fixed-size sliding window directly finds the optimal position in O(n).' },
+        { label: 'Grow or shrink the span on a condition', isCorrect: false, feedback: 'Variable-size windows expand and contract based on a validity condition. Here the window size is fixed at exactly `minutes` — there\'s no condition that changes its size.' },
+        { label: 'Keep a fixed length, moving forward each step', isCorrect: true },
+        { label: 'Scan inward from both ends toward the middle', isCorrect: false, feedback: 'Two pointers from both ends work when you\'re looking for a pair that satisfies a condition. Here you\'re sliding a fixed-length window in one direction to find the best position.' },
+        { label: 'Precompute running totals to answer arbitrary range queries', isCorrect: false, feedback: 'Prefix sums can answer range-sum queries, but they don\'t identify the best window placement on their own. The fixed-size sliding window directly finds the optimal position in O(n).' },
       ],
       correctFeedback: 'A fixed-size window of length `minutes` slides from index 0 to n - minutes. At each position you compute the extra customers gained — and you want to maximize that gain.',
       wrongFeedback: [
         'The suppression window is always exactly `minutes` long — it doesn\'t grow or shrink. What kind of sliding window has a constant size?',
         'When the window size never changes, you add the new right element and remove the old left element at each step. What pattern is that?',
       ],
+      highlight: { location: 'description', text: 'suppress grumpiness for <code>minutes</code> consecutive minutes' },
     },
     {
       id: 'decompose-problem',
-      question: 'The total satisfied customers = always-satisfied customers + extra customers from the suppression window. What does this decomposition tell you about what to maximize?',
+      question: 'Breaking a total into a part that never changes and a part that does tells you exactly where the optimization opportunity lives. The total satisfied customers = always-satisfied customers + extra customers from the suppression window. What does this decomposition tell you about what to maximize?',
       options: [
         { label: 'Maximize total customers in the window', isCorrect: false, feedback: 'Maximizing total customers in the window includes customers who were already satisfied (grumpy[i] = 0). Those are already counted in the base total — you only want the extra ones the suppression adds.' },
         { label: 'Maximize grumpy customers in the window', isCorrect: true },
@@ -50,18 +53,34 @@ export default {
     },
     {
       id: 'constraint-size',
-      question: 'n ≤ 2 × 10⁴. What complexity is comfortably acceptable here?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. n ≤ 2 × 10⁴. What complexity is comfortably acceptable here?',
       options: [
         { label: 'O(n²) — try all (start, end) pairs', isCorrect: false, feedback: 'O(n²) at n = 20,000 is 400 million operations. A fixed-size sliding window processes the array in a single O(n) pass — no reason to try all pairs.' },
-        { label: 'O(n) with a single sliding window pass', isCorrect: false },
+        { label: 'O(n) with a single pass over the array', isCorrect: false },
         { label: 'O(n) in one or two linear passes', isCorrect: true },
-        { label: 'O(n log n) at minimum due to window search', isCorrect: false, feedback: 'No sorting or binary search is needed. The window slides linearly — each element enters and exits exactly once, giving O(n) total.' },
+        { label: 'O(n log n) at minimum to find the best placement', isCorrect: false, feedback: 'No sorting or binary search is needed. The window slides linearly — each element enters and exits exactly once, giving O(n) total.' },
       ],
       correctFeedback: 'Two O(n) passes — one to compute the base total, one for the sliding window — gives O(n) overall. At n = 20,000 that\'s trivially fast.',
       wrongFeedback: [
         'How many times does each element need to be visited when a fixed-size window slides from left to right?',
         'Each element is added to the window once and removed once. What total complexity does that give for processing all n elements?',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ minutes ≤ n ≤ 2 × 10⁴' },
     },
   ],
+  solutionCode: `class Solution:
+    def max_satisfied(self, customers, grumpy, minutes):
+        base = sum(c for c, g in zip(customers, grumpy) if g == 0)
+        extra = sum(customers[i] for i in range(minutes) if grumpy[i] == 1)
+        best_extra = extra
+        for i in range(minutes, len(customers)):
+            if grumpy[i] == 1:
+                extra += customers[i]
+            if grumpy[i - minutes] == 1:
+                extra -= customers[i - minutes]
+            best_extra = max(best_extra, extra)
+        return base + best_extra`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>base</code> already counts every already-satisfied customer regardless of the window\'s placement — the sliding window only ever needs to track the *extra* customers a grumpy minute would otherwise cost, never re-summing the whole array per window position.',
+  solutionExplanation: 'Customers during non-grumpy minutes are always satisfied no matter where the suppression window goes, so they can be totaled once up front as a fixed baseline. What actually changes as the window slides is only the grumpy-minute customers it happens to cover — sliding the window one step just adds the newly-covered minute and removes the one that fell out the back, so the best window is found in one linear pass instead of resumming each candidate window from scratch.',
 }

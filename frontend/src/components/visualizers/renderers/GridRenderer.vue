@@ -25,7 +25,7 @@ function cellClass(r: number, c: number): string {
 
 function pointerBadgeClass(r: number, c: number): string {
   const kind = props.frame.highlights[r]?.[c] ?? 'default'
-  const base = 'w-[16px] h-[16px] rounded-full border-[1.5px] flex items-center justify-center text-[8px] font-bold leading-none transition-colors duration-200'
+  const base = 'w-[16px] h-[16px] rounded-lg border-[1.5px] flex items-center justify-center text-[8px] font-bold leading-none transition-colors duration-200'
   if (kind === 'match')  return `${base} border-green text-green bg-green-bg`
   if (kind === 'active' || kind === 'window') return `${base} border-accent text-accent bg-[rgba(74,124,247,0.07)]`
   return `${base} border-text/30 text-text/50`

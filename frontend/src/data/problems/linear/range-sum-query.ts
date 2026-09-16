@@ -12,8 +12,10 @@ export default {
     '-10⁵ ≤ nums[i] ≤ 10⁵',
     '0 ≤ left ≤ right < nums.length',
   ],
-  starterCode: `def range_sum(nums, left, right):
-  pass`,
+  starterCode: `class Solution:
+    def range_sum(self, nums, left, right):
+        pass`,
+  runnerSetup: 'range_sum = Solution().range_sum',
   functionName: 'range_sum',
   conceptId: 'prefix-sums',
   testCases: [
@@ -22,12 +24,13 @@ export default {
     { label: 'Full array', args: [[-2, 0, 3, -5, 2, -1], 0, 5], expected: -3 },
     { label: 'Single element', args: [[3, 5, 2], 1, 1], expected: 5 },
   ],
-  bruteHint: 'Describe summing the elements in the range from scratch, and name its time complexity',
-  optimizeHint: 'Name the precomputed structure that turns each query into an O(1) lookup',
+  bruteHint: 'Picture looping from index left to right, adding each element as you go, to answer a single query — that takes O(right − left + 1) time, which is O(n) in the worst case when the range spans nearly the whole array. If this function gets called many times, each on a potentially large range, how does that repeated cost add up?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'o1-query-requirement',
-      question: '"Use a prefix sum array so the query runs in O(1)." What does O(1) rule out?',
+      question: 'Time-complexity requirements tell you what kind of computation is allowed at query time. "Use a prefix sum array so the query runs in O(1)." What does O(1) rule out?',
+      highlight: { location: 'description', text: 'Use a prefix sum array so the query runs in O(1).' },
       options: [
         { label: 'Using a loop to sum elements in [left, right]', isCorrect: true },
         { label: 'Allocating an extra array', isCorrect: false, feedback: 'The problem explicitly asks you to use a prefix sum array — extra space is expected. O(1) refers to query time, not space.' },
@@ -42,7 +45,7 @@ export default {
     },
     {
       id: 'prefix-sum-construction',
-      question: 'prefix[0] = 0 and prefix[i+1] = prefix[i] + nums[i]. For nums = [-2, 0, 3, -5], what is prefix[3]?',
+      question: 'Getting the build step exactly right is what makes O(1) lookups possible afterward. prefix[0] = 0 and prefix[i+1] = prefix[i] + nums[i]. For nums = [-2, 0, 3, -5], what is prefix[3]?',
       options: [
         { label: '3', isCorrect: false, feedback: 'prefix[3] = prefix[2] + nums[2]. prefix[2] = prefix[1] + nums[1] = -2 + 0 = -2. So prefix[3] = -2 + 3 = 1.' },
         { label: '1', isCorrect: true },
@@ -57,12 +60,13 @@ export default {
     },
     {
       id: 'left-equals-zero',
-      question: '0 ≤ left ≤ right. When left = 0, how does the prefix formula handle it?',
+      question: 'Boundary values are what reveal whether your formula needs special-casing. 0 ≤ left ≤ right. When left = 0, how does the prefix formula handle it?',
+      highlight: { location: 'constraint', text: '0 ≤ left ≤ right < nums.length' },
       options: [
         { label: 'It fails — prefix[-1] is out of bounds', isCorrect: false, feedback: 'The formula is prefix[right+1] − prefix[left], not prefix[right+1] − prefix[left−1]. When left = 0, you subtract prefix[0] = 0, which is valid.' },
         { label: 'prefix[right+1] − prefix[0] = prefix[right+1]', isCorrect: true },
         { label: 'You need a special case for left = 0', isCorrect: false, feedback: 'No special case is needed. prefix[0] = 0 by construction, so prefix[right+1] − prefix[0] simplifies naturally to prefix[right+1].' },
-        { label: 'left = 0 makes prefix sums unnecessary', isCorrect: false, feedback: 'Even when left = 0, the prefix formula gives you the sum in O(1). Abandoning the prefix approach for this case would complicate the code without benefit.' },
+        { label: "left = 0 means you don't need the precomputed lookup", isCorrect: false, feedback: 'Even when left = 0, the prefix formula gives you the sum in O(1). Abandoning the prefix approach for this case would complicate the code without benefit.' },
       ],
       correctFeedback: 'prefix[0] = 0 by construction. So sumRange(0, right) = prefix[right+1] − 0 = prefix[right+1], which is exactly the cumulative sum of the first right+1 elements.',
       wrongFeedback: [
@@ -71,4 +75,13 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def range_sum(self, nums, left, right):
+        prefix = [0] * (len(nums) + 1)
+        for i, x in enumerate(nums):
+            prefix[i + 1] = prefix[i] + x
+        return prefix[right + 1] - prefix[left]`,
+  solutionComplexity: { time: 'O(n) to build, O(1) per query', space: 'O(n)' },
+  solutionCaveat: 'This rebuilds the prefix array on every call since each test here is a one-shot function call — in a real <code>NumArray</code> class, the prefix array would be built once in <code>__init__</code> and every <code>range_sum</code> call would cost O(1), not O(n).',
+  solutionExplanation: '<code>prefix[i]</code> holds the sum of everything before index i, so the sum of any range [left, right] is just "everything up to right" minus "everything up to left" — one subtraction instead of a loop. The <code>+1</code> offset throughout exists so <code>prefix[0] = 0</code> can represent "sum of nothing" without a special case, keeping <code>prefix[i+1]</code> aligned with <code>nums[i]</code>.',
 }

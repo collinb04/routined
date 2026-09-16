@@ -6,6 +6,7 @@ import { defaultKeymap, indentWithTab } from '@codemirror/commands'
 import { python } from '@codemirror/lang-python'
 import { HighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
+import { indentationMarkers } from '@replit/codemirror-indentation-markers'
 
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits<{ 'update:modelValue': [v: string] }>()
@@ -65,6 +66,10 @@ onMounted(() => {
         highlightActiveLine(),
         indentOnInput(),
         bracketMatching(),
+        indentationMarkers({
+          highlightActiveBlock: true,
+          colors: { dark: 'rgba(255,255,255,0.09)', activeDark: 'rgba(255,255,255,0.22)' },
+        }),
         python(),
         vscodeDark,
         syntaxHighlighting(vscodeDarkHighlight),

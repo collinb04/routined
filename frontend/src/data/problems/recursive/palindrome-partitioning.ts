@@ -8,23 +8,25 @@ export default {
     { input: 's = "a"', output: '[["a"]]' },
   ],
   constraints: ['1 <= s.length <= 16', 's consists only of lowercase English letters'],
-  starterCode: `def partition(s):
-  pass`,
+  starterCode: `class Solution:
+    def partition(self, s):
+        pass`,
   functionName: 'partition_run',
   conceptId: 'backtracking',
   runnerSetup: `def partition_run(s):
-  result = partition(s)
+  result = Solution().partition(s)
   return sorted([sorted(p) for p in result])`,
   testCases: [
     { label: '"aab"', args: ['aab'], expected: [['a','a','b'],['aa','b']] },
     { label: '"a"', args: ['a'], expected: [['a']] },
   ],
-  bruteHint: 'Describe generating every possible way to split the string and checking afterward which splits consist entirely of palindromes',
-  optimizeHint: 'Name the technique of only extending a partition with a substring once you\'ve confirmed it\'s a palindrome, rather than checking at the end',
+  bruteHint: 'The brute-force approach generates every possible way to split the string into substrings, then checks afterward which of those splits consist entirely of palindromes. Since there are 2^(n-1) ways to partition a string of length n, and each split must be checked for validity after the fact, this generate-then-check strategy costs roughly O(n · 2ⁿ) time overall. What would let you avoid building splits that you already know contain a non-palindrome substring?',
+  optimizeComplexity: { time: 'O(n · 2ⁿ)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 16. What does this small bound tell you about the expected approach?',
+      question: 'Input-size constraints are usually your strongest clue about the complexity class the intended solution should hit. s.length ≤ 16. What does this small bound tell you about the expected approach?',
+      highlight: { location: 'constraint', text: '1 <= s.length <= 16' },
       options: [
         { label: 'Greedy: always take the longest palindrome prefix', isCorrect: false, feedback: 'Greedy commits to one choice per position without reconsidering. Partitioning requires exploring all valid splits — taking the longest prefix at each step misses shorter palindromes that enable better splits later.' },
         { label: 'Exhaustive backtracking over all palindrome splits', isCorrect: true },
@@ -39,7 +41,8 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is all possible palindrome partitions — a list of lists of strings. What does this require?',
+      question: 'How the problem describes its expected output determines whether your solution needs to enumerate every valid result or can stop at the first one. The output is all possible palindrome partitions — a list of lists of strings. What does this require?',
+      highlight: { location: 'description', text: 'Return all possible palindrome partitioning of <code>s</code>.' },
       options: [
         { label: 'Return the single partition with the fewest parts', isCorrect: false, feedback: 'The problem asks for all valid partitions, not the optimal one. Any approach that picks one result misses the rest of the output.' },
         { label: 'Collect every valid partition into a result list', isCorrect: true },
@@ -54,7 +57,8 @@ export default {
     },
     {
       id: 'palindrome-check-signal',
-      question: 'Every substring in the partition must be a palindrome. When should you check this — before or after recursing?',
+      question: 'The validity condition embedded in a problem statement tells you exactly where to prune invalid branches before they multiply. Every substring in the partition must be a palindrome. When should you check this — before or after recursing?',
+      highlight: { location: 'description', text: 'every substring of the partition is a palindrome' },
       options: [
         { label: 'After recursing, filter non-palindrome results', isCorrect: false, feedback: 'Post-filtering means you recurse into invalid branches and discard them after the fact. Checking before recursing prunes those branches immediately, cutting the search space.' },
         { label: 'Before recursing — only extend with palindrome prefixes', isCorrect: true },
@@ -69,7 +73,7 @@ export default {
     },
     {
       id: 'palindrome-precomputation',
-      question: 'You may check the same substring for palindrome-ness multiple times across different branches. What optimization does this suggest?',
+      question: 'Recognizing when the same subproblem gets solved repeatedly across branches is what points you toward caching or precomputing results. You may check the same substring for palindrome-ness multiple times across different branches. What optimization does this suggest?',
       options: [
         { label: 'Precompute a 2D table of palindrome results', isCorrect: true },
         { label: 'Sort the string before partitioning', isCorrect: false, feedback: 'Sorting changes the string entirely — it is not a valid preprocessing step. Palindrome checks depend on the original character positions.' },
@@ -83,4 +87,33 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def partition(self, s):
+        n = len(s)
+        result = []
+        path = []
+
+        def is_pal(l, r):
+            while l < r:
+                if s[l] != s[r]:
+                    return False
+                l += 1
+                r -= 1
+            return True
+
+        def backtrack(start):
+            if start == n:
+                result.append(path[:])
+                return
+            for end in range(start, n):
+                if is_pal(start, end):
+                    path.append(s[start:end + 1])
+                    backtrack(end + 1)
+                    path.pop()
+
+        backtrack(0)
+        return result`,
+  solutionComplexity: { time: 'O(n · 2ⁿ)', space: 'O(n)' },
+  solutionCaveat: 'The palindrome check runs <code>before</code> the recursive call, not after — a substring that fails the check is never appended to <code>path</code> or recursed into, which prunes that entire branch immediately instead of letting the search build out an invalid partition all the way to a leaf before discovering the problem.',
+  solutionExplanation: 'Every valid partition corresponds to a sequence of split points, so backtracking one split at a time — trying every possible next palindrome prefix starting at <code>start</code> — naturally enumerates all of them; reaching <code>start == n</code> means the entire string has been consumed by a sequence of confirmed palindromes, which is exactly when a complete valid partition is found and recorded. Because the problem asks for every valid partition rather than just one, the search can never stop early — it must explore every branch that survives the palindrome-check pruning.',
 }

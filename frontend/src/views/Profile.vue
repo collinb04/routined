@@ -4,7 +4,7 @@
 
       <!-- Profile card -->
       <div class="bg-white border border-gray-200 rounded-2xl p-6 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-black text-white text-xl font-semibold flex items-center justify-center shrink-0">
+        <div class="w-14 h-14 rounded-lg bg-black text-white text-xl font-semibold flex items-center justify-center shrink-0">
           {{ userInitial }}
         </div>
         <div class="flex flex-col min-w-0">

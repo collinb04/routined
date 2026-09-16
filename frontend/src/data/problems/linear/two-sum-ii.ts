@@ -12,8 +12,10 @@ export default {
     'numbers is sorted in non-decreasing order',
     'Exactly one solution exists',
   ],
-  starterCode: `def two_sum_ii(numbers, target):
-  pass`,
+  starterCode: `class Solution:
+    def two_sum_ii(self, numbers, target):
+        pass`,
+  runnerSetup: 'two_sum_ii = Solution().two_sum_ii',
   functionName: 'two_sum_ii',
   conceptId: 'two-pointers',
   testCases: [
@@ -22,16 +24,17 @@ export default {
     { label: 'Negative numbers', args: [[-1, 0], -1], expected: [1, 2] },
     { label: 'Last two', args: [[1, 2, 3, 4, 5], 9], expected: [4, 5] },
   ],
-  bruteHint: 'Describe the nested-loop approach checking every pair, and its time complexity',
-  optimizeHint: 'Name the technique that exploits the array already being sorted to avoid nested loops',
+  bruteHint: 'A brute-force approach checks every pair of indices (i, j) with i < j, computing numbers[i] + numbers[j] and comparing it to target — an O(n²) nested loop over up to 3 × 10⁴ elements, which is roughly 900 million comparisons in the worst case. Notice that the array being sorted is not even used by this approach. If the array is already sorted, is there a way to rule out pairs whose sum is too high or too low without checking every combination?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'sorted-input-signal',
-      question: '"numbers is sorted in non-decreasing order." What does the sorted order unlock that an unsorted array would not?',
+      question: 'Recognizing what a specific input guarantee unlocks is often what points you toward the right technique. "numbers is sorted in non-decreasing order." What does the sorted order unlock that an unsorted array would not?',
+      highlight: { location: 'constraint', text: 'numbers is sorted in non-decreasing order' },
       options: [
         { label: 'You can skip duplicate values', isCorrect: false, feedback: 'The problem does not mention duplicates as a concern. The key insight from sorted order is that moving pointers inward changes the sum in a predictable direction.' },
-        { label: 'Two pointers can adjust the sum by moving inward', isCorrect: true },
-        { label: 'You can binary-search for each element\'s complement', isCorrect: false, feedback: 'Binary searching for each complement is O(n log n). Sorted order enables an O(n) two-pointer approach because the sum changes monotonically as you move either pointer.' },
+        { label: 'Moving inward from both ends lets you steer the sum toward the target', isCorrect: true },
+        { label: 'You can repeatedly halve a range to search for each element\'s complement', isCorrect: false, feedback: 'Binary searching for each complement is O(n log n). Sorted order enables an O(n) two-pointer approach because the sum changes monotonically as you move either pointer.' },
         { label: 'Sorted order means the answer is always at the two ends', isCorrect: false, feedback: 'The answer is not always at the ends — [2, 3, 4] with target 6 returns indices 1 and 3, not the outermost pair. Sorted order allows directed adjustment, not a guaranteed position.' },
       ],
       correctFeedback: 'With sorted order, moving the left pointer right increases the sum; moving the right pointer left decreases it. This gives O(1) steering per step, for O(n) total.',
@@ -42,12 +45,13 @@ export default {
     },
     {
       id: 'o1-space-constraint',
-      question: '"Use O(1) extra space." What common Two Sum approach does this rule out?',
+      question: 'Space constraints do not just cap memory — they actively rule out entire categories of approach. "Use O(1) extra space." What common Two Sum approach does this rule out?',
+      highlight: { location: 'description', text: 'Use O(1) extra space.' },
       options: [
-        { label: 'Two pointers', isCorrect: false, feedback: 'Two pointers use only two index variables — O(1) space. The constraint rules out approaches that allocate data structures proportional to n.' },
-        { label: 'A hash map storing value-to-index mappings', isCorrect: true },
-        { label: 'Binary search on the sorted array', isCorrect: false, feedback: 'Binary search uses O(log n) stack space at most — well within O(1) extra space for an iterative implementation. The hash map is the approach explicitly blocked.' },
-        { label: 'A brute-force nested loop', isCorrect: false, feedback: 'A nested loop uses O(1) space (just two index variables), but it is O(n²) time. The O(1) space constraint does not rule it out — the sorted guarantee makes the two-pointer approach strictly better.' },
+        { label: 'Tracking a pair of positions with two simple variables', isCorrect: false, feedback: 'Two pointers use only two index variables — O(1) space. The constraint rules out approaches that allocate data structures proportional to n.' },
+        { label: 'Storing every value seen so far in a lookup table for later retrieval', isCorrect: true },
+        { label: 'Repeatedly halving the array to search for a value', isCorrect: false, feedback: 'Binary search uses O(log n) stack space at most — well within O(1) extra space for an iterative implementation. The hash map is the approach explicitly blocked.' },
+        { label: 'Comparing every pair of elements directly', isCorrect: false, feedback: 'A nested loop uses O(1) space (just two index variables), but it is O(n²) time. The O(1) space constraint does not rule it out — the sorted guarantee makes the two-pointer approach strictly better.' },
       ],
       correctFeedback: 'A hash map stores up to n entries — O(n) space. The O(1) constraint, combined with sorted order, points directly to the two-pointer approach.',
       wrongFeedback: [
@@ -57,7 +61,8 @@ export default {
     },
     {
       id: 'exactly-one-solution',
-      question: '"Exactly one solution exists." What does this guarantee let you skip?',
+      question: 'Guarantees in the problem statement can shrink the amount of work your solution actually needs to do. "Exactly one solution exists." What does this guarantee let you skip?',
+      highlight: { location: 'constraint', text: 'Exactly one solution exists' },
       options: [
         { label: 'You must handle the case where no solution is found', isCorrect: false, feedback: 'The guarantee says a solution always exists. Writing a "not found" return path would be dead code — the constraint explicitly permits omitting it.' },
         { label: 'You can return immediately when the pair is found', isCorrect: true },
@@ -72,7 +77,8 @@ export default {
     },
     {
       id: 'one-indexed-output',
-      question: '"The array is 1-indexed." The output is [index1, index2] where 1 ≤ index1 < index2. How does this affect your pointer tracking?',
+      question: 'Output format details do not affect algorithmic complexity, but getting them wrong still means an incorrect answer. "The array is 1-indexed." The output is [index1, index2] where 1 ≤ index1 < index2. How does this affect your pointer tracking?',
+      highlight: { location: 'description', text: '<strong>1-indexed</strong>' },
       options: [
         { label: 'Start both pointers at index 1 in the code', isCorrect: false, feedback: 'Python arrays are 0-indexed. Start the pointers at 0 and len(numbers)-1 in your code, then add 1 to each before returning.' },
         { label: 'Add 1 to each pointer value before returning', isCorrect: true },
@@ -86,4 +92,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def two_sum_ii(self, numbers, target):
+        left, right = 0, len(numbers) - 1
+        while left < right:
+            total = numbers[left] + numbers[right]
+            if total == target:
+                return [left + 1, right + 1]
+            elif total < target:
+                left += 1
+            else:
+                right -= 1
+        return []`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The answer is 1-indexed (<code>left + 1</code>, <code>right + 1</code>), matching the problem\'s own indexing convention — an easy detail to drop if this gets confused with the plain (0-indexed) Two Sum.',
+  solutionExplanation: 'The array being sorted is what makes two pointers work at all: if the current pair sums too low, the only way to increase the total is to move the left pointer up to a bigger value; too high, and only moving the right pointer down helps. That directional certainty — which pointer to move, and which way — is exactly what a hash-map approach doesn\'t need but also doesn\'t get for free; the tradeoff here is using the sort order instead of extra memory.',
 }

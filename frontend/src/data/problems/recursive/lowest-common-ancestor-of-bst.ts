@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def lowest_common_ancestor(root, p, q):
-  pass`,
+class Solution:
+    def lowest_common_ancestor(self, root, p, q):
+        pass`,
   functionName: 'lca_bst_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -38,18 +39,19 @@ def _find(root, val):
       else: root = root.right
 def lca_bst_run(arr, p, q):
   root = _build(arr)
-  result = lowest_common_ancestor(root, _find(root,p), _find(root,q))
+  result = Solution().lowest_common_ancestor(root, _find(root,p), _find(root,q))
   return result.val`,
   testCases: [
     { label: 'p=2,q=8', args: [[6,2,8,0,4,7,9,null,null,3,5], 2, 8], expected: 6 },
     { label: 'p=2,q=4', args: [[6,2,8,0,4,7,9,null,null,3,5], 2, 4], expected: 2 },
   ],
-  bruteHint: 'Describe finding the full root-to-node path for p and for q via a general traversal, then comparing the two paths for their last shared node',
-  optimizeHint: 'Name the property of the tree\'s ordering that lets you decide, at each node, which single subtree must contain the answer',
+  bruteHint: 'The brute-force approach ignores the BST ordering and treats the tree as a generic binary tree: build the full root-to-node path for p with a general traversal, build the full root-to-node path for q the same way, then compare the two paths for their last shared node. That takes O(n) time to build both paths and O(n) space to store them, even though BST ordering could tell you which way to go at every step without exploring both subtrees. What property of a BST lets you decide, at each node, which single subtree must contain the LCA?',
+  optimizeComplexity: { time: 'O(h)', space: 'O(1)' },
   clues: [
     {
       id: 'bst-ordering-signal',
-      question: 'This is a BST, not a generic binary tree. What property does that give you for finding the LCA?',
+      highlight: { location: 'description', text: 'binary search tree (BST)' },
+      question: 'Recognizing the specific structure you are given reveals which shortcuts become available. This is a BST, not a generic binary tree. What property does that give you for finding the LCA?',
       options: [
         { label: 'Left children are always larger than the root', isCorrect: false, feedback: 'In a BST, left children are smaller, not larger, than the parent. The ordering is: left subtree < node < right subtree.' },
         { label: 'Navigate by comparing node value to p and q', isCorrect: true },
@@ -64,7 +66,8 @@ def lca_bst_run(arr, p, q):
     },
     {
       id: 'constraint-complexity',
-      question: 'Up to 10⁵ nodes, but the tree is a BST. What does BST ordering do to the complexity of finding the LCA?',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [2, 10^5]' },
+      question: 'Constraints define the performance ceiling your solution must respect, though structural properties can lower it further. Up to 10⁵ nodes, but the tree is a BST. What does BST ordering do to the complexity of finding the LCA?',
       options: [
         { label: 'Still requires O(n) — ordering does not help', isCorrect: false, feedback: 'BST ordering lets you eliminate half the remaining tree at each step, giving O(h) where h is the tree height. In a balanced BST of 10⁵ nodes, h ≈ 17 — far better than visiting all 100,000 nodes.' },
         { label: 'O(h) where h is tree height — not O(n)', isCorrect: true },
@@ -79,7 +82,8 @@ def lca_bst_run(arr, p, q):
     },
     {
       id: 'split-point-signal',
-      question: 'The LCA is the "lowest" (deepest) ancestor of both nodes. In BST terms, what identifies that node?',
+      highlight: { location: 'description', text: 'the lowest node in the tree that has both nodes as descendants' },
+      question: 'The way a problem defines its answer often tells you exactly what condition to check for. The LCA is the "lowest" (deepest) ancestor of both nodes. In BST terms, what identifies that node?',
       options: [
         { label: 'The first node where one of p or q is found', isCorrect: false, feedback: 'Finding p or q is not the split criterion. Example 2: you find p=2 before you encounter q=4, but 2 is still the LCA because 4 is in 2\'s subtree. The split point is the key, not the first match.' },
         { label: 'The first node where p and q go to different subtrees', isCorrect: true },
@@ -93,4 +97,17 @@ def lca_bst_run(arr, p, q):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def lowest_common_ancestor(self, root, p, q):
+        node = root
+        while node:
+            if p.val < node.val and q.val < node.val:
+                node = node.left
+            elif p.val > node.val and q.val > node.val:
+                node = node.right
+            else:
+                return node`,
+  solutionComplexity: { time: 'O(h)', space: 'O(1)' },
+  solutionCaveat: 'The loop\'s final <code>else</code> branch fires both when <code>p</code> and <code>q</code> are on opposite sides of <code>node</code> <code>and</code> when <code>node</code> itself equals <code>p</code> or <code>q</code> — both cases correctly return the current node, since "a node can be a descendant of itself" means the LCA is exactly the current node either way.',
+  solutionExplanation: 'BST ordering makes the search self-directing: if both targets are smaller than the current node, their LCA must be in the left subtree entirely, and symmetrically for the right — so an iterative walk moves directly toward the LCA in O(h) time, no exploration of the other subtree ever needed. The walk stops the instant the two targets no longer agree on a single direction, which is precisely the deepest node that still has both as descendants.',
 }

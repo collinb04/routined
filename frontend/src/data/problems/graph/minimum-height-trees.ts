@@ -8,8 +8,10 @@ export default {
     { input: 'n=6, edges=[[3,0],[3,1],[3,2],[3,4],[5,4]]', output: '[3,4]' },
   ],
   constraints: ['1 ≤ n ≤ 2 × 10⁴', 'edges.length == n − 1'],
-  starterCode: `def find_min_height_trees(n, edges):
-  pass`,
+  starterCode: `class Solution:
+    def find_min_height_trees(self, n, edges):
+        pass`,
+  runnerSetup: 'find_min_height_trees = Solution().find_min_height_trees',
   functionName: 'find_min_height_trees',
   conceptId: 'graphs',
   testCases: [
@@ -17,17 +19,18 @@ export default {
     { label: 'Two roots', args: [6,[[3,0],[3,1],[3,2],[3,4],[5,4]]], expected: [3,4] },
     { label: 'Single node', args: [1,[]], expected: [0] },
   ],
-  bruteHint: 'Describe computing the tree\'s height when rooted at every single node and comparing them, and its time complexity',
-  optimizeHint: 'Name the technique of iteratively trimming leaf nodes layer by layer until only the centroid(s) remain',
+  bruteHint: 'One direct approach roots the tree at every single node in turn, computes its height with a BFS or DFS from that root, and tracks which roots give the smallest height. Recomputing height from scratch for each of the n candidate roots costs O(n) per root, so the total work is O(n²). At n up to 2 × 10⁴, that is potentially hundreds of millions of operations. Can you avoid re-measuring the whole tree for every candidate root?',
+  optimizeComplexity: { time: 'O(V)', space: 'O(V)' },
   clues: [
     {
       id: 'constraint-n-edges',
-      question: '"edges.length == n − 1" — the input is always a tree, not a general graph. What does this guarantee?',
+      question: 'Constraints often encode structural guarantees about the input, not just size limits. "edges.length == n − 1" — the input is always a tree, not a general graph. What does this guarantee?',
+      highlight: { location: 'constraint', text: 'edges.length == n − 1' },
       options: [
         { label: 'The graph may have cycles', isCorrect: false, feedback: 'A connected graph with exactly n − 1 edges has no cycles — that is the definition of a tree. You do not need to detect or handle cycles here.' },
         { label: 'No cycles exist; the structure is a tree', isCorrect: true },
         { label: 'Some nodes may be disconnected', isCorrect: false, feedback: 'n − 1 edges on a connected structure means all nodes are reachable from each other. Disconnected components would require fewer edges to form a spanning tree for each.' },
-        { label: 'You need Union-Find to verify connectivity', isCorrect: false, feedback: 'The problem guarantees a valid tree — connectivity is given, not something to verify. Union-Find would be redundant work.' },
+        { label: 'You must verify the graph is connected before proceeding', isCorrect: false, feedback: 'The problem guarantees a valid tree — connectivity is given, not something to verify. Union-Find would be redundant work.' },
       ],
       correctFeedback: 'With exactly n − 1 edges and n nodes, the input is always a valid tree. You skip cycle detection and connectivity checks entirely and focus on finding the best root.',
       wrongFeedback: [
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is a list of root labels — potentially more than one. What does this tell you about the answer?',
+      question: 'How a problem shapes its expected output can reveal structural bounds on the answer before you write any code. The output is a list of root labels — potentially more than one. What does this tell you about the answer?',
+      highlight: { location: 'description', text: 'Find all root labels that give trees of minimum height.' },
       options: [
         { label: 'Always return every node', isCorrect: false, feedback: 'Most trees have only 1 or 2 optimal roots. Returning all n nodes would be wrong — only nodes that produce the minimum height qualify.' },
         { label: 'At most 2 roots can minimize height', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'leaf-trimming-strategy',
-      question: 'n ≤ 2 × 10⁴ and the tree has n − 1 edges. Checking every node as a root naively costs O(n²). What is the efficient approach?',
+      question: 'When a brute-force complexity collides with the input size, that tension is the signal to look for a smarter algorithmic technique. n ≤ 2 × 10⁴ and the tree has n − 1 edges. Checking every node as a root naively costs O(n²). What is the efficient approach?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 2 × 10⁴' },
       options: [
         { label: 'Root at node 0 and measure height', isCorrect: false, feedback: 'Node 0 is just an arbitrary label — it has no structural significance. Starting there and measuring height is O(n) for one root but does not find the minimum-height root without checking all n candidates.' },
         { label: 'Iteratively remove leaf nodes until 1–2 remain', isCorrect: true },
@@ -67,7 +72,7 @@ export default {
     },
     {
       id: 'single-node-edge-case',
-      question: 'n can equal 1 with an empty edges list. What must your solution return in that case?',
+      question: 'Edge cases at the boundary of valid input often expose assumptions your main algorithm silently relies on. n can equal 1 with an empty edges list. What must your solution return in that case?',
       options: [
         { label: '[0] — the only node is always the root', isCorrect: true },
         { label: '[] — no tree exists with a single node', isCorrect: false, feedback: 'A single node is a valid tree of height 0. Node 0 is trivially the root and the only possible answer.' },
@@ -81,4 +86,30 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def find_min_height_trees(self, n, edges):
+        if n == 1:
+            return [0]
+        adj = [set() for _ in range(n)]
+        for u, v in edges:
+            adj[u].add(v)
+            adj[v].add(u)
+
+        leaves = deque([i for i in range(n) if len(adj[i]) == 1])
+        remaining = n
+        while remaining > 2:
+            leaf_count = len(leaves)
+            remaining -= leaf_count
+            for _ in range(leaf_count):
+                leaf = leaves.popleft()
+                nbr = adj[leaf].pop()
+                adj[nbr].discard(leaf)
+                if len(adj[nbr]) == 1:
+                    leaves.append(nbr)
+        return list(leaves)`,
+  solutionComplexity: { time: 'O(V)', space: 'O(V)' },
+  solutionCaveat: 'The peeling stops once <code>remaining</code> drops to 2 or fewer rather than peeling down to a single node — a tree\'s minimum-height root(s) are always the one or two centermost nodes, and peeling one layer further would strip away a true center along with the leaves.',
+  solutionExplanation: 'A tree\'s minimum height is achieved by rooting at its geometric center, so this repeatedly strips away the current outermost layer of leaves (nodes with only one remaining neighbor), the same way peeling an onion removes one ring at a time — each stripped leaf can never have been the center, since a leaf sits at a tree\'s edge, not its middle. What survives after every layer but the innermost one or two nodes has been peeled away is exactly the tree\'s center, or centers when the longest path has even length.',
 }

@@ -7,20 +7,23 @@ export default {
     { input: 'nums=[1,2,1,2,6,7,5,1], k=2', output: '[0,3,5]', explanation: 'Subarrays [1,2],[2,6],[7,5] with sum 15.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 2 × 10⁴', '1 ≤ nums[i] < 2¹⁶', '1 ≤ k ≤ ⌊nums.length / 3⌋'],
-  starterCode: `def max_sum_of_three_subarrays(nums, k):
-  pass`,
+  starterCode: `class Solution:
+    def max_sum_of_three_subarrays(self, nums, k):
+        pass`,
+  runnerSetup: 'max_sum_of_three_subarrays = Solution().max_sum_of_three_subarrays',
   functionName: 'max_sum_of_three_subarrays',
   conceptId: 'prefix-sum',
   testCases: [
     { label: 'Standard', args: [[1,2,1,2,6,7,5,1],2], expected: [0,3,5] },
     { label: 'k=1', args: [[1,2,3],1], expected: [0,1,2] },
   ],
-  bruteHint: 'Describe trying every combination of 3 non-overlapping windows and its time complexity',
-  optimizeHint: 'Name what you would precompute once for every window sum, then explain how tracking the best window to the left and right of each position helps',
+  bruteHint: 'The brute-force approach tries every combination of 3 non-overlapping windows of length k, computing each combination\'s total sum directly. With three nested loops choosing starting positions and summing each window from scratch, that is roughly O(n³ · k) work. At n up to 20,000, would that finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 2 × 10⁴. What does this say about trying all triples of starting indices?',
+      question: 'We can gauge how much computation we can afford based on the size constraint of the input. nums.length ≤ 2 × 10⁴. What does this say about trying all triples of starting indices?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 2 × 10⁴' },
       options: [
         { label: 'Trying all triples is fine', isCorrect: false, feedback: 'There are O(n³) triples — at n = 20,000 that is 8 × 10¹² combinations. Even O(n²) is 400 million, which is marginal. You need a linear or near-linear approach.' },
         { label: 'O(n) with precomputation is the target', isCorrect: true },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'fixed-window-sum',
-      question: 'All three subarrays have length exactly k. What does that let you precompute?',
+      question: 'We can figure out what work can be done once and reused by noticing which quantities stay fixed across the problem. All three subarrays have length exactly k. What does that let you precompute?',
+      highlight: { location: 'description', text: 'subarrays of length k' },
       options: [
         { label: 'Precompute all window sums of length k in O(n)', isCorrect: true },
         { label: 'Sort windows by their sum', isCorrect: false, feedback: 'Sorting windows would help you find the largest sums, but you also need non-overlapping windows at valid positions — sorting loses the position structure you need.' },
@@ -50,12 +54,13 @@ export default {
     },
     {
       id: 'non-overlapping-constraint',
-      question: 'The three subarrays must be non-overlapping. How does this shape the search over window positions?',
+      question: 'We can narrow down which search strategies are valid by considering the structural constraint the problem imposes. The three subarrays must be non-overlapping. How does this shape the search over window positions?',
+      highlight: { location: 'description', text: 'non-overlapping subarrays' },
       options: [
         { label: 'Sort windows by position and pick the top 3', isCorrect: false, feedback: 'The top 3 sums may overlap. Non-overlapping means the middle window index j must satisfy j ≥ i + k and j + k ≤ right_start — position constraints, not sum rankings.' },
         { label: 'Fix the middle window index and find the best left and right independently', isCorrect: true },
-        { label: 'Use backtracking to try all non-overlapping combinations', isCorrect: false, feedback: 'Backtracking is exponential in the number of windows. The non-overlapping structure is a partition into left / middle / right zones — exploitable with precomputed arrays, not search.' },
-        { label: 'Greedily pick the highest-sum window, then repeat', isCorrect: false, feedback: 'Greedy does not work: the single highest-sum window might force poor choices for the other two. You need to jointly optimize all three positions.' },
+        { label: 'Recursively try every combination of window placements, undoing ones that break the constraint', isCorrect: false, feedback: 'Backtracking is exponential in the number of windows. The non-overlapping structure is a partition into left / middle / right zones — exploitable with precomputed arrays, not search.' },
+        { label: 'Repeatedly choose whichever remaining window has the highest sum, then move on', isCorrect: false, feedback: 'Greedy does not work: the single highest-sum window might force poor choices for the other two. You need to jointly optimize all three positions.' },
       ],
       correctFeedback: 'For each middle window starting at j, the best left window is in [0, j−k] and the best right window is in [j+k, n−k]. Precompute left_best[i] and right_best[i] arrays so each lookup is O(1).',
       wrongFeedback: [
@@ -65,7 +70,8 @@ export default {
     },
     {
       id: 'output-indices',
-      question: 'The output is the starting indices, not the maximum sum itself. What tie-breaking rule applies?',
+      question: 'We can determine exactly what our final answer needs to specify by looking closely at what the problem asks us to return. The output is the starting indices, not the maximum sum itself. What tie-breaking rule applies?',
+      highlight: { location: 'description', text: 'Return the starting indices of the subarrays.' },
       options: [
         { label: 'Any valid triple is acceptable', isCorrect: false, feedback: 'The problem requires the lexicographically smallest index triple when ties exist. Returning an arbitrary valid triple may fail test cases where multiple optimal triples exist.' },
         { label: 'Return the lexicographically smallest index triple', isCorrect: true },
@@ -79,4 +85,41 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_sum_of_three_subarrays(self, nums, k):
+        n = len(nums)
+        window_sum = [0] * (n - k + 1)
+        s = sum(nums[:k])
+        window_sum[0] = s
+        for i in range(1, n - k + 1):
+            s += nums[i + k - 1] - nums[i - 1]
+            window_sum[i] = s
+
+        m = len(window_sum)
+        left = [0] * m
+        best_idx = 0
+        for i in range(m):
+            if window_sum[i] > window_sum[best_idx]:
+                best_idx = i
+            left[i] = best_idx
+
+        right = [0] * m
+        best_idx = m - 1
+        for i in range(m - 1, -1, -1):
+            if window_sum[i] >= window_sum[best_idx]:
+                best_idx = i
+            right[i] = best_idx
+
+        best_total = -1
+        result = [0, 0, 0]
+        for j in range(k, m - k):
+            l, r = left[j - k], right[j + k]
+            total = window_sum[l] + window_sum[j] + window_sum[r]
+            if total > best_total:
+                best_total = total
+                result = [l, j, r]
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: '<code>left</code> breaks ties with strict <code>&gt;</code> (prefers the earliest index on equal sums) while <code>right</code> uses <code>&gt;=</code> (also prefers the earliest index) — both are needed specifically to satisfy "return the lexicographically smallest indices" when multiple triples tie on total sum.',
+  solutionExplanation: 'Every fixed-length window sum can be computed once via a running sum, turning "pick 3 non-overlapping windows" into "pick 3 non-overlapping positions in the window_sum array." For the middle window at position <code>j</code>, the best possible left window is whatever gave the best sum anywhere in <code>[0, j-k]</code>, and the best right window is whatever gave the best sum anywhere in <code>[j+k, m-1]</code> — precomputing those two "best index so far" arrays once means trying every possible middle position is a single O(1) lookup each, instead of re-scanning the left and right sides for every candidate middle.',
 }

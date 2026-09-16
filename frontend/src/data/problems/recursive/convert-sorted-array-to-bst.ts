@@ -7,25 +7,45 @@ export default {
     { input: 'nums = [-10,-3,0,5,9]', output: '[0,-3,9,-10,null,5]', explanation: 'Multiple valid answers exist.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁴', '-10⁴ ≤ nums[i] ≤ 10⁴', 'nums is sorted in strictly increasing order'],
-  starterCode: `def sorted_array_to_bst(nums):
-  pass`,
-  functionName: 'sorted_array_to_bst',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def sorted_array_to_bst(self, nums):
+        pass`,
+  functionName: 'sorted_array_to_bst_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _level(root):
+  if not root: return []
+  q = deque([root]); res = []
+  while q:
+      node = q.popleft()
+      if node: res.append(node.val); q.append(node.left); q.append(node.right)
+      else: res.append(None)
+  while res and res[-1] is None: res.pop()
+  return res
+def sorted_array_to_bst_run(nums):
+  return _level(Solution().sorted_array_to_bst(nums))`,
   testCases: [
-    { label: 'Five elements root', args: [[-10,-3,0,5,9]], expected: 0 },
-    { label: 'Single', args: [[1]], expected: 1 },
+    { label: 'Five elements', args: [[-10,-3,0,5,9]], expected: [0,-3,9,-10,null,5] },
+    { label: 'Single', args: [[1]], expected: [1] },
   ],
-  bruteHint: 'Describe what happens to tree height if you insert elements in their given order one at a time, or always pick an endpoint as root',
-  optimizeHint: 'Name the divide-and-conquer root choice at each step that keeps the two resulting subtrees as close to equal size as possible',
+  bruteHint: 'The brute-force approach inserts each element into a BST one at a time, in the order given, always choosing the next endpoint as the root of whatever remains. Because nums is already sorted, that produces a completely skewed tree where every insertion costs O(n) in the worst case, for O(n²) total time and O(n) height. What choice of root at each step would keep the tree from leaning entirely to one side?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(log n)' },
   clues: [
     {
       id: 'sorted-input-bst-property',
-      question: '"nums is sorted in ascending order." How does a sorted array relate to BST inorder traversal?',
+      highlight: { location: 'description', text: '<code>nums</code> sorted in ascending order' },
+      question: 'Recognizing that a given input ordering matches a specific tree traversal is often the key that unlocks a direct construction, instead of inserting elements one by one. "nums is sorted in ascending order." How does a sorted array relate to BST inorder traversal?',
       options: [
-        { label: 'A sorted array maps directly to a BST level-order traversal', isCorrect: false, feedback: 'Level-order (BFS) visits nodes top-down by depth, not in sorted order. Inorder traversal of a BST produces the sorted sequence — that is the relationship being exploited here.' },
-        { label: 'A sorted array is the inorder traversal of the target BST', isCorrect: true },
+        { label: 'A sorted array maps directly to visiting the tree top-down, one full row at a time', isCorrect: false, feedback: 'Level-order (BFS) visits nodes top-down by depth, not in sorted order. Inorder traversal of a BST produces the sorted sequence — that is the relationship being exploited here.' },
+        { label: 'A sorted array is exactly the left-to-right node order of the target BST', isCorrect: true },
         { label: 'Sorted input means you can skip the BST property checks', isCorrect: false, feedback: 'The sorted input is what lets you construct the BST efficiently — it is not a reason to skip correctness. The BST property must hold in the output.' },
-        { label: 'Sorted order implies the tree must be a min-heap', isCorrect: false, feedback: 'Heaps and BSTs are different structures. A BST maintains inorder sorted order; a heap maintains parent-child ordering. Sorted input targets a BST, not a heap.' },
+        { label: 'Sorted order implies every parent must be smaller than both of its children', isCorrect: false, feedback: 'Heaps and BSTs are different structures. A BST maintains inorder sorted order; a heap maintains parent-child ordering. Sorted input targets a BST, not a heap.' },
       ],
       correctFeedback: 'Inorder traversal of a BST always yields values in ascending order. Working backward: a sorted array is the inorder sequence, so you can reconstruct the BST by assigning each element to the correct position.',
       wrongFeedback: [
@@ -35,7 +55,8 @@ export default {
     },
     {
       id: 'height-balanced-constraint',
-      question: '"Height-balanced" means no subtree differs in height by more than one. What root choice ensures balance?',
+      highlight: { location: 'description', text: 'height-balanced binary search tree' },
+      question: 'An explicit balance requirement in the problem statement usually dictates exactly how you must choose structure at each recursive step, not something left to chance. "Height-balanced" means no subtree differs in height by more than one. What root choice ensures balance?',
       options: [
         { label: 'Always pick nums[0] (the smallest) as root', isCorrect: false, feedback: 'Picking the smallest as root puts all elements in the right subtree and none in the left — creating a maximally skewed, unbalanced tree of height n.' },
         { label: 'Pick the middle element as root at each level', isCorrect: true },
@@ -50,7 +71,7 @@ export default {
     },
     {
       id: 'multiple-valid-answers',
-      question: '"Multiple valid answers exist." What does that mean for how you handle even-length subarrays?',
+      question: 'Phrases that call out "multiple valid answers" tell you which choices in your approach are actually flexible, and which are not. "Multiple valid answers exist." What does that mean for how you handle even-length subarrays?',
       options: [
         { label: 'You must find the unique correct answer', isCorrect: false, feedback: 'There is no unique correct answer — the problem explicitly states that multiple valid trees exist. Any height-balanced BST that represents the sorted array is acceptable.' },
         { label: 'Either middle index works for even-length subarrays', isCorrect: true },
@@ -65,7 +86,8 @@ export default {
     },
     {
       id: 'recursion-structure',
-      question: 'With up to 10⁴ elements, what is the time complexity of the divide-and-conquer approach?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁴' },
+      question: 'A stated input size bound is a hint for what complexity class the intended approach needs to hit. With up to 10⁴ elements, what is the time complexity of the divide-and-conquer approach?',
       options: [
         { label: 'O(n log n) — similar to merge sort', isCorrect: false, feedback: 'This construction does O(1) work per node (pick midpoint, create node) and visits each node exactly once. That is O(n), not O(n log n). There is no merge step that costs O(n) per level.' },
         { label: 'O(n) — each element becomes exactly one node', isCorrect: true },
@@ -79,4 +101,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def sorted_array_to_bst(self, nums):
+        def build(lo, hi):
+            if lo > hi:
+                return None
+            mid = (lo + hi + 1) // 2
+            node = TreeNode(nums[mid])
+            node.left = build(lo, mid - 1)
+            node.right = build(mid + 1, hi)
+            return node
+
+        return build(0, len(nums) - 1)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(log n)' },
+  solutionCaveat: 'The midpoint is computed as <code>(lo + hi + 1) // 2</code> rather than the more common <code>(lo + hi) // 2</code> — both produce a valid height-balanced tree, but consistently rounding up on even-length splits is one specific, deterministic choice among the several the problem\'s "multiple valid answers" allows.',
+  solutionExplanation: 'Since the sorted array is exactly the inorder sequence of the target BST, recursively picking the middle element of each remaining subarray as the root and recursing on the two halves builds the tree directly, without ever inserting elements one at a time. Choosing the true middle at every level is what guarantees the two subtrees differ in size by at most one, which is precisely the height-balance condition the problem requires.',
 }

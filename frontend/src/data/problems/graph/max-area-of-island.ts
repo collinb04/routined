@@ -7,20 +7,23 @@ export default {
     { input: 'grid = [[0,0,1,0,0],[0,0,0,0,0],[0,1,1,0,1],[0,1,0,0,1],[0,1,0,0,1]]', output: '4' },
   ],
   constraints: ['m == grid.length', 'n == grid[i].length', '1 <= m, n <= 50', 'grid[i][j] is 0 or 1'],
-  starterCode: `def max_area_of_island(grid):
-  pass`,
+  starterCode: `class Solution:
+    def max_area_of_island(self, grid):
+        pass`,
+  runnerSetup: 'max_area_of_island = Solution().max_area_of_island',
   functionName: 'max_area_of_island',
   conceptId: 'graphs',
   testCases: [
     { label: 'max=4', args: [[[0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,1,1,0,1,0,0,0,0,0,0,0,0],[0,1,0,0,1,1,0,0,1,0,1,0,0],[0,1,0,0,1,1,0,0,1,1,1,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,0,1,1,0,0,0,0]]], expected: 6 },
     { label: 'no island', args: [[[0,0,0,0,0,0,0,0]]], expected: 0 },
   ],
-  bruteHint: 'Describe re-exploring an island\'s cells from scratch for every land cell without marking them visited, and the repeated work that causes',
-  optimizeHint: 'Name the technique that flood-fills each island once while tracking a running maximum size',
+  bruteHint: 'A brute-force approach would, for every land cell in the grid, re-explore its entire connected island from scratch without marking cells as visited, repeating the same exploration for every member of that island. With up to m × n cells, and an island potentially re-explored once per each of its own cells, this wastes an enormous amount of repeated work recomputing the same area. What would change if you marked each cell visited the first time it\'s counted toward an island\'s area?',
+  optimizeComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'm, n ≤ 50. What does this say about how much of the grid you can afford to visit?',
+      highlight: { location: 'constraint', text: '1 <= m, n <= 50' },
+      question: 'Grid size limits tell you how much per-cell work you can afford across the whole grid. m, n ≤ 50. What does this say about how much of the grid you can afford to visit?',
       options: [
         { label: 'Visit each cell at most once with marking', isCorrect: true },
         { label: 'O(m²n²) nested search per cell is fine', isCorrect: false, feedback: 'At m = n = 50, O(m²n²) would be 50⁴ = 6.25 million operations per query — technically affordable but completely unnecessary. You only need to visit each cell once.' },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'connectivity-definition',
-      question: '"Connected 4-directionally" — islands connect only up, down, left, right. What does this rule out?',
+      highlight: { location: 'description', text: 'connected 4-directionally' },
+      question: 'How a problem defines connectivity determines exactly which neighbor cells your traversal is allowed to expand into. "Connected 4-directionally" — islands connect only up, down, left, right. What does this rule out?',
       options: [
         { label: 'Diagonal neighbors count as connected', isCorrect: false, feedback: '4-directional connectivity explicitly excludes diagonals. Two land cells sharing only a corner are not part of the same island.' },
         { label: 'Diagonal connections are excluded', isCorrect: true },
@@ -50,7 +54,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is the maximum area, or 0 if no island exists. What does this require you to track?',
+      highlight: { location: 'description', text: 'the maximum area of an island in grid' },
+      question: 'The nature of the requested output tells you what value you need to track and update as you process each island. The output is the maximum area, or 0 if no island exists. What does this require you to track?',
       options: [
         { label: 'A running maximum across all island sizes', isCorrect: true },
         { label: 'The coordinates of every island', isCorrect: false, feedback: 'The output is a single integer — the largest area. You do not need to store coordinates of islands, only compare their sizes as you discover each one.' },
@@ -65,7 +70,8 @@ export default {
     },
     {
       id: 'no-island-guarantee',
-      question: '"Return 0 if there is no island." What edge case must your solution handle?',
+      highlight: { location: 'description', text: 'or 0 if there is no island' },
+      question: 'Edge cases called out explicitly in a problem statement often hint at an initialization detail your solution must get right. "Return 0 if there is no island." What edge case must your solution handle?',
       options: [
         { label: 'Initialize the answer to 0, not 1', isCorrect: true },
         { label: 'The grid will always have at least one island', isCorrect: false, feedback: 'The problem explicitly states "return 0 if there is no island" — an all-zero grid is a valid input. Your solution must handle it without error.' },
@@ -79,4 +85,23 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_area_of_island(self, grid):
+        m, n = len(grid), len(grid[0])
+
+        def dfs(r, c):
+            if r < 0 or r >= m or c < 0 or c >= n or grid[r][c] != 1:
+                return 0
+            grid[r][c] = 0
+            return 1 + dfs(r + 1, c) + dfs(r - 1, c) + dfs(r, c + 1) + dfs(r, c - 1)
+
+        best = 0
+        for r in range(m):
+            for c in range(n):
+                if grid[r][c] == 1:
+                    best = max(best, dfs(r, c))
+        return best`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: 'Flood-filling a visited land cell back to <code>0</code> in place, rather than tracking a separate <code>visited</code> set, both marks it seen and prevents the outer double loop from ever re-starting a flood-fill from the same island — a cell that has already been counted can never be counted again.',
+  solutionExplanation: 'Every unvisited land cell found by the outer scan is the start of exactly one flood-fill, which recursively claims every 4-directionally connected land cell as belonging to that same island while counting them, so the return value of one call to <code>dfs</code> is precisely that island\'s total area. Since every land cell gets zeroed out the moment it\'s visited, no cell is ever double-counted across different flood-fills, and the running maximum after scanning the whole grid is the largest island\'s area.',
 }

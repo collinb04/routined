@@ -8,8 +8,10 @@ export default {
     { input: 'words = ["a","banana","app","appl","ap","apply","apple"]', output: '"apple"' },
   ],
   constraints: ['1 ≤ words.length ≤ 1000', '1 ≤ words[i].length ≤ 30', 'words[i] consists of lowercase English letters'],
-  starterCode: `def longest_word(words):
-  pass`,
+  starterCode: `class Solution:
+    def longest_word(self, words):
+        pass`,
+  runnerSetup: 'longest_word = Solution().longest_word',
   functionName: 'longest_word',
   conceptId: 'tries',
   testCases: [
@@ -17,12 +19,12 @@ export default {
     { label: 'Tie break', args: [['a','banana','app','appl','ap','apply','apple']], expected: 'apple' },
     { label: 'Single char', args: [['a','b','c']], expected: 'a' },
   ],
-  bruteHint: 'Describe testing whether each prefix of a candidate word exists in the word set, and the total cost across all words',
-  optimizeHint: 'Name the structure that encodes shared prefixes so a word\'s entire prefix chain can be verified in a single walk',
+  bruteHint: 'The brute-force approach checks each candidate word by testing whether every one of its prefixes appears somewhere in the original array, scanning the full list of words for each prefix check. For a word of length L, that means up to L scans through n words, so the total cost grows to roughly O(n² × L) across the whole array. With n up to 1000 and L up to 30, that scanning adds up fast — what structure would let you check whether a prefix exists in constant time instead of scanning the whole array each time?',
+  optimizeComplexity: { time: 'O(total characters)', space: 'O(total characters)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'words.length ≤ 1000 and words[i].length ≤ 30. What does this tell you about acceptable complexity?',
+      question: 'Bounds on array length and element size define your complexity budget before you write any code. words.length ≤ 1000 and words[i].length ≤ 30. What does this tell you about acceptable complexity?',
       options: [
         { label: 'O(n²) per word is too slow', isCorrect: false, feedback: 'With n = 1000 words and lengths up to 30, O(n × 30²) is under a million operations — well within budget. The constraint here is permissive enough for quadratic-per-word approaches.' },
         { label: 'O(n × L) solutions are fine', isCorrect: true },
@@ -34,25 +36,27 @@ export default {
         'What is the maximum total work if you check all prefixes of every word?',
         'At most 1000 words × 30 characters = 30,000 operations at worst. Does that change what structures are viable?',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ words.length ≤ 1000' },
     },
     {
       id: 'prefix-check-requirement',
-      question: 'A word qualifies only if it can be "built one character at a time" — every prefix must also be in the array. What does this imply?',
+      question: 'Precise wording in the problem description often encodes the exact rule your algorithm must enforce. A word qualifies only if it can be "built one character at a time" — every prefix must also be in the array. What does this imply?',
       options: [
         { label: 'Sort words by length and scan', isCorrect: false, feedback: 'Sorting by length alone does not help you check whether every prefix of a word exists in the array. You still need a membership test for each prefix.' },
-        { label: 'Store all words in a set for O(1) prefix lookup', isCorrect: true },
+        { label: 'Store every word up front so any prefix can be checked instantly', isCorrect: true },
         { label: 'Count occurrences of each word', isCorrect: false, feedback: 'Counting occurrences tells you nothing about whether a given prefix exists in the array. You need existence checks, not frequency.' },
-        { label: 'Use a two-pointer approach on sorted words', isCorrect: false, feedback: 'Two pointers work on pairs or ranges, not on verifying that all k prefixes of a word appear in an unsorted collection. You need a structure that answers membership queries.' },
+        { label: 'Compare words from both ends of a sorted list', isCorrect: false, feedback: 'Two pointers work on pairs or ranges, not on verifying that all k prefixes of a word appear in an unsorted collection. You need a structure that answers membership queries.' },
       ],
       correctFeedback: 'Inserting all words into a set lets you check each prefix in O(1), so verifying a word of length L costs O(L) total. A trie stores the same information structurally.',
       wrongFeedback: [
         'For each candidate word, you need to confirm that word[0:1], word[0:2], … word[0:L-1] all exist. What data structure answers "does this string exist?" in O(1)?',
         'You need membership queries, not sorting. A hash set or trie both give you O(1) or O(L) prefix existence checks.',
       ],
+      highlight: { location: 'description', text: 'built one character at a time' },
     },
     {
       id: 'tie-break-rule',
-      question: 'If there is a tie in length, return the lexicographically smallest result. What does this signal about how you track candidates?',
+      question: 'Tie-breaking rules buried in the description change what you track as your "best so far," not just what you compute. If there is a tie in length, return the lexicographically smallest result. What does this signal about how you track candidates?',
       options: [
         { label: 'Return the first qualifying word found', isCorrect: false, feedback: 'The first qualifying word depends on input order, which has nothing to do with lexicographic order. You need to compare candidates by length first, then alphabetically.' },
         { label: 'Track best by length, then alphabetic order', isCorrect: true },
@@ -64,10 +68,11 @@ export default {
         'You want the longest word, but ties go to the alphabetically earlier one. How do you compare two candidates?',
         'Compare on (length, alphabetic order): prefer longer; among equal-length, prefer the one that comes first in a dictionary.',
       ],
+      highlight: { location: 'description', text: 'If there is a tie, return the lexicographically smallest result.' },
     },
     {
       id: 'trie-vocabulary',
-      question: 'The conceptId for this problem is "tries." What property of a trie makes it a natural fit here?',
+      question: 'The concept tag attached to a problem is often the most direct signal of the intended data structure or technique. The conceptId for this problem is "tries." What property of a trie makes it a natural fit here?',
       options: [
         { label: 'Tries store words sorted by frequency', isCorrect: false, feedback: 'Tries do not sort by frequency — they organize characters by shared prefixes. Frequency is unrelated to the trie structure.' },
         { label: 'Tries encode shared prefixes structurally', isCorrect: true },
@@ -81,4 +86,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def longest_word(self, words):
+        word_set = set(words)
+        best = ""
+        for word in words:
+            valid = all(word[:i] in word_set for i in range(1, len(word) + 1))
+            if valid:
+                if len(word) > len(best) or (len(word) == len(best) and word < best):
+                    best = word
+        return best`,
+  solutionComplexity: { time: 'O(total characters)', space: 'O(total characters)' },
+  solutionCaveat: 'The prefix check range runs through <code>len(word) + 1</code>, which includes the word\'s own full length — that\'s deliberate, since a word can only be built one character at a time if it (not just its strict prefixes) is itself present in the array too.',
+  solutionExplanation: 'Storing every word in a set up front turns "is this prefix buildable" into an O(1) membership check, so verifying a candidate word of length L costs O(L) instead of rescanning the whole array for each prefix. Comparing each valid candidate against the running best on <code>(length, then lexicographic order)</code> — preferring longer, and among equal lengths preferring the alphabetically earlier one — directly encodes the tie-breaking rule the problem specifies, without needing to collect every valid word and sort them afterward.',
 }

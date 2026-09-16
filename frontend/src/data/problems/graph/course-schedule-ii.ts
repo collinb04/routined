@@ -8,12 +8,13 @@ export default {
     { input: 'numCourses = 1, prerequisites = []', output: '[0]' },
   ],
   constraints: ['1 <= numCourses <= 2000', '0 <= prerequisites.length <= numCourses * (numCourses - 1)'],
-  starterCode: `def find_order(num_courses, prerequisites):
-  pass`,
+  starterCode: `class Solution:
+    def find_order(self, num_courses, prerequisites):
+        pass`,
   functionName: 'find_order_run',
   conceptId: 'graphs',
   runnerSetup: `def find_order_run(num_courses, prerequisites):
-  order = find_order(num_courses, prerequisites)
+  order = Solution().find_order(num_courses, prerequisites)
   if not order: return []
   pos = {v: i for i, v in enumerate(order)}
   for a, b in prerequisites:
@@ -23,15 +24,16 @@ export default {
     { label: '4 courses', args: [4, [[1,0],[2,0],[3,1],[3,2]]], expected: [0,1,2,3] },
     { label: 'single', args: [1, []], expected: [0] },
   ],
-  bruteHint: 'Describe repeatedly scanning every course for one whose prerequisites are already satisfied, restarting the scan each time',
-  optimizeHint: 'Name the algorithm that processes courses in order as their prerequisite counts drop to zero',
+  bruteHint: 'One brute-force approach repeatedly scans every course, looking for one whose prerequisites have already been placed in the order, then restarts the scan from the beginning once it finds a match. Since each of the numCourses courses might need a full O(numCourses) scan before it\'s ready, and this repeats numCourses times, the total cost climbs to O(numCourses^2) or worse. Can you avoid rescanning courses that were already ineligible, and instead let the graph tell you the moment a course becomes ready?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V + E)' },
   clues: [
     {
       id: 'output-vs-course-schedule-i',
-      question: 'Course Schedule I returns true/false. This problem returns the actual ordering. What does that change about your algorithm?',
+      question: 'Pay attention to what the return type asks for — it often reveals what extra bookkeeping your algorithm needs beyond a simple cycle check. Course Schedule I returns true/false. This problem returns the actual ordering. What does that change about your algorithm?',
+      highlight: { location: 'description', text: 'Return the ordering of courses you should take to finish all courses.' },
       options: [
-        { label: 'You need to collect nodes in topological order, not just detect cycles', isCorrect: true },
-        { label: 'You must run DFS instead of BFS', isCorrect: false, feedback: 'Both BFS (Kahn\'s algorithm) and DFS can produce a topological ordering. The output being an ordering changes what you collect, not which traversal you must use.' },
+        { label: 'You need to record each node in the order its dependencies become satisfied, not just detect whether a cycle exists', isCorrect: true },
+        { label: 'You must traverse using recursion instead of a queue-based sweep', isCorrect: false, feedback: 'Both BFS (Kahn\'s algorithm) and DFS can produce a topological ordering. The output being an ordering changes what you collect, not which traversal you must use.' },
         { label: 'You need to sort courses by number of prerequisites', isCorrect: false, feedback: 'Sorting by prerequisite count doesn\'t produce a valid topological order — it ignores the dependency edges. A course with many prerequisites might still come before a course with few, depending on the graph structure.' },
         { label: 'The impossible case no longer needs to be handled', isCorrect: false, feedback: 'The impossible case (a cycle) still requires returning an empty array. The output type changed from bool to list, but the cycle detection requirement remains.' },
       ],
@@ -43,7 +45,8 @@ export default {
     },
     {
       id: 'cycle-means-empty',
-      question: '"If it is impossible, return an empty array." When is it impossible?',
+      question: 'Knowing the exact condition that makes a problem unsolvable tells you precisely what your algorithm must detect before it can return successfully. "If it is impossible, return an empty array." When is it impossible?',
+      highlight: { location: 'description', text: 'If it is impossible, return an empty array.' },
       options: [
         { label: 'When numCourses > prerequisites.length', isCorrect: false, feedback: 'Having more courses than prerequisites is perfectly fine — it just means some courses have no dependencies. Impossibility comes from a circular dependency, not from the counts.' },
         { label: 'When a cycle exists in the prerequisite graph', isCorrect: true },
@@ -58,7 +61,7 @@ export default {
     },
     {
       id: 'in-degree-signal',
-      question: 'In Kahn\'s algorithm, you start with all courses that have in-degree 0. What does in-degree 0 mean for a course?',
+      question: 'The core algorithmic quantity you track often encodes a real-world meaning that guides when your algorithm can act. In Kahn\'s algorithm, you start with all courses that have in-degree 0. What does in-degree 0 mean for a course?',
       options: [
         { label: 'The course has no students', isCorrect: false, feedback: 'In-degree in this graph refers to prerequisite edges, not student enrollment. In-degree 0 means no other course is listed as a prerequisite for this one.' },
         { label: 'The course has no prerequisites — safe to take immediately', isCorrect: true },
@@ -73,7 +76,8 @@ export default {
     },
     {
       id: 'prerequisite-direction',
-      question: '[a, b] means you must take b before a. In your adjacency list, which direction does the edge go?',
+      question: 'Getting the direction of each edge right at graph-construction time determines whether every later traversal step behaves correctly. [a, b] means you must take b before a. In your adjacency list, which direction does the edge go?',
+      highlight: { location: 'description', text: '<code>prerequisites[i] = [ai, bi]</code> indicates that you must take course <code>bi</code> first to take course <code>ai</code>.' },
       options: [
         { label: 'From a to b — a points to its prerequisite', isCorrect: false, feedback: 'If you build edges from a to b, in-degree counts dependents, not prerequisites — and Kahn\'s would process nodes differently. Build edges from b to a: b unlocks a, so the edge flows in the unlock direction.' },
         { label: 'Both directions — the graph is undirected', isCorrect: false, feedback: 'Prerequisites are directed: b must come before a, not the other way around. Making the graph undirected would destroy the ordering constraint.' },
@@ -87,4 +91,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def find_order(self, num_courses, prerequisites):
+        adj = [[] for _ in range(num_courses)]
+        indegree = [0] * num_courses
+        for a, b in prerequisites:
+            adj[b].append(a)
+            indegree[a] += 1
+
+        queue = deque([c for c in range(num_courses) if indegree[c] == 0])
+        order = []
+        while queue:
+            course = queue.popleft()
+            order.append(course)
+            for nxt in adj[course]:
+                indegree[nxt] -= 1
+                if indegree[nxt] == 0:
+                    queue.append(nxt)
+
+        return order if len(order) == num_courses else []`,
+  solutionComplexity: { time: 'O(V + E)', space: 'O(V + E)' },
+  solutionCaveat: 'If the final <code>order</code> has fewer courses than <code>num_courses</code>, some courses never reached in-degree zero — meaning they sit inside a prerequisite cycle — so the correct answer is an empty list, not the partial order collected so far.',
+  solutionExplanation: 'Courses with zero prerequisites remaining are the only ones safe to take next, so Kahn\'s algorithm repeatedly takes any such course, records it, and decrements the in-degree of every course that depended on it — exactly simulating "now that this is done, what becomes available." A course only ever enters the queue once its in-degree hits zero, so the emitted order always respects every prerequisite edge, and any cycle leaves some courses permanently stuck above zero, which is what the final length check detects.',
 }

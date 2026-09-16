@@ -8,20 +8,23 @@ export default {
     { input: 'board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCB"', output: 'false' },
   ],
   constraints: ['m == board.length', 'n == board[i].length', '1 <= m, n <= 6', '1 <= word.length <= 15'],
-  starterCode: `def exist(board, word):
-  pass`,
+  starterCode: `class Solution:
+    def exist(self, board, word):
+        pass`,
+  runnerSetup: 'exist = Solution().exist',
   functionName: 'exist',
   conceptId: 'backtracking',
   testCases: [
     { label: 'ABCCED', args: [[['A','B','C','E'],['S','F','C','S'],['A','D','E','E']], 'ABCCED'], expected: true },
     { label: 'ABCB false', args: [[['A','B','C','E'],['S','F','C','S'],['A','D','E','E']], 'ABCB'], expected: false },
   ],
-  bruteHint: 'Describe launching a DFS from every possible starting cell and matching the word character by character, and name the branching factor and word length that bound its worst-case cost',
-  optimizeHint: 'Name the in-place technique for marking a cell as used during the current path and restoring it on backtrack, avoiding a separate visited-set data structure',
+  bruteHint: 'The brute-force approach launches a fresh DFS from every cell on the board, matching the target word character by character along each path of adjacent cells. Each search branches up to 4 ways at every step, so the worst-case cost is bounded by O(m · n · 4^L), where L is the length of the word. Once the next character along a path fails to match, is there any reason to keep exploring further down that branch?',
+  optimizeComplexity: { time: 'O(m · n · 4^L)', space: 'O(L)' },
   clues: [
     {
       id: 'constraint-board-size',
-      question: 'm, n ≤ 6 and word.length ≤ 15. What does this small size say about the acceptable complexity?',
+      question: 'Small input bounds are a direct hint at which worst-case complexity the intended solution is allowed to have. m, n ≤ 6 and word.length ≤ 15. What does this small size say about the acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 <= m, n <= 6' },
       options: [
         { label: 'Only O(m × n) solutions are acceptable', isCorrect: false, feedback: 'With a 6 × 6 board and word length 15, O(m × n × 4^L) DFS is at most 36 × 4^15 ≈ 36 billion — actually tight. In practice, backtracking prunes most branches early, making it feasible.' },
         { label: 'Backtracking with early pruning is sufficient', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'no-cell-reuse',
-      question: '"The same cell may not be used more than once." How do you enforce this without extra space overhead?',
+      question: 'A rule against reusing elements within a single path is usually meant to be enforced with minimal extra memory, not a brand-new data structure. "The same cell may not be used more than once." How do you enforce this without extra space overhead?',
+      highlight: { location: 'description', text: 'The same cell may not be used more than once.' },
       options: [
         { label: 'Keep a separate boolean visited matrix', isCorrect: false, feedback: 'A boolean matrix works correctly but adds O(m × n) extra space. Marking the board cell in place and restoring it on backtrack achieves the same result with O(1) extra space per step.' },
         { label: 'Temporarily overwrite the cell and restore on backtrack', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'output-boolean-early-exit',
-      question: 'The output is a single boolean. What does this let you do as soon as you find a valid path?',
+      question: 'A yes or no output is a strong signal that you do not need to explore exhaustively, since you can stop the instant the answer is decided. The output is a single boolean. What does this let you do as soon as you find a valid path?',
+      highlight: { location: 'description', text: 'return <code>true</code> if <code>word</code> exists in the grid.' },
       options: [
         { label: 'Continue searching to confirm no other paths exist', isCorrect: false, feedback: 'The output only requires knowing whether any path exists — not all paths. Continuing after finding one is unnecessary work.' },
         { label: 'Return true immediately and stop all recursion', isCorrect: true },
@@ -66,7 +71,7 @@ export default {
     },
     {
       id: 'starting-cell-search',
-      question: 'The word can start at any cell. What does this imply about how you initiate the search?',
+      question: 'When a problem does not pin down where a solution must begin, that absence of a constraint is itself a signal that you need to consider every possible starting point. The word can start at any cell. What does this imply about how you initiate the search?',
       options: [
         { label: 'Start DFS only from the top-left corner', isCorrect: false, feedback: 'The word can start anywhere on the board. Starting only from (0, 0) would miss words that begin at any other cell.' },
         { label: 'Try DFS from every cell as a potential starting point', isCorrect: true },
@@ -80,4 +85,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def exist(self, board, word):
+        m, n = len(board), len(board[0])
+
+        def dfs(r, c, i):
+            if i == len(word):
+                return True
+            if r < 0 or r >= m or c < 0 or c >= n or board[r][c] != word[i]:
+                return False
+            temp = board[r][c]
+            board[r][c] = '#'
+            found = (dfs(r + 1, c, i + 1) or dfs(r - 1, c, i + 1) or
+                     dfs(r, c + 1, i + 1) or dfs(r, c - 1, i + 1))
+            board[r][c] = temp
+            return found
+
+        for r in range(m):
+            for c in range(n):
+                if dfs(r, c, 0):
+                    return True
+        return False`,
+  solutionComplexity: { time: 'O(m · n · 4^L)', space: 'O(L)' },
+  solutionCaveat: 'The original character is saved in <code>temp</code> and restored <code>after</code> all four recursive directions have been tried, not immediately after marking it — restoring too early would let a sibling recursive call revisit the same cell within the same path, violating the no-reuse rule.',
+  solutionExplanation: 'Temporarily overwriting the current cell with a sentinel character (<code>\'#\'</code>) that can never match a real board letter is what enforces "no cell reused within a path" at O(1) extra cost per step, instead of paying for a separate boolean visited grid — restoring the original character on the way back out is what makes the cell available again for a completely different path once the current one backtracks past it. Trying every cell as a potential starting point (since the word could begin anywhere) and returning true the instant any one of those DFS searches succeeds is what lets the search stop immediately rather than needlessly checking the remaining candidates.',
 }

@@ -8,8 +8,10 @@ export default {
     { input: 'intervals = [[1,2],[1,2],[1,2]]', output: '2' },
   ],
   constraints: ['1 ≤ intervals.length ≤ 10⁵', 'intervals[i].length == 2', '-5 × 10⁴ ≤ start < end ≤ 5 × 10⁴'],
-  starterCode: `def erase_overlap_intervals(intervals):
-  pass`,
+  starterCode: `class Solution:
+    def erase_overlap_intervals(self, intervals):
+        pass`,
+  runnerSetup: 'erase_overlap_intervals = Solution().erase_overlap_intervals',
   functionName: 'erase_overlap_intervals',
   conceptId: 'intervals',
   testCases: [
@@ -18,17 +20,18 @@ export default {
     { label: 'No removal', args: [[[1,2],[2,3]]], expected: 0 },
     { label: 'All overlap', args: [[[1,4],[1,4],[1,4]]], expected: 2 },
   ],
-  bruteHint: 'Describe comparing every pair of intervals (or trying combinations) to determine which to remove, and its time complexity',
-  optimizeHint: 'Name the greedy strategy — sorting by end time — that lets you keep the maximum non-overlapping set in one pass',
+  bruteHint: 'A brute-force approach could try every possible subset of intervals to remove, or compare every pair to find conflicts, then check whether what remains is non-overlapping and track the smallest removal count found. Trying combinations is exponential, and even pairwise conflict checking costs O(n²). With up to 100,000 intervals, can either approach finish in time?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'intervals.length ≤ 10⁵ tells you…',
+      question: 'Constraints reveal the time complexity budget you have to work within. intervals.length ≤ 10⁵ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ intervals.length ≤ 10⁵' },
       options: [
         { label: 'O(n²) is acceptable', isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations — far too slow. You need at most O(n log n).' },
         { label: 'O(n log n) is the target complexity', isCorrect: true },
-        { label: 'O(n) is required — no sorting allowed', isCorrect: false, feedback: 'O(n log n) is acceptable and natural here — sorting the intervals is the first step. A sub-linear solution isn\'t achievable since you must examine every interval.' },
-        { label: 'Use a hash map for O(1) lookups', isCorrect: false, feedback: 'Intervals aren\'t discrete keys you can hash for membership. The structure of this problem calls for sorting and a greedy sweep, not hash lookups.' },
+        { label: 'O(n) is required — you can\'t spend any time reordering the input first', isCorrect: false, feedback: 'O(n log n) is acceptable and natural here — sorting the intervals is the first step. A sub-linear solution isn\'t achievable since you must examine every interval.' },
+        { label: 'Look up each interval in O(1) using a key-based structure', isCorrect: false, feedback: 'Intervals aren\'t discrete keys you can hash for membership. The structure of this problem calls for sorting and a greedy sweep, not hash lookups.' },
       ],
       correctFeedback: 'At n = 100,000, O(n²) is 10 billion operations — too slow. Sorting takes O(n log n), and a single greedy pass takes O(n), giving O(n log n) overall.',
       wrongFeedback: [
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is the minimum number of intervals to remove, not which ones. This means…',
+      question: 'Understanding exactly what the return value represents shapes the whole approach you build. The output is the minimum number of intervals to remove, not which ones. This means…',
+      highlight: { location: 'description', text: 'Given an array of intervals, return the minimum number of intervals you need to remove to make the rest non-overlapping.' },
       options: [
         { label: 'Record which intervals to remove', isCorrect: false, feedback: 'Tracking specific intervals isn\'t required. The output is a count — you just need to know how many removals are needed, not which intervals they were.' },
         { label: 'Maximize intervals kept, then subtract from n', isCorrect: true },
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'greedy-sort-by-end',
-      question: 'To maximize the number of non-overlapping intervals you keep, what should you sort by?',
+      question: 'Identifying the core greedy strategy is the key insight for interval problems like this. To maximize the number of non-overlapping intervals you keep, what should you sort by?',
       options: [
         { label: 'Sort by start time', isCorrect: false, feedback: 'Sorting by start time is useful for detecting overlaps, but doesn\'t give you the greedy property for maximizing kept intervals. An interval that starts early but ends late blocks many future intervals.' },
         { label: 'Sort by end time', isCorrect: true },
@@ -68,7 +72,7 @@ export default {
     },
     {
       id: 'touching-boundary',
-      question: 'The first example shows [[1,2],[2,3],[3,4],[1,3]] requires only 1 removal, keeping [1,2],[2,3],[3,4]. Meetings touching at endpoints are considered non-overlapping. What does this mean for your overlap check?',
+      question: 'Working through a concrete example exposes exactly where your boundary condition needs to land. The first example shows [[1,2],[2,3],[3,4],[1,3]] requires only 1 removal, keeping [1,2],[2,3],[3,4]. Meetings touching at endpoints are considered non-overlapping. What does this mean for your overlap check?',
       options: [
         { label: 'Overlap when next.start < current.end (strict)', isCorrect: true },
         { label: 'Overlap when next.start ≤ current.end', isCorrect: false, feedback: 'Using ≤ would flag [1,2] and [2,3] as overlapping, requiring a removal where none is needed. The example shows they can coexist — touching boundaries don\'t conflict.' },
@@ -82,4 +86,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def erase_overlap_intervals(self, intervals):
+        intervals.sort(key=lambda x: x[1])
+        count = 0
+        prev_end = float('-inf')
+        for start, end in intervals:
+            if start >= prev_end:
+                prev_end = end
+            else:
+                count += 1
+        return count`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(1)' },
+  solutionCaveat: 'Sorting by end coordinate — not start — is what makes the greedy "always keep the interval that ends soonest" rule correct; keeping the earliest-ending interval leaves the most room for everything still to come, which is exactly the same insight Minimum Arrows to Burst Balloons relies on.',
+  solutionExplanation: 'Minimizing removals is the same as maximizing how many intervals can be *kept* non-overlapping, and greedily keeping whichever remaining interval ends soonest is always at least as good as any other choice, since it leaves the most room for future intervals. Every interval that starts before the last *kept* interval\'s end must be removed (it necessarily overlaps), so a single left-to-right pass — extending the "kept" boundary only when an interval genuinely fits after it — counts exactly how many had to be discarded.',
 }

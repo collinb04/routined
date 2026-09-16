@@ -7,6 +7,7 @@
   "dependencies": {
     "@auth0/auth0-vue": "^2.7.0",
     "@codemirror/lang-python": "^6.2.1",
+    "@replit/codemirror-indentation-markers": "^6.5.3",
     "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-vue": "^6.0.7",
     "canvas-confetti": "^1.9.4",

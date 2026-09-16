@@ -7,20 +7,23 @@ export default {
     { input: 'n=4, flights=[[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]], src=0, dst=3, k=1', output: '700', explanation: '0→1→3 costs 700 with 1 stop.' },
   ],
   constraints: ['1 ≤ n ≤ 100', '0 ≤ flights.length ≤ n*(n-1)/2', '1 ≤ price ≤ 10⁴'],
-  starterCode: `def find_cheapest_price(n, flights, src, dst, k):
-  pass`,
+  starterCode: `class Solution:
+    def find_cheapest_price(self, n, flights, src, dst, k):
+        pass`,
+  runnerSetup: 'find_cheapest_price = Solution().find_cheapest_price',
   functionName: 'find_cheapest_price',
-  conceptId: 'advanced-graphs',
+  conceptId: 'graphs',
   testCases: [
     { label: 'k=1', args: [4,[[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]],0,3,1], expected: 700 },
     { label: 'k=2', args: [4,[[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]],0,3,2], expected: 400 },
   ],
-  bruteHint: 'Describe exploring every possible route within k stops via DFS and recomputing the cost of each one from scratch',
-  optimizeHint: 'Name the shortest-path technique that relaxes all edges in rounds, bounded to a fixed number of rounds',
+  bruteHint: 'One brute-force approach is to run DFS from src, exploring every possible route that stays within k stops, and recomputing the total cost of each route as you build it. With up to 100 cities and dense flight lists, the number of routes to explore grows exponentially with the branching factor at each city, giving roughly O(E^k) time in the worst case. What happens to that runtime as k grows toward n-1?',
+  optimizeComplexity: { time: 'O(k · E)', space: 'O(V)' },
   clues: [
     {
       id: 'stop-constraint',
-      question: '"At most k stops." A stop is an intermediate city, not counting src or dst. What does this constraint add on top of a standard shortest-path problem?',
+      question: 'Constraints that add a hidden dimension beyond raw cost often mean a standard shortest-path algorithm needs to be adapted. "At most k stops." A stop is an intermediate city, not counting src or dst. What does this constraint add on top of a standard shortest-path problem?',
+      highlight: { location: 'description', text: 'at most k stops' },
       options: [
         { label: 'A hop count limit — not just minimum cost', isCorrect: true },
         { label: 'Nothing — Dijkstra already handles it', isCorrect: false, feedback: 'Dijkstra finds the globally cheapest path regardless of how many hops it takes. The k-stop limit means a cheaper path with too many hops is invalid — standard Dijkstra doesn\'t track that.' },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'no-route-output',
-      question: 'Return -1 if no route exists within k stops. What does this require in your algorithm?',
+      question: 'The specified return value for an edge case often reveals exactly what sentinel state your algorithm needs to track. Return -1 if no route exists within k stops. What does this require in your algorithm?',
+      highlight: { location: 'description', text: 'Return -1 if no route.' },
       options: [
         { label: 'Check for negative cycles before running', isCorrect: false, feedback: 'All prices are ≥ 1, so negative cycles are impossible here. The -1 output signals unreachability within k stops, not a negative-cycle sentinel.' },
         { label: 'Initialize dist to infinity, return -1 if dst stays unreached', isCorrect: true },
@@ -50,7 +54,8 @@ export default {
     },
     {
       id: 'bellman-ford-rounds',
-      question: 'Bellman-Ford normally runs n-1 rounds. Here you run at most k+1 rounds. Why?',
+      question: 'When an algorithm\'s round count is capped by a problem constraint, seeing how that cap maps to path length tells you exactly why the bound is set that way. Bellman-Ford normally runs n-1 rounds. Here you run at most k+1 rounds. Why?',
+      highlight: { location: 'description', text: 'at most k stops' },
       options: [
         { label: 'Each round extends paths by exactly one edge', isCorrect: true },
         { label: 'k+1 rounds reduces time complexity to O(k)', isCorrect: false, feedback: 'Each round still processes all flights, so cost per round is O(E). Running k+1 rounds gives O(k·E), not O(k). The bound on rounds comes from the stop limit, not a performance optimization.' },
@@ -65,7 +70,7 @@ export default {
     },
     {
       id: 'stale-copy',
-      question: 'During each Bellman-Ford round, you must use prices from the previous round, not the current one. What happens if you update in-place?',
+      question: 'Subtle ordering details in how updates are applied can silently break the guarantees an algorithm depends on. During each Bellman-Ford round, you must use prices from the previous round, not the current one. What happens if you update in-place?',
       options: [
         { label: 'You skip some flights accidentally', isCorrect: false, feedback: 'Processing all flights in a round doesn\'t get skipped — the order issue is different. Using updated values mid-round lets a single round effectively extend a path by more than one edge.' },
         { label: 'A single round can extend a path by more than one hop', isCorrect: true },
@@ -79,4 +84,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_cheapest_price(self, n, flights, src, dst, k):
+        dist = [float('inf')] * n
+        dist[src] = 0
+        for _ in range(k + 1):
+            new_dist = dist[:]
+            for u, v, w in flights:
+                if dist[u] != float('inf') and dist[u] + w < new_dist[v]:
+                    new_dist[v] = dist[u] + w
+            dist = new_dist
+        return dist[dst] if dist[dst] != float('inf') else -1`,
+  solutionComplexity: { time: 'O(k · E)', space: 'O(n)' },
+  solutionCaveat: 'Relaxation reads from the previous round\'s <code>dist</code> array and writes into a fresh <code>new_dist</code> copy — never updating <code>dist</code> in place mid-round — which is exactly what keeps a single round from chaining two edges into one "free" extra stop.',
+  solutionExplanation: 'This is Bellman-Ford capped at <code>k + 1</code> rounds instead of run to convergence: each round relaxes every edge once, so after <code>r</code> rounds <code>dist[v]</code> holds the cheapest cost reachable using at most <code>r</code> edges. Stopping at exactly <code>k + 1</code> rounds — one more than the number of allowed stops — bounds path length to at most <code>k</code> intermediate stops, which is the entire reason this problem needs a bounded variant of shortest-path rather than plain Dijkstra.',
 }

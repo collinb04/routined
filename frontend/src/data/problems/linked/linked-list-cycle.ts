@@ -17,8 +17,9 @@ export default {
       self.val = val
       self.next = next
 
-def has_cycle(head):
-  pass`,
+class Solution:
+    def has_cycle(self, head):
+        pass`,
   functionName: 'has_cycle',
   conceptId: 'fast-slow',
   runnerSetup: `
@@ -31,7 +32,7 @@ def _build_cycle(vals, pos):
       nodes[-1].next = nodes[pos]
   return nodes[0]
 
-_orig_has_cycle = has_cycle
+_orig_has_cycle = Solution().has_cycle
 def has_cycle(vals, pos):
   return _orig_has_cycle(_build_cycle(vals, pos))
 `,
@@ -41,12 +42,13 @@ def has_cycle(vals, pos):
     { label: 'No cycle', args: [[1], -1], expected: false },
     { label: 'Longer no cycle', args: [[1, 2, 3, 4], -1], expected: false },
   ],
-  bruteHint: 'Describe using a hash set to track visited nodes, and the O(n) space that costs',
-  optimizeHint: 'Name the two-pointer technique that detects a cycle in O(1) space',
+  bruteHint: 'A straightforward approach walks the list while storing every visited node in a hash set, checking before each step whether the next node is already in the set. This finds a cycle in O(n) time but costs O(n) extra space to remember up to n node references. Since the answer is just yes or no, can you detect a repeated node without remembering every node you have already seen?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'output-boolean',
-      question: 'The output is true or false — just whether a cycle exists. This means you…',
+      question: 'What the output actually requires shapes how much work you need to do. The output is true or false — just whether a cycle exists. This means you…',
+      highlight: { location: 'description', text: 'return <code>true</code> if the list contains a cycle, or <code>false</code> otherwise.' },
       options: [
         { label: 'Must find where the cycle starts', isCorrect: false, feedback: 'Finding the cycle entry point is a harder variant of this problem. Here you only need to detect presence — true or false — which is simpler and allows earlier termination.' },
         { label: 'Only need to detect presence, not location', isCorrect: true },
@@ -61,7 +63,7 @@ def has_cycle(vals, pos):
     },
     {
       id: 'constraint-no-end',
-      question: 'In a cyclic list, following next pointers never reaches null. This means a simple traversal…',
+      question: 'Recognizing what a signal rules out saves you from writing code that never terminates. In a cyclic list, following next pointers never reaches null. This means a simple traversal…',
       options: [
         { label: 'Terminates when it revisits a value', isCorrect: false, feedback: 'Node values are not unique — a list can have repeated values without a cycle. You need to detect revisiting a node by identity, not by value.' },
         { label: 'Loops forever without a termination condition', isCorrect: true },
@@ -76,7 +78,8 @@ def has_cycle(vals, pos):
     },
     {
       id: 'floyd-algorithm-signal',
-      question: 'The problem explicitly says "use Floyd\'s fast and slow pointer algorithm." This implies the intended space complexity is…',
+      question: 'Explicit algorithm names in a problem statement are a direct signal about the intended complexity. The problem explicitly says "use Floyd\'s fast and slow pointer algorithm." This implies the intended space complexity is…',
+      highlight: { location: 'description', text: 'Use Floyd\'s fast and slow pointer algorithm.' },
       options: [
         { label: 'O(n) — store all visited nodes', isCorrect: false, feedback: 'Storing visited nodes in a set detects cycles in O(n) time but O(n) space. Floyd\'s algorithm achieves O(n) time with O(1) space — two pointers, no storage.' },
         { label: 'O(1) — two pointers, no extra storage', isCorrect: true },
@@ -91,7 +94,8 @@ def has_cycle(vals, pos):
     },
     {
       id: 'pos-guarantee',
-      question: 'pos is -1 or a valid node index. pos = -1 means no cycle. This guarantees…',
+      question: 'Constraints define exactly what signals you can rely on for termination. pos is -1 or a valid node index. pos = -1 means no cycle. This guarantees…',
+      highlight: { location: 'constraint', text: 'pos is -1 or a valid node index' },
       options: [
         { label: 'You must handle corrupted lists with invalid pointers', isCorrect: false, feedback: 'pos is always -1 or a valid index — there are no invalid pointer values in the input. The guarantee simplifies the problem: null means no cycle, and any non-null tail connection is valid.' },
         { label: 'Null termination is the only no-cycle signal', isCorrect: true },
@@ -105,4 +109,21 @@ def has_cycle(vals, pos):
       ],
     },
   ],
+  solutionCode: `class ListNode:
+  def __init__(self, val=0, next=None):
+      self.val = val
+      self.next = next
+
+class Solution:
+    def has_cycle(self, head):
+        slow, fast = head, head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:
+                return True
+        return False`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The loop guard checks <code>fast and fast.next</code> — both, not just <code>fast</code> — because <code>fast.next.next</code> would otherwise crash the instant <code>fast.next</code> is <code>None</code> on a list with no cycle.',
+  solutionExplanation: 'Two pointers walk the same list at different speeds — one step at a time for <code>slow</code>, two for <code>fast</code>. If there\'s no cycle, <code>fast</code> simply runs off the end first. If there is one, both pointers are stuck circling the same loop forever, and a faster runner lapping a slower one on a closed track is *guaranteed* to eventually land on it exactly — that meeting point is the proof of a cycle, no extra memory of visited nodes required.',
 }

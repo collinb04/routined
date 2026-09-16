@@ -8,20 +8,23 @@ export default {
     { input: 'cost = [1,100,1,1,1,100,1,1,100,1]', output: '6' },
   ],
   constraints: ['2 <= cost.length <= 1000', '0 <= cost[i] <= 999'],
-  starterCode: `def min_cost_climbing_stairs(cost):
-  pass`,
+  starterCode: `class Solution:
+    def min_cost_climbing_stairs(self, cost):
+        pass`,
+  runnerSetup: 'min_cost_climbing_stairs = Solution().min_cost_climbing_stairs',
   functionName: 'min_cost_climbing_stairs',
   conceptId: 'dp-1d',
   testCases: [
     { label: '[10,15,20]', args: [[10,15,20]], expected: 15 },
     { label: 'longer', args: [[1,100,1,1,1,100,1,1,100,1]], expected: 6 },
   ],
-  bruteHint: 'Describe the naive recursion that tries one-step and two-step moves from every position, and why it recomputes the same positions repeatedly',
-  optimizeHint: 'Name the technique for caching each position\'s minimum cost, and how few previous values you need to keep',
+  bruteHint: 'The brute-force approach recursively tries both a one-step and a two-step move from every position, exploring every possible path to the top — since each position spawns two more recursive calls, that branches out to O(2^n) calls. Because the same step index gets reached by multiple different paths, the recursion recomputes its result over and over. Could you cache each position\'s minimum cost the first time you compute it, so overlapping subproblems are only solved once?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'cost.length ≤ 1000 tells you…',
+      highlight: { location: 'constraint', text: '2 <= cost.length <= 1000' },
+      question: 'Size constraints tell you how much computational headroom you have, which narrows down what time complexity is actually required. cost.length ≤ 1000 tells you…',
       options: [
         { label: 'O(n) or O(n²) are both fine', isCorrect: false, feedback: 'At n = 1,000, O(n²) is 1 million operations — acceptable, but the structure of this problem makes O(n) natural. The constraint is wide enough to permit either, so it\'s not the deciding signal here.' },
         { label: 'You need O(n) time and space', isCorrect: false, feedback: 'O(n) time is correct, but you can reduce space to O(1) by keeping only the last two values. The constraint doesn\'t force O(n) space.' },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'two-step-choice',
-      question: '"Once you pay the cost, you can climb one or two steps." This means…',
+      highlight: { location: 'description', text: 'Once you pay the cost, you can climb one or two steps.' },
+      question: 'The problem statement\'s own wording about how movement works often encodes the recurrence relation you need to build directly. "Once you pay the cost, you can climb one or two steps." This means…',
       options: [
         { label: 'You must always take two steps', isCorrect: false, feedback: 'Taking two steps is optional. At each step you choose one or two — the minimum of the two incoming paths determines the cheapest way to arrive.' },
         { label: 'Each step has exactly two predecessors', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'start-choice',
-      question: '"You can start from index 0 or 1." This means…',
+      highlight: { location: 'description', text: 'You can start from index 0 or 1.' },
+      question: 'Base-case details buried in the problem description determine how your DP table gets initialized, so it\'s worth reading them literally. "You can start from index 0 or 1." This means…',
       options: [
         { label: 'Index 0 is always the cheaper start', isCorrect: false, feedback: 'cost[0] and cost[1] can be anything — the problem tells you to choose, not which one to pick. Both starting positions need to be seeded as base cases.' },
         { label: 'Both indices are valid base cases', isCorrect: true },
@@ -66,7 +71,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is the minimum cost to reach the top, not a path. This means…',
+      highlight: { location: 'description', text: 'Return the minimum cost to reach the top of the floor.' },
+      question: 'What the problem asks you to return — a single value versus a full structure — tells you how much information your solution actually needs to retain. The output is the minimum cost to reach the top, not a path. This means…',
       options: [
         { label: 'You must reconstruct which steps were taken', isCorrect: false, feedback: 'Reconstructing the path requires backtracking through your DP table, which is extra work the problem never asks for. You only need the final cost value.' },
         { label: 'You only need to track the running minimum cost', isCorrect: true },
@@ -80,4 +86,15 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def min_cost_climbing_stairs(self, cost):
+        n = len(cost)
+        prev2, prev1 = 0, 0
+        for i in range(2, n + 1):
+            curr = min(prev1 + cost[i - 1], prev2 + cost[i - 2])
+            prev2, prev1 = prev1, curr
+        return prev1`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>prev2</code> and <code>prev1</code> both start at 0 — representing the free "virtual" starting positions before index 0 and before index 1, since the problem lets you begin at either step without paying anything to arrive there, only to leave.',
+  solutionExplanation: 'The top of the staircase is reachable from either of the last two steps, so the minimum cost to reach position <code>i</code> is that step\'s own cost plus whichever of the two positions behind it (one step back or two) was cheaper to reach — the classic two-predecessor recurrence. Because each new value only ever depends on the two immediately preceding ones, rolling them forward in two variables instead of a full array collapses the space requirement to O(1).',
 }

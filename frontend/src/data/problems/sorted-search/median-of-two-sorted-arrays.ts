@@ -8,23 +8,26 @@ export default {
     { input: 'nums1 = [1,2], nums2 = [3,4]', output: '2.5' },
   ],
   constraints: ['0 <= m, n <= 1000', '1 <= m + n <= 2000', '-10^6 <= nums1[i], nums2[i] <= 10^6'],
-  starterCode: `def find_median_sorted_arrays(nums1, nums2):
-  pass`,
+  starterCode: `class Solution:
+    def find_median_sorted_arrays(self, nums1, nums2):
+        pass`,
+  runnerSetup: 'find_median_sorted_arrays = Solution().find_median_sorted_arrays',
   functionName: 'find_median_sorted_arrays',
   conceptId: 'binary-search',
   testCases: [
     { label: '[1,3],[2]', args: [[1,3], [2]], expected: 2.0 },
     { label: '[1,2],[3,4]', args: [[1,2], [3,4]], expected: 2.5 },
   ],
-  bruteHint: 'Describe merging both sorted arrays and indexing into the middle, and its O(m+n) time complexity',
-  optimizeHint: 'Name the technique — binary searching for the correct partition point on the smaller array — that achieves O(log(min(m,n)))',
+  bruteHint: 'The simplest approach merges both sorted arrays into one combined sorted array, then reads off the middle element (or averages the two middle elements) for the median. Building that merged array takes O(m+n) time and O(m+n) space, since every element from both inputs gets visited once. That\'s correct, but the problem explicitly demands O(log(m+n)) — where does the merge step spend time that a smarter approach could skip entirely?',
+  optimizeComplexity: { time: 'O(log(min(n, m)))', space: 'O(1)' },
   clues: [
     {
       id: 'time-constraint',
-      question: '"O(log(m+n)) time." m + n ≤ 2000. What does this requirement rule out?',
+      question: 'Explicit time-complexity requirements tell you which classes of algorithms remain viable. "O(log(m+n)) time." m + n ≤ 2000. What does this requirement rule out?',
+      highlight: { location: 'description', text: 'O(log(m+n))' },
       options: [
         { label: 'Merging both arrays, then taking the middle element', isCorrect: true },
-        { label: 'Any use of binary search', isCorrect: false, feedback: 'Binary search is exactly the tool the O(log(m+n)) requirement is pointing at. The constraint rules out O(m+n) linear work, not O(log) work.' },
+        { label: 'Any approach that halves the remaining candidates each step', isCorrect: false, feedback: 'Binary search is exactly the tool the O(log(m+n)) requirement is pointing at. The constraint rules out O(m+n) linear work, not O(log) work.' },
         { label: 'Accessing elements by index', isCorrect: false, feedback: 'Index access is O(1) and is used in binary search. The constraint limits how many elements you visit across both arrays, not how you access them.' },
         { label: 'Nothing — O(m+n) is fine since m+n ≤ 2000', isCorrect: false, feedback: 'The problem explicitly requires O(log(m+n)). Even though 2000 is small and a merge would pass in practice, the problem is testing whether you can binary search across two sorted arrays.' },
       ],
@@ -36,7 +39,7 @@ export default {
     },
     {
       id: 'median-definition',
-      question: 'The median of a combined array of total length L is the middle value. When L is even, it\'s the average of the two middle values. What does this mean for your algorithm?',
+      question: 'Precise mathematical definitions in a problem statement pin down exactly what your algorithm must compute. The median of a combined array of total length L is the middle value. When L is even, it\'s the average of the two middle values. What does this mean for your algorithm?',
       options: [
         { label: 'Return the middle element of nums1 or nums2, whichever is longer', isCorrect: false, feedback: 'The median is over the combined sorted array, not either individual array. The middle of nums1 alone is unrelated to the median of the merged sequence.' },
         { label: 'Find the (L//2)-th and (L//2 + 1)-th smallest elements across both arrays', isCorrect: true },
@@ -51,7 +54,7 @@ export default {
     },
     {
       id: 'partition-approach',
-      question: 'The O(log(m+n)) solution binary searches on one array to find the right partition. What invariant must hold at a valid partition?',
+      question: 'Naming the invariant a technique relies on clarifies what condition your solution must maintain at every step. The O(log(m+n)) solution binary searches on one array to find the right partition. What invariant must hold at a valid partition?',
       options: [
         { label: 'The partition index in nums1 equals the partition index in nums2', isCorrect: false, feedback: 'The two partition indices are complementary, not equal. If nums1 contributes i elements to the left half, nums2 contributes (m+n)//2 − i elements. They add up to the half-size, but aren\'t individually equal.' },
         { label: 'max(left halves) ≤ min(right halves) across both arrays', isCorrect: true },
@@ -66,10 +69,10 @@ export default {
     },
     {
       id: 'binary-search-on-shorter',
-      question: 'The algorithm binary searches on the shorter array. Why shorter, not longer?',
+      question: 'Comparing complexity across two equivalent choices reveals which one the problem actually rewards. The algorithm binary searches on the shorter array. Why shorter, not longer?',
       options: [
         { label: 'Shorter arrays have smaller elements on average', isCorrect: false, feedback: 'Array length doesn\'t imply anything about element values. The reason to search the shorter array is purely about the number of steps, not element magnitude.' },
-        { label: 'Binary search on the shorter array guarantees O(log(min(m,n))) steps', isCorrect: true },
+        { label: 'Searching the shorter array bounds the process to O(log(min(m,n))) steps', isCorrect: true },
         { label: 'The longer array\'s median is a better starting guess', isCorrect: false, feedback: 'You\'re not guessing a median — you\'re binary searching for a partition index. The shorter array is chosen because it bounds the number of search steps to O(log(min(m,n))).' },
         { label: 'The shorter array is guaranteed to be sorted', isCorrect: false, feedback: 'Both arrays are sorted — that\'s given in the problem. The choice of shorter array is about minimizing the search range, not about sortedness.' },
       ],
@@ -80,4 +83,29 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_median_sorted_arrays(self, nums1, nums2):
+        if len(nums1) > len(nums2):
+            nums1, nums2 = nums2, nums1
+        m, n = len(nums1), len(nums2)
+        lo, hi = 0, m
+        while lo <= hi:
+            i = (lo + hi) // 2
+            j = (m + n + 1) // 2 - i
+            left1 = nums1[i - 1] if i > 0 else float('-inf')
+            right1 = nums1[i] if i < m else float('inf')
+            left2 = nums2[j - 1] if j > 0 else float('-inf')
+            right2 = nums2[j] if j < n else float('inf')
+            if left1 <= right2 and left2 <= right1:
+                if (m + n) % 2 == 0:
+                    return (max(left1, left2) + min(right1, right2)) / 2
+                else:
+                    return max(left1, left2)
+            elif left1 > right2:
+                hi = i - 1
+            else:
+                lo = i + 1`,
+  solutionComplexity: { time: 'O(log(min(m, n)))', space: 'O(1)' },
+  solutionCaveat: 'Choosing <code>i</code> automatically determines <code>j</code> via <code>j = (m+n+1)//2 - i</code> — the partition of the *shorter* array is the only thing actually being binary-searched; the partition of the longer array is always fully determined by it, so there is only one search dimension, not two.',
+  solutionExplanation: 'The median can be found without merging anything by searching for a partition point that splits the combined arrays into two halves of (nearly) equal size, where every element in the left half is <code>&lt;=</code> every element in the right half — at that point, the median is derivable directly from the four values straddling the partition. Binary searching over possible partition points in the shorter array (with the partition of the other array always determined by the required left-half size) finds that correct split in O(log(min(m,n))), since each failed guess reveals which direction to shift the partition using only local comparisons.',
 }

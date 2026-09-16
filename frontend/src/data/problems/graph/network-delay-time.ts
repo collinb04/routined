@@ -7,21 +7,24 @@ export default {
     { input: 'times=[[2,1,1],[2,3,1],[3,4,1]], n=4, k=2', output: '2', explanation: 'Signal from node 2 reaches all nodes in at most 2 time units.' },
   ],
   constraints: ['1 ≤ k ≤ n ≤ 100', '1 ≤ times.length ≤ 6000', 'All travel times are positive'],
-  starterCode: `def network_delay_time(times, n, k):
-  pass`,
+  starterCode: `class Solution:
+    def network_delay_time(self, times, n, k):
+        pass`,
+  runnerSetup: 'network_delay_time = Solution().network_delay_time',
   functionName: 'network_delay_time',
-  conceptId: 'advanced-graphs',
+  conceptId: 'heaps',
   testCases: [
     { label: 'Standard', args: [[[2,1,1],[2,3,1],[3,4,1]],4,2], expected: 2 },
     { label: 'Unreachable', args: [[[1,2,1]],2,2], expected: -1 },
     { label: 'Single node', args: [[],1,1], expected: 0 },
   ],
-  bruteHint: 'Describe trying every possible path from k to each node and comparing total travel times, and why that\'s inefficient',
-  optimizeHint: 'Name the shortest-path algorithm that greedily finalizes each node\'s minimum distance using a priority queue',
+  bruteHint: 'One brute-force option explores every possible path from k to each other node, adding up travel times along the way, and keeps the smallest total for each destination. Since the number of distinct paths through a graph can grow exponentially with the number of edges, this exploration can take exponential time in the worst case. Is there a way to build up shortest distances incrementally instead of re-exploring paths from scratch?',
+  optimizeComplexity: { time: 'O(E log V)', space: 'O(V + E)' },
   clues: [
     {
       id: 'positive-weights',
-      question: '"All travel times are positive." What does this guarantee about the algorithm you can use?',
+      question: 'A constraint on edge weights often tells you exactly which shortest-path algorithm is safe to use. "All travel times are positive." What does this guarantee about the algorithm you can use?',
+      highlight: { location: 'constraint', text: 'All travel times are positive' },
       options: [
         { label: 'Dijkstra\'s algorithm is valid here', isCorrect: true },
         { label: 'Bellman-Ford is required', isCorrect: false, feedback: 'Bellman-Ford handles negative edge weights, but all travel times here are positive. Dijkstra\'s greedy relaxation is correct and faster — O((n + e) log n) versus O(n × e).' },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'directed-graph',
-      question: 'The edges in times are directed: [u, v, w] means u → v, not v → u. What does this mean for your adjacency list?',
+      question: 'Whether a problem describes its edges as directed or undirected determines how many entries each edge adds to your adjacency list. The edges in times are directed: [u, v, w] means u → v, not v → u. What does this mean for your adjacency list?',
+      highlight: { location: 'description', text: 'directed edges' },
       options: [
         { label: 'Add both directions for every edge', isCorrect: false, feedback: 'Adding both directions would model an undirected graph. Here, a signal traveling u → v does not imply it can travel v → u at the same cost. Only store the directed edge u → v.' },
         { label: 'Store each edge in one direction only', isCorrect: true },
@@ -80,4 +84,30 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def network_delay_time(self, times, n, k):
+        adj = [[] for _ in range(n + 1)]
+        for u, v, w in times:
+            adj[u].append((v, w))
+
+        dist = [float('inf')] * (n + 1)
+        dist[k] = 0
+        heap = [(0, k)]
+        while heap:
+            d, u = heapq.heappop(heap)
+            if d > dist[u]:
+                continue
+            for v, w in adj[u]:
+                nd = d + w
+                if nd < dist[v]:
+                    dist[v] = nd
+                    heapq.heappush(heap, (nd, v))
+
+        max_dist = max(dist[1:])
+        return max_dist if max_dist != float('inf') else -1`,
+  solutionComplexity: { time: 'O(E log V)', space: 'O(V + E)' },
+  solutionCaveat: 'The signal reaches all nodes only once the <code>slowest</code> node hears it, so the answer is the <code>maximum</code> shortest-path distance across all nodes, not the sum or the minimum — a single unreachable node anywhere makes the whole broadcast impossible, hence the <code>-1</code> check on infinity.',
+  solutionExplanation: 'Dijkstra\'s algorithm from source <code>k</code> computes the shortest signal-arrival time to every node, always finalizing the currently-closest unvisited node next and relaxing its neighbors — correct here because all edge weights are positive. Once every node\'s shortest distance is known, the time for the whole network to receive the signal is the maximum of those distances, since that\'s exactly when the last, slowest-to-reach node finally gets it; any node still at infinity means it was never reachable at all.',
 }

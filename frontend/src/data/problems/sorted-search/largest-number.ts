@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [3,30,34,5,9]', output: '"9534330"' },
   ],
   constraints: ['1 ≤ nums.length ≤ 100', '0 ≤ nums[i] ≤ 10⁹'],
-  starterCode: `def largest_number(nums):
-  pass`,
+  starterCode: `class Solution:
+    def largest_number(self, nums):
+        pass`,
+  runnerSetup: 'largest_number = Solution().largest_number',
   functionName: 'largest_number',
   conceptId: 'sorting',
   testCases: [
@@ -18,12 +20,12 @@ export default {
     { label: 'All zeros', args: [[0,0]], expected: '0' },
     { label: 'Single', args: [[5]], expected: '5' },
   ],
-  bruteHint: 'Describe sorting the numbers by plain numeric value and why that produces the wrong order',
-  optimizeHint: 'Name the technique — a custom pairwise comparator based on concatenation order — that produces the correct arrangement',
+  bruteHint: 'The brute-force instinct is to sort the numbers by their plain numeric value, largest to smallest, and concatenate them in that order. But numeric sort doesn\'t account for how digits combine — a case like [3, 34] shows why: 3 sorts before 34 numerically, giving "334", when "343" is actually larger. Since numeric sort doesn\'t reflect concatenation order, what comparison would?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'comparison-key',
-      question: 'Sorting [10, 2] numerically gives [2, 10], producing "210" — the correct answer. But standard numeric sort fails on [3, 30]: it gives [3, 30] (→ "330") when the answer is "330." Hmm, it happens to work here. Try [3, 34]: numeric sort gives [3, 34] → "334", but "343" > "334". What comparison actually works?',
+      question: 'When a natural sort order breaks under composition, the fix is usually a custom comparator built around how elements combine. Sorting [10, 2] numerically gives [2, 10], producing "210" — the correct answer. But standard numeric sort fails on [3, 30]: it gives [3, 30] (→ "330") when the answer is "330." Hmm, it happens to work here. Try [3, 34]: numeric sort gives [3, 34] → "334", but "343" > "334". What comparison actually works?',
       options: [
         { label: 'Sort numerically, largest first', isCorrect: false, feedback: 'Numeric sort breaks on cases like [3, 34]: it places 3 before 34 (→ "334") but "343" is larger. The correct order depends on concatenation, not numeric value.' },
         { label: 'Compare a+b vs b+a as strings for each pair', isCorrect: true },
@@ -38,7 +40,8 @@ export default {
     },
     {
       id: 'all-zeros-edge-case',
-      question: 'The test case [0, 0] expects "0", not "00". When should you return "0"?',
+      highlight: { location: 'constraint', text: '0 ≤ nums[i] ≤ 10⁹' },
+      question: 'Constraints that permit boundary values like zero often hide edge cases you must handle explicitly. The test case [0, 0] expects "0", not "00". When should you return "0"?',
       options: [
         { label: 'When every element is 0', isCorrect: false, feedback: 'This is close but imprecise. After sorting and joining, if the result starts with "0", the entire number is 0 — because if the largest element is 0, all elements are 0. Checking the first character of the joined result is the cleanest guard.' },
         { label: 'When the first character of the joined result is "0"', isCorrect: true },
@@ -53,7 +56,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a string, not an integer. Why return a string?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 100' },
+      question: 'Large size bounds in the constraints can rule out native numeric types entirely. The output is a string, not an integer. Why return a string?',
       options: [
         { label: 'Integers can\'t hold large concatenations like nums.length = 100 with nums[i] up to 10⁹', isCorrect: true },
         { label: 'String comparison is faster than integer comparison', isCorrect: false, feedback: 'Performance is not the reason. The output is a string because the concatenated result could have up to 100 × 10 = 1,000 digits — far beyond the range of a 64-bit integer.' },
@@ -67,4 +71,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `from functools import cmp_to_key
+
+class Solution:
+    def largest_number(self, nums):
+        strs = [str(n) for n in nums]
+        def compare(a, b):
+            if a + b > b + a:
+                return -1
+            elif a + b < b + a:
+                return 1
+            return 0
+        strs.sort(key=cmp_to_key(compare))
+        result = "".join(strs)
+        return "0" if result[0] == "0" else result`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'The all-zeros edge case (like <code>[0, 0]</code>) needs an explicit check — concatenating any number of <code>"0"</code> strings sorted correctly still produces <code>"00"</code>, which is numerically zero but not the canonical string representation the problem wants.',
+  solutionExplanation: 'Comparing two numbers by their *concatenation* in both orders — is <code>a + b</code> bigger than <code>b + a</code>? — directly answers "which order produces a larger combined number," which is exactly the ordering rule needed, unlike comparing the numbers\' plain numeric values (which breaks for cases like 3 vs. 34, where "334" loses to "343"). Sorting all the numbers\' string forms by that custom comparator and concatenating them in order builds the largest possible arrangement directly.',
 }

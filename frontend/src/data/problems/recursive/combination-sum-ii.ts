@@ -8,19 +8,20 @@ export default {
     { input: 'candidates = [2,5,2,1,2], target = 5', output: '[[1,2,2],[5]]' },
   ],
   constraints: ['1 <= candidates.length <= 100', '1 <= candidates[i] <= 50', '1 <= target <= 30'],
-  starterCode: `def combination_sum2(candidates, target):
-  pass`,
+  starterCode: `class Solution:
+    def combination_sum2(self, candidates, target):
+        pass`,
   functionName: 'combination_sum2_run',
   conceptId: 'backtracking',
   runnerSetup: `def combination_sum2_run(candidates, target):
-  result = combination_sum2(candidates, target)
+  result = Solution().combination_sum2(candidates, target)
   return sorted([sorted(c) for c in result])`,
   testCases: [
     { label: 'target=8', args: [[10,1,2,7,6,1,5], 8], expected: [[1,1,6],[1,2,5],[1,7],[2,6]] },
     { label: 'target=5', args: [[2,5,2,1,2], 5], expected: [[1,2,2],[5]] },
   ],
-  bruteHint: 'Describe generating every subset of candidates and filtering for ones that sum to target without duplicates',
-  optimizeHint: 'Name the technique of building combinations incrementally and skipping a branch as soon as it can\'t lead to a valid, unique combination',
+  bruteHint: 'The brute-force approach generates every possible subset of the candidates array — there are 2ⁿ of them — sums each one, and keeps only the subsets that equal target, discarding duplicate combinations afterward. With n up to 100, that is an enormous number of subsets to generate and sum, most of which do not even come close to target. What does this approach fail to take advantage of about the array once it is sorted?',
+  optimizeComplexity: { time: 'O(2ⁿ)', space: 'O(n)' },
   clues: [
     {
       id: 'duplicate-input-signal',
@@ -83,4 +84,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def combination_sum2(self, candidates, target):
+        candidates.sort()
+        result = []
+        path = []
+
+        def backtrack(start, remaining):
+            if remaining == 0:
+                result.append(path[:])
+                return
+            for i in range(start, len(candidates)):
+                if candidates[i] > remaining:
+                    break
+                if i > start and candidates[i] == candidates[i - 1]:
+                    continue
+                path.append(candidates[i])
+                backtrack(i + 1, remaining - candidates[i])
+                path.pop()
+
+        backtrack(0, target)
+        return result`,
+  solutionComplexity: { time: 'O(2ⁿ)', space: 'O(n)' },
+  solutionCaveat: 'The duplicate-skip check requires <code>i &gt; start</code>, not just <code>candidates[i] == candidates[i-1]</code> — the <code>first</code> occurrence of a repeated value at the current recursion level must still be tried, since skipping it entirely would eliminate valid combinations like <code>[1,2,2]</code> that legitimately use a repeated value more than once across different levels.',
+  solutionExplanation: 'Sorting first makes two things possible at once: candidates equal to the previous one at the same recursion level can be skipped to avoid generating the same combination twice, and once a candidate exceeds the remaining target, every later candidate does too (since they only get bigger), letting the loop break early instead of trying them all. Advancing to <code>i + 1</code> rather than <code>i</code> in the recursive call is what enforces "each number used once" — the same index is never eligible again within one combination.',
 }

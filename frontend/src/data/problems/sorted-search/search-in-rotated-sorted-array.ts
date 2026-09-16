@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [4,5,6,7,0,1,2], target = 3', output: '-1' },
   ],
   constraints: ['1 <= nums.length <= 5000', 'All values are unique', '-10^4 <= nums[i], target <= 10^4'],
-  starterCode: `def search(nums, target):
-  pass`,
+  starterCode: `class Solution:
+    def search(self, nums, target):
+        pass`,
+  runnerSetup: 'search = Solution().search',
   functionName: 'search',
   conceptId: 'binary-search',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'not found', args: [[4,5,6,7,0,1,2], 3], expected: -1 },
     { label: 'single', args: [[1], 0], expected: -1 },
   ],
-  bruteHint: 'Describe scanning the array linearly to find the target, and why that fails the O(log n) requirement',
-  optimizeHint: 'Name the modified binary search technique that determines which half of the array is properly sorted at each step',
+  bruteHint: 'A brute-force approach walks the array left to right, comparing each element to the target until a match is found or the array is exhausted. That takes O(n) time in the worst case, checking up to 5,000 elements. Since the O(log n) requirement rules out a full linear pass, what property of a sorted-then-rotated array could let you eliminate half the search space at each step?',
+  optimizeComplexity: { time: 'O(log n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'You must use O(log n) runtime. With n ≤ 5,000, what does this rule out?',
+      question: 'Explicit runtime requirements in a problem statement often signal which algorithm family is even viable. You must use O(log n) runtime. With n ≤ 5,000, what does this rule out?',
+      highlight: { location: 'description', text: 'You must write an algorithm with O(log n) runtime complexity.' },
       options: [
         { label: 'Linear scan through the array', isCorrect: false, feedback: 'A linear scan is O(n) — up to 5,000 comparisons. O(log n) allows only about 13. The constraint is explicitly ruling out any approach that visits every element.' },
         { label: 'Binary search variant', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'rotation-structure',
-      question: 'The array is sorted then rotated at an unknown pivot. At any midpoint, what can you always determine?',
+      question: 'Structural invariants that survive a transformation like rotation are often the key to keeping an efficient algorithm viable. The array is sorted then rotated at an unknown pivot. At any midpoint, what can you always determine?',
+      highlight: { location: 'description', text: 'sorted in ascending order with distinct values, possibly rotated at an unknown pivot.' },
       options: [
         { label: 'The exact pivot position', isCorrect: false, feedback: 'You cannot determine the pivot from a single midpoint comparison. But you don\'t need it — you only need to know which half is sorted to decide where to search.' },
         { label: 'Which half is fully sorted', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'distinct-values-guarantee',
-      question: '"All values are unique." How does this simplify the binary search logic?',
+      question: 'Uniqueness guarantees in the input can eliminate entire categories of edge cases you\'d otherwise need to handle. "All values are unique." How does this simplify the binary search logic?',
+      highlight: { location: 'constraint', text: 'All values are unique' },
       options: [
         { label: 'You can use == to find the target in O(1)', isCorrect: false, feedback: 'Uniqueness doesn\'t give you O(1) lookup — you still need to binary search. It simplifies pivot detection, not access speed.' },
         { label: 'You never need to handle nums[lo] == nums[mid]', isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is an index (or -1), not a boolean. What does this mean for your search logic?',
+      question: 'The exact shape of the expected return value often changes what information your algorithm needs to track along the way. The output is an index (or -1), not a boolean. What does this mean for your search logic?',
+      highlight: { location: 'description', text: 'return the index of <code>target</code> if it is in <code>nums</code>, or <code>-1</code> if it is not.' },
       options: [
         { label: 'Return true/false first, then find the index', isCorrect: false, feedback: 'Two passes — one to confirm existence and one to find the index — would still be O(log n), but it\'s unnecessary work. The binary search should track the index directly.' },
         { label: 'Track and return the exact position, not just existence', isCorrect: true },
@@ -81,4 +87,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def search(self, nums, target):
+        lo, hi = 0, len(nums) - 1
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if nums[mid] == target:
+                return mid
+            if nums[lo] <= nums[mid]:
+                if nums[lo] <= target < nums[mid]:
+                    hi = mid - 1
+                else:
+                    lo = mid + 1
+            else:
+                if nums[mid] < target <= nums[hi]:
+                    lo = mid + 1
+                else:
+                    hi = mid - 1
+        return -1`,
+  solutionComplexity: { time: 'O(log n)', space: 'O(1)' },
+  solutionCaveat: 'Checking <code>nums[lo] &lt;= nums[mid]</code> identifies which *half* is the normally-sorted one — the rotation point can only ever be in the other half — which is what still lets binary search discard half the array at every step even though the whole array isn\'t sorted end to end.',
+  solutionExplanation: 'A rotated sorted array always has at least one half (relative to any midpoint) that is itself a normal ascending run, and checking whether the target could fall within that run\'s known value range tells you definitively whether to search there or the other half. This preserves the halving guarantee that makes binary search O(log n), just with one extra comparison per step to figure out which half is safe to reason about directly.',
 }

@@ -8,21 +8,25 @@ export default {
     { input: 's = "0000"', output: '["0.0.0.0"]' },
   ],
   constraints: ['1 ≤ s.length ≤ 20', 's consists of digits only'],
-  starterCode: `def restore_ip_addresses(s):
-  pass`,
-  functionName: 'restore_ip_addresses',
+  starterCode: `class Solution:
+    def restore_ip_addresses(self, s):
+        pass`,
+  functionName: 'restore_ip_addresses_run',
   conceptId: 'backtracking',
+  runnerSetup: `def restore_ip_addresses_run(s):
+  return sorted(Solution().restore_ip_addresses(s))`,
   testCases: [
     { label: 'Two valid IPs', args: ['25525511135'], expected: ['255.255.11.135','255.255.111.35'] },
     { label: 'All zeros', args: ['0000'], expected: ['0.0.0.0'] },
     { label: 'Too short', args: ['1'], expected: [] },
   ],
-  bruteHint: 'Describe generating every way to place three dots in the string and filtering afterward for the splits where all four segments are valid octets',
-  optimizeHint: 'Name the technique of rejecting an invalid or oversized segment the moment it\'s chosen, instead of completing all four before checking',
+  bruteHint: 'The brute-force approach generates every way to place three dots among the string\'s characters, producing every possible four-part split regardless of validity. Each split is only checked afterward, discarding the ones where any segment fails to be a valid octet. With up to 20 characters, that is roughly O(n^3) dot placements to generate before you even start validating. What changes if you reject an invalid or oversized segment the moment you choose it, instead of waiting until all four are picked?',
+  optimizeComplexity: { time: 'O(1)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-structure',
-      question: 's.length ≤ 20 and a valid IP always has exactly 4 octets. What does this tell you about the search space?',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 20' },
+      question: 'Constraints that cap both the input length and the number of pieces you must produce often bound the search space to something small enough to explore directly. s.length ≤ 20 and a valid IP always has exactly 4 octets. What does this tell you about the search space?',
       options: [
         { label: 'Exponentially large — try every split of s', isCorrect: false, feedback: 'The search space is actually tiny. Each octet is 1–3 digits, and there are exactly 4 octets. At most 3 choices per octet × 4 octets = 81 possible splits — all enumerable in microseconds.' },
         { label: 'At most 3^4 = 81 total splits to check', isCorrect: true },
@@ -37,7 +41,8 @@ export default {
     },
     {
       id: 'octet-validity-signal',
-      question: 'A valid octet is 0–255 with no leading zeros. What two conditions must you check for each segment?',
+      highlight: { location: 'description', text: '0-255 octets (no leading zeros)' },
+      question: 'The precise validity rules spelled out in a problem\'s description tell you exactly what to check at each branch of your search. A valid octet is 0–255 with no leading zeros. What two conditions must you check for each segment?',
       options: [
         { label: 'Value ≤ 255 only', isCorrect: false, feedback: 'Value ≤ 255 is necessary but not sufficient. "00", "01", "001" are all ≤ 255 but contain leading zeros, which are invalid. You must also reject any multi-digit segment starting with "0".' },
         { label: 'Value ≤ 255 and no leading zeros', isCorrect: true },
@@ -52,7 +57,8 @@ export default {
     },
     {
       id: 'four-octet-constraint',
-      question: 'A valid IP has exactly 4 octets. How do you use this to prune your backtracking?',
+      highlight: { location: 'description', text: 'four 0-255 octets' },
+      question: 'A fixed target count for how many pieces you must produce usually defines your base case for stopping the search. A valid IP has exactly 4 octets. How do you use this to prune your backtracking?',
       options: [
         { label: 'Stop when the string is exhausted', isCorrect: false, feedback: 'Exhausting the string is one condition, but not the only one. You also need exactly 4 octets. Stopping at exhaustion without checking the count might accept partial IPs or reject valid ones.' },
         { label: 'Accept only when 4 octets are placed and the full string is used', isCorrect: true },
@@ -67,7 +73,7 @@ export default {
     },
     {
       id: 'remaining-length-pruning',
-      question: 'With k octets still to place and r digits remaining, what early-exit conditions can you add?',
+      question: 'Once you know the minimum and maximum length each remaining piece can take, you can compute early whether a partial solution is still feasible before continuing. With k octets still to place and r digits remaining, what early-exit conditions can you add?',
       options: [
         { label: 'Continue regardless — validity is checked at the base case', isCorrect: false, feedback: 'Waiting for the base case misses obvious pruning. If r > 3*k, there are too many digits to fit in k octets (max 3 digits each). If r < k, there are too few (min 1 digit each). Both are dead ends you can prune immediately.' },
         { label: 'Prune when remaining digits cannot fit in remaining octets', isCorrect: true },
@@ -81,4 +87,38 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def restore_ip_addresses(self, s):
+        n = len(s)
+        result = []
+        path = []
+
+        def valid(seg):
+            if len(seg) > 1 and seg[0] == '0':
+                return False
+            return int(seg) <= 255
+
+        def backtrack(start):
+            if len(path) == 4:
+                if start == n:
+                    result.append('.'.join(path))
+                return
+            remaining_parts = 4 - len(path)
+            remaining_chars = n - start
+            if remaining_chars > remaining_parts * 3 or remaining_chars < remaining_parts:
+                return
+            for length in range(1, 4):
+                if start + length > n:
+                    break
+                seg = s[start:start + length]
+                if valid(seg):
+                    path.append(seg)
+                    backtrack(start + length)
+                    path.pop()
+
+        backtrack(0)
+        return result`,
+  solutionComplexity: { time: 'O(1)', space: 'O(1)' },
+  solutionCaveat: 'The feasibility prune (<code>remaining_chars &gt; remaining_parts * 3</code> or <code>&lt; remaining_parts</code>) runs <code>before</code> the octet-length loop even starts trying candidates — this catches doomed branches immediately, rather than letting the search place a few more octets only to fail the final length check once <code>path</code> reaches length 4.',
+  solutionExplanation: 'Since a valid octet is always 1 to 3 digits and an IP always has exactly 4 octets, the entire search space is bounded to at most 3⁴ = 81 candidate splits regardless of how long <code>s</code> is — trying each possible next-octet length and validating it immediately (both the ≤255 check and the no-leading-zero rule) prunes invalid branches the instant they\'re created rather than after building a complete invalid split. A result is only recorded when both conditions hold simultaneously: exactly 4 octets have been chosen <code>and</code> every character of <code>s</code> has been consumed — either alone would accept malformed addresses that either skip trailing digits or terminate too early.',
 }

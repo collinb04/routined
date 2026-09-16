@@ -8,8 +8,10 @@ export default {
     { input: 's = "aaab"', output: '""', explanation: 'Impossible — too many a\'s.' },
   ],
   constraints: ['1 ≤ s.length ≤ 500', 's consists of lowercase English letters'],
-  starterCode: `def reorganize_string(s):
-  pass`,
+  starterCode: `class Solution:
+    def reorganize_string(self, s):
+        pass`,
+  runnerSetup: 'reorganize_string = Solution().reorganize_string',
   functionName: 'reorganize_string',
   conceptId: 'heap',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Impossible', args: ['aaab'], expected: '' },
     { label: 'Single', args: ['a'], expected: 'a' },
   ],
-  bruteHint: 'Describe a naive approach that repeatedly rescans character counts to pick a safe next placement, and why that doesn\'t scale well.',
-  optimizeHint: 'Name the data structure that always surfaces the most frequent remaining character in log time.',
+  bruteHint: 'A brute-force approach could rebuild the character counts from the remaining string and scan for the most frequent one that isn\'t the previously placed character, place it, then repeat for every position — that\'s an O(n) rescan for each of n positions, giving O(n²) time overall. For a string of up to 500 characters that adds up quickly. What information from the previous step could be carried forward instead of recomputed each time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'feasibility-condition',
-      question: 'For a rearrangement to exist, what condition must the most frequent character\'s count satisfy?',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 500' },
+      question: 'Checking whether a solution is even possible before you try to build one saves wasted effort on inputs that can never work. For a rearrangement to exist, what condition must the most frequent character\'s count satisfy?',
       options: [
         { label: 'It must appear at most n / 2 times (rounded down)', isCorrect: false, feedback: 'The threshold is ceil(n / 2), not floor. For n = 5 (odd), a character appearing 3 times is valid — it occupies every other position. floor(5 / 2) = 2 would wrongly reject that case.' },
         { label: 'Its count must be ≤ ceil(n / 2)', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'greedy-most-frequent',
-      question: 'Each character you place must differ from the previous one. What greedy strategy minimizes the chance of getting stuck?',
+      highlight: { location: 'description', text: 'rearrange its characters so that no two adjacent characters are the same.' },
+      question: 'Identifying which greedy choice avoids painting yourself into a corner matters most when one dominant element could block later placements. Each character you place must differ from the previous one. What greedy strategy minimizes the chance of getting stuck?',
       options: [
         { label: 'Place characters in alphabetical order', isCorrect: false, feedback: 'Alphabetical order ignores frequency entirely. You can easily run into a situation where the only remaining characters are all the same letter, causing two adjacent duplicates.' },
         { label: 'Always place the most frequent remaining character', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'max-heap-role',
-      question: 'You need the most frequent remaining character at each step, and counts change as you build the result. What structure gives that in O(log n) per step?',
+      highlight: { location: 'constraint', text: 's consists of lowercase English letters' },
+      question: 'Recognizing a repeated "find the current maximum, then update it" pattern is the signal that a heap keyed by that value is the right structure. You need the most frequent remaining character at each step, and counts change as you build the result. What structure gives that in O(log n) per step?',
       options: [
         { label: 'A frequency dictionary, scanning for the max each step', isCorrect: false, feedback: 'Scanning a dictionary for the maximum costs O(26) per step here — acceptable for 26 letters, but a max-heap is the general-purpose pattern and makes the selection O(log n) as counts change dynamically.' },
         { label: 'A max-heap keyed by character frequency', isCorrect: true },
@@ -67,12 +72,13 @@ export default {
     },
     {
       id: 'adjacent-constraint-enforcement',
-      question: 'After placing a character, you cannot immediately place the same character again even if it is still the most frequent. How do you enforce this?',
+      highlight: { location: 'description', text: 'rearrange its characters so that no two adjacent characters are the same.' },
+      question: 'Translating a placement rule into an explicit bookkeeping step is often what separates a correct greedy idea from a buggy implementation. After placing a character, you cannot immediately place the same character again even if it is still the most frequent. How do you enforce this?',
       options: [
-        { label: 'Check the last character in the result before popping the heap', isCorrect: false, feedback: 'Checking and skipping the top of the heap is complex — you would need to pop a second candidate, use it, then re-push the first. A cleaner approach holds the previous character aside for exactly one step.' },
-        { label: 'Hold the previous character out of the heap for one step, then re-push it', isCorrect: true },
+        { label: 'Check the last character in the result before selecting the next one', isCorrect: false, feedback: 'Checking and skipping the top of the heap is complex — you would need to pop a second candidate, use it, then re-push the first. A cleaner approach holds the previous character aside for exactly one step.' },
+        { label: 'Hold the previous character aside for one step, then make it eligible again', isCorrect: true },
         { label: 'Shuffle the remaining characters before each placement', isCorrect: false, feedback: 'Shuffling destroys the frequency ordering you built. You need a deterministic structure that enforces the adjacency rule while preserving the greedy selection.' },
-        { label: 'The heap automatically prevents adjacent duplicates', isCorrect: false, feedback: 'A heap orders by frequency, not by adjacency history. If the same character is the most frequent across two consecutive steps, the heap will return it both times without any automatic adjacency check.' },
+        { label: 'No extra bookkeeping is needed — duplicates are prevented automatically', isCorrect: false, feedback: 'A heap orders by frequency, not by adjacency history. If the same character is the most frequent across two consecutive steps, the heap will return it both times without any automatic adjacency check.' },
       ],
       correctFeedback: 'Pop the top (most frequent), append it to the result, then hold it aside. On the next step, pop the new top, append it, and re-push the held character. This enforces a one-step gap between reuses.',
       wrongFeedback: [
@@ -81,4 +87,27 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+from collections import Counter
+
+class Solution:
+    def reorganize_string(self, s):
+        count = Counter(s)
+        heap = [(-freq, ch) for ch, freq in count.items()]
+        heapq.heapify(heap)
+        result = []
+        prev = None
+        while heap:
+            freq, ch = heapq.heappop(heap)
+            result.append(ch)
+            if prev and prev[0] < 0:
+                heapq.heappush(heap, prev)
+            freq += 1
+            prev = (freq, ch)
+        if len(result) != len(s):
+            return ''
+        return ''.join(result)`,
+  solutionComplexity: { time: 'O(n log k)', space: 'O(n)' },
+  solutionCaveat: 'The character just placed is held in <code>prev</code> for exactly one iteration before being returned to the heap — pushing it back immediately would let it be popped again on the very next step, right where it is forbidden to go.',
+  solutionExplanation: 'Always placing the currently most frequent remaining character keeps every other character\'s count as high as possible for as long as possible, which is what prevents any single character from being "stranded" with no valid neighbor near the end. Holding the just-used character out of the heap for one full step enforces the no-adjacent-repeat rule directly rather than checking it after the fact, and if the heap ever empties before every character has been placed, no valid arrangement was possible in the first place — which happens precisely when one character\'s count exceeds <code>(len(s) + 1) // 2</code>.',
 }

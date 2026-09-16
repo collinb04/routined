@@ -11,10 +11,12 @@ export default {
     '0 ≤ number of nodes ≤ 10⁴',
     '-100 ≤ Node.val ≤ 100',
   ],
-  starterCode: `def max_depth(level_order):
-  # level_order is a list like [3, 9, 20, None, None, 15, 7]
-  # Build the tree and find max depth
-  pass`,
+  starterCode: `class Solution:
+    def max_depth(self, level_order):
+        # level_order is a list like [3, 9, 20, None, None, 15, 7]
+        # Build the tree and find max depth
+        pass`,
+  runnerSetup: 'max_depth = Solution().max_depth',
   functionName: 'max_depth',
   conceptId: 'trees',
   testCases: [
@@ -23,12 +25,13 @@ export default {
     { label: 'Empty tree', args: [[]], expected: 0 },
     { label: 'Left skewed', args: [[1, 2, null, 3]], expected: 3 },
   ],
-  bruteHint: 'Describe recomputing the distance from the root to each node independently, rather than reusing work already done for its subtrees',
-  optimizeHint: 'Name the recursive pattern where each node\'s depth is computed once, directly from its children\'s already-computed depths',
+  bruteHint: 'The brute-force approach recomputes the root-to-node distance for every node independently, walking down from the root again each time instead of reusing the depth already computed for that node\'s children. Doing this for all n nodes costs O(n²) time in the worst case, since each of the n distance computations can itself take O(n) steps down a skewed tree. Since a node\'s depth depends only on its children\'s depths, is there a way to compute every node\'s depth exactly once, from the bottom up?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'Up to 10⁴ nodes in the tree. What complexity target does this set?',
+      highlight: { location: 'constraint', text: '0 ≤ number of nodes ≤ 10⁴' },
+      question: 'Constraints define the performance ceiling your traversal must respect. Up to 10⁴ nodes in the tree. What complexity target does this set?',
       options: [
         { label: 'O(n²) is acceptable at 10⁴ nodes', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations — borderline or too slow. For a tree traversal problem, O(n) is natural and expected.' },
         { label: 'O(n) — visit each node once', isCorrect: true },
@@ -43,7 +46,8 @@ export default {
     },
     {
       id: 'empty-tree-guarantee',
-      question: 'The constraint says "0 ≤ number of nodes." What edge case does this introduce?',
+      highlight: { location: 'constraint', text: '0 ≤ number of nodes ≤ 10⁴' },
+      question: 'Lower bounds in the constraints often hide an edge case your solution must handle before it touches the main structure. The constraint says "0 ≤ number of nodes." What edge case does this introduce?',
       options: [
         { label: 'You can assume the tree is non-empty', isCorrect: false, feedback: 'The lower bound of 0 explicitly means the tree can be empty. Assuming non-empty would cause a crash or wrong answer on the empty-list input.' },
         { label: 'You must handle an empty input (depth = 0)', isCorrect: true },
@@ -58,7 +62,7 @@ export default {
     },
     {
       id: 'recursive-structure',
-      question: 'The depth of a tree equals 1 + the maximum depth of its subtrees. What does this recursive definition suggest about your approach?',
+      question: 'A recursive problem definition often maps directly onto the recursive function you need to write. The depth of a tree equals 1 + the maximum depth of its subtrees. What does this recursive definition suggest about your approach?',
       options: [
         { label: 'Iterative BFS counting levels', isCorrect: false, feedback: 'BFS counting levels is a valid approach, but it is iterative — the recursive definition points toward DFS where each call returns the depth of its subtree. Both work; DFS maps more directly to the definition.' },
         { label: 'DFS returning depth at each node', isCorrect: true },
@@ -72,4 +76,41 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def max_depth(self, level_order):
+        if not level_order or level_order[0] is None:
+            return 0
+
+        class _Node:
+            def __init__(self, val):
+                self.val = val
+                self.left = None
+                self.right = None
+
+        root = _Node(level_order[0])
+        queue = deque([root])
+        i = 1
+        n = len(level_order)
+        while queue and i < n:
+            node = queue.popleft()
+            if i < n and level_order[i] is not None:
+                node.left = _Node(level_order[i])
+                queue.append(node.left)
+            i += 1
+            if i < n and level_order[i] is not None:
+                node.right = _Node(level_order[i])
+                queue.append(node.right)
+            i += 1
+
+        def depth(node):
+            if not node:
+                return 0
+            return 1 + max(depth(node.left), depth(node.right))
+
+        return depth(root)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The input here is a flat level-order *list*, not a tree object — so before depth can even be measured, the same index-based rule used everywhere else in this app (two children per node, <code>None</code> meaning "no child here") has to reconstruct the actual tree first.',
+  solutionExplanation: 'Once the tree is built, depth is a one-line recurrence: the depth of any node is 1 (for itself) plus whichever child subtree goes deeper. A leaf has no children, so both branches of the <code>max</code> bottom out at 0, making the leaf\'s own depth exactly 1 — the recursion doesn\'t need a separate base case beyond "no node at all is depth 0."',
 }

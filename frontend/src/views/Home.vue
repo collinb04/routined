@@ -52,8 +52,8 @@
           to turn you into a DSA machine.
         </p>
       </div>
-      <div class="max-w-5xl w-full rounded-2xl overflow-hidden shadow-sm border border-black/6" style="height:620px">
-        <ProblemSpace height="620px" :embedded="true" />
+      <div class="max-w-6xl w-full rounded-2xl overflow-hidden shadow-sm border border-black/6" style="height:660px">
+        <ProblemSpace height="660px" :embedded="true" />
       </div>
     </section>
 
@@ -77,9 +77,9 @@
         <div class="sm:row-span-2 rounded-2xl cursor-pointer h-full" style="perspective:1000px" @click="heroFlipped = !heroFlipped">
           <div class="relative w-full h-full min-h-64 sm:min-h-70" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: heroFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
             <!-- Front -->
-            <div class="absolute inset-0 rounded-2xl p-7 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.02) 100%),rgba(17,17,17,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.18),0 0 16px rgba(255,255,255,0.07);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+            <div class="absolute inset-0 rounded-2xl p-7 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.02) 100%),rgba(17,17,17,0.88);box-shadow:0 0 0 2px rgba(255,255,255,0.18),0 0 16px rgba(255,255,255,0.07);backface-visibility:hidden;-webkit-backface-visibility:hidden">
               <div class="flex items-start justify-between">
-                <span class="text-white/30 text-[10px] font-semibold uppercase tracking-widest">Foundation</span>
+                <span class="text-white/30 text-[10px] font-medium font-mono uppercase tracking-widest ">Foundation</span>
                 <span class="flex items-center gap-1 text-white/25 text-[9px] font-medium select-none">
                   flip
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
@@ -95,7 +95,7 @@
             </div>
             <!-- Back -->
             <div class="absolute inset-0 rounded-2xl p-7 flex flex-col gap-5 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-red-400">Without Routined</span>
               <p class="text-4xl font-semibold text-gray-800 leading-none">Fall Behind.</p>
               <div class="flex flex-col gap-3">
                 <p class="text-gray-400 text-sm leading-relaxed">Grinding solutions is one of the weakest retention strategies. Without pattern recognition, you're just hoping to see the same problem twice.</p>
@@ -112,7 +112,7 @@
         <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="clusterFlipped = !clusterFlipped">
           <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: clusterFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
             <!-- Front -->
-            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(124,92,232,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(124,92,232,0.78);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
               <div class="flex items-start justify-between">
                 <span class="text-white/50 text-[10px] font-medium uppercase tracking-widest">01</span>
                 <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
@@ -143,9 +143,9 @@
         <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="patternsFlipped = !patternsFlipped">
           <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: patternsFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
             <!-- Front -->
-            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(232,93,74,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(232,93,74,0.78);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
               <div class="flex items-start justify-between">
-                <span class="text-white/50 text-[10px] font-semibold uppercase tracking-widest">Patterns & Algorithms</span>
+                <span class="text-white/50 text-[10px] font-medium font-mono uppercase tracking-widest ">Patterns & Algorithms</span>
                 <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none shrink-0 ml-2">
                   flip
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
@@ -158,7 +158,7 @@
             </div>
             <!-- Back -->
             <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-red-400">Without Routined</span>
               <div>
                 <p class="text-5xl font-bold text-gray-800 leading-none">0</p>
                 <p class="text-gray-400 text-xs mt-1.5">Patterns truly internalized by grinding solutions alone</p>
@@ -171,9 +171,9 @@
         <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="problemsFlipped = !problemsFlipped">
           <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: problemsFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
             <!-- Front -->
-            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(58,154,232,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(58,154,232,0.78);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
               <div class="flex items-start justify-between">
-                <span class="text-white/50 text-[10px] font-semibold uppercase tracking-widest">Problems</span>
+                <span class="text-white/50 text-[10px] font-medium font-mono uppercase tracking-widest ">Problems</span>
                 <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
                   flip
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
@@ -187,7 +187,7 @@
             </div>
             <!-- Back -->
             <div class="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-red-400">Without Routined</span>
               <div>
                 <p class="text-5xl font-bold text-gray-800 leading-none">3,000+</p>
                 <p class="text-gray-400 text-xs mt-1.5">Problems you can grind and still blank on your interview</p>
@@ -200,7 +200,7 @@
         <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="socraticFlipped = !socraticFlipped">
           <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: socraticFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
             <!-- Front -->
-            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-1" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(76,175,125,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-1" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(76,175,125,0.78);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
               <div class="flex items-start justify-between">
                 <span class="text-white/50 text-[10px] font-medium uppercase tracking-widest">02</span>
                 <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
@@ -213,7 +213,7 @@
             </div>
             <!-- Back -->
             <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-2 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-red-400">Without Routined</span>
               <p class="font-semibold text-gray-800">Answer Dumping</p>
               <p class="text-gray-400 text-xs leading-relaxed mt-1">Copy a solution, move on. No understanding built, no transfer to new problems.</p>
             </div>
@@ -253,9 +253,9 @@
         <div class="rounded-2xl cursor-pointer" style="perspective:1000px" @click="goalFlipped = !goalFlipped">
           <div class="relative w-full min-h-44" style="transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0.2,0.2,1)" :style="{ transform: goalFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }">
             <!-- Front -->
-            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-4" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(232,162,58,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
+            <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-4" style="background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.04) 100%),rgba(232,162,58,0.78);box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 0 16px rgba(255,255,255,0.12);backface-visibility:hidden;-webkit-backface-visibility:hidden">
               <div class="flex items-start justify-between">
-                <span class="text-white/50 text-[10px] font-semibold uppercase tracking-widest">Goal</span>
+                <span class="text-white/50 text-[10px] font-medium font-mono uppercase tracking-widest ">Goal</span>
                 <span class="flex items-center gap-1 text-white/30 text-[9px] font-medium select-none">
                   flip
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg>
@@ -263,14 +263,14 @@
               </div>
               <ul class="flex flex-col gap-2.5">
                 <li v-for="goal in ['Interview-ready pattern recognition', 'Get your dream job', 'Learn to learn in the process']" :key="goal" class="flex items-start gap-2">
-                  <span class="mt-1.5 w-1 h-1 rounded-full bg-white/50 shrink-0" />
+                  <span class="mt-1.5 w-1 h-1 rounded-lg bg-white/50 shrink-0" />
                   <span class="text-xs text-white/80 leading-relaxed">{{ goal }}</span>
                 </li>
               </ul>
             </div>
             <!-- Back -->
             <div class="absolute inset-0 rounded-2xl p-6 flex flex-col gap-4 bg-white" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 0 2px rgba(0,0,0,0.07)">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-red-400">Without Routined</span>
+              <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-red-400">Without Routined</span>
               <ul class="flex flex-col gap-2.5">
                 <li v-for="item in ['Blank on unseen variants', 'Grind 300 problems for a chance', 'Forget what you learned']" :key="item" class="flex items-start gap-2">
                   <svg class="shrink-0 mt-0.5" width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="#ef4444" stroke-width="1.75" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="#ef4444" stroke-width="1.75" stroke-linecap="round"/></svg>
@@ -295,7 +295,7 @@
         <div v-for="t in testimonials" :key="t.name" class="flex flex-col gap-4 bg-white rounded-2xl p-6">
           <p class="text-text-dim leading-relaxed text-sm">"{{ t.quote }}"</p>
           <div class="flex items-center gap-3 mt-auto">
-            <div class="w-9 h-9 rounded-full bg-white shrink-0" />
+            <div class="w-9 h-9 rounded-lg bg-white shrink-0" />
             <div>
               <p class="font-semibold text-sm text-text">{{ t.name }}</p>
               <p class="text-xs text-text-muted">{{ t.role }}</p>

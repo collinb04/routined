@@ -4,7 +4,7 @@ export function generateLinkedListInsert(): LinkedListFrame[] {
   const frames: LinkedListFrame[] = []
 
   function f(
-    step: number, phase: string, message: string,
+    step: number, phase: 'init' | 'compare' | 'update' | 'done', message: string,
     nodes: ListNode[], highlights: Record<number, CellKind>,
   ): LinkedListFrame {
     return { step, phase, message, nodes, highlights }

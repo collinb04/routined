@@ -8,8 +8,10 @@ export default {
     { input: 'arr=[1,2,3,4,5], k=4, x=-1', output: '[1,2,3,4]' },
   ],
   constraints: ['1 ≤ k ≤ arr.length', '1 ≤ arr.length ≤ 10⁴', 'arr is sorted'],
-  starterCode: `def find_closest_elements(arr, k, x):
-  pass`,
+  starterCode: `class Solution:
+    def find_closest_elements(self, arr, k, x):
+        pass`,
+  runnerSetup: 'find_closest_elements = Solution().find_closest_elements',
   functionName: 'find_closest_elements',
   conceptId: 'binary-search',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Left of range', args: [[1,2,3,4,5],4,-1], expected: [1,2,3,4] },
     { label: 'Right of range', args: [[1,2,3,4,5],4,100], expected: [2,3,4,5] },
   ],
-  bruteHint: 'Describe computing the distance from x for every element and sorting to find the k smallest, and its time complexity',
-  optimizeHint: 'Name the technique that binary searches for the window\'s starting position instead',
+  bruteHint: 'The brute-force approach computes the distance |arr[i] − x| for every element, sorts all n candidates by that distance, and takes the k smallest before restoring index order. Computing every distance costs O(n), but sorting them costs O(n log n) overall. Given arr can hold up to 10,000 elements and is already sorted, is that sorting step actually necessary?',
+  optimizeComplexity: { time: 'O(log(n − k))', space: 'O(k)' },
   clues: [
     {
       id: 'sorted-input',
-      question: '"arr is sorted." What does this property enable?',
+      question: 'A stated property like "sorted" is often the single biggest clue to which technique applies. "arr is sorted." What does this property enable?',
+      highlight: { location: 'constraint', text: 'arr is sorted' },
       options: [
         { label: 'Sort the output after collecting all candidates', isCorrect: false, feedback: 'The output is already in sorted order because arr is sorted and the k closest elements form a contiguous subarray. There\'s nothing to sort at the end.' },
         { label: 'Binary search to locate x, then expand outward', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'tie-breaking-rule',
-      question: '"Ties are broken by preferring the smaller element." How does this affect how you compare candidates at the window boundary?',
+      question: 'An explicit tie-breaking rule in a problem statement tells you exactly how to compare candidates, not just what to compare. "Ties are broken by preferring the smaller element." How does this affect how you compare candidates at the window boundary?',
+      highlight: { location: 'description', text: 'Ties are broken by preferring the smaller element.' },
       options: [
         { label: 'Prefer the element with the smaller index', isCorrect: false, feedback: 'Index is correlated with value in a sorted array, but the rule is about value magnitude, not array position. When distances are equal, prefer the numerically smaller element.' },
         { label: 'When left distance equals right distance, include the left (smaller) element', isCorrect: true },
@@ -52,11 +56,12 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output must be in sorted order. Given that arr is already sorted, what does this mean for how you collect the result?',
+      question: 'The required output format, combined with a known input property, can eliminate steps you would otherwise assume you need. The output must be in sorted order. Given that arr is already sorted, what does this mean for how you collect the result?',
+      highlight: { location: 'description', text: 'in sorted order' },
       options: [
         { label: 'Sort all distances and map back to values', isCorrect: false, feedback: 'Sorting distances and mapping back requires extra work and loses the original order. Since arr is sorted and the answer is a contiguous subarray, the result is already in order — just slice it.' },
         { label: 'Return a contiguous slice of arr; no re-sorting needed', isCorrect: true },
-        { label: 'Use a min-heap to extract elements in sorted order', isCorrect: false, feedback: 'A heap would produce sorted order, but it\'s unnecessary overhead. The k closest elements form a contiguous window in a sorted array — a slice already provides sorted output.' },
+        { label: 'Repeatedly extract the smallest remaining distance to build sorted order', isCorrect: false, feedback: 'A heap would produce sorted order, but it\'s unnecessary overhead. The k closest elements form a contiguous window in a sorted array — a slice already provides sorted output.' },
         { label: 'Collect in any order, then sort at the end', isCorrect: false, feedback: 'Sorting at the end works but wastes O(k log k) time. The k closest elements form a contiguous window in arr, so a direct slice produces sorted output for free.' },
       ],
       correctFeedback: 'The answer is always arr[left:left+k] for some index left. Find the right starting index and slice — the sorted property of arr guarantees the output is already in order.',
@@ -66,4 +71,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_closest_elements(self, arr, k, x):
+        lo, hi = 0, len(arr) - k
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if x - arr[mid] > arr[mid + k] - x:
+                lo = mid + 1
+            else:
+                hi = mid
+        return arr[lo:lo + k]`,
+  solutionComplexity: { time: 'O(log(n - k))', space: 'O(k)' },
+  solutionCaveat: 'The comparison <code>x - arr[mid] > arr[mid + k] - x</code> deliberately avoids <code>abs()</code> on both sides — it directly compares "how far left the window\'s start is from x" against "how far right the window\'s end is from x," which is what correctly breaks ties in favor of the smaller element per the problem\'s tie-breaking rule.',
+  solutionExplanation: 'Since the answer is guaranteed to be some contiguous slice <code>arr[i:i+k]</code>, the problem reduces to binary-searching for the correct starting index <code>i</code> directly, rather than computing every element\'s distance and sorting. At each candidate window, comparing the distance from <code>x</code> to the window\'s left edge against the distance to the element just past its right edge tells you which direction to shift — sliding right when the left edge is farther from <code>x</code> than the next right-hand candidate, and stopping once neither shift would improve the window.',
 }

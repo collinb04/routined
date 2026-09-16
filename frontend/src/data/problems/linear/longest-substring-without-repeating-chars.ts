@@ -9,8 +9,10 @@ export default {
     { input: 's = "pwwkew"', output: '3 ("wke")' },
   ],
   constraints: ['0 <= s.length <= 5 * 10^4', 's consists of English letters, digits, symbols and spaces'],
-  starterCode: `def length_of_longest_substring(s):
-  pass`,
+  starterCode: `class Solution:
+    def length_of_longest_substring(self, s):
+        pass`,
+  runnerSetup: 'length_of_longest_substring = Solution().length_of_longest_substring',
   functionName: 'length_of_longest_substring',
   conceptId: 'sliding-window',
   testCases: [
@@ -18,15 +20,15 @@ export default {
     { label: '"bbbbb"', args: ['bbbbb'], expected: 1 },
     { label: '"pwwkew"', args: ['pwwkew'], expected: 3 },
   ],
-  bruteHint: 'Describe checking every substring for repeated characters, and the resulting time complexity',
-  optimizeHint: 'Name the two-pointer technique that expands and shrinks the window based on whether a repeat is found',
+  bruteHint: 'The brute-force approach checks every substring of s: for each of the O(n²) start/end pairs, scan the substring to check whether all its characters are unique, then track the longest one that passes. That validation step costs O(n) per substring, so the whole approach runs in O(n³). At n up to 50,000, how many operations does that come out to, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 5 × 10^4. A brute-force approach checks all O(n²) substrings and validates each in O(n). What does this bound tell you about acceptable complexity?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. s.length ≤ 5 × 10^4. A brute-force approach checks all O(n²) substrings and validates each in O(n). What does this bound tell you about acceptable complexity?',
       options: [
         { label: 'O(n³) is fine at 50,000 characters', isCorrect: false, feedback: 'O(n³) at n = 50,000 is 1.25 × 10^14 operations — nowhere near feasible. The constraint signals that O(n) is the target.' },
-        { label: 'O(n) with a sliding window', isCorrect: true },
+        { label: 'O(n) using two pointers that each advance forward through the string', isCorrect: true },
         { label: 'O(n²) — check every starting position', isCorrect: false, feedback: 'O(n²) at n = 50,000 is 2.5 billion operations — too slow in Python. A sliding window processes each character at most twice and runs in O(n).' },
         { label: 'O(n log n) — sort characters first', isCorrect: false, feedback: 'Sorting destroys order, and a substring must be contiguous. The order of characters in the window is essential — you cannot sort and maintain valid substrings.' },
       ],
@@ -35,10 +37,11 @@ export default {
         'How many substrings does a string of length 50,000 have? Is O(n²) ≈ 2.5 billion operations feasible in Python?',
         'A sliding window\'s two pointers each advance at most n steps. What total complexity does that give for n = 50,000?',
       ],
+      highlight: { location: 'constraint', text: '0 <= s.length <= 5 * 10^4' },
     },
     {
       id: 'validity-condition',
-      question: '"Without repeating characters" — a window is valid when every character in it appears exactly once. When you add a character to the right, what must you check?',
+      question: 'Precise wording in the problem statement defines exactly what condition your solution must maintain. "Without repeating characters" — a window is valid when every character in it appears exactly once. When you add a character to the right, what must you check?',
       options: [
         { label: 'Whether the new character is alphabetic', isCorrect: false, feedback: 'The constraint "English letters, digits, symbols and spaces" means any character is valid input. The check is about repetition within the current window, not about character type.' },
         { label: 'Whether the new character is already in the window', isCorrect: true },
@@ -50,25 +53,27 @@ export default {
         'Adding character c to the window: what makes the window invalid?',
         'The window is valid as long as all characters are unique. What single condition breaks that?',
       ],
+      highlight: { location: 'description', text: 'without repeating characters' },
     },
     {
       id: 'tracking-structure',
-      question: '"s consists of English letters, digits, symbols and spaces" — the character set is not just 26 letters. What structure most efficiently tracks which characters are in the current window?',
+      question: 'The range of characters allowed in the input tells you whether a fixed-size lookup can even represent them all. "s consists of English letters, digits, symbols and spaces" — the character set is not just 26 letters. What structure most efficiently tracks which characters are in the current window?',
       options: [
-        { label: 'A fixed array of 26 booleans', isCorrect: false, feedback: 'A 26-slot array only covers lowercase letters. The constraint explicitly includes digits, symbols, and spaces — ASCII has 128 characters, and a 26-slot array would miss most of them.' },
-        { label: 'A hash set of current window characters', isCorrect: false },
-        { label: 'A hash map from character to its last seen index', isCorrect: true },
-        { label: 'A sorted list of window characters', isCorrect: false, feedback: 'A sorted list takes O(log n) to insert and O(log n) to check membership. A hash structure gives O(1) for both. Maintaining sort order is also unnecessary here.' },
+        { label: 'Flip a dedicated on/off flag for each of the 26 lowercase letters', isCorrect: false, feedback: 'A 26-slot array only covers lowercase letters. The constraint explicitly includes digits, symbols, and spaces — ASCII has 128 characters, and a 26-slot array would miss most of them.' },
+        { label: 'Track which characters are currently in the window, without positions', isCorrect: false },
+        { label: 'Track each character\'s most recent index as you scan', isCorrect: true },
+        { label: 'Continuously re-sort the window\'s characters as new ones arrive', isCorrect: false, feedback: 'A sorted list takes O(log n) to insert and O(log n) to check membership. A hash structure gives O(1) for both. Maintaining sort order is also unnecessary here.' },
       ],
       correctFeedback: 'A hash map storing character → most recent index lets you jump the left pointer directly to the position after the duplicate, rather than advancing one step at a time. This keeps the algorithm O(n).',
       wrongFeedback: [
         'When a duplicate is found, how far should the left pointer jump? Does a set give you that information?',
         'A set tells you whether a character is in the window, but not where it is. Which structure lets you find the duplicate\'s position in O(1) to jump the left pointer directly?',
       ],
+      highlight: { location: 'constraint', text: 's consists of English letters, digits, symbols and spaces' },
     },
     {
       id: 'left-pointer-jump',
-      question: 'When character c at index r is already in the window at index prev, where should the left pointer move?',
+      question: 'Knowing a structure can find the duplicate isn\'t enough — you also need to use its output to move correctly. When character c at index r is already in the window at index prev, where should the left pointer move?',
       options: [
         { label: 'To prev (the previous position of c)', isCorrect: false, feedback: 'Moving to prev would keep the duplicate c inside the window. You need to move past it — to prev + 1 — so that c is no longer in the window.' },
         { label: 'To prev + 1 (one past the duplicate)', isCorrect: true },
@@ -82,4 +87,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def length_of_longest_substring(self, s):
+        seen = {}
+        left = 0
+        best = 0
+        for right, ch in enumerate(s):
+            if ch in seen and seen[ch] >= left:
+                left = seen[ch] + 1
+            seen[ch] = right
+            best = max(best, right - left + 1)
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Checking <code>seen[ch] >= left</code> — not just whether <code>ch</code> was ever seen — matters: a character\'s last occurrence might be *outside* the current window already (to the left of <code>left</code>), in which case it is not actually a duplicate inside this window and should not force a jump.',
+  solutionExplanation: 'A hash map remembering each character\'s most recent index lets the window jump straight to the fix instead of shrinking one step at a time: the instant a repeat is found inside the current window, <code>left</code> can jump directly to one past that character\'s last occurrence, since everything between the old <code>left</code> and there is now guaranteed to contain the duplicate. Every character is examined once as <code>right</code> advances, and <code>left</code> only ever moves forward, so the whole scan stays O(n) despite conceptually representing a shrinking-and-growing window.',
 }

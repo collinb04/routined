@@ -8,8 +8,10 @@ export default {
     { input: 'obstacleGrid = [[0,1],[0,0]]', output: '1' },
   ],
   constraints: ['m == obstacleGrid.length', 'n == obstacleGrid[0].length', '1 ≤ m, n ≤ 100', 'obstacleGrid[i][j] is 0 or 1'],
-  starterCode: `def unique_paths_with_obstacles(obstacle_grid):
-  pass`,
+  starterCode: `class Solution:
+    def unique_paths_with_obstacles(self, obstacle_grid):
+        pass`,
+  runnerSetup: 'unique_paths_with_obstacles = Solution().unique_paths_with_obstacles',
   functionName: 'unique_paths_with_obstacles',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Right obstacle', args: [[[0,1],[0,0]]], expected: 1 },
     { label: 'Blocked', args: [[[1,0]]], expected: 0 },
   ],
-  bruteHint: 'Describe the naive recursion that tries moving right or down from every cell, and why the same cells get revisited by different paths',
-  optimizeHint: 'Name the 2D grid DP that caches the path count at each cell, zeroing out obstacles as it goes',
+  bruteHint: 'The brute-force approach recursively tries moving right or moving down from the current cell, branching into two recursive calls at each step until it falls off the grid or reaches the bottom-right corner. Since the recursion branches at up to every one of the O(m+n) moves, it explores O(2^(m+n)) paths, and the same cell (i, j) gets revisited by many different move sequences along the way. What could you cache at each cell to avoid recomputing it every time it\'s reached?',
+  optimizeComplexity: { time: 'O(m·n)', space: 'O(m·n)' },
   clues: [
     {
       id: 'obstacle-zero-rule',
-      question: 'Cells with value 1 are obstacles. What does an obstacle mean for dp[i][j]?',
+      question: 'The description defines a marker value for blocked cells, and recognizing what that marker means for reachability tells you how to adapt the standard grid recurrence. Cells with value 1 are obstacles. What does an obstacle mean for dp[i][j]?',
+      highlight: { location: 'description', text: 'Some cells have obstacles (1 = obstacle, 0 = empty).' },
       options: [
         { label: 'dp[i][j] = dp[i-1][j] + dp[i][j-1] as usual', isCorrect: false, feedback: 'An obstacle blocks all paths through it — applying the normal recurrence would incorrectly route paths through a blocked cell.' },
         { label: 'dp[i][j] = 0, and no paths flow through it', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'first-row-column',
-      question: 'The first row and first column can only be reached by moving right or down respectively. How do obstacles affect their initialization?',
+      question: 'Because movement is restricted to only two directions, the grid\'s edges can only be reached one way, so boundary cells need special-case initialization rather than the general recurrence. The first row and first column can only be reached by moving right or down respectively. How do obstacles affect their initialization?',
+      highlight: { location: 'description', text: 'moves only right or down' },
       options: [
         { label: 'Initialize all first-row and first-column cells to 1', isCorrect: false, feedback: 'An obstacle anywhere in the first row blocks all cells to its right — there\'s no way to bypass it since you can only move right or down. After an obstacle, all subsequent cells in that row are 0.' },
         { label: 'Set cells to 1 until an obstacle, then 0 for the rest', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'start-or-end-blocked',
-      question: 'The third test case [[1,0]] has an obstacle at the starting cell. What should you return?',
+      question: 'The description singles out the start and end corners of the grid, which are the cells most likely to break a naive recurrence if they happen to be blocked. The third test case [[1,0]] has an obstacle at the starting cell. What should you return?',
+      highlight: { location: 'description', text: 'starts at the top-left' },
       options: [
         { label: 'Treat start as valid and compute normally', isCorrect: false, feedback: 'If the starting cell is blocked, the robot can\'t even begin. No paths exist — return 0 immediately.' },
         { label: '0, because no path can begin from a blocked start', isCorrect: true },
@@ -66,4 +71,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def unique_paths_with_obstacles(self, obstacle_grid):
+        m, n = len(obstacle_grid), len(obstacle_grid[0])
+        if obstacle_grid[0][0] == 1:
+            return 0
+
+        dp = [[0] * n for _ in range(m)]
+        dp[0][0] = 1
+        for i in range(m):
+            for j in range(n):
+                if obstacle_grid[i][j] == 1:
+                    dp[i][j] = 0
+                    continue
+                if i == 0 and j == 0:
+                    continue
+                top = dp[i - 1][j] if i > 0 else 0
+                left = dp[i][j - 1] if j > 0 else 0
+                dp[i][j] = top + left
+        return dp[m - 1][n - 1]`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: 'An obstacle cell is set to <code>dp[i][j] = 0</code> and left there — it never picks up a contribution from above or to the left — which is exactly what stops any path from being counted as passing through it, since every downstream cell only ever adds in <code>0</code> from a blocked neighbor.',
+  solutionExplanation: 'The number of ways to reach any open cell is the sum of the ways to reach the cell above it and the cell to its left, since those are the only two directions the robot can arrive from — an obstacle simply forces that cell\'s count to zero, which then naturally propagates forward as "zero paths pass through here" without any special-case logic elsewhere in the table. Starting <code>dp[0][0] = 1</code> only when the start itself isn\'t blocked (returning 0 immediately otherwise) anchors the whole table correctly.',
 }

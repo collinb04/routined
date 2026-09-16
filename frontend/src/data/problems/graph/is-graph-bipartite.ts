@@ -8,20 +8,23 @@ export default {
     { input: 'graph = [[1,3],[0,2],[1,3],[0,2]]', output: 'true' },
   ],
   constraints: ['1 ≤ graph.length ≤ 100', '0 ≤ graph[u].length < graph.length', 'No self-loops or repeated edges'],
-  starterCode: `def is_bipartite(graph):
-  pass`,
+  starterCode: `class Solution:
+    def is_bipartite(self, graph):
+        pass`,
+  runnerSetup: 'is_bipartite = Solution().is_bipartite',
   functionName: 'is_bipartite',
   conceptId: 'graphs',
   testCases: [
     { label: 'Not bipartite', args: [[[1,2,3],[0,2],[0,1,3],[0,2]]], expected: false },
     { label: 'Is bipartite', args: [[[1,3],[0,2],[1,3],[0,2]]], expected: true },
   ],
-  bruteHint: 'Describe trying every possible 2-coloring assignment and checking it against all edges, and why that grows exponentially',
-  optimizeHint: 'Name the traversal technique that assigns alternating colors as it visits nodes and flags conflicts',
+  bruteHint: 'A brute-force approach would enumerate every possible way to 2-color the n nodes — 2^n assignments — and check each one against every edge for a conflict. That is exponential time, and with n up to 100 it is utterly infeasible to try even a tiny fraction of those assignments. Rather than guessing colorings blindly, what if you assigned colors incrementally as you traversed the graph, using each edge to constrain the next choice?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'graph.length ≤ 100. What does this say about acceptable solution complexity?',
+      highlight: { location: 'constraint', text: '1 ≤ graph.length ≤ 100' },
+      question: 'Constraint bounds tell you which algorithmic complexity will pass and which will time out. graph.length ≤ 100. What does this say about acceptable solution complexity?',
       options: [
         { label: 'Only O(n) solutions work', isCorrect: false, feedback: 'At n = 100 nodes, even O(n²) is 10,000 operations — trivially fast. The constraint is small enough that efficiency is not the concern here; correctness of traversal logic is.' },
         { label: 'O(n + e) traversal is affordable', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'bipartite-definition',
-      question: 'The problem defines bipartite as "nodes can be colored with two colors such that no two adjacent nodes share the same color." What traversal strategy does this suggest?',
+      highlight: { location: 'description', text: 'nodes can be colored with two colors such that no two adjacent nodes share the same color' },
+      question: 'The way a problem defines its core property often reveals the exact algorithmic technique needed to check it. The problem defines bipartite as "nodes can be colored with two colors such that no two adjacent nodes share the same color." What traversal strategy does this suggest?',
       options: [
         { label: 'Sort nodes by degree first', isCorrect: false, feedback: 'Degree order does not help you assign and verify colors. Bipartiteness is checked by propagating a color assignment along edges — sorting gives you no information about which color a neighbor should receive.' },
         { label: 'Assign alternating colors during graph traversal', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'disconnected-graph',
-      question: 'The constraint says "0 ≤ graph[u].length < graph.length" — some nodes may have no neighbors. What does this mean for your algorithm?',
+      highlight: { location: 'constraint', text: '0 ≤ graph[u].length < graph.length' },
+      question: 'Edge-case constraints like allowing isolated nodes tell you whether a single traversal is enough or whether your algorithm needs an outer loop. The constraint says "0 ≤ graph[u].length < graph.length" — some nodes may have no neighbors. What does this mean for your algorithm?',
       options: [
         { label: 'Start from every node, not just node 0', isCorrect: true },
         { label: 'Skip nodes with no edges', isCorrect: false, feedback: 'Isolated nodes are trivially bipartite, but you cannot skip unvisited nodes entirely — an isolated node still needs to be reached and colored to ensure you cover the full graph.' },
@@ -66,7 +71,8 @@ export default {
     },
     {
       id: 'output-boolean',
-      question: 'The output is a boolean. What does this mean for how your traversal handles a failed color check?',
+      highlight: { location: 'description', text: '<code>true</code> if it is bipartite' },
+      question: 'The shape of the expected output tells you whether your algorithm can exit early or must aggregate results across the whole traversal. The output is a boolean. What does this mean for how your traversal handles a failed color check?',
       options: [
         { label: 'Collect all conflicting edges first', isCorrect: false, feedback: 'You do not need all conflicts — one is enough to prove the graph is not bipartite. Collecting every conflict would be unnecessary work when you can return false immediately.' },
         { label: 'Return false as soon as one conflict is found', isCorrect: true },
@@ -80,4 +86,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_bipartite(self, graph):
+        n = len(graph)
+        color = [0] * n
+        for start in range(n):
+            if color[start] != 0:
+                continue
+            color[start] = 1
+            stack = [start]
+            while stack:
+                node = stack.pop()
+                for nbr in graph[node]:
+                    if color[nbr] == 0:
+                        color[nbr] = -color[node]
+                        stack.append(nbr)
+                    elif color[nbr] == color[node]:
+                        return False
+        return True`,
+  solutionComplexity: { time: 'O(V + E)', space: 'O(V)' },
+  solutionCaveat: 'The outer loop over every <code>start</code> node is required because the graph is not guaranteed to be connected — a 2-coloring found in one component says nothing about a separate, disconnected component, so each uncolored component needs its own traversal.',
+  solutionExplanation: 'A graph is bipartite exactly when it can be 2-colored so that every edge connects two differently-colored nodes — coloring greedily (flip the color across every edge as the traversal proceeds) either succeeds everywhere or hits a contradiction, where some node already has a color that matches the very neighbor it needs to differ from. That contradiction is a definitive "not bipartite," found the instant it occurs, since one bad edge is enough to rule out any valid 2-coloring.',
 }

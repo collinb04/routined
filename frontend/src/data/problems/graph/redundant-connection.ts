@@ -8,20 +8,23 @@ export default {
     { input: 'edges = [[1,2],[2,3],[3,4],[1,4],[1,5]]', output: '[1,4]' },
   ],
   constraints: ['n == edges.length', '3 <= n <= 1000', 'edges[i].length == 2', 'No repeated edges'],
-  starterCode: `def find_redundant_connection(edges):
-  pass`,
+  starterCode: `class Solution:
+    def find_redundant_connection(self, edges):
+        pass`,
+  runnerSetup: 'find_redundant_connection = Solution().find_redundant_connection',
   functionName: 'find_redundant_connection',
   conceptId: 'graphs',
   testCases: [
     { label: 'triangle', args: [[[1,2],[1,3],[2,3]]], expected: [2,3] },
     { label: 'longer cycle', args: [[[1,2],[2,3],[3,4],[1,4],[1,5]]], expected: [1,4] },
   ],
-  bruteHint: 'Describe a brute-force approach that removes each edge in turn and checks whether the remaining graph is a tree, and its time complexity',
-  optimizeHint: 'Name the data structure that detects a cycle-forming edge in near-O(1) as you process edges one by one',
+  bruteHint: 'A brute-force approach would try removing each edge one at a time, then check whether the remaining graph is connected and acyclic — i.e., a valid tree. Checking connectivity for each candidate removal takes O(n) via traversal, and doing this for all n edges costs O(n²) overall. Since n can be up to 1000, this is still manageable, but can you find which edge is redundant in a single pass instead of testing each removal separately?',
+  optimizeComplexity: { time: 'O(n · α(n))', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-exactly-one-extra-edge',
-      question: 'The graph started as a tree with one extra edge added. What does this guarantee about the graph?',
+      question: 'Knowing the exact structural relationship between a graph and a tree tells you precisely what kind of anomaly you are hunting for. The graph started as a tree with one extra edge added. What does this guarantee about the graph?',
+      highlight: { location: 'description', text: 'started as a tree with <code>n</code> nodes labeled 1 to n, with one additional edge added.' },
       options: [
         { label: 'Exactly one cycle exists', isCorrect: true },
         { label: 'The graph may be disconnected', isCorrect: false, feedback: 'A tree is connected by definition, and adding an edge to a connected graph keeps it connected. The graph is always connected — the extra edge created exactly one cycle.' },
@@ -65,4 +68,24 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_redundant_connection(self, edges):
+        n = len(edges)
+        parent = list(range(n + 1))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        for u, v in edges:
+            ru, rv = find(u), find(v)
+            if ru == rv:
+                return [u, v]
+            parent[ru] = rv
+        return []`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Since the input is a valid tree plus exactly one extra edge, at most one edge can ever trigger the "already same component" check — so returning the very first edge that does is automatically also the last (and only) redundant edge, with no need for any extra tie-breaking logic.',
+  solutionExplanation: 'Processing edges in input order with union-find, an edge whose two endpoints already share a root is provably redundant — connecting two nodes already reachable from each other can only create a cycle, never help connectivity. Because the input guarantees exactly one such edge exists, the first (and only) edge that fails the union check is the answer, requiring no additional bookkeeping to identify which of several candidates to report.',
 }

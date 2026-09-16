@@ -11,10 +11,12 @@ export default {
     '1 ≤ nums.length ≤ 200',
     '1 ≤ nums[i] ≤ 100',
   ],
-  starterCode: `def can_partition(nums):
-  # Hint: target = sum(nums)//2; if odd total, return False
-  # dp[j] = True if subset summing to j is reachable
-  pass`,
+  starterCode: `class Solution:
+    def can_partition(self, nums):
+        # Hint: target = sum(nums)//2; if odd total, return False
+        # dp[j] = True if subset summing to j is reachable
+        pass`,
+  runnerSetup: 'can_partition = Solution().can_partition',
   functionName: 'can_partition',
   conceptId: 'dp-knapsack',
   testCases: [
@@ -24,12 +26,13 @@ export default {
     { label: 'Odd sum', args: [[1,2]], expected: false },
     { label: 'Larger', args: [[1,2,5,5,11]], expected: true },
   ],
-  bruteHint: 'Describe the naive recursion that tries including or excluding each number, and why the number of subsets it explores is exponential',
-  optimizeHint: 'Name the classic problem this reduces to — subset sum / 0-1 knapsack — and the DP state that tracks which sums are reachable',
+  bruteHint: 'The brute-force approach recursively tries, for each number, two choices: include it in the first subset or leave it for the second, branching across up to 2^n possible ways to split the array. Even though many of these branches ask about the same remaining target sum reached from different points in the array, the recursion re-derives each one independently, giving O(2^n) time in the worst case. If the same (index, remaining-target) pair keeps reappearing across separate branches, what technique would let you compute it once and reuse the answer?',
+  optimizeComplexity: { time: 'O(n·sum)', space: 'O(sum)' },
   clues: [
     {
       id: 'odd-sum-early-exit',
-      question: 'The two subsets must have equal sums. What can you check immediately before any DP work?',
+      question: 'Cheap invariants derived directly from the input can eliminate entire classes of impossible cases before you write any real algorithm. The two subsets must have equal sums. What can you check immediately before any DP work?',
+      highlight: { location: 'description', text: 'equal sums' },
       options: [
         { label: 'Whether the array is sorted', isCorrect: false, feedback: 'Sorted order doesn\'t determine partitionability. [1,5,5,11] can be partitioned even though it\'s unsorted, and sorting it doesn\'t change the answer.' },
         { label: 'Whether the total sum is even', isCorrect: true },
@@ -44,7 +47,8 @@ export default {
     },
     {
       id: 'problem-reduction',
-      question: '"Two subsets with equal sums" reduces to what simpler problem?',
+      question: 'Recognizing that a complex-sounding requirement is actually a restatement of a well-known simpler problem can save you from designing a solution from scratch. "Two subsets with equal sums" reduces to what simpler problem?',
+      highlight: { location: 'description', text: 'partitioned into two subsets' },
       options: [
         { label: 'Find all possible subset sums', isCorrect: false, feedback: 'You don\'t need all subset sums — just whether one specific target (sum/2) is reachable. That\'s a focused subset-sum check, not a full enumeration.' },
         { label: 'Can any subset sum to exactly sum(nums) / 2?', isCorrect: true },
@@ -59,7 +63,8 @@ export default {
     },
     {
       id: 'knapsack-state',
-      question: 'The target is at most sum(nums)/2 ≤ 200×100/2 = 10,000. What DP structure does this suggest?',
+      question: 'The bounds given in a problem\'s constraints directly determine how large a DP table you can afford to build. The target is at most sum(nums)/2 ≤ 200×100/2 = 10,000. What DP structure does this suggest?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 200' },
       options: [
         { label: 'A 1D boolean array dp[0..target]', isCorrect: true },
         { label: 'A 2D table dp[i][j] over elements and target', isCorrect: false, feedback: 'A 2D table (200 × 10,000 = 2 million cells) works but uses more space than needed. A 1D array updated in reverse order achieves the same result in O(target) space.' },
@@ -74,7 +79,7 @@ export default {
     },
     {
       id: 'iterate-backwards',
-      question: 'When updating dp[j] with a new element x, you must iterate j from target down to x. Why?',
+      question: 'The order in which you update a DP array can silently change what each state represents, so it\'s worth reasoning about direction explicitly. When updating dp[j] with a new element x, you must iterate j from target down to x. Why?',
       options: [
         { label: 'To process larger sums before smaller ones', isCorrect: false, feedback: 'The direction isn\'t about ordering sums by size — it\'s about preventing an element from being used more than once.' },
         { label: 'To prevent using the same element more than once', isCorrect: true },
@@ -88,4 +93,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def can_partition(self, nums):
+        total = sum(nums)
+        if total % 2 != 0:
+            return False
+        target = total // 2
+        dp = [False] * (target + 1)
+        dp[0] = True
+        for num in nums:
+            for j in range(target, num - 1, -1):
+                dp[j] = dp[j] or dp[j - num]
+        return dp[target]`,
+  solutionComplexity: { time: 'O(n × target)', space: 'O(target)' },
+  solutionCaveat: 'The inner loop walks <code>j</code> *backward*. Going forward would let the same item be "used" twice in one pass — reading <code>dp[j - num]</code> after it was already updated this round for the same item — which turns 0/1 knapsack into the unbounded (reusable-items) variant by accident.',
+  solutionExplanation: 'An odd total can never split into two equal halves, so that\'s an instant no. Otherwise this is 0/1 knapsack in disguise: can some subset of <code>nums</code> sum to exactly half the total? <code>dp[j]</code> tracks whether capacity <code>j</code> is reachable using items considered so far; each item either gets skipped (dp[j] stays as-is) or included (dp[j] becomes true if dp[j - num] was already reachable before this item). If half the total is reachable, its complement — the rest of the array — sums to the other half automatically.',
 }

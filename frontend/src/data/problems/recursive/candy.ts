@@ -8,8 +8,10 @@ export default {
     { input: 'ratings = [1,2,2]', output: '4', explanation: '[1,2,1] candies.' },
   ],
   constraints: ['n == ratings.length', '1 ≤ n ≤ 2 × 10⁴', '0 ≤ ratings[i] ≤ 2 × 10⁴'],
-  starterCode: `def candy(ratings):
-  pass`,
+  starterCode: `class Solution:
+    def candy(self, ratings):
+        pass`,
+  runnerSetup: 'candy = Solution().candy',
   functionName: 'candy',
   conceptId: 'greedy',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Single', args: [[5]], expected: 1 },
     { label: 'Ascending', args: [[1,2,3]], expected: 6 },
   ],
-  bruteHint: 'Describe repeatedly scanning the array and bumping any child that violates a neighbor rule until no violations remain, and why that can take many passes',
-  optimizeHint: 'Name the technique of two one-directional scans, left-to-right then right-to-left, that resolves both neighbor constraints',
+  bruteHint: 'The brute-force approach repeatedly scans the array and bumps up any child whose candy count violates a neighbor rule, then rescans from the beginning to check for new violations that the fix may have created, continuing until a full pass produces no changes. Because fixing one violation can create a new violation elsewhere, this can take many passes — up to O(n) rescans of an O(n) array, giving O(n²) time in the worst case. Can you find a way to guarantee every neighbor rule is satisfied in a fixed, small number of passes instead of repeating until nothing changes?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-two-directions',
-      question: '"Higher rating than their neighbor" — neighbor means both left and right. What does this two-sided constraint mean for a single-pass approach?',
+      question: 'Constraints describing relationships between adjacent elements often dictate whether a single pass can resolve the problem or multiple passes are required. "Higher rating than their neighbor" — neighbor means both left and right. What does this two-sided constraint mean for a single-pass approach?',
+      highlight: { location: 'description', text: 'Children with a higher rating than their neighbor must get more candies.' },
       options: [
         { label: 'One left-to-right pass is sufficient', isCorrect: false, feedback: 'A single left-to-right pass only enforces the left-neighbor rule. It ignores whether each child also has more candies than their right neighbor. You will miss violations on the right side.' },
         { label: 'Two passes are needed — one per direction', isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'output-minimum',
-      question: 'The output is the minimum total candies. What does "minimum" tell you about how to set each child\'s candy count?',
+      question: 'When a problem asks for a minimum or maximum result, that framing tells you exactly how aggressively to constrain each individual choice. The output is the minimum total candies. What does "minimum" tell you about how to set each child\'s candy count?',
+      highlight: { location: 'description', text: 'Return the minimum total candies needed.' },
       options: [
         { label: 'Give every child the same number of candies', isCorrect: false, feedback: 'Equal distribution satisfies "at least one" but will violate the higher-rating rule whenever ratings differ. Minimum means assign as few as possible while still satisfying both constraints.' },
         { label: 'Give each child the smallest value that satisfies both neighbor constraints', isCorrect: true },
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'equal-ratings-edge',
-      question: '"Higher rating than their neighbor must get more." In [1,2,2], the last child gets only 1 candy. Why does equal rating not require equal candy counts?',
+      question: 'Precise wording around comparison operators — strictly greater versus greater-or-equal — often determines exactly when a rule does or doesn\'t apply. "Higher rating than their neighbor must get more." In [1,2,2], the last child gets only 1 candy. Why does equal rating not require equal candy counts?',
       options: [
         { label: 'Equal ratings are a bug in the input', isCorrect: false, feedback: 'Ratings of 0–20,000 can repeat; equal values are a valid and expected input. The constraint only applies when one rating is strictly greater than its neighbor.' },
         { label: 'The rule only applies when a rating is strictly greater', isCorrect: true },
@@ -68,11 +72,12 @@ export default {
     },
     {
       id: 'constraint-size',
-      question: 'n can be up to 2 × 10⁴. What complexity is required?',
+      question: 'Input size constraints directly tell you which complexity classes are fast enough and which will time out. n can be up to 2 × 10⁴. What complexity is required?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 2 × 10⁴' },
       options: [
         { label: 'O(n²) is acceptable at this size', isCorrect: false, feedback: 'At n = 20,000, O(n²) is 400 million operations — too slow. The constraint calls for a linear or linearithmic approach.' },
         { label: 'O(n) using two linear passes', isCorrect: true },
-        { label: 'O(n log n) by sorting the ratings', isCorrect: false, feedback: 'Sorting destroys neighbor relationships that the solution depends on. The two-pass linear approach is both sufficient and simpler.' },
+        { label: 'O(n log n) by reordering children based on rating value', isCorrect: false, feedback: 'Sorting destroys neighbor relationships that the solution depends on. The two-pass linear approach is both sufficient and simpler.' },
         { label: 'O(1) space with a single variable', isCorrect: false, feedback: 'You need to store a candy count for each of the n children to allow updating both left and right passes independently. O(1) space is not achievable here.' },
       ],
       correctFeedback: 'Two passes of O(n) each gives O(n) total — well within budget for 20,000 elements. Each pass reads the ratings array once and updates the candy array once.',
@@ -82,4 +87,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def candy(self, ratings):
+        n = len(ratings)
+        candies = [1] * n
+        for i in range(1, n):
+            if ratings[i] > ratings[i - 1]:
+                candies[i] = candies[i - 1] + 1
+        for i in range(n - 2, -1, -1):
+            if ratings[i] > ratings[i + 1]:
+                candies[i] = max(candies[i], candies[i + 1] + 1)
+        return sum(candies)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The right-to-left pass uses <code>max(candies[i], candies[i + 1] + 1)</code>, not a plain overwrite — a child might already need more candies than its right-neighbor requirement demands (from the earlier left-to-right pass), and overwriting would silently lose that already-satisfied left-neighbor constraint.',
+  solutionExplanation: 'Because the "more candies than a higher-rated neighbor" rule looks both left and right, no single directional scan can satisfy it — a left-to-right pass alone enforces "beat your left neighbor if you\'re rated higher" but says nothing about right neighbors, so a second right-to-left pass is needed to enforce the mirror-image rule, taking the max with what the first pass already assigned rather than discarding it. Starting every child at exactly 1 candy and only ever incrementing when a specific neighbor comparison forces it is what keeps the total at the true minimum, since equal ratings never trigger an increase in either direction.',
 }

@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def diameter_of_binary_tree(root):
-  pass`,
+class Solution:
+    def diameter_of_binary_tree(self, root):
+        pass`,
   functionName: 'diameter_of_binary_tree_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def diameter_of_binary_tree_run(arr):
-  return diameter_of_binary_tree(_build(arr))`,
+  return Solution().diameter_of_binary_tree(_build(arr))`,
   testCases: [
     { label: '[1,2,3,4,5]', args: [[1,2,3,4,5]], expected: 3 },
     { label: '[1,2]', args: [[1,2]], expected: 1 },
   ],
-  bruteHint: 'Describe recomputing the depth of the left and right subtree from scratch at every node, and why that repeated work is costly',
-  optimizeHint: 'Name what a single DFS pass could return upward so each node\'s depth is computed once, while a separate running value tracks the best diameter seen',
+  bruteHint: 'One brute-force approach computes the depth of a node by recursing into its left and right subtrees from scratch, then repeats this same depth computation independently at every node while tracking the best left-depth-plus-right-depth sum seen. Because each node triggers a fresh traversal of its own subtree, the total work multiplies to roughly O(n²) in the worst case for a skewed tree. What would let you compute every node\'s depth exactly once while still checking the diameter at each node?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'path-not-through-root',
-      question: '"This path may or may not pass through the root." What does this tell you about where to look for the diameter?',
+      question: 'When a description explicitly widens where an answer could live, it is warning you that checking a single fixed location will not be enough. "This path may or may not pass through the root." What does this tell you about where to look for the diameter?',
+      highlight: { location: 'description', text: 'This path may or may not pass through the root.' },
       options: [
         { label: 'Compute left depth + right depth at the root only', isCorrect: false, feedback: 'The example shows path 4→2→1→3 which does pass through root 1, but the problem warns you the diameter might not. Computing only at the root misses paths entirely within a subtree.' },
         { label: 'The diameter must be checked at every node', isCorrect: true },
@@ -57,7 +59,8 @@ def diameter_of_binary_tree_run(arr):
     },
     {
       id: 'diameter-as-depth-sum',
-      question: 'The path 4→2→1→3 has length 3. How is that length expressed in terms of subtree depths?',
+      question: 'Turning a concrete worked example into a general formula is often what reveals exactly what a recursive function needs to compute. The path 4→2→1→3 has length 3. How is that length expressed in terms of subtree depths?',
+      highlight: { location: 'description', text: 'the length of the longest path between any two nodes' },
       options: [
         { label: 'Max depth of the tree minus 1', isCorrect: false, feedback: 'Max depth only measures one arm from the root. The diameter through node 1 uses both arms: left depth (2, going through nodes 2 and 4) plus right depth (1, going through node 3).' },
         { label: 'Number of nodes on the path', isCorrect: false, feedback: 'The length is measured in edges, not nodes. Path 4→2→1→3 has 4 nodes but length 3 (three edges). Counting nodes would overcount by 1.' },
@@ -72,7 +75,7 @@ def diameter_of_binary_tree_run(arr):
     },
     {
       id: 'recursive-depth-and-diameter',
-      question: 'To check the diameter at every node efficiently, what computation should each recursive call return?',
+      question: 'Deciding what a recursive call hands back to its caller determines whether a traversal repeats work or covers the whole tree in a single pass. To check the diameter at every node efficiently, what computation should each recursive call return?',
       options: [
         { label: 'The diameter found so far in the subtree', isCorrect: false, feedback: 'Returning the diameter from a subtree doesn\'t give the parent enough information to compute the diameter through the parent. The parent needs each child\'s depth, not a pre-computed diameter.' },
         { label: 'The depth of the subtree', isCorrect: true },
@@ -86,4 +89,22 @@ def diameter_of_binary_tree_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def diameter_of_binary_tree(self, root):
+        best = 0
+
+        def depth(node):
+            nonlocal best
+            if not node:
+                return 0
+            left = depth(node.left)
+            right = depth(node.right)
+            best = max(best, left + right)
+            return 1 + max(left, right)
+
+        depth(root)
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: '<code>depth</code> returns <code>1 + max(left, right)</code> to its caller — only the taller of the two arms — while <code>best</code> is updated separately with <code>left + right</code>, the sum of <code>both</code> arms; a node\'s own depth going upward can only follow one branch, but a diameter passing through that node uses both.',
+  solutionExplanation: 'Every node is a candidate "turning point" for the longest path, and the length of the longest path through a given node is exactly its left subtree\'s depth plus its right subtree\'s depth — so computing subtree depth bottom-up while updating a running maximum at every node checks every possible turning point in a single traversal, rather than requiring the O(n) work of computing depth from scratch at each of the n nodes independently. Because <code>best</code> lives outside the recursive return value, it can be updated at every node regardless of what gets passed back up to that node\'s own parent.',
 }

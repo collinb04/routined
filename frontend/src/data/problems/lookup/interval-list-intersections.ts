@@ -7,8 +7,10 @@ export default {
     { input: 'firstList=[[0,2],[5,10],[13,23],[24,25]], secondList=[[1,5],[8,12],[15,24],[25,26]]', output: '[[1,2],[5,5],[8,10],[15,23],[24,24],[25,25]]' },
   ],
   constraints: ['0 ≤ firstList.length, secondList.length ≤ 1000', '0 ≤ start ≤ end ≤ 10⁹', 'Both lists are sorted and pairwise disjoint'],
-  starterCode: `def interval_intersection(first_list, second_list):
-  pass`,
+  starterCode: `class Solution:
+    def interval_intersection(self, first_list, second_list):
+        pass`,
+  runnerSetup: 'interval_intersection = Solution().interval_intersection',
   functionName: 'interval_intersection',
   conceptId: 'intervals',
   testCases: [
@@ -16,12 +18,13 @@ export default {
     { label: 'Empty first', args: [[],[[1,2]]], expected: [] },
     { label: 'No intersection', args: [[[1,2]],[[3,4]]], expected: [] },
   ],
-  bruteHint: 'Describe comparing every interval in one list against every interval in the other, and its time complexity',
-  optimizeHint: 'Name the technique that walks both sorted lists with two pointers instead of nested loops',
+  bruteHint: 'A brute-force approach compares every interval in firstList against every interval in secondList, checking each pair for overlap and recording the intersection when one exists. With n and m intervals in the two lists, that is O(n × m) pair comparisons and up to O(n × m) space for intermediate results, even though both lists are already sorted. If you already know both lists are sorted, do you really need to check every possible pair, or could many of them be ruled out immediately?',
+  optimizeComplexity: { time: 'O(n + m)', space: 'O(n + m)' },
   clues: [
     {
       id: 'two-pointer-structure',
-      question: 'Both lists are sorted and pairwise disjoint. What traversal pattern does this enable?',
+      question: 'Knowing both inputs are already sorted tells you which traversal strategies become viable. Both lists are sorted and pairwise disjoint. What traversal pattern does this enable?',
+      highlight: { location: 'constraint', text: 'Both lists are sorted and pairwise disjoint' },
       options: [
         { label: 'Nested loop over both lists', isCorrect: false, feedback: 'A nested loop compares every pair — O(n × m), up to 1,000,000 comparisons. Sorted input lets you advance pointers instead of restarting the inner list each time.' },
         { label: 'Two pointers advancing through each list', isCorrect: true },
@@ -36,7 +39,7 @@ export default {
     },
     {
       id: 'intersection-formula',
-      question: 'For two overlapping closed intervals, what is the intersection?',
+      question: 'Correctly computing overlap depends on knowing exactly how two ranges combine. For two overlapping closed intervals, what is the intersection?',
       options: [
         { label: '[min(start1, start2), max(end1, end2)]', isCorrect: false, feedback: 'That is the union — it expands to cover both intervals. Intersection contracts to only the shared region.' },
         { label: '[max(start1, start2), min(end1, end2)]', isCorrect: true },
@@ -51,7 +54,7 @@ export default {
     },
     {
       id: 'advance-pointer-rule',
-      question: 'After checking a pair for intersection, which pointer should advance?',
+      question: 'Deciding which pointer to move is what keeps a two-pointer sweep correct and efficient. After checking a pair for intersection, which pointer should advance?',
       options: [
         { label: 'Always advance the firstList pointer', isCorrect: false, feedback: 'Advancing only one pointer means you never fully scan the other list. You might miss intersections between the skipped intervals and remaining ones.' },
         { label: 'Advance the pointer whose interval ends first', isCorrect: true },
@@ -66,7 +69,8 @@ export default {
     },
     {
       id: 'closed-interval-boundary',
-      question: '"Closed intervals" — endpoints are included. How does this affect the overlap check?',
+      question: 'The exact definition of the interval type determines whether boundary cases count as overlap. "Closed intervals" — endpoints are included. How does this affect the overlap check?',
+      highlight: { location: 'description', text: 'closed intervals' },
       options: [
         { label: 'Touching endpoints do not overlap', isCorrect: false, feedback: 'For closed intervals [a,b] and [b,c], the point b belongs to both — that is an intersection. Touching endpoints count as overlap in closed intervals.' },
         { label: 'Overlap exists when max(s1,s2) ≤ min(e1,e2)', isCorrect: false },
@@ -80,4 +84,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def interval_intersection(self, first_list, second_list):
+        result = []
+        i, j = 0, 0
+        while i < len(first_list) and j < len(second_list):
+            lo = max(first_list[i][0], second_list[j][0])
+            hi = min(first_list[i][1], second_list[j][1])
+            if lo <= hi:
+                result.append([lo, hi])
+            if first_list[i][1] < second_list[j][1]:
+                i += 1
+            else:
+                j += 1
+        return result`,
+  solutionComplexity: { time: 'O(n + m)', space: 'O(n + m)' },
+  solutionCaveat: 'Using <code>&lt;=</code> rather than <code>&lt;</code> when checking <code>lo &lt;= hi</code> is what correctly captures single-point intersections like <code>[5,5]</code> — two closed intervals that only touch at one shared endpoint still count as intersecting.',
+  solutionExplanation: 'Because both lists are already sorted, the interval currently ending earlier can never intersect anything later in the *other* list beyond what has already been checked, so it is always safe to advance past it — that single rule is what lets two pointers replace an all-pairs comparison. At each step, the overlap between the two current intervals (if any) is exactly <code>[max(starts), min(ends)]</code>, and whichever interval ends first has nothing left to contribute, so its pointer moves forward.',
 }

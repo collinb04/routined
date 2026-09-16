@@ -8,8 +8,10 @@ export default {
     { input: 'nums=[3,1,3,4,3], k=6', output: '1', explanation: 'Only one pair (3,3).' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁵', '1 ≤ nums[i] ≤ 10⁹', '2 ≤ k ≤ 10⁹'],
-  starterCode: `def max_operations(nums, k):
-  pass`,
+  starterCode: `class Solution:
+    def max_operations(self, nums, k):
+        pass`,
+  runnerSetup: 'max_operations = Solution().max_operations',
   functionName: 'max_operations',
   conceptId: 'two-pointers',
   testCases: [
@@ -17,16 +19,16 @@ export default {
     { label: 'One pair', args: [[3,1,3,4,3],6], expected: 1 },
     { label: 'No pairs', args: [[1,2,3],10], expected: 0 },
   ],
-  bruteHint: 'Describe checking every pair of elements, and the resulting time complexity',
-  optimizeHint: 'Name the data structure that lets you look up how many complements are still available, or the sort-plus-two-pointers alternative',
+  bruteHint: 'The brute-force approach checks every pair of elements in nums — for each number, scan the rest of the array for a partner that sums to k, and if you find one, count the pair and move on. That works, but it checks roughly n² pairs in total. At n up to 100,000, how many comparisons is that, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁵. What does this rule out?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. What does nums.length ≤ 10⁵ rule out?',
       options: [
         { label: 'Checking every pair of elements', isCorrect: true },
         { label: 'Sorting the array first', isCorrect: false, feedback: 'Sorting is O(n log n) — roughly 1.7 million operations at n = 100,000. That is well within budget. The constraint rules out O(n²), not O(n log n).' },
-        { label: 'Using a hash map to count values', isCorrect: false, feedback: 'A hash map runs in O(n) — easily within budget. The constraint is ruling out the O(n²) brute-force pair check, not faster structures.' },
+        { label: 'Counting how many times each value appears', isCorrect: false, feedback: 'That runs in O(n) — easily within budget. The constraint is ruling out the O(n²) brute-force pair check, not faster approaches.' },
         { label: 'Arrays with large values like 10⁹', isCorrect: false, feedback: 'The value range is a separate constraint. The length constraint limits time complexity, not value size. Large values affect index arithmetic, not whether an O(n) pass is fast enough.' },
       ],
       correctFeedback: 'At n = 100,000, checking every pair is O(n²) = 10 billion operations — too slow. You need an O(n) or O(n log n) approach.',
@@ -34,6 +36,7 @@ export default {
         'How many pairs does a double nested loop check when n = 100,000?',
         'Two nested loops give O(n²) pairs. At n = 10⁵, that is 10¹⁰ comparisons. What faster approach can find all valid pairs?',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁵' },
     },
     {
       id: 'complement-structure',
@@ -81,4 +84,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_operations(self, nums, k):
+        count = {}
+        ops = 0
+        for n in nums:
+            complement = k - n
+            if count.get(complement, 0) > 0:
+                count[complement] -= 1
+                ops += 1
+            else:
+                count[n] = count.get(n, 0) + 1
+        return ops`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Decrementing the complement\'s count on a match — rather than deleting the key or leaving it untouched — is what correctly handles repeated values like <code>[3,1,3,4,3]</code>, where some copies of <code>3</code> get paired off while others remain available for a later match.',
+  solutionExplanation: 'Every number is looking for exactly one partner, <code>k - n</code>, so a running count of "numbers seen but not yet paired" answers instantly whether that partner has already shown up. Finding one immediately pairs them off (consuming one copy of the complement) instead of continuing to scan the rest of the array for it, which turns the O(n²) pairwise search into a single O(n) pass with O(1) lookups.',
 }

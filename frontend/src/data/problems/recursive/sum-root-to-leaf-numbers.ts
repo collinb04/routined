@@ -8,21 +8,44 @@ export default {
     { input: 'root = [4,9,0,5,1]', output: '1026', explanation: 'Paths: 495, 491, 40. Sum = 1026.' },
   ],
   constraints: ['1 ≤ number of nodes ≤ 1000', '0 ≤ Node.val ≤ 9', 'Tree depth ≤ 10'],
-  starterCode: `def sum_numbers(root):
-  pass`,
-  functionName: 'sum_numbers',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def sum_numbers(self, root):
+        pass`,
+  functionName: 'sum_numbers_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def sum_numbers_run(arr):
+  return Solution().sum_numbers(_build(arr))`,
   testCases: [
     { label: 'Two paths', args: [[1,2,3]], expected: 25 },
     { label: 'Three paths', args: [[4,9,0,5,1]], expected: 1026 },
     { label: 'Single node', args: [[5]], expected: 5 },
   ],
-  bruteHint: 'Describe collecting each full root-to-leaf path into a list first, converting each completed path into a number, and summing them afterward',
-  optimizeHint: 'Name the technique that carries a running accumulated number down through the recursion so each leaf can contribute its total without ever storing the full path',
+  bruteHint: 'One brute-force approach walks every root-to-leaf path in full, storing each digit in a list as you descend, and only converts that list into a number once a leaf is reached, before adding it to the total. This still visits every node exactly once, so the traversal itself runs in O(n) time, but it costs O(n) extra space to hold each path\'s digit list rather than a single running value. What happens if you fold each digit into a running number as you descend, instead of storing the whole path first?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'node-val-range',
-      question: '0 ≤ Node.val ≤ 9 — each value is a single digit. What does this tell you about how to build the number along a path?',
+      highlight: { location: 'constraint', text: '0 ≤ Node.val ≤ 9' },
+      question: 'Constraints that pin down a value\'s range often reveal the exact arithmetic operation the problem expects you to use. 0 ≤ Node.val ≤ 9 — each value is a single digit. What does this tell you about how to build the number along a path?',
       options: [
         { label: 'Concatenate digits as strings, then convert', isCorrect: false, feedback: 'String concatenation works but is unnecessary. Since each digit is 0–9, you can build the number arithmetically: multiply the running total by 10 and add the current digit.' },
         { label: 'Multiply running total by 10 and add current digit', isCorrect: true },
@@ -37,7 +60,8 @@ export default {
     },
     {
       id: 'output-sum-all-paths',
-      question: 'The output is the sum of ALL root-to-leaf numbers. When do you add a path\'s value to the total?',
+      highlight: { location: 'description', text: 'Return the total sum of all root-to-leaf numbers.' },
+      question: 'The description\'s statement of what to return often tells you exactly when a computation is complete. The output is the sum of ALL root-to-leaf numbers. When do you add a path\'s value to the total?',
       options: [
         { label: 'At every node you visit', isCorrect: false, feedback: 'Adding at every node counts partial paths — path 1→2 would contribute both 1 (at the root) and 12 (at the leaf). Only complete root-to-leaf paths represent numbers.' },
         { label: 'Only at leaf nodes', isCorrect: true },
@@ -52,7 +76,8 @@ export default {
     },
     {
       id: 'depth-constraint',
-      question: 'Tree depth ≤ 10 and each node value is a single digit. What is the maximum value of any root-to-leaf number?',
+      highlight: { location: 'constraint', text: 'Tree depth ≤ 10' },
+      question: 'Combining multiple constraints together often bounds the size of intermediate values you must handle. Tree depth ≤ 10 and each node value is a single digit. What is the maximum value of any root-to-leaf number?',
       options: [
         { label: 'Up to 9,999,999,999 (ten 9s)', isCorrect: true },
         { label: 'Up to 90 (ten nodes × max digit 9)', isCorrect: false, feedback: 'Adding digits gives 90 only if you ignore place value. With depth 10, the path number has 10 digits — the leftmost is in the billions place.' },
@@ -66,4 +91,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def sum_numbers(self, root):
+        def dfs(node, current):
+            if not node:
+                return 0
+            current = current * 10 + node.val
+            if not node.left and not node.right:
+                return current
+            return dfs(node.left, current) + dfs(node.right, current)
+
+        return dfs(root, 0)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The running total is only <code>added</code> to the overall sum at a leaf — an internal node\'s partial number (like the "1" after just visiting the root of path 1→2) is never itself added, since it does not yet represent a complete root-to-leaf number.',
+  solutionExplanation: 'Shifting the accumulated value one decimal place with <code>current * 10 + node.val</code> at every step down the tree builds the path\'s number incrementally, exactly mirroring how each new digit extends a number in base 10 — no string concatenation or post-hoc conversion needed. Because a number is only "complete" once a path reaches a leaf, recursion only contributes to the total sum at that point, and the sum of the two subtrees\' contributions naturally aggregates every distinct root-to-leaf path in the tree.',
 }

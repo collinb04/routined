@@ -8,8 +8,10 @@ export default {
     { input: 'bills = [5,5,10,10,20]', output: 'false', explanation: 'Not enough $5 bills to make change for the second $20.' },
   ],
   constraints: ['1 ≤ bills.length ≤ 10⁵', 'bills[i] is 5, 10, or 20'],
-  starterCode: `def lemonade_change(bills):
-  pass`,
+  starterCode: `class Solution:
+    def lemonade_change(self, bills):
+        pass`,
+  runnerSetup: 'lemonade_change = Solution().lemonade_change',
   functionName: 'lemonade_change',
   conceptId: 'greedy',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'All fives', args: [[5,5,5,5]], expected: true },
     { label: 'First $10', args: [[10]], expected: false },
   ],
-  bruteHint: 'Describe trying every combination of bills you could hand back at each step to see which choice keeps the rest of the sequence working',
-  optimizeHint: 'Name the greedy preference for which bills to give back first, and the two running counts that fully describe your register',
+  bruteHint: 'The brute-force approach tries every combination of bills you could hand back at each step, then recursively checks whether the rest of the sequence still works out under that choice. With up to 10⁵ customers and several possible change combinations at each one, the number of branching paths explodes exponentially. What two running counts could replace this entire branching search with a single greedy pass?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'only-three-denominations',
-      question: 'bills[i] is always 5, 10, or 20. How many distinct cash-register states do you need to track?',
+      highlight: { location: 'constraint', text: 'bills[i] is 5, 10, or 20' },
+      question: 'When a value is restricted to a small, fixed set of possibilities, that\'s often a sign you can track state with a few counters instead of a general-purpose structure. bills[i] is always 5, 10, or 20. How many distinct cash-register states do you need to track?',
       options: [
         { label: 'One — total cash on hand', isCorrect: false, feedback: 'Total cash does not tell you whether you can make exact change. To give $15 back, you need specific denominations — a pile of $20 bills is worth nothing for making change.' },
         { label: 'Two — count of $5 bills and count of $10 bills', isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'greedy-twenty-dollar',
-      question: 'A customer pays $20. You owe $15 change. You have $5s and $10s. What is the greedy choice?',
+      highlight: { location: 'description', text: 'Customers pay with $5, $10, or $20 bills.' },
+      question: 'Once you know which few states matter, the next question is which choice to make at each step — a greedy strategy commits to the locally best option without looking back. A customer pays $20. You owe $15 change. You have $5s and $10s. What is the greedy choice?',
       options: [
         { label: 'Give three $5 bills', isCorrect: false, feedback: 'Three $5 bills works, but it is not the greedy choice. $5 bills are more versatile than $10 bills — they can be used for $10-change situations too. Prefer giving one $10 + one $5 to preserve $5 bills for future customers.' },
         { label: 'Give one $10 and one $5 if available', isCorrect: true },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'order-matters',
-      question: 'The order of bills is fixed. Why can\'t you reorder customers to make change easier?',
+      highlight: { location: 'description', text: 'Given the order of bills, return <code>true</code> if you can give every customer correct change.' },
+      question: 'Notice whether a problem defines a fixed sequence you must process in order — that ruling out reordering shapes which algorithms are even valid. The order of bills is fixed. Why can\'t you reorder customers to make change easier?',
       options: [
         { label: 'bills.length can be up to 10⁵', isCorrect: false, feedback: 'Array length does not prevent reordering — sorting 10⁵ elements is O(n log n) and perfectly fast. The issue is that the problem specifies a fixed customer order, not that reordering is too slow.' },
         { label: 'The problem requires serving customers in the given sequence', isCorrect: true },
@@ -68,7 +73,8 @@ export default {
     },
     {
       id: 'constraint-linear',
-      question: 'bills.length ≤ 10⁵. Each customer requires O(1) work. What is the overall complexity?',
+      highlight: { location: 'constraint', text: '1 ≤ bills.length ≤ 10⁵' },
+      question: 'Input-size constraints tell you the target complexity class before you even design the algorithm. bills.length ≤ 10⁵. Each customer requires O(1) work. What is the overall complexity?',
       options: [
         { label: 'O(n log n) — you need to sort the bills', isCorrect: false, feedback: 'No sorting is needed. You process bills in the given order, and each bill requires a single conditional check and at most one or two counter updates — O(1) per customer.' },
         { label: 'O(n) — one pass through the bills array', isCorrect: true },
@@ -82,4 +88,27 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def lemonade_change(self, bills):
+        five = ten = 0
+        for bill in bills:
+            if bill == 5:
+                five += 1
+            elif bill == 10:
+                if five == 0:
+                    return False
+                five -= 1
+                ten += 1
+            else:
+                if ten > 0 and five > 0:
+                    ten -= 1
+                    five -= 1
+                elif five >= 3:
+                    five -= 3
+                else:
+                    return False
+        return True`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'When change for a $20 is owed, a $10 + $5 combination is tried <code>before</code> falling back to three $5 bills — preferring to spend the less-flexible $10 bill first, since a $5 bill is the only denomination that can ever make change for a future $10, making it the more valuable bill to conserve.',
+  solutionExplanation: 'Only two running counts — how many $5 and $10 bills are currently held — fully describe the register\'s state, since $20 bills are collected but never handed back as change. Every incoming bill triggers exactly one deterministic decision (collect a $5, make $5 change for a $10, or make $15 change for a $20 using the most bill-conserving combination available), and the moment any required change can\'t be made, the answer is definitively false — no later bill could undo that failure.',
 }

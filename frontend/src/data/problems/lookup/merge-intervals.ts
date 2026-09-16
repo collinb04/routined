@@ -8,8 +8,10 @@ export default {
     { input: 'intervals = [[1,4],[4,5]]', output: '[[1,5]]', explanation: 'They share a boundary, so they merge.' },
   ],
   constraints: ['1 ≤ intervals.length ≤ 10⁴', 'intervals[i].length == 2', '0 ≤ start ≤ end ≤ 10⁴'],
-  starterCode: `def merge(intervals):
-  pass`,
+  starterCode: `class Solution:
+    def merge(self, intervals):
+        pass`,
+  runnerSetup: 'merge = Solution().merge',
   functionName: 'merge',
   conceptId: 'intervals',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'No overlap', args: [[[1,2],[3,4]]], expected: [[1,2],[3,4]] },
     { label: 'All overlap', args: [[[1,10],[2,3],[4,7]]], expected: [[1,10]] },
   ],
-  bruteHint: 'Describe repeatedly comparing every pair of intervals to find and merge overlaps, and its time complexity',
-  optimizeHint: 'Name what sorting the intervals by start time lets you do in a single pass',
+  bruteHint: 'The brute-force approach repeatedly scans all intervals, comparing every pair to find one that overlaps, merging them, and restarting the scan since a merge can create new overlaps. Each full pass is O(n), and repeating this until no overlaps remain costs O(n²) time overall. It also risks re-checking already-settled intervals over and over. What single ordering of the intervals would let you catch every overlap in one pass instead?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'output-structure',
-      question: 'The output is a list of merged intervals, not a boolean or count. This means…',
+      question: 'The shape of the expected return value tells you what you actually need to build. The output is a list of merged intervals, not a boolean or count. This means…',
+      highlight: { location: 'description', text: 'return an array of the non-overlapping intervals.' },
       options: [
         { label: 'Build a new list of resulting intervals', isCorrect: true },
         { label: 'Return indices of overlapping intervals', isCorrect: false, feedback: 'The output is the merged intervals themselves, not positions in the original array. You need to construct new [start, end] pairs, not track where old ones were.' },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'sort-first',
-      question: 'Intervals arrive in arbitrary order. What must you do before you can merge in a single pass?',
+      question: 'When input order is not guaranteed, the first step is often establishing an order you can rely on. Intervals arrive in arbitrary order. What must you do before you can merge in a single pass?',
       options: [
         { label: 'Sort by end time', isCorrect: false, feedback: 'Sorting by end time doesn\'t guarantee that adjacent intervals in sorted order are candidates for merging. Two intervals that share a start time but have different ends would be split apart. Sort by start time to ensure merge candidates are adjacent.' },
         { label: 'Sort by start time', isCorrect: true },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'merge-condition',
-      question: 'The example shows [1,4] and [4,5] merge to [1,5]. What overlap condition handles touching endpoints correctly?',
+      question: 'Worked examples often encode a boundary rule that the plain description leaves implicit. The example shows [1,4] and [4,5] merge to [1,5]. What overlap condition handles touching endpoints correctly?',
       options: [
         { label: 'Merge when next.start < current.end (strict)', isCorrect: false, feedback: 'Strict less-than would miss the touching case: [1,4] and [4,5] have next.start == current.end, so they wouldn\'t merge. The example shows they should.' },
         { label: 'Merge when next.start ≤ current.end', isCorrect: true },
@@ -68,7 +71,7 @@ export default {
     },
     {
       id: 'extend-vs-append',
-      question: 'When processing a new interval, you either extend the current merged interval or start a new one. What determines which?',
+      question: 'Once the general rule is set, the remaining question is how to apply it consistently on each pass. When processing a new interval, you either extend the current merged interval or start a new one. What determines which?',
       options: [
         { label: 'Whether the new interval is longer', isCorrect: false, feedback: 'Length doesn\'t determine overlap. A tiny interval can overlap with a huge one, and a huge interval might not overlap at all. The relevant comparison is between start and end times.' },
         { label: 'Whether next.start ≤ last result\'s end', isCorrect: true },
@@ -82,4 +85,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def merge(self, intervals):
+        intervals.sort(key=lambda x: x[0])
+        result = [intervals[0][:]]
+        for start, end in intervals[1:]:
+            if start <= result[-1][1]:
+                result[-1][1] = max(result[-1][1], end)
+            else:
+                result.append([start, end])
+        return result`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'Sorting a copy of each interval (<code>intervals[0][:]</code>) before mutating <code>result[-1][1]</code> avoids silently corrupting the original input array — mutating a slice of the original list in place would be a subtle bug if the caller still needed the untouched intervals.',
+  solutionExplanation: 'Sorting by start time guarantees that any interval which could possibly overlap the one currently being built is either already merged into it or comes immediately next — nothing overlapping can be "hiding" further down the list. That turns the problem into a single left-to-right sweep: extend the last interval in the result whenever the next one starts before (or exactly where) it currently ends, or start a fresh interval otherwise, catching every overlap in one pass instead of repeatedly rescanning.',
 }

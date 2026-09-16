@@ -11,8 +11,10 @@ export default {
     '1 ≤ s.length ≤ 2 × 10⁵',
     's consists only of printable ASCII characters',
   ],
-  starterCode: `def is_palindrome(s):
-  pass`,
+  starterCode: `class Solution:
+    def is_palindrome(self, s):
+        pass`,
+  runnerSetup: 'is_palindrome = Solution().is_palindrome',
   functionName: 'is_palindrome',
   conceptId: 'strings',
   testCases: [
@@ -21,12 +23,13 @@ export default {
     { label: 'Single space', args: [' '], expected: true },
     { label: 'Pure alpha', args: ['racecar'], expected: true },
   ],
-  bruteHint: 'Describe building a cleaned, lowercased copy of the string and comparing it to its reverse, and its space cost',
-  optimizeHint: 'Name the technique that checks the palindrome in place with two pointers, skipping non-alphanumeric characters',
+  bruteHint: 'A brute-force approach builds a new string containing only the lowercased alphanumeric characters, then compares that string to its reverse. Building the cleaned copy and reversing it both take O(n) time, but each also takes O(n) extra space to store. With s as long as 2 × 10⁵ characters, is a second full copy of the string actually necessary just to check whether it reads the same forward and backward?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'preprocessing-signal',
-      question: '"Remove all non-alphanumeric characters and lowercase." What does this preprocessing step imply about your scan?',
+      question: 'How you handle preprocessing often determines whether extra space is needed. "Remove all non-alphanumeric characters and lowercase." What does this preprocessing step imply about your scan?',
+      highlight: { location: 'description', text: 'removing all non-alphanumeric characters and lowercasing' },
       options: [
         { label: 'Build a cleaned string, then check it', isCorrect: false, feedback: 'Building a cleaned copy works but costs O(n) extra space. Two pointers that skip non-alphanumeric characters in-place achieve the same result with O(1) space.' },
         { label: 'Skip non-alphanumeric characters during the two-pointer scan', isCorrect: true },
@@ -41,7 +44,8 @@ export default {
     },
     {
       id: 'case-insensitive-comparison',
-      question: '"After lowercasing." The input includes uppercase letters. How must you compare characters in the scan?',
+      question: 'Getting comparisons right often rules out shortcuts that look correct but fail on certain inputs. "After lowercasing." The input includes uppercase letters. How must you compare characters in the scan?',
+      highlight: { location: 'description', text: 'lowercasing' },
       options: [
         { label: 'Compare ASCII codes directly', isCorrect: false, feedback: 'ASCII codes differ for uppercase and lowercase versions of the same letter — \'A\' is 65, \'a\' is 97. Direct code comparison would fail the case-insensitive requirement.' },
         { label: 'Lowercase both characters before comparing', isCorrect: true },
@@ -56,7 +60,7 @@ export default {
     },
     {
       id: 'empty-after-filtering',
-      question: 'A string of only spaces like " " has no alphanumeric characters. What should the result be?',
+      question: 'Edge cases reveal whether your logic handles boundaries correctly or breaks down. A string of only spaces like " " has no alphanumeric characters. What should the result be?',
       options: [
         { label: 'false — no valid characters to form a palindrome', isCorrect: false, feedback: 'An empty sequence is trivially a palindrome — there are no characters to violate the rule. The test case " " expects true.' },
         { label: 'true — an empty sequence is a palindrome', isCorrect: true },
@@ -70,4 +74,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_palindrome(self, s):
+        left, right = 0, len(s) - 1
+        while left < right:
+            while left < right and not s[left].isalnum():
+                left += 1
+            while left < right and not s[right].isalnum():
+                right -= 1
+            if s[left].lower() != s[right].lower():
+                return False
+            left += 1
+            right -= 1
+        return True`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionExplanation: 'Two pointers close in from both ends, but before every comparison each one independently skips forward (or backward) past anything that isn\'t a letter or digit — punctuation and spaces are invisible to the comparison, they just aren\'t where the pointers ever stop. <code>.lower()</code> on both sides makes the comparison case-insensitive without needing to build a cleaned-up copy of the string first.',
 }

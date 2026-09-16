@@ -8,8 +8,10 @@ export default {
     { input: 'gas=[2,3,4], cost=[3,4,3]', output: '-1' },
   ],
   constraints: ['n == gas.length == cost.length', '1 ≤ n ≤ 10⁵', '0 ≤ gas[i], cost[i] ≤ 10⁴'],
-  starterCode: `def can_complete_circuit(gas, cost):
-  pass`,
+  starterCode: `class Solution:
+    def can_complete_circuit(self, gas, cost):
+        pass`,
+  runnerSetup: 'can_complete_circuit = Solution().can_complete_circuit',
   functionName: 'can_complete_circuit',
   conceptId: 'greedy',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Impossible', args: [[2,3,4],[3,4,3]], expected: -1 },
     { label: 'Single station', args: [[5],[4]], expected: 0 },
   ],
-  bruteHint: 'Describe simulating the full circuit starting from every possible station to see whether the tank ever goes negative',
-  optimizeHint: 'Name the greedy quantity you could track in a single pass, and what it means the moment that quantity goes negative',
+  bruteHint: "One brute-force approach simulates the entire circuit starting from every station: for each of the n candidates, walk all n stops and check whether the tank ever dips below zero. That's O(n) work per candidate across n candidates, giving O(n²) overall — at n = 10⁵ that's roughly 10 billion operations. Is there a way to reuse information from a failed simulation instead of restarting from scratch each time?",
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'feasibility-check',
-      question: 'The problem says return -1 if impossible. What single condition determines whether any solution exists?',
+      highlight: { location: 'description', text: 'Return -1 if impossible.' },
+      question: 'When a description calls out an explicit fallback value for an impossible case, it\'s telling you there\'s a simple global check you can perform before doing any real work. The problem says return -1 if impossible. What single condition determines whether any solution exists?',
       options: [
         { label: 'sum(gas) >= sum(cost)', isCorrect: true },
         { label: 'Every gas[i] >= cost[i]', isCorrect: false, feedback: 'Individual stations don\'t need to be self-sufficient. Gas accumulates as you travel — you can enter a station on empty, fill up, and still make it forward. Only the global total needs to be non-negative.' },
@@ -37,7 +40,7 @@ export default {
     },
     {
       id: 'unique-answer',
-      question: 'The constraints guarantee at most one valid starting station. What does this mean for your algorithm?',
+      question: 'A guarantee about the uniqueness of the answer often hints that a single deterministic pass — rather than an exhaustive search — will find it. The constraints guarantee at most one valid starting station. What does this mean for your algorithm?',
       options: [
         { label: 'Try all n starting points and return the first valid one', isCorrect: false, feedback: 'Trying all n starting points is O(n²) — 10⁵² = 10 billion operations at worst. The uniqueness guarantee means you can find the answer in one O(n) pass without brute-force verification.' },
         { label: 'Stop and return as soon as you find a valid start', isCorrect: true },
@@ -52,7 +55,8 @@ export default {
     },
     {
       id: 'circular-structure',
-      question: '"There are n gas stations in a circle." How does the circular layout affect how you track the starting candidate?',
+      highlight: { location: 'description', text: 'There are <code>n</code> gas stations in a circle.' },
+      question: 'Recognizing when a problem\'s underlying structure is circular rather than linear changes how you reason about wraparound and where a greedy scan can safely stop. "There are n gas stations in a circle." How does the circular layout affect how you track the starting candidate?',
       options: [
         { label: 'You must simulate the full circuit from each candidate', isCorrect: false, feedback: 'Simulating the full circuit from each of the n candidates is O(n²). The circular property does not require brute-force simulation — the greedy insight handles the wrap-around implicitly.' },
         { label: 'If you can reach the end linearly, you can complete the circuit', isCorrect: true },
@@ -67,7 +71,8 @@ export default {
     },
     {
       id: 'constraint-linear',
-      question: 'n ≤ 10⁵. What complexity do you need?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 10⁵' },
+      question: 'Large input bounds in the constraints are a direct signal for the time complexity your algorithm must hit. n ≤ 10⁵. What complexity do you need?',
       options: [
         { label: 'O(n log n) — sort first, then scan', isCorrect: false, feedback: 'Sorting destroys the circular order. And O(n log n) is unnecessary here — the greedy algorithm is O(n) with no sorting required.' },
         { label: 'O(n²) is acceptable at n = 10⁵', isCorrect: false, feedback: 'O(n²) at n = 10⁵ is 10 billion operations — far too slow. You need a linear-time approach.' },
@@ -81,4 +86,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def can_complete_circuit(self, gas, cost):
+        if sum(gas) < sum(cost):
+            return -1
+
+        tank = 0
+        start = 0
+        for i in range(len(gas)):
+            tank += gas[i] - cost[i]
+            if tank < 0:
+                start = i + 1
+                tank = 0
+        return start`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'When the running tank drops below zero, the candidate resets to <code>i + 1</code> and the tank resets to <code>0</code> — <code>none</code> of the stations between the old candidate and <code>i</code> are ever retried, since every one of them had a non-negative running total from the old candidate, so adding the same negative segment after any of them could only make things worse.',
+  solutionExplanation: 'The total-gas-versus-total-cost check answers feasibility in O(1): if the whole circuit\'s fuel can\'t cover the whole circuit\'s cost, no starting point can ever work, and the problem guarantees exactly one starting point works otherwise. A single left-to-right pass then finds it directly — whenever the running tank goes negative starting from the current candidate, every station skipped over on the way there is provably a worse candidate, so resetting to the very next station after the failure point is always safe and never discards the true answer.',
 }

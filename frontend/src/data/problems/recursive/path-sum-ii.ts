@@ -7,20 +7,43 @@ export default {
     { input: 'root=[5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum=22', output: '[[5,4,11,2],[5,8,4,5]]' },
   ],
   constraints: ['0 ≤ number of nodes ≤ 5000', '-1000 ≤ Node.val, targetSum ≤ 1000'],
-  starterCode: `def path_sum(root, target_sum):
-  pass`,
-  functionName: 'path_sum',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def path_sum(self, root, target_sum):
+        pass`,
+  functionName: 'path_sum_ii_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def path_sum_ii_run(arr, target_sum):
+  return Solution().path_sum(_build(arr), target_sum)`,
   testCases: [
     { label: 'Two paths', args: [[5,4,8,11,null,13,4,7,2,null,null,5,1],22], expected: [[5,4,11,2],[5,8,4,5]] },
     { label: 'No paths', args: [[1,2],5], expected: [] },
   ],
-  bruteHint: 'Describe generating every root-to-leaf path first, then filtering afterward for the ones that sum to the target',
-  optimizeHint: 'Name the technique of carrying the running sum and path forward through a single DFS, recording a match only at a leaf',
+  bruteHint: 'The brute-force approach performs a full traversal to generate every root-to-leaf path in the tree first, storing each one in a list, and only afterward filters that list down to the paths whose values sum to targetSum. Because every path must be built and held before any sum is checked, this costs O(n²) time and O(n²) space in the worst case, since a skewed tree can produce paths whose combined lengths grow quadratically. What would change if you checked and recorded the sum as soon as you reached a leaf, rather than after generating every path?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(h)' },
   clues: [
     {
       id: 'output-structure',
-      question: 'The output is all root-to-leaf paths — a list of lists, not a count or boolean. What does that require?',
+      question: 'How the problem describes its expected output determines whether your solution needs to enumerate every valid result or can stop at the first one. The output is all root-to-leaf paths — a list of lists, not a count or boolean. What does that require?',
+      highlight: { location: 'description', text: 'return all root-to-leaf paths where the sum of node values equals <code>targetSum</code>.' },
       options: [
         { label: 'Return as soon as any valid path is found', isCorrect: false, feedback: 'Early return works when you only need to confirm existence. Here the output requires collecting every valid path — you must explore the entire tree.' },
         { label: 'Collect every valid path; explore the full tree', isCorrect: true },
@@ -79,4 +102,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def path_sum(self, root, target_sum):
+        result = []
+        path = []
+
+        def dfs(node, remaining):
+            if not node:
+                return
+            path.append(node.val)
+            remaining -= node.val
+            if not node.left and not node.right and remaining == 0:
+                result.append(path[:])
+            else:
+                dfs(node.left, remaining)
+                dfs(node.right, remaining)
+            path.pop()
+
+        dfs(root, target_sum)
+        return result`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(h)' },
+  solutionCaveat: 'No early exit on <code>remaining &lt; 0</code> — since node values can be negative, a sum that overshoots partway down could still recover and land exactly on target deeper in the tree, so a branch can only be safely abandoned once it reaches a leaf, never earlier.',
+  solutionExplanation: 'A single running <code>path</code> list, appended to on the way down and popped on the way back up, always reflects exactly the sequence of node values from the root to wherever the recursion currently stands — that append/pop discipline is what lets every leaf see its own correct path without any need to rebuild it from scratch. Since the problem asks for every qualifying path rather than just one, the search must reach every leaf regardless of what it finds, appending a copy of <code>path</code> to the result whenever a leaf\'s cumulative sum exactly matches <code>target_sum</code> — checking both <code>left</code> and <code>right</code> are absent is what correctly identifies a leaf rather than a node with only one child still ahead of it.',
 }

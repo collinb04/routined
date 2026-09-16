@@ -8,8 +8,10 @@ export default {
     { input: 'k=3, n=9', output: '[[1,2,6],[1,3,5],[2,3,4]]' },
   ],
   constraints: ['2 ≤ k ≤ 9', '1 ≤ n ≤ 60'],
-  starterCode: `def combination_sum3(k, n):
-  pass`,
+  starterCode: `class Solution:
+    def combination_sum3(self, k, n):
+        pass`,
+  runnerSetup: 'combination_sum3 = Solution().combination_sum3',
   functionName: 'combination_sum3',
   conceptId: 'backtracking',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'k=3, n=9', args: [3,9], expected: [[1,2,6],[1,3,5],[2,3,4]] },
     { label: 'Impossible', args: [3,1], expected: [] },
   ],
-  bruteHint: 'Describe generating every subset of digits 1-9 and filtering for those with exactly k numbers summing to n',
-  optimizeHint: 'Name the technique of backtracking digit by digit, abandoning a branch once the running sum or remaining digit count rules out success',
+  bruteHint: 'One brute-force approach generates every subset of the digits 1 through 9 — all 2⁹ = 512 of them — and filters for the ones with exactly k numbers summing to n. This ignores information as it goes: it keeps extending a subset even after the running sum already exceeds n or after too few digits remain to reach length k. What check could let you abandon a subset before it is fully built?',
+  optimizeComplexity: { time: 'O(2⁹)', space: 'O(k)' },
   clues: [
     {
       id: 'fixed-digit-pool',
-      question: '"Using only numbers 1-9, where each number is used at most once." What does the fixed, small pool tell you about the search space?',
+      question: 'Constraints that shrink the candidate pool often reveal that the entire search space is small enough to explore directly. "Using only numbers 1-9, where each number is used at most once." What does the fixed, small pool tell you about the search space?',
+      highlight: { location: 'description', text: 'using only numbers 1-9, where each number is used at most once' },
       options: [
         { label: 'The solution space is infinite — any integer could appear', isCorrect: false, feedback: 'The candidates are strictly limited to 1–9. You never need to consider 10 or beyond, so the entire search space is a subset of the 9 digits.' },
         { label: 'At most 9 candidates, each usable once — backtrack over them', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'two-termination-conditions',
-      question: 'A valid combination requires exactly k numbers that sum to n. What two conditions must both be true to add a combination to the result?',
+      question: 'Pinning down exactly when a partial solution counts as complete is what separates a correct base case from a search that never terminates cleanly. A valid combination requires exactly k numbers that sum to n. What two conditions must both be true to add a combination to the result?',
+      highlight: { location: 'description', text: 'combinations of <code>k</code> numbers that sum up to <code>n</code>' },
       options: [
         { label: 'Sum equals n only', isCorrect: false, feedback: 'Sum = n with fewer than k numbers is not a valid answer. k=3, n=7 does not accept [7] — it requires exactly 3 numbers. Both conditions must hold simultaneously.' },
         { label: 'Length equals k only', isCorrect: false, feedback: 'A combination with exactly k numbers but the wrong sum is not valid. For k=3, n=7, the combination [1,2,3] has length 3 but sums to 6 — not a valid answer.' },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'pruning-opportunities',
-      question: 'k ≤ 9 and n ≤ 60. What two pruning conditions let you abandon a branch early?',
+      question: 'Small numeric bounds in the constraints are often a hint that early pruning, not a cleverer data structure, is what keeps a backtracking search fast. k ≤ 9 and n ≤ 60. What two pruning conditions let you abandon a branch early?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 60' },
       options: [
         { label: 'Stop if the current sum exceeds n, or if more numbers are needed than remain available', isCorrect: true },
         { label: 'Stop only when the sum exceeds n', isCorrect: false, feedback: 'Sum pruning alone does not catch the case where you need, say, 3 more numbers but only 1 digit remains in 1–9. You also need to prune when there are not enough remaining digits to reach k elements.' },
@@ -66,4 +71,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def combination_sum3(self, k, n):
+        result = []
+        path = []
+
+        def backtrack(start, remaining):
+            if len(path) == k:
+                if remaining == 0:
+                    result.append(path[:])
+                return
+            for i in range(start, 10):
+                if i > remaining:
+                    break
+                if 10 - i < k - len(path):
+                    break
+                path.append(i)
+                backtrack(i + 1, remaining - i)
+                path.pop()
+
+        backtrack(1, n)
+        return result`,
+  solutionComplexity: { time: 'O(2⁹)', space: 'O(k)' },
+  solutionCaveat: 'The second break condition, <code>10 - i &lt; k - len(path)</code>, prunes a branch even when the sum is still fine — if fewer digits remain in 1-9 than are still needed to reach length <code>k</code>, no amount of further searching from here can possibly complete the combination.',
+  solutionExplanation: 'Because digits are tried in increasing order starting from <code>start</code>, each digit is automatically usable at most once, and the recursion only records a combination when both required conditions hold simultaneously — exactly <code>k</code> digits chosen and their sum exactly <code>n</code>. Two independent early-exit checks — the running sum already exceeding <code>remaining</code>, or too few digits left to reach length <code>k</code> — let the search abandon a doomed branch immediately instead of continuing to build it out to a guaranteed failure.',
 }

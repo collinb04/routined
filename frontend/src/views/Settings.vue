@@ -13,7 +13,7 @@
 
       <!-- Account -->
       <div class="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
-        <p class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Account</p>
+        <p class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Account</p>
 
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-text-muted">Name</label>

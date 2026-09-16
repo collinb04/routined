@@ -48,6 +48,7 @@ export interface LinkedListFrame {
   phase: 'init' | 'compare' | 'update' | 'done'
   nodes: ListNode[]
   highlights: Record<number, CellKind>
+  pointers?: Record<string, number>  // label -> node id, drawn above that node
 }
 
 export interface GraphNode {

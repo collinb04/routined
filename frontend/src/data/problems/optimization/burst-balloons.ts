@@ -7,8 +7,10 @@ export default {
     { input: 'nums = [3,1,5,8]', output: '167', explanation: 'Burst 1: 3*1*5=15. Burst 5: 3*5*8=120. Burst 3: 1*3*8=24. Burst 8: 1*8*1=8. Total = 167.' },
   ],
   constraints: ['n == nums.length', '1 ≤ n ≤ 300', '0 ≤ nums[i] ≤ 100'],
-  starterCode: `def max_coins(nums):
-  pass`,
+  starterCode: `class Solution:
+    def max_coins(self, nums):
+        pass`,
+  runnerSetup: 'max_coins = Solution().max_coins',
   functionName: 'max_coins',
   conceptId: 'dp-2d',
   testCases: [
@@ -16,12 +18,13 @@ export default {
     { label: 'Single', args: [[1]], expected: 1 },
     { label: 'Two', args: [[1,5]], expected: 10 },
   ],
-  bruteHint: 'Describe the brute-force approach of trying every possible order of bursting balloons and explain why that\'s factorial in the number of balloons.',
-  optimizeHint: 'Name the trick of choosing which balloon is burst last within a range so its subproblem depends only on the range\'s two boundaries, enabling a DP table indexed by interval.',
+  bruteHint: 'The brute-force approach tries every possible order of bursting the n balloons, recursively branching into a choice of which balloon to pop next and computing the total coins earned for that full ordering. Since there are n! possible orderings to explore, this brute-force search runs in O(n!) time. How quickly does n! grow once n passes even 10 or 15, compared to the n ≤ 300 you\'re actually given here?',
+  optimizeComplexity: { time: 'O(n³)', space: 'O(n²)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 300 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 300' },
+      question: 'Constraints reveal the complexity budget you have to work within, telling you upfront whether brute force or a polynomial approach is expected. n ≤ 300 tells you…',
       options: [
         { label: 'O(n) or O(n log n) is required',   isCorrect: false, feedback: 'O(n) or O(n log n) would be impressive, but n ≤ 300 is a hint that much slower approaches are fine. At n = 300, even O(n³) is only 27 million operations.' },
         { label: 'O(n³) is acceptable',               isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'coin-formula',
-      question: 'Bursting balloon i earns nums[left] * nums[i] * nums[right]. What makes this formula tricky to reason about?',
+      highlight: { location: 'description', text: 'bursting balloon <code>i</code> earns <code>nums[left] * nums[i] * nums[right]</code> coins' },
+      question: 'Noticing when a formula couples an element to its neighbors warns you that subproblems won\'t be independent, which is exactly the kind of signal that steers you away from a naive approach. Bursting balloon i earns nums[left] * nums[i] * nums[right]. What makes this formula tricky to reason about?',
       options: [
         { label: 'The formula involves three numbers, not two',         isCorrect: false, feedback: 'Three multiplied values aren\'t inherently tricky. The difficulty is that bursting a balloon changes who the neighbors are for every remaining balloon.' },
         { label: 'Bursting one balloon changes the neighbors of others', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'think-last-not-first',
-      question: 'The coin formula depends on which balloons are adjacent. Which perspective untangles the dependencies?',
+      highlight: { location: 'description', text: 'bursting balloon <code>i</code> earns <code>nums[left] * nums[i] * nums[right]</code> coins' },
+      question: 'Recognizing which reasoning direction removes coupling between choices is often the key that turns a tangled recursive mess into a clean DP recurrence. The coin formula depends on which balloons are adjacent. Which perspective untangles the dependencies?',
       options: [
         { label: 'Burst the smallest balloon first',                    isCorrect: false, feedback: 'Greedy by value doesn\'t account for how neighbors interact. Bursting the smallest first might leave expensive neighbors that produce less than a different order would.' },
         { label: 'Think about which balloon is burst last in a range',  isCorrect: true },
@@ -66,7 +71,8 @@ export default {
     },
     {
       id: 'interval-dp',
-      question: 'The problem decomposes over ranges of balloons. What DP formulation does this suggest?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 300' },
+      question: 'Once you know which variables actually define a subproblem, you know exactly what shape your DP table needs to be. The problem decomposes over ranges of balloons. What DP formulation does this suggest?',
       options: [
         { label: 'dp[i] = max coins from bursting the first i balloons', isCorrect: false, feedback: 'A 1D index can\'t capture which balloons remain in a range. The state needs to represent a contiguous interval, not just a prefix.' },
         { label: 'dp[i][j] = max coins from bursting all balloons in range [i, j]', isCorrect: true },
@@ -80,4 +86,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_coins(self, nums):
+        balloons = [1] + nums + [1]
+        n = len(balloons)
+        dp = [[0] * n for _ in range(n)]
+        for length in range(2, n):
+            for left in range(0, n - length):
+                right = left + length
+                best = 0
+                for k in range(left + 1, right):
+                    coins = balloons[left] * balloons[k] * balloons[right] + dp[left][k] + dp[k][right]
+                    best = max(best, coins)
+                dp[left][right] = best
+        return dp[0][n - 1]`,
+  solutionComplexity: { time: 'O(n³)', space: 'O(n²)' },
+  solutionCaveat: 'Padding <code>nums</code> with a virtual balloon of value <code>1</code> on each side removes the need for any special-case handling of the array\'s real edges — the leftmost and rightmost real balloons simply treat those padding values as their boundary neighbors, exactly like any interior balloon treats its range boundaries.',
+  solutionExplanation: 'Choosing which balloon to burst <code>last</code> within a range, rather than reasoning forward about burst order, is what makes the subproblems independent: whichever balloon <code>k</code> is burst last in range <code>(left, right)</code> is guaranteed to still have <code>balloons[left]</code> and <code>balloons[right]</code> as its immediate neighbors, since everything else in the range was already gone. Trying every possible "last balloon" <code>k</code> and taking the best combination of its coin value plus the optimal value of the two sub-ranges it splits the range into builds the answer up from smaller ranges to the full array.',
 }

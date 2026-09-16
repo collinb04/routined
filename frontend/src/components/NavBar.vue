@@ -54,18 +54,23 @@
                   class="grid gap-1"
                   :style="`grid-template-columns: repeat(${link.dropdown.columns ?? 2}, minmax(0, 1fr))`"
                 >
-                  <a
+                  <component
+                    :is="item.soon ? 'div' : 'a'"
                     v-for="item in link.dropdown.items"
                     :key="item.label"
-                    :href="item.to"
-                    class="flex items-start gap-3 px-3 py-3 rounded-lg hover:bg-[#f5f5f2] transition-colors group"
+                    :href="item.soon ? undefined : item.to"
+                    class="flex items-start gap-3 px-3 py-3 rounded-lg transition-colors group"
+                    :class="item.soon ? 'cursor-not-allowed opacity-60' : 'hover:bg-[#f5f5f2]'"
                   >
                     <span class="mt-0.5 text-gray-400 group-hover:text-gray-600 transition-colors" v-html="item.icon" />
                     <div>
-                      <p class="text-sm font-semibold text-text group-hover:text-black transition-colors">{{ item.label }}</p>
+                      <p class="flex items-center gap-1.5 text-sm font-semibold text-text group-hover:text-black transition-colors">
+                        {{ item.label }}
+                        <span v-if="item.soon" class="text-[10px] font-mono font-normal px-1.5 py-0.5 rounded border border-gray-300 text-text-muted shrink-0">Soon</span>
+                      </p>
                       <p class="text-xs text-text-muted leading-relaxed mt-0.5">{{ item.description }}</p>
                     </div>
-                  </a>
+                  </component>
                 </div>
               </div>
             </Transition>
@@ -97,10 +102,12 @@
         @mouseleave="scheduleCloseDropdown()"
       >
         <button
-          class="w-8 h-8 rounded-full bg-black text-white text-[13px] font-semibold flex items-center justify-center hover:opacity-80 transition-opacity"
+          class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:opacity-80 transition-opacity"
           @click="openDropdown = openDropdown === '__profile__' ? null : '__profile__'"
         >
-          {{ userInitial }}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
         </button>
 
         <Transition
@@ -203,15 +210,18 @@
           <div class="pt-2 pb-1">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-text-muted mb-1">{{ link.label }}</p>
             <div class="flex flex-col">
-              <a
+              <component
+                :is="item.soon ? 'div' : 'a'"
                 v-for="item in link.dropdown.items"
                 :key="item.label"
-                :href="item.to"
-                class="py-2 text-[15px] font-medium text-text hover:translate-x-1.5"
-                @click="mobileOpen = false"
+                :href="item.soon ? undefined : item.to"
+                class="flex items-center gap-1.5 py-2 text-[15px] font-medium text-text"
+                :class="item.soon ? 'opacity-60 cursor-not-allowed' : 'hover:translate-x-1.5'"
+                @click="item.soon ? null : (mobileOpen = false)"
               >
                 {{ item.label }}
-              </a>
+                <span v-if="item.soon" class="text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-300 text-text-muted shrink-0">Soon</span>
+              </component>
             </div>
           </div>
         </template>
@@ -257,7 +267,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { useAuthStore } from '@/stores/auth'
@@ -265,12 +275,6 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const auth   = useAuthStore()
 const auth0  = useAuth0()
-
-const userInitial = computed(() => {
-  const name  = auth.user?.name
-  const email = auth.user?.email
-  return (name?.[0] ?? email?.[0] ?? '?').toUpperCase()
-})
 
 function goGetStarted() {
   mobileOpen.value = false
@@ -319,10 +323,11 @@ const links = [
           icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4l3 3"/></svg>',
         },
         {
-          label: 'The Team',
-          description: 'Meet the people building the product',
-          to: '/about',
-          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+          label: 'Feedback Library',
+          description: 'AI insights into your problem-solving performance history',
+          to: '/feedback',
+          soon: true,
+          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
         },
         {
           label: 'Contact',

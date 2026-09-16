@@ -17,7 +17,7 @@
         </div>
         <h1 class="text-xl font-semibold tracking-tight text-text">Feedback Library</h1>
         <p class="text-sm text-text-dim leading-relaxed max-w-xs">
-          Coming soon — this is where the bug reports and feedback you've submitted will show up.
+          Coming soon — AI-driven insights into your problem-solving performance over time.
         </p>
       </div>
 

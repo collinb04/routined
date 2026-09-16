@@ -8,23 +8,24 @@ export default {
     { input: 'digits = ""', output: '[]' },
   ],
   constraints: ['0 <= digits.length <= 4', 'digits[i] is a digit in the range [2,9]'],
-  starterCode: `def letter_combinations(digits):
-  pass`,
+  starterCode: `class Solution:
+    def letter_combinations(self, digits):
+        pass`,
   functionName: 'letter_combinations_run',
   conceptId: 'backtracking',
   runnerSetup: `def letter_combinations_run(digits):
-  result = letter_combinations(digits)
+  result = Solution().letter_combinations(digits)
   return sorted(result) if result else []`,
   testCases: [
     { label: '"23"', args: ['23'], expected: ['ad','ae','af','bd','be','bf','cd','ce','cf'] },
     { label: 'empty', args: [''], expected: [] },
   ],
-  bruteHint: 'Describe building up the combinations iteratively, using a nested loop per digit to expand a growing list of partial strings at every step',
-  optimizeHint: 'Name the recursive technique that builds one combination at a time, one character per digit, undoing each choice before trying the next',
+  bruteHint: 'A brute-force approach expands a list of partial combinations one digit at a time: start with [""], then for each digit, loop over its letters and append each one to every partial string built so far. This costs O(4ⁿ · n) time and space, since it builds and stores all 4ⁿ possible strings of length n. The trouble is that the number of digits — and therefore the number of nested loops — is not fixed in advance. How would you structure this expansion when you do not know ahead of time how many loop levels you will need?',
+  optimizeComplexity: { time: 'O(4ⁿ · n)', space: 'O(n)' },
   clues: [
     {
       id: 'output-count',
-      question: '"23" produces 9 combinations. How many does "234" produce, and what pattern does this follow?',
+      question: 'Counting how many outputs an input can produce often reveals whether growth is additive or multiplicative, which hints at the right traversal shape. "23" produces 9 combinations. How many does "234" produce, and what pattern does this follow?',
       options: [
         { label: 'Additive: 3 + 3 + 3 = 9 combinations', isCorrect: false, feedback: 'Additive would be correct if you were listing letters from each digit separately. But you need every combination of one letter per digit — that is multiplicative. "234" gives 3 × 3 × 3 = 27 combinations.' },
         { label: 'Multiplicative: letters-per-digit₁ × letters-per-digit₂ × …', isCorrect: true },
@@ -39,10 +40,11 @@ export default {
     },
     {
       id: 'empty-input',
-      question: '"If the input is empty, return an empty list." Why is this an explicit constraint rather than falling out naturally?',
+      highlight: { location: 'description', text: 'If the input is empty, return an empty list.' },
+      question: 'Edge cases spelled out explicitly in the problem statement often expose an off-by-one or default-case bug in the natural termination logic of an algorithm. "If the input is empty, return an empty list." Why is this an explicit constraint rather than falling out naturally?',
       options: [
         { label: 'An empty digits string has no digit mapping to apply', isCorrect: false, feedback: 'That is true — but a naive backtracking implementation starting with an empty current combination would add that empty string to results, returning [""] instead of []. The constraint guards against that off-by-one.' },
-        { label: 'Backtracking would otherwise return [\"\"] instead of []', isCorrect: true },
+        { label: 'The natural recursive base case would otherwise return [""] instead of []', isCorrect: true },
         { label: 'The constraint is purely for input validation', isCorrect: false, feedback: 'The constraint has a concrete effect on the algorithm. Without an explicit check, a backtracking solution that adds current to results when index == len(digits) would output [""] for empty input — wrong answer.' },
         { label: 'An empty list avoids a division-by-zero error', isCorrect: false, feedback: 'There is no division involved. The constraint exists because backtracking\'s natural termination condition (index reaches end) would fire immediately on empty input and add an empty string to results.' },
       ],
@@ -54,7 +56,8 @@ export default {
     },
     {
       id: 'backtracking-structure',
-      question: 'To generate all combinations of "23", you try each letter for digit "2" and for each one try all letters for digit "3". What algorithmic pattern does this describe?',
+      highlight: { location: 'description', text: 'return all possible letter combinations that the number could represent' },
+      question: 'Recognizing when a problem requires enumerating every possible outcome, rather than a single optimal one, is what points you toward the right search technique. To generate all combinations of "23", you try each letter for digit "2" and for each one try all letters for digit "3". What algorithmic pattern does this describe?',
       options: [
         { label: 'Dynamic programming — build combinations bottom-up', isCorrect: false, feedback: 'DP builds optimal solutions from subproblems. Here there is no optimization — you need every combination. Backtracking explores the full search space by making choices and recursing.' },
         { label: 'Backtracking — build combination one character at a time', isCorrect: true },
@@ -69,7 +72,8 @@ export default {
     },
     {
       id: 'constraint-output-size',
-      question: 'digits.length ≤ 4. With at most 4 letters per digit, what is the maximum number of combinations to return?',
+      highlight: { location: 'constraint', text: '0 <= digits.length <= 4' },
+      question: 'Small numeric bounds in the constraints are often a signal that full enumeration, rather than a cleverer optimization, is the intended approach. digits.length ≤ 4. With at most 4 letters per digit, what is the maximum number of combinations to return?',
       options: [
         { label: '4 × 4 = 16', isCorrect: false, feedback: '16 would be correct if you were picking 2 letters from digits of size 4. With 4 digits each contributing up to 4 letters, the count is 4⁴ = 256 — one combination per path through the decision tree.' },
         { label: '4⁴ = 256', isCorrect: true },
@@ -83,4 +87,30 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def letter_combinations(self, digits):
+        if not digits:
+            return []
+
+        mapping = {
+            '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+            '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+        }
+        result = []
+        path = []
+
+        def backtrack(index):
+            if index == len(digits):
+                result.append(''.join(path))
+                return
+            for ch in mapping[digits[index]]:
+                path.append(ch)
+                backtrack(index + 1)
+                path.pop()
+
+        backtrack(0)
+        return result`,
+  solutionComplexity: { time: 'O(4ⁿ · n)', space: 'O(n)' },
+  solutionCaveat: 'The empty-input check runs <code>before</code> backtracking starts — without it, the standard base case (<code>index == len(digits)</code>) would fire immediately on an empty string and append the empty combination <code>""</code>, producing <code>[""]</code> instead of the required <code>[]</code>.',
+  solutionExplanation: 'The number of combinations grows multiplicatively, not additively — each digit contributes an independent factor of however many letters map to it — which is exactly the shape backtracking handles naturally: recurse one digit at a time, trying every one of that digit\'s letters and appending it to the combination being built. Since the recursion depth is always <code>digits.length</code> (at most 4) and each level branches into at most 4 letters, the entire search space is small enough that no pruning is needed — every path bottoms out at a complete, valid combination.',
 }

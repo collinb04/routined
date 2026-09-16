@@ -9,8 +9,10 @@ export default {
     { input: 'num = "10", k = 2', output: '"0"' },
   ],
   constraints: ['1 ≤ k ≤ num.length ≤ 10⁵', 'num consists of digits only', 'num does not have leading zeros except "0"'],
-  starterCode: `def remove_k_digits(num, k):
-  pass`,
+  starterCode: `class Solution:
+    def remove_k_digits(self, num, k):
+        pass`,
+  runnerSetup: 'remove_k_digits = Solution().remove_k_digits',
   functionName: 'remove_k_digits',
   conceptId: 'monotonic-stack',
   testCases: [
@@ -19,12 +21,13 @@ export default {
     { label: 'Remove all', args: ['10',2], expected: '0' },
     { label: 'Already min', args: ['123',1], expected: '12' },
   ],
-  bruteHint: 'Describe trying every combination of k digit removals and comparing the results, and explain why that is exponential',
-  optimizeHint: 'Name the structure that maintains increasing digits, popping larger ones when a smaller digit appears and removals remain',
+  bruteHint: 'Imagine trying every possible way to choose which k digits to remove from num, building each resulting number and comparing them all to find the smallest. The number of ways to choose k positions out of n grows combinatorially, exploding as n approaches 10⁵. If you had to enumerate and compare all of these candidates, how quickly would that become impossible to run in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-input-size',
-      question: 'num.length ≤ 10⁵ tells you…',
+      question: 'Input size sets the ceiling on how much total work your approach can perform. num.length ≤ 10⁵ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ k ≤ num.length ≤ 10⁵' },
       options: [
         { label: 'O(n²) is acceptable — 10¹⁰ is fine', isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations — completely infeasible. You need an approach that processes each digit a constant number of times.' },
         { label: 'O(n) is needed — each digit processed once', isCorrect: true },
@@ -39,7 +42,7 @@ export default {
     },
     {
       id: 'which-digit-to-remove',
-      question: 'To minimize the number, which digit should you remove first when given a choice?',
+      question: 'The order you consider removals in determines whether the result stays minimal at each step. To minimize the number, which digit should you remove first when given a choice?',
       options: [
         { label: 'The largest digit in the entire number', isCorrect: false, feedback: 'Removing the global maximum does not always minimize the result. The position of the digit matters — a large digit early on is more harmful than a large digit at the end.' },
         { label: 'The leftmost digit that is greater than the one following it', isCorrect: true },
@@ -54,7 +57,8 @@ export default {
     },
     {
       id: 'leading-zeros',
-      question: '"Return the result as a string (no leading zeros)." When does this situation arise?',
+      question: 'Knowing exactly what the output format forbids tells you what cleanup step you can\'t skip. "Return the result as a string (no leading zeros)." When does this situation arise?',
+      highlight: { location: 'description', text: 'Return the result as a string (no leading zeros).' },
       options: [
         { label: 'When the input contains a zero', isCorrect: false, feedback: 'A zero in the middle does not cause a leading zero unless it ends up at position 0 after removals. Leading zeros only matter for the final output string.' },
         { label: 'When removals leave zeros at the front of the result', isCorrect: true },
@@ -69,7 +73,7 @@ export default {
     },
     {
       id: 'k-exhausted-guarantee',
-      question: 'What if k removals are used up before you reach a peak (e.g., num = "123", k = 1)?',
+      question: 'Handling the case where removals run out early is what separates a correct greedy rule from an incomplete one. What if k removals are used up before you reach a peak (e.g., num = "123", k = 1)?',
       options: [
         { label: 'The algorithm fails — you must always find a peak', isCorrect: false, feedback: 'No failure occurs. When k reaches 0, you simply stop popping. For "123" with k=1, no digit exceeds its successor, so you remove the last digit and return "12".' },
         { label: 'Truncate the remaining digits to length n−k from the left', isCorrect: true },
@@ -83,4 +87,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def remove_k_digits(self, num, k):
+        stack = []
+        for digit in num:
+            while k > 0 and stack and stack[-1] > digit:
+                stack.pop()
+                k -= 1
+            stack.append(digit)
+        if k > 0:
+            stack = stack[:-k]
+        result = ''.join(stack).lstrip('0')
+        return result if result else '0'`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'If the budget <code>k</code> still has removals left after the whole string is scanned (the digits were non-decreasing throughout), the leftover removals must come off the *end* of the stack — those are the least significant digits, so trimming there hurts the number\'s value the least.',
+  solutionExplanation: 'A digit is worth removing whenever something bigger sits immediately to its left, since a smaller digit in a more significant position always produces a smaller number — this is the same "pop while the top is worse than what\'s arriving" pattern as other monotonic-stack problems, just comparing digit values instead of heights or asteroid sizes. Leading zeros left over after all the removals are stripped away, with a fallback to <code>"0"</code> for the case where every digit gets stripped.',
 }

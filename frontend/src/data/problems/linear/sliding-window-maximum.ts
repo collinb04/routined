@@ -8,24 +8,27 @@ export default {
     { input: 'nums = [1], k = 1', output: '[1]' },
   ],
   constraints: ['1 <= nums.length <= 10^5', '-10^4 <= nums[i] <= 10^4', '1 <= k <= nums.length'],
-  starterCode: `def max_sliding_window(nums, k):
-  pass`,
+  starterCode: `class Solution:
+    def max_sliding_window(self, nums, k):
+        pass`,
+  runnerSetup: 'max_sliding_window = Solution().max_sliding_window',
   functionName: 'max_sliding_window',
   conceptId: 'sliding-window',
   testCases: [
     { label: 'k=3', args: [[1,3,-1,-3,5,3,6,7], 3], expected: [3,3,5,5,6,7] },
     { label: 'k=1', args: [[1], 1], expected: [1] },
   ],
-  bruteHint: 'Describe scanning all k elements in every window to find its max, and name the overall time complexity',
-  optimizeHint: 'Name the structure that maintains a monotonic decreasing order of indices as the window slides',
+  bruteHint: 'A brute-force approach re-scans every element inside each window to find its maximum, then slides the window over by one and repeats — that is O(k) work for each of the n−k+1 windows, or O(n·k) overall. Since n can be up to 10^5 and k can be nearly as large, what does that product grow to, and how many operations would that require in the worst case?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(k)' },
   clues: [
     {
       id: 'input-size-complexity',
-      question: 'nums.length ≤ 10⁵. If you scan each window of size k to find its maximum, what is the total cost?',
+      question: 'Constraints often tell you exactly how efficient your solution needs to be. nums.length ≤ 10⁵. If you scan each window of size k to find its maximum, what is the total cost?',
+      highlight: { location: 'constraint', text: '1 <= nums.length <= 10^5' },
       options: [
         { label: 'O(n) — the window slides by one each time', isCorrect: false, feedback: 'The window slides in O(1) steps, but finding the max within each window requires scanning all k elements. That is O(k) per window, not O(1).' },
         { label: 'O(n · k) — up to 10¹⁰ for large k', isCorrect: true },
-        { label: 'O(n log n) — with a heap per window', isCorrect: false, feedback: 'A heap gives O(log k) per insertion/deletion, not O(k) per window. But even O(n log k) can be beaten — the deque approach achieves O(n) total.' },
+        { label: 'O(n log n) — recomputing the max in log time as the window slides', isCorrect: false, feedback: 'A log-time update per element gives O(n log k), not O(k) per window. But even O(n log k) can be beaten — the optimal approach achieves O(n) total.' },
         { label: 'O(k) — you only process k elements', isCorrect: false, feedback: 'There are n−k+1 windows, each of size k. Processing all of them costs O((n−k+1)·k) ≈ O(n·k) total.' },
       ],
       correctFeedback: 'There are n−k+1 windows. Scanning each for its max costs O(k) per window → O(n·k) total. At n = k = 10⁵/2, that is 2.5 billion operations — too slow.',
@@ -36,7 +39,7 @@ export default {
     },
     {
       id: 'dominated-elements',
-      question: 'When a new element enters the window and is larger than some existing elements, can those smaller elements ever be the window maximum?',
+      question: 'Recognizing what can be safely ruled out is often the key to an efficient structure. When a new element enters the window and is larger than some existing elements, can those smaller elements ever be the window maximum?',
       options: [
         { label: 'Yes — they could become max if the larger element leaves', isCorrect: false, feedback: 'A smaller element that entered before a larger one will leave the window first (windows slide right, so older elements exit sooner). If the larger element is still in the window when they overlap, the smaller one is always dominated.' },
         { label: 'No — they are permanently dominated and can be discarded', isCorrect: true },
@@ -51,7 +54,7 @@ export default {
     },
     {
       id: 'deque-structure',
-      question: 'You need to add to one end and remove from both ends efficiently. What structure supports this?',
+      question: 'Matching the required operations to the right structure is what separates a slow solution from a fast one. You need to add to one end and remove from both ends efficiently. What structure supports this?',
       options: [
         { label: 'A stack — O(1) push and pop from one end', isCorrect: false, feedback: 'A stack only gives O(1) access to one end. You need to remove expired elements from the front (left side) as the window slides — a stack cannot do that efficiently.' },
         { label: 'A deque (double-ended queue)', isCorrect: true },
@@ -66,7 +69,8 @@ export default {
     },
     {
       id: 'output-size',
-      question: 'nums.length = n, window size = k. How many values are in the output?',
+      question: 'Knowing exactly how much output is expected helps you verify your loop bounds are correct. nums.length = n, window size = k. How many values are in the output?',
+      highlight: { location: 'constraint', text: '1 <= k <= nums.length' },
       options: [
         { label: 'n values — one per element', isCorrect: false, feedback: 'The first full window does not exist until index k−1. There is no output for the first k−1 positions, giving n−k+1 values total, not n.' },
         { label: 'n − k + 1 values', isCorrect: true },
@@ -80,4 +84,22 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def max_sliding_window(self, nums, k):
+        dq = deque()
+        result = []
+        for i, n in enumerate(nums):
+            while dq and nums[dq[-1]] <= n:
+                dq.pop()
+            dq.append(i)
+            if dq[0] <= i - k:
+                dq.popleft()
+            if i >= k - 1:
+                result.append(nums[dq[0]])
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(k)' },
+  solutionCaveat: 'Any index popped from the back of the deque for being <code>&lt;=</code> the incoming value can never become a future window\'s maximum — the new, later value is at least as large and will still be in the window whenever that old index would have been, so discarding it loses nothing.',
+  solutionExplanation: 'The deque holds indices in strictly decreasing value order, front to back, so the front is always the current window\'s maximum — an O(1) lookup instead of an O(k) scan. Sliding the window one step only ever needs two cheap fixes: dropping indices from the back that the new element has already made irrelevant, and dropping the front if it just aged out of the window\'s left edge; both operations happen at most once per index over the whole scan, keeping total work linear.',
 }

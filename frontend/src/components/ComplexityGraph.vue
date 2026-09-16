@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const selected = ref<string | null>(null)
@@ -71,12 +71,17 @@ function draw() {
   const canvas = canvasRef.value
   if (!canvas) return
 
+  // Size the backing store to the canvas's actual displayed width (it's
+  // rendered at 100% of its container, which is wider than the CW×CH design
+  // grid) — otherwise the browser upscales a lower-res bitmap and it blurs.
   const dpr = window.devicePixelRatio || 1
-  canvas.width = CW * dpr
-  canvas.height = CH * dpr
+  const displayWidth = canvas.clientWidth || CW
+  canvas.width = displayWidth * dpr
+  canvas.height = displayWidth * (CH / CW) * dpr
 
   const ctx = canvas.getContext('2d')!
-  ctx.scale(dpr, dpr)
+  const scale = (displayWidth * dpr) / CW
+  ctx.scale(scale, scale)
   ctx.clearRect(0, 0, CW, CH)
 
   // Grid lines
@@ -138,7 +143,12 @@ function draw() {
 
 const selectedCurve = () => CURVES.find(c => c.id === selected.value) ?? null
 
-onMounted(draw)
+onMounted(() => {
+  draw()
+  const ro = new ResizeObserver(draw)
+  ro.observe(canvasRef.value!)
+  onUnmounted(() => ro.disconnect())
+})
 watch(selected, draw)
 </script>
 
@@ -158,7 +168,7 @@ watch(selected, draw)
       <button
         v-for="c in CURVES"
         :key="c.id"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-medium border transition-all"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all"
         :style="selected === c.id
           ? { background: c.color, borderColor: c.color, color: '#fff' }
           : { background: 'transparent', borderColor: '#e5e7eb', color: '#374151' }"

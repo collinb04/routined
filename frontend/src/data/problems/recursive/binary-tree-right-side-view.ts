@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def right_side_view(root):
-  pass`,
+class Solution:
+    def right_side_view(self, root):
+        pass`,
   functionName: 'right_side_view_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def right_side_view_run(arr):
-  return right_side_view(_build(arr))`,
+  return Solution().right_side_view(_build(arr))`,
   testCases: [
     { label: '[1,2,3,null,5,null,4]', args: [[1,2,3,null,5,null,4]], expected: [1,3,4] },
     { label: '[1,null,3]', args: [[1,null,3]], expected: [1,3] },
   ],
-  bruteHint: 'Describe collecting every node into full level lists via BFS, then keeping only the last value from each list',
-  optimizeHint: 'Name the traversal order that lets you record just the last (or first) node seen at each depth directly',
+  bruteHint: 'The brute-force approach runs a full BFS and collects every node\'s value into a list for each level, then afterward throws away everything except the last value in each level\'s list. That does real work to build complete level lists just to discard most of them, and while the 100-node cap keeps it fast in practice, it\'s still wasted effort. Could you track only the last node seen at each depth as you traverse, without ever storing a full level?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'output-structure',
-      question: 'The output is values "ordered from top to bottom." What does that tell you about how to traverse the tree?',
+      highlight: { location: 'description', text: 'ordered from top to bottom' },
+      question: 'When a problem specifies an output ordering like top-to-bottom, that phrasing is usually pointing at the traversal strategy that naturally produces results in that order. The output is values "ordered from top to bottom." What does that tell you about how to traverse the tree?',
       options: [
         { label: 'Traverse depth-first, right side only', isCorrect: false, feedback: 'Depth-first right-side traversal would miss nodes like node 5 in [1,2,3,null,5,null,4], which is visible from the right even though node 3 is to its right at a higher level. You need to process one full level at a time.' },
         { label: 'Process the tree level by level', isCorrect: true },
@@ -57,7 +59,8 @@ def right_side_view_run(arr):
     },
     {
       id: 'visible-node-rule',
-      question: 'In [1,2,3,null,5,null,4], node 4 (not node 5) is visible at depth 2 even though 5 is also at that depth. Why?',
+      highlight: { location: 'description', text: 'the values of the nodes you can see' },
+      question: 'The description defines visibility concretely, as whichever nodes are seen from one side, which gives you a precise rule to apply at every level rather than a vague notion of "rightmost." In [1,2,3,null,5,null,4], node 4 (not node 5) is visible at depth 2 even though 5 is also at that depth. Why?',
       options: [
         { label: 'Node 4 has a higher value than node 5', isCorrect: false, feedback: 'Visibility has nothing to do with node values — it depends on position. The rightmost node at each level is the one visible from the right.' },
         { label: 'Node 4 is the last (rightmost) node at its depth level', isCorrect: true },
@@ -72,7 +75,8 @@ def right_side_view_run(arr):
     },
     {
       id: 'empty-tree-edge',
-      question: 'The number of nodes can be 0. What should the output be for an empty tree?',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [0, 100]' },
+      question: 'A constraint whose lower bound allows zero elements is a direct signal to explicitly handle the empty-input case before your main traversal logic runs. The number of nodes can be 0. What should the output be for an empty tree?',
       options: [
         { label: 'Return [null]', isCorrect: false, feedback: 'An empty tree has no nodes to see, so the output is an empty list — not a list containing null.' },
         { label: 'Return []', isCorrect: true },
@@ -86,4 +90,25 @@ def right_side_view_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def right_side_view(self, root):
+        if not root:
+            return []
+        result = []
+        queue = [root]
+        while queue:
+            level_size = len(queue)
+            next_queue = []
+            for i, node in enumerate(queue):
+                if i == level_size - 1:
+                    result.append(node.val)
+                if node.left:
+                    next_queue.append(node.left)
+                if node.right:
+                    next_queue.append(node.right)
+            queue = next_queue
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The visible node at each level is whichever one is <code>last</code> in left-to-right BFS order — not necessarily a right child — so a level whose rightmost branch is missing still correctly surfaces whatever left-side node happens to be furthest right at that depth.',
+  solutionExplanation: 'Processing the tree one full level at a time and recording only the final node encountered in each level\'s left-to-right sweep is exactly what "visible from the right" means: every node earlier in that sweep has something to its right at the same depth blocking the view, while the last one has nothing blocking it. An empty tree short-circuits to an empty result immediately, since there are no levels at all to view.',
 }

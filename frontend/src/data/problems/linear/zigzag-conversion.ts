@@ -8,8 +8,10 @@ export default {
     { input: 's = "PAYPALISHIRING", numRows = 4', output: '"PINALSIGYAHRPI"' },
   ],
   constraints: ['1 ≤ s.length ≤ 1000', 's consists of English letters, \',\' and \'.\'', '1 ≤ numRows ≤ 1000'],
-  starterCode: `def convert(s, num_rows):
-  pass`,
+  starterCode: `class Solution:
+    def convert(self, s, num_rows):
+        pass`,
+  runnerSetup: 'convert = Solution().convert',
   functionName: 'convert',
   conceptId: 'strings',
   testCases: [
@@ -17,12 +19,12 @@ export default {
     { label: '4 rows', args: ['PAYPALISHIRING',4], expected: 'PINALSIGYAHRPI' },
     { label: '1 row', args: ['A',1], expected: 'A' },
   ],
-  bruteHint: 'Describe simulating the full 2D zigzag grid and reading it off afterward, and its space cost',
-  optimizeHint: 'Name the technique that appends each character to one of numRows buffers in a single pass, tracking direction',
+  bruteHint: 'A brute-force approach builds the actual zigzag as a full numRows × n grid, placing each character at its computed row and column, then reads the filled cells row by row to assemble the answer. This grid takes O(numRows × n) space even though at most one row is ever touched per character, leaving most of the grid empty. With s up to 1000 characters and numRows up to 1000, how much space is wasted here compared to only keeping numRows growing strings?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'simulate-with-row-buckets',
-      question: 'Characters are placed row by row in a zigzag, then read back row by row. What approach models this directly?',
+      question: 'When a problem describes a physical layout, look for an approach that mirrors that layout directly rather than deriving a formula. Characters are placed row by row in a zigzag, then read back row by row. What approach models this directly?',
       options: [
         { label: 'Compute the output index of each character mathematically', isCorrect: false, feedback: 'A direct index formula works but is complex to derive correctly for each row. Simulating the zigzag with row buckets is simpler: assign each character to the row it lands in, then concatenate.' },
         { label: 'Maintain one string per row and append characters as you traverse', isCorrect: true },
@@ -37,7 +39,7 @@ export default {
     },
     {
       id: 'direction-reversal',
-      question: 'The zigzag goes down then up, repeating. When does the direction reverse?',
+      question: 'Getting the traversal logic right depends on pinpointing the exact trigger for each state change. The zigzag goes down then up, repeating. When does the direction reverse?',
       options: [
         { label: 'Every numRows characters', isCorrect: false, feedback: 'Direction reverses at the boundary rows (0 and numRows-1), not after a fixed count of characters. The period is 2 × (numRows - 1) characters, but the reversal point is determined by the row index.' },
         { label: 'When the current row reaches 0 or numRows - 1', isCorrect: true },
@@ -52,7 +54,8 @@ export default {
     },
     {
       id: 'single-row-edge-case',
-      question: '1 ≤ numRows ≤ 1000. What happens when numRows = 1?',
+      question: 'Edge cases at the boundaries of the input constraints often reveal whether your general approach still holds. 1 ≤ numRows ≤ 1000. What happens when numRows = 1?',
+      highlight: { location: 'constraint', text: '1 ≤ numRows ≤ 1000' },
       options: [
         { label: 'The zigzag has no diagonals — return s unchanged', isCorrect: true },
         { label: 'The output is the reverse of s', isCorrect: false, feedback: 'With one row, every character lands in row 0 in the original order. No reversal occurs — the output equals the input.' },
@@ -66,4 +69,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def convert(self, s, num_rows):
+        if num_rows == 1:
+            return s
+        rows = [''] * num_rows
+        cur_row = 0
+        direction = -1
+        for ch in s:
+            rows[cur_row] += ch
+            if cur_row == 0 or cur_row == num_rows - 1:
+                direction = -direction
+            cur_row += direction
+        return ''.join(rows)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Flipping <code>direction</code> whenever the current row hits either the top (0) or the bottom (<code>num_rows - 1</code>) is what produces the actual "bounce" of a zigzag — a single-direction walk down and back up, rather than needing to compute each character\'s exact (row, column) coordinates in a full grid.',
+  solutionExplanation: 'A character\'s row only ever needs to bounce back and forth between 0 and <code>num_rows - 1</code>, so tracking just the current row and a direction (+1 or -1) reproduces the zigzag path without ever building the 2D grid it visually represents. Appending each character directly onto a small array of growing strings — one per row — means the final answer is just those rows concatenated top to bottom, in O(n) time using only O(n) space for the output itself.',
 }

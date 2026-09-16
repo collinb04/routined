@@ -11,10 +11,9 @@ export default {
     '1 ≤ nums.length ≤ 10³',
     '-10⁴ ≤ nums[i] ≤ 10⁴',
   ],
-  starterCode: `def insertion_sort(nums):
-  nums = nums[:]  # work on a copy
-  # Hint: for each element, shift larger sorted elements right, then insert
-  pass`,
+  starterCode: `class Solution:
+    def insertion_sort(self, nums):
+        pass`,
   functionName: 'insertion_sort',
   conceptId: 'sorting',
   runnerSetup: `
@@ -24,7 +23,7 @@ def __no_sort(*a, **kw):
   raise RuntimeError("sorted() and list.sort() are disabled — implement the algorithm manually.")
 
 __b.sorted = __no_sort
-list.sort = lambda *a, **kw: __no_sort()
+insertion_sort = Solution().insertion_sort
 `,
   testCases: [
     { label: 'Basic', args: [[4, 3, 2, 10, 12, 1, 5, 6]], expected: [1, 2, 3, 4, 5, 6, 10, 12] },
@@ -33,12 +32,13 @@ list.sort = lambda *a, **kw: __no_sort()
     { label: 'Duplicates', args: [[3, 1, 2, 1, 3]], expected: [1, 1, 2, 3, 3] },
     { label: 'Single element', args: [[7]], expected: [7] },
   ],
-  bruteHint: 'Describe insertion sort\'s core mechanism — shifting larger sorted elements right to insert each new one — and why it\'s O(n²) in the worst case',
-  optimizeHint: 'Explain insertion sort\'s O(n) best case on nearly-sorted input, contrasted with its O(n²) worst case',
+  bruteHint: 'Insertion sort builds the sorted portion one element at a time: for each new element, shift every larger element in the sorted prefix one position to the right, then drop the new element into the resulting gap. In the worst case — a reverse-sorted array — every new element must shift past all previously sorted elements, giving O(n²) time overall. What loop structure lets you shift elements right while searching backward for the insertion point?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 1,000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10³' },
+      question: 'Constraint bounds tell you which complexities are acceptable before you write a single line of code. n ≤ 1,000 tells you…',
       options: [
         { label: 'O(n log n) is required', isCorrect: false, feedback: 'O(n log n) would be faster but isn\'t required here. At n = 1,000, O(n²) is 1 million operations — well within reach. The constraint permits the simpler nested-loop approach.' },
         { label: 'O(n²) is acceptable', isCorrect: true },
@@ -53,7 +53,8 @@ list.sort = lambda *a, **kw: __no_sort()
     },
     {
       id: 'algorithm-mechanism',
-      question: '"Insert each new element into its correct position" in the sorted prefix. This implies…',
+      highlight: { location: 'description', text: 'each new element into its correct position' },
+      question: 'The problem description often names the core mechanic you need to implement. "Insert each new element into its correct position" in the sorted prefix. This implies…',
       options: [
         { label: 'Compare every adjacent pair and swap if out of order', isCorrect: false, feedback: 'Comparing all adjacent pairs across the whole array each pass is bubble sort, not insertion sort. Insertion sort works on one new element at a time, shifting only the sorted prefix to make room.' },
         { label: 'Shift larger sorted elements right to open a slot, then place the element', isCorrect: true },
@@ -68,11 +69,11 @@ list.sort = lambda *a, **kw: __no_sort()
     },
     {
       id: 'best-case-behavior',
-      question: '"Already sorted" is one of the test cases. What is insertion sort\'s complexity on an already-sorted array?',
+      question: 'Test cases can reveal edge-case behavior that shapes an algorithm\'s real-world performance. "Already sorted" is one of the test cases. What is insertion sort\'s complexity on an already-sorted array?',
       options: [
         { label: 'O(n²) — same as the worst case', isCorrect: false, feedback: 'On a sorted array, the inner loop never shifts — each element is already in place. That reduces the total work to n − 1 comparisons, which is O(n), not O(n²).' },
         { label: 'O(n) — the inner loop body never executes', isCorrect: true },
-        { label: 'O(log n) — binary search finds the insertion point', isCorrect: false, feedback: 'Binary search could find the insertion point in O(log n), but you still need O(n) shifts in the worst case. On a sorted array the shift loop does zero work, giving O(n) total — not O(log n).' },
+        { label: 'O(log n) — repeatedly halving the search range locates the insertion point', isCorrect: false, feedback: 'Binary search could find the insertion point in O(log n), but you still need O(n) shifts in the worst case. On a sorted array the shift loop does zero work, giving O(n) total — not O(log n).' },
         { label: 'O(1) — no work is needed', isCorrect: false, feedback: 'You still need to iterate through all n elements to confirm each is already in place. That\'s O(n) comparisons even when no shifts are made.' },
       ],
       correctFeedback: 'On a sorted array, every element is already ≥ all preceding elements, so the inner shift loop exits immediately after one comparison. The outer loop still runs n − 1 times, giving O(n) total.',
@@ -82,4 +83,18 @@ list.sort = lambda *a, **kw: __no_sort()
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def insertion_sort(self, nums):
+        nums = nums[:]
+        for i in range(1, len(nums)):
+            key = nums[i]
+            j = i - 1
+            while j >= 0 and nums[j] > key:
+                nums[j + 1] = nums[j]
+                j -= 1
+            nums[j + 1] = key
+        return nums`,
+  solutionComplexity: { time: 'O(n²) worst case, O(n) best case', space: 'O(1) extra' },
+  solutionCaveat: 'Shifting stops as soon as a sorted element <code>&lt;= key</code> is found — not <code>&lt;</code> — which preserves the relative order of equal elements exactly as they appeared in the input, a property (stability) that would break if the comparison flipped.',
+  solutionExplanation: 'The array is conceptually split into a sorted prefix (already placed) and an unsorted remainder — each iteration takes the next unsorted element and shifts every larger element in the sorted prefix one slot to the right until it finds the key\'s correct resting place, exactly how a person sorts playing cards in hand one at a time. On an already-sorted input, no element is ever larger than the key, so the inner loop never shifts anything, which is what makes the best case O(n) instead of O(n²).',
 }

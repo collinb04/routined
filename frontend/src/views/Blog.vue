@@ -20,7 +20,7 @@
 
         <!-- Sidebar header -->
         <div class="flex items-center justify-between px-2 pt-6 pb-3">
-          <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Learn</span>
+          <span class="text-[10px] font-medium uppercase tracking-widest font-mono text-text-muted">Learn</span>
           <div class="flex items-center gap-1">
             <!-- Search button -->
             <button
@@ -52,7 +52,12 @@
             : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
           @click="navigateToId('__intro')"
         >
-          Intro
+          <span class="flex items-center gap-1.5">
+            Intro
+            <svg v-if="completed.has('__intro')" class="ml-auto shrink-0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+          </span>
         </button>
         <button
           class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-0.5"
@@ -61,7 +66,12 @@
             : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
           @click="navigateToId('__guide')"
         >
-          Guide to Learning
+          <span class="flex items-center gap-1.5">
+            Guide to Learning
+            <svg v-if="completed.has('__guide')" class="ml-auto shrink-0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+          </span>
         </button>
         <button
           class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-3"
@@ -70,7 +80,21 @@
             : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
           @click="navigateToId('__complexity')"
         >
-          Understanding Complexity
+          <span class="flex items-center gap-1.5">
+            Understanding Complexity
+            <svg v-if="completed.has('__complexity')" class="ml-auto shrink-0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+          </span>
+        </button>
+        <button
+          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-3"
+          :class="activeView === 'map'
+            ? 'border-black text-text bg-black/5'
+            : 'border-transparent text-text-muted hover:bg-black/5 hover:text-text'"
+          @click="navigateToId('__map')"
+        >
+          Structure of Learning
         </button>
 
         <!-- Cluster accordion -->
@@ -82,7 +106,7 @@
             @click="toggleCluster(cluster.id)"
           >
             <span class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full shrink-0" :style="{ background: cluster.color }" />
+              <span class="w-2 h-2 rounded-lg shrink-0" :style="{ background: cluster.color }" />
               {{ cluster.label }}
             </span>
             <svg
@@ -151,26 +175,30 @@
     <main class="flex-1 min-w-0">
 
       <!-- Top bar with sidebar toggle -->
-      <div class="sticky top-16 z-10 bg-transparent flex items-center gap-3 px-5 sm:px-10 pt-6 pb-2">
-        <button
-          class="p-1.5 -ml-1.5 rounded-md text-text-muted hover:text-text hover:bg-black/5 transition-colors"
-          @click="sidebarOpen = !sidebarOpen"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="18" height="18" x="3" y="3" rx="2"/>
-            <path d="M9 3v18"/>
-          </svg>
-        </button>
-        <!-- Breadcrumb -->
-        <div class="flex items-center gap-1.5 text-xs text-text-muted">
-          <template v-if="activeView === 'map'">
-            <span class="text-text">Structure of Learning</span>
-          </template>
-          <template v-else-if="selectedSection">
-            <button class="hover:text-text transition-colors" @click="navigateToId('__map')">Map</button>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            <span class="text-text">{{ selectedSection.label }}</span>
-          </template>
+      <div class="sticky top-16 z-10 bg-transparent flex items-center px-5 sm:px-10 pt-6 pb-2">
+        <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm px-3 py-1.5">
+          <button
+            class="p-1.5 -m-1.5 rounded-md text-text-muted hover:text-text hover:bg-black/5 transition-colors"
+            @click="sidebarOpen = !sidebarOpen"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M9 3v18"/>
+            </svg>
+          </button>
+          <!-- Breadcrumb -->
+          <div class="flex items-center gap-1.5 text-xs text-text-muted">
+            <template v-if="activeView === 'map'">
+              <span class="text-text">Structure of Learning</span>
+            </template>
+            <template v-else-if="selectedSection">
+              <template v-if="clusterForSection(selectedSection.id)">
+                <span>{{ clusterForSection(selectedSection.id)?.label }}</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+              </template>
+              <span class="text-text">{{ selectedSection.label }}</span>
+            </template>
+          </div>
         </div>
       </div>
 
@@ -195,7 +223,7 @@
 
         <!-- Cluster map -->
         <div class="max-w-5xl mx-auto w-full px-4 sm:px-8">
-          <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="aspect-ratio: 720/480;">
+          <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="aspect-ratio: 720/500;">
             <ClusterMap
               @select-cluster="selectCluster"
               @select-concept="navigateToId"
@@ -206,17 +234,17 @@
         <!-- Selected cluster detail -->
         <div v-if="activeCluster" class="max-w-5xl mx-auto w-full px-5 sm:px-10 py-8 flex flex-col gap-5">
           <template v-for="cluster in CLUSTERS" :key="cluster.id">
-            <div v-if="cluster.id === activeCluster" class="flex flex-col gap-5">
+            <div v-if="cluster.id === activeCluster" class="flex flex-col gap-5 cluster-scoped" :style="{ '--cluster-color': cluster.color }">
 
               <!-- Cluster header -->
               <div class="flex items-center gap-3">
-                <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: cluster.color }" />
+                <span class="w-3 h-3 rounded-lg shrink-0" :style="{ background: cluster.color }" />
                 <h2 class="text-xl font-medium text-text">{{ cluster.label }}</h2>
               </div>
 
               <!-- Central primitive callout -->
               <div class="flex gap-4">
-                <div class="w-1 rounded-full shrink-0" :style="{ background: cluster.color }" />
+                <div class="w-1 rounded-lg shrink-0" :style="{ background: cluster.color }" />
                 <div class="flex flex-col gap-2 py-1">
                   <span
                     class="text-[10px] font-mono px-1.5 py-0.5 rounded border w-fit"
@@ -229,14 +257,14 @@
 
               <!-- Why this groups together -->
               <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Why this groups together</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Why this groups together</span>
                 <div class="h-px bg-gray-100" />
                 <p class="text-sm text-text-dim leading-relaxed">{{ cluster.why }}</p>
               </div>
 
               <!-- Concepts in order -->
               <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Internal learning order</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Internal learning order</span>
                 <div class="h-px bg-gray-100" />
                 <div class="flex flex-col gap-2">
                   <button
@@ -258,14 +286,15 @@
 
               <!-- Transfer hooks -->
               <div v-if="cluster.transferHooks.length" class="flex flex-col gap-2">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted px-1">Connected clusters</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted px-1">Connected clusters</span>
                 <div
                   v-for="hook in cluster.transferHooks"
                   :key="hook.targetId"
                   class="bg-white rounded-2xl p-5 shadow-sm flex items-start gap-4 cursor-pointer hover:shadow-md transition-shadow"
+                  :style="{ '--cluster-color': CLUSTERS.find(c => c.id === hook.targetId)?.color }"
                   @click="selectCluster(hook.targetId)"
                 >
-                  <div class="w-2 h-2 rounded-full mt-1.5 shrink-0" :style="{ background: CLUSTERS.find(c => c.id === hook.targetId)?.color }" />
+                  <div class="w-2 h-2 rounded-lg mt-1.5 shrink-0" :style="{ background: CLUSTERS.find(c => c.id === hook.targetId)?.color }" />
                   <div class="flex flex-col gap-1 flex-1">
                     <span class="text-[11px] font-semibold text-text-muted uppercase tracking-widest">
                       {{ CLUSTERS.find(c => c.id === hook.targetId)?.label }}
@@ -304,7 +333,7 @@
         <!-- Section 1: Why static content matters -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">01</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">01</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">Why the static content matters</h2>
@@ -315,7 +344,7 @@
             </p>
             <div class="flex flex-col gap-3 pt-1">
               <div v-for="point in whyPoints" :key="point" class="flex items-start gap-3">
-                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
                 <span class="text-sm text-text-dim leading-relaxed">{{ point }}</span>
               </div>
             </div>
@@ -325,7 +354,7 @@
         <!-- Section 2: The analogy (DS / Algs / Patterns) -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">02</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">02</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">Materials, tools, and blueprints</h2>
@@ -334,7 +363,7 @@
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div v-for="card in analogyCards" :key="card.label" class="bg-white rounded-2xl p-5 shadow-sm flex flex-col gap-2">
-              <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">{{ card.label }}</span>
+              <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">{{ card.label }}</span>
               <div class="h-px bg-gray-100" />
               <p class="text-[13px] font-medium text-text">{{ card.analogy }}</p>
               <p class="text-xs text-text-dim leading-relaxed">{{ card.description }}</p>
@@ -345,7 +374,7 @@
         <!-- Section 3: What, why, how -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">03</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">03</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">The what, why, and how</h2>
@@ -366,7 +395,7 @@
         <!-- Section 4: How a DSA interview problem works -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">04</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">04</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">How a DSA interview problem actually works</h2>
@@ -396,11 +425,11 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-11">
               <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Rules out</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Rules out</span>
                 <span class="text-xs text-text-dim leading-relaxed">Dataset is enormous → backtracking is off the table. Anything exponential is dead on arrival.</span>
               </div>
               <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Highlights</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Highlights</span>
                 <span class="text-xs text-text-dim leading-relaxed">No duplicates allowed → a set or hash map enforces that efficiently and naturally.</span>
               </div>
             </div>
@@ -438,7 +467,7 @@
         <!-- Section 5: DSA problem debrief -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">05</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">05</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">The DSA problem debrief</h2>
@@ -502,7 +531,7 @@
         <!-- Section 1: Information abstraction -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">01</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">01</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">Information abstraction</h2>
@@ -515,7 +544,7 @@
             </p>
             <div class="flex flex-col gap-3 pt-1">
               <div v-for="point in abstractionPoints" :key="point" class="flex items-start gap-3">
-                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
                 <span class="text-sm text-text-dim leading-relaxed">{{ point }}</span>
               </div>
             </div>
@@ -525,14 +554,14 @@
         <!-- Section 2: Topics connecting / ROI / prereqs -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">02</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">02</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">Topics connect — learn in the right order</h2>
           <p class="text-sm text-text-dim leading-relaxed">DSA is not a flat list of topics. It's a dependency graph. Knowing its shape saves you hours of frustration.</p>
 
           <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-            <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Return on investment</h3>
+            <h3 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Return on investment</h3>
             <div class="h-px bg-gray-100" />
             <p class="text-sm text-text-dim leading-relaxed">
               Not all topics are equal. Arrays, hash maps, and trees alone cover the majority of real interview problems. 
@@ -543,7 +572,7 @@
           </div>
 
           <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Prerequisite chain examples</h3>
+            <h3 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Prerequisite chain examples</h3>
             <div class="h-px bg-gray-100" />
             <div class="flex flex-col gap-3">
               <div v-for="chain in prereqChains" :key="chain.topic" class="flex items-start gap-3">
@@ -557,7 +586,7 @@
         <!-- Section 3: Cognitive science -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">03</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">03</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">How your brain actually learns</h2>
@@ -567,13 +596,13 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div v-for="principle in cogSciPrinciples" :key="principle.name" class="bg-white rounded-2xl p-5 shadow-sm flex flex-col gap-2.5">
               <div class="flex items-center justify-between gap-3">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">{{ principle.name }}</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">{{ principle.name }}</span>
                 <div class="flex items-center gap-2 shrink-0">
                   <div class="flex flex-col items-end">
                     <span class="text-[11px] text-text-muted">{{ principle.researcher }}</span>
                     <span class="text-[10px] text-text-muted/60">{{ principle.credential }}</span>
                   </div>
-                  <div class="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
+                  <div class="w-7 h-7 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
                     <img v-if="principle.image" :src="principle.image" :alt="principle.researcher" class="w-full h-full object-cover" />
                   </div>
                 </div>
@@ -588,7 +617,7 @@
         <!-- Section 4: How routined facilitates -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">04</span>
+            <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">04</span>
             <div class="flex-1 h-px bg-gray-200" />
           </div>
           <h2 class="text-xl font-medium text-text">How routined puts this into practice</h2>
@@ -653,7 +682,7 @@
             Click any curve to see a plain-English explanation. Big O answers what the worst case scenario is.
           </p>
           <div class="flex gap-4">
-            <div class="w-1 rounded-full bg-accent shrink-0" />
+            <div class="w-1 rounded-lg bg-accent shrink-0" />
             <div class="flex flex-col gap-2 py-1">
               <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Importance</span>
               <p class="text-base font-medium text-text leading-relaxed">Complexity is the difference between a product that scales and one that collapses under load.</p>
@@ -665,23 +694,23 @@
         <ComplexityGraph />
 
         <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-          <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">What matters in practice</h3>
+          <h3 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">What matters in practice</h3>
           <div class="h-px bg-gray-100" />
           <div class="flex flex-col gap-3">
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">O(n²) is a warning sign</strong> — not always wrong, but always worth questioning. If you have a nested loop, ask whether a hash map or two pointers can eliminate the inner one.</span>
             </div>
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">O(n log n) is the sorting ceiling</strong> — the best any comparison-based sort can do. Most well-optimized solutions land here or better.</span>
             </div>
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">O(2ⁿ) means you need memoization</strong> — exponential growth blows up at n=30. If your recursion tree doubles at every step, cache the results (DP).</span>
             </div>
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Space complexity counts too</strong> — an O(n) space solution uses memory proportional to input size. O(1) means you only use a fixed number of extra variables, regardless of n.</span>
             </div>
           </div>
@@ -689,26 +718,26 @@
 
         <!-- Amortized complexity -->
         <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-          <h3 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Amortized complexity</h3>
+          <h3 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Amortized complexity</h3>
           <div class="h-px bg-gray-100" />
           <p class="text-sm text-text-dim leading-relaxed">
             Big O normally describes the cost of <strong class="text-text">one</strong> operation in the worst case. <strong class="text-text">Amortized</strong> complexity instead describes the <em>average</em> cost of an operation over a long sequence of calls — even when a few individual calls are much more expensive than the rest. It is not the same as "average case": average case is about the distribution of inputs, while amortized is a worst-case guarantee about a sequence of operations, regardless of input.
           </p>
           <div class="flex flex-col gap-3">
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Dynamic array append is O(1) amortized</strong> — a Python list over-allocates capacity, so most <code class="text-[13px] bg-[#f5f5f2] rounded px-1">append()</code> calls just write into the spare space in O(1). Occasionally the buffer fills and the list must reallocate and copy every existing element — an O(n) operation. That expensive copy happens rarely enough (roughly every time the size doubles) that its cost, spread evenly across all the cheap appends that came before it, averages out to O(1) per call.</span>
             </div>
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">Hash map insert/lookup is O(1) amortized</strong> — the same idea applies to the underlying bucket array: most insertions are O(1), but a resize-and-rehash of every existing key is O(n) and happens infrequently as the table grows. Averaged over many insertions, the cost per insertion is still O(1).</span>
             </div>
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">The usual proof technique is the "doubling" argument</strong> — if a resize costs O(n) and only happens after n operations have occurred since the last resize, the total resizing work across n operations is bounded by a constant multiple of n. Divide that total by n operations and the amortized cost per operation is O(1).</span>
             </div>
             <div class="flex items-start gap-3">
-              <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
               <span class="text-sm text-text-dim leading-relaxed"><strong class="text-text">It still matters which operation you hit</strong> — "O(1) amortized" does not mean every single call is fast. If a problem is latency-sensitive per-call (like a real-time system), the rare O(n) spike can matter even though the long-run average is O(1). For typical interview analysis, amortized O(1) is treated the same as O(1).</span>
             </div>
           </div>
@@ -738,14 +767,23 @@
               <span class="font-medium">Guide to Learning</span>
             </div>
           </button>
-          <div />
+          <button
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-text hover:border-gray-300 transition-colors group"
+            @click="navigateToId('linear-intro')"
+          >
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] uppercase tracking-widest text-text-muted">Next</span>
+              <span class="font-medium">Continue to Linear cluster</span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted group-hover:text-text transition-colors"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
 
       </div>
 
 
       <!-- Section skeleton -->
-      <div v-else-if="selectedSection" class="max-w-3xl mx-auto px-5 sm:px-10 py-10 flex flex-col gap-4">
+      <div v-else-if="selectedSection" class="max-w-3xl mx-auto px-5 sm:px-10 py-10 flex flex-col gap-4 cluster-scoped" :style="{ '--cluster-color': currentClusterColor }">
 
         <!-- ── Sorting ── -->
         <template v-if="selectedSection.id === 'sorting'">
@@ -769,7 +807,7 @@
           <template v-if="sortingTab === 'intro'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">What is sorting?</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">What is sorting?</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">Sorting rearranges a collection into a defined order — usually ascending. On its own, that's not very exciting. What makes it matter is everything sorting <em>enables</em>: binary search requires a sorted array. Two-pointer techniques often assume sorted input. Finding duplicates, closest pairs, or overlapping intervals all become dramatically simpler once the data has been put in order. Sorting is usually a preprocessing step, not the final answer.</p>
               <p class="text-sm text-text-dim leading-relaxed">In practice, you'll reach for Python's built-in <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">sorted()</code> or <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">.sort()</code> — both use <strong>Timsort</strong>, a hybrid of merge sort and insertion sort that runs in O(n log n) and is stable. Understanding the individual algorithms still matters: the concepts — divide and conquer, invariants, stability — show up everywhere else in DSA.</p>
@@ -777,7 +815,7 @@
 
             <!-- Comparison table -->
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Algorithm comparison</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Algorithm comparison</h2>
               <div class="h-px bg-gray-100" />
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -817,7 +855,7 @@
 
             <!-- Lower bound callout -->
             <div class="flex gap-4">
-              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="w-1 rounded-lg bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
                 <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">No comparison-based sort can beat O(n log n) in the worst case — it's a mathematical lower bound.</p>
@@ -827,7 +865,7 @@
 
             <!-- Python built-in card -->
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Python built-ins</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Python built-ins</h2>
               <div class="h-px bg-gray-100" />
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-2">
@@ -856,7 +894,7 @@
           <template v-else-if="sortingTab === 'merge'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">Imagine you have two separate piles of cards, each already sorted face-up. Merging them into one sorted pile is easy: always take the smaller of the two top cards. You never need to look further down either pile. Merge sort exploits this — it recursively splits the array in half until each piece has one element (trivially sorted), then merges those pieces back together, bottom up.</p>
               <p class="text-sm text-text-dim leading-relaxed">The split costs nothing. All the real work happens in the <strong>merge step</strong>, where two sorted halves are combined in linear time. Because there are log n levels of splitting, and each level does O(n) work in total across all merges, the overall cost is O(n log n) — always, regardless of input order.</p>
@@ -864,24 +902,24 @@
 
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n log n)</span>
                 <span class="text-[11px] text-text-muted">all cases</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n)</span>
                 <span class="text-[11px] text-text-muted">merge buffer</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Stable</span>
                 <span class="text-sm font-semibold text-green">Yes</span>
                 <span class="text-[11px] text-text-muted">equal elements keep order</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">How it works</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col gap-3">
                 <div v-for="(step, i) in SORT_STEPS.merge" :key="i" class="flex gap-3">
@@ -899,7 +937,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <div class="px-6 py-5">
@@ -909,7 +947,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3 flex items-center justify-between">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.merge, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -921,7 +959,7 @@
           <template v-else-if="sortingTab === 'bubble'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">Think of bubbles in a glass of water — lighter bubbles rise to the top. In bubble sort, larger elements "bubble" toward the end of the array. Each pass compares adjacent pairs and swaps them if they're out of order. After one full pass, the largest element is guaranteed to be in its correct final position. After k passes, the k largest elements are correctly placed.</p>
               <p class="text-sm text-text-dim leading-relaxed">Bubble sort is rarely used in production — O(n²) is too slow for large inputs. It earns its place in DSA education because it makes the concept of a <strong>loop invariant</strong> very tangible: you can watch the sorted suffix grow one element per pass and reason about exactly why it works.</p>
@@ -929,24 +967,24 @@
 
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n²)</span>
                 <span class="text-[11px] text-text-muted">O(n) best case</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">in-place</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Stable</span>
                 <span class="text-sm font-semibold text-green">Yes</span>
                 <span class="text-[11px] text-text-muted">adjacent swaps only</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">How it works</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col gap-3">
                 <div v-for="(step, i) in SORT_STEPS.bubble" :key="i" class="flex gap-3">
@@ -964,7 +1002,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <div class="px-6 py-5">
@@ -974,7 +1012,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.bubble, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -986,7 +1024,7 @@
           <template v-else-if="sortingTab === 'insertion'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">Think about how you sort a hand of cards. You pick up one card at a time and slide it left until it's in the right position relative to the cards you're already holding. You don't look at all the remaining cards first — you just maintain a sorted section in your hand and insert each new card where it belongs.</p>
               <p class="text-sm text-text-dim leading-relaxed">Insertion sort works the same way. It maintains a sorted prefix at the front of the array and extends it by one element per pass — shifting existing elements right to open up the correct spot for the new one. It's O(n²) in the worst case, but O(n) when the input is nearly sorted, which makes it exceptionally practical. <strong>Timsort</strong>, Python's built-in algorithm, uses insertion sort for small subarrays (under ~64 elements) because it outperforms merge sort at that scale.</p>
@@ -994,24 +1032,24 @@
 
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n²)</span>
                 <span class="text-[11px] text-text-muted">O(n) if nearly sorted</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">in-place</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Stable</span>
                 <span class="text-sm font-semibold text-green">Yes</span>
                 <span class="text-[11px] text-text-muted">shifts, not swaps</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">How it works</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col gap-3">
                 <div v-for="(step, i) in SORT_STEPS.insertion" :key="i" class="flex gap-3">
@@ -1029,7 +1067,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <div class="px-6 py-5">
@@ -1039,7 +1077,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.insertion, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -1051,7 +1089,7 @@
           <template v-else-if="sortingTab === 'bucket'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">Imagine a postal worker sorting mail for a city. Instead of comparing every letter to every other letter, they first drop each piece into one of many labeled bins — say, by the first digit of the zip code. Within each bin, the volume is small and easy to sort. Then they collect the bins in order. The total work is much less than a full pairwise comparison.</p>
               <p class="text-sm text-text-dim leading-relaxed">Bucket sort does the same thing: distribute input elements into k buckets based on value range, sort each bucket individually (usually with insertion sort), then concatenate. If the input is <strong>uniformly distributed</strong>, each bucket gets roughly n/k elements, and the whole process runs in O(n + k). This is how bucket sort escapes the O(n log n) comparison lower bound — it doesn't compare elements against each other to determine placement; it uses their values directly.</p>
@@ -1059,24 +1097,24 @@
 
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n + k)</span>
                 <span class="text-[11px] text-text-muted">O(n²) worst case</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n + k)</span>
                 <span class="text-[11px] text-text-muted">buckets + output</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Stable</span>
                 <span class="text-sm font-semibold text-green">Yes</span>
                 <span class="text-[11px] text-text-muted">if inner sort is stable</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">How it works</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col gap-3">
                 <div v-for="(step, i) in SORT_STEPS.bucket" :key="i" class="flex gap-3">
@@ -1094,7 +1132,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <div class="px-6 py-5">
@@ -1104,7 +1142,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.bucket, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -1116,7 +1154,7 @@
           <template v-else-if="sortingTab === 'quicksort'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">Picture arranging people at a party by height. You pick one person — the pivot — and ask everyone shorter to move left and everyone taller to move right. Now the pivot is in its exact final position, and you have two independent groups to sort. Apply the same logic recursively to each group. No one compares against anyone outside their group.</p>
               <p class="text-sm text-text-dim leading-relaxed">Quicksort is the fastest comparison sort in practice — not in theory. Its O(n log n) average case is the same as merge sort, but it wins on real hardware due to <strong>cache efficiency</strong>: it sorts in-place, so data stays hot in the CPU cache instead of being copied to a separate buffer. The weakness is the worst case: if the pivot is always the smallest or largest element, partitioning is lopsided and the algorithm degrades to O(n²). Randomizing the pivot selection makes this astronomically unlikely.</p>
@@ -1124,24 +1162,24 @@
 
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(n log n)</span>
                 <span class="text-[11px] text-text-muted">O(n²) worst case</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(log n)</span>
                 <span class="text-[11px] text-text-muted">call stack depth</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Stable</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Stable</span>
                 <span class="text-sm font-semibold text-text-muted">No</span>
                 <span class="text-[11px] text-text-muted">partition swaps disturb order</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">How it works</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">How it works</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col gap-3">
                 <div v-for="(step, i) in SORT_STEPS.quicksort" :key="i" class="flex gap-3">
@@ -1159,7 +1197,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Step-by-step visual</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <div class="px-6 py-5">
@@ -1169,7 +1207,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(SORT_CODE.quicksort, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -1201,7 +1239,7 @@
           <template v-if="bfsDfsTab === 'bfs'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">BFS is like dropping a stone in water — ripples spread outward <strong>level by level</strong>, reaching every node at distance 1 before any node at distance 2. It uses a <strong>queue</strong> (first in, first out) to track what to visit next, processing nodes in the exact order they were discovered.</p>
               <p class="text-sm text-text-dim leading-relaxed">That ordering guarantee is the point. In an unweighted graph, the number of edges on a path is its cost. BFS explores paths in order of increasing edge count, so the first time it reaches a node, it has taken the shortest possible path. Once a node is dequeued, the optimal distance to it is final.</p>
@@ -1209,19 +1247,19 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(V + E)</span>
                 <span class="text-[11px] text-text-muted">each vertex and edge visited once</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(V)</span>
                 <span class="text-[11px] text-text-muted">queue + visited set</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">When to use BFS</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">When to use BFS</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col divide-y divide-gray-100">
                 <div v-for="signal in BFS_SIGNALS" :key="signal.cue" class="flex flex-col gap-0.5 py-3 first:pt-0 last:pb-0">
@@ -1233,7 +1271,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(BFS_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -1241,7 +1279,7 @@
 
             <!-- Key insight -->
             <div class="flex gap-4">
-              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="w-1 rounded-lg bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
                 <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">BFS guarantees shortest path in unweighted graphs — not because it's searching smarter, but because it can't visit anything far before visiting everything close.</p>
@@ -1255,7 +1293,7 @@
           <template v-else-if="bfsDfsTab === 'dfs'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">DFS is like exploring a cave with a single flashlight — go as deep as possible down one tunnel before backtracking and trying the next. It uses a <strong>stack</strong> (or the call stack via recursion) to track the current path. When a dead end is reached, it unwinds to the last unexplored branch.</p>
               <p class="text-sm text-text-dim leading-relaxed">On trees there are no cycles, so DFS naturally terminates and needs no visited set. On graphs, a visited set is mandatory — without it, cycles cause infinite loops. The three tree traversal orders (preorder, inorder, postorder) are DFS with different points at which the node's value is processed.</p>
@@ -1263,19 +1301,19 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Time</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Time</span>
                 <span class="font-mono text-sm font-semibold text-text">O(V + E)</span>
                 <span class="text-[11px] text-text-muted">each vertex and edge visited once</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Space</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Space</span>
                 <span class="font-mono text-sm font-semibold text-text">O(H)</span>
                 <span class="text-[11px] text-text-muted">H = height of recursion / stack</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Tree traversal orders</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Tree traversal orders</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col divide-y divide-gray-100">
                 <div class="flex flex-col gap-0.5 py-3 first:pt-0">
@@ -1294,7 +1332,7 @@
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">When to use DFS</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">When to use DFS</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col divide-y divide-gray-100">
                 <div v-for="signal in DFS_SIGNALS" :key="signal.cue" class="flex flex-col gap-0.5 py-3 first:pt-0 last:pb-0">
@@ -1306,7 +1344,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(DFS_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
@@ -1314,7 +1352,7 @@
 
             <!-- Key insight -->
             <div class="flex gap-4">
-              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="w-1 rounded-lg bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
                 <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">Recursive DFS and iterative DFS with an explicit stack are the same algorithm — the call stack IS a stack.</p>
@@ -1348,32 +1386,42 @@
           <template v-if="stacksQueuesTab === 'stack'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">A stack is like a stack of plates — you add to the top and remove from the top. <strong>LIFO: Last In, First Out.</strong> The most recently added item is always the first to be removed. Only one end is ever accessible; the rest of the stack is hidden.</p>
               <p class="text-sm text-text-dim leading-relaxed">This constraint is the feature. Function calls unwind in reverse order because the runtime uses a call stack — each frame is pushed when a function is called and popped when it returns. DFS works the same way: push the current node, explore, pop when backtracking. Any time you need to undo the last action or process things in reverse order, a stack is the structure.</p>
             </div>
 
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="stack-ops" />
+              </div>
+            </div>
+
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Push</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Push</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">append()</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Pop</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Pop</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">pop()</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Peek</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Peek</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">stack[-1]</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Use cases</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Use cases</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col divide-y divide-gray-100">
                 <div class="flex flex-col gap-0.5 py-3 first:pt-0">
@@ -1397,15 +1445,18 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(STACK_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
             </div>
 
+            <!-- Practice problem -->
+            <PracticeProblemSandbox :problem="sectionProblem" :key="sectionProblem?.id" />
+
             <!-- Key insight -->
             <div class="flex gap-4">
-              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="w-1 rounded-lg bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
                 <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">A stack is a list with a rule. Python's list supports push and pop from the tail in O(1) — that's all a stack is.</p>
@@ -1419,32 +1470,42 @@
           <template v-else-if="stacksQueuesTab === 'queue'">
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">The idea</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">The idea</h2>
               <div class="h-px bg-gray-100" />
               <p class="text-sm text-text-dim leading-relaxed">A queue is like a line at a coffee shop — the first person in line is the first to order. <strong>FIFO: First In, First Out.</strong> Items are added at the back and removed from the front. The order of insertion is preserved exactly.</p>
               <p class="text-sm text-text-dim leading-relaxed">In Python, use <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">collections.deque</code> — a doubly-ended queue that supports O(1) operations at both ends. A regular list can simulate a queue with <code class="font-mono text-xs bg-[#f5f5f2] px-1.5 py-0.5 rounded">pop(0)</code>, but that's O(n) — it shifts every element left. Don't do it.</p>
             </div>
 
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="px-6 pt-5 pb-3">
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Step-by-step visual</h2>
+              </div>
+              <div class="h-px bg-gray-100" />
+              <div class="px-6 py-5">
+                <PatternVisualizer pattern="queue-ops" />
+              </div>
+            </div>
+
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Enqueue</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Enqueue</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">append()</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Dequeue</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Dequeue</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">popleft()</span>
               </div>
               <div class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-                <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted">Peek</span>
+                <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted">Peek</span>
                 <span class="font-mono text-sm font-semibold text-text">O(1)</span>
                 <span class="text-[11px] text-text-muted">queue[0]</span>
               </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Use cases</h2>
+              <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Use cases</h2>
               <div class="h-px bg-gray-100" />
               <div class="flex flex-col divide-y divide-gray-100">
                 <div class="flex flex-col gap-0.5 py-3 first:pt-0">
@@ -1468,15 +1529,18 @@
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div class="px-6 pt-5 pb-3">
-                <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implementation</h2>
+                <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implementation</h2>
               </div>
               <div class="h-px bg-gray-100" />
               <pre class="hljs p-5! m-0! rounded-none!"><code v-html="hljs.highlight(QUEUE_CODE, { language: 'python' }).value" class="font-mono text-[12.5px] leading-relaxed" /></pre>
             </div>
 
+            <!-- Practice problem -->
+            <PracticeProblemSandbox :problem="sectionProblem" :key="sectionProblem?.id" />
+
             <!-- Key insight -->
             <div class="flex gap-4">
-              <div class="w-1 rounded-full bg-accent shrink-0" />
+              <div class="w-1 rounded-lg bg-accent shrink-0" />
               <div class="flex flex-col gap-2 py-1">
                 <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
                 <p class="text-base font-medium text-text leading-relaxed">Never use <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">list.pop(0)</code> as a queue — it's O(n). Use <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">collections.deque</code> with <code class="font-mono text-sm bg-[#f5f5f2] px-1 py-0.5 rounded">popleft()</code>.</p>
@@ -1535,7 +1599,7 @@
         <template v-else>
         <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl shadow-sm flex flex-col">
           <div class="flex items-center justify-between px-6 pt-5 pb-3">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">
               {{ selectedSection.content?.madeSimple ? 'Made Simple' : 'Analogy' }}
             </h2>
             <div class="flex items-center gap-1">
@@ -1568,7 +1632,7 @@
             <p class="text-sm text-text-dim leading-relaxed px-6 pt-2 pb-4" v-html="selectedSection.content.madeSimple.body" />
             <div class="mx-6 mb-5 rounded-xl border border-gray-100 overflow-hidden">
               <div class="px-4 py-2.5 bg-[#f5f5f2] border-b border-gray-100">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Try it — s = "{{ selectedSection.content.madeSimple.visualString }}"</span>
+                <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Try it — s = "{{ selectedSection.content.madeSimple.visualString }}"</span>
               </div>
               <div class="flex flex-col divide-y divide-gray-50">
                 <div v-for="step in selectedSection.content.madeSimple.steps" :key="step.expr" class="flex items-baseline gap-3 px-4 py-3">
@@ -1593,7 +1657,7 @@
         <!-- 2. What / Why / How -->
         <div class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">What / Why / How</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">What / Why / How</h2>
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Conceptual</span>
               <div class="relative group">
@@ -1628,7 +1692,7 @@
         <!-- 3a. Fixed vs Dynamic (arrays only) -->
         <div v-if="selectedSection.content?.fixedVsDynamic" class="bg-white rounded-2xl p-6 flex flex-col gap-5 shadow-sm">
           <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Fixed vs Dynamic Arrays</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Fixed vs Dynamic Arrays</h2>
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Concept</span>
               <div class="relative group">
@@ -1666,7 +1730,7 @@
         <!-- 3b. Memory & Storage (DS only, not cluster intros) -->
         <div v-if="selectedSection.categoryId === 'data-structures' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Memory & Storage</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Memory & Storage</h2>
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Technical</span>
               <div class="relative group">
@@ -1684,21 +1748,21 @@
              v-html="selectedSection.content?.memory?.overview || `Where ${selectedSection.label} lives in memory and how it's laid out — this directly explains the complexity tradeoffs below.`" />
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-1.5">
-              <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Layout</span>
+              <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Layout</span>
               <span class="text-xs leading-relaxed" :class="selectedSection.content?.memory?.layout ? 'text-text-dim' : 'text-text-muted italic'" v-html="selectedSection.content?.memory?.layout || 'e.g. Contiguous block / linked nodes / hash buckets...'" />
             </div>
             <div class="bg-[#f5f5f2] rounded-xl p-4 flex flex-col gap-1.5">
-              <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Implication</span>
+              <span class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Implication</span>
               <span class="text-xs leading-relaxed" :class="selectedSection.content?.memory?.implication ? 'text-text-dim' : 'text-text-muted italic'" v-html="selectedSection.content?.memory?.implication || 'What this layout makes fast or slow, and why...'" />
             </div>
           </div>
         </div>
 
         <!-- 3b. Recognition Signals (Patterns only) -->
-        <div v-if="selectedSection.categoryId === 'patterns'" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm border border-[#3a9ae8]/20">
+        <div v-if="selectedSection.categoryId === 'patterns'" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center gap-2">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Recognition Signals</h2>
-            <span class="text-[10px] font-semibold text-[#3a9ae8] bg-[#3a9ae8]/10 px-2 py-0.5 rounded-full">Key insight</span>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Recognition Signals</h2>
+            <span class="text-[10px] font-semibold text-[#3a9ae8] bg-[#3a9ae8]/10 px-2 py-0.5 rounded-lg">Key insight</span>
           </div>
           <div class="h-px bg-gray-100" />
           <p class="text-sm text-text-muted italic leading-relaxed">
@@ -1722,7 +1786,7 @@
         <!-- 4. Complexity -->
         <div v-if="selectedSection.categoryId !== 'the-connection' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Complexity</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Complexity</h2>
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Technical</span>
               <div class="relative group">
@@ -1759,7 +1823,7 @@
 
         <!-- 5. Pros & Cons (DS only, not cluster intros) -->
         <div v-if="selectedSection.categoryId === 'data-structures' && !selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
-          <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Pros & Cons</h2>
+          <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Pros & Cons</h2>
           <div class="h-px bg-gray-100" />
           <div class="grid grid-cols-2 gap-6">
             <div class="flex flex-col gap-2.5">
@@ -1797,18 +1861,18 @@
 
         <!-- 6. Key Properties -->
         <div class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
-          <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Key Properties</h2>
+          <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Key Properties</h2>
           <div class="h-px bg-gray-100" />
           <ul class="flex flex-col gap-3">
             <template v-if="selectedSection.content?.keyProperties?.length">
               <li v-for="prop in selectedSection.content.keyProperties" :key="prop" class="flex items-start gap-3">
-                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
                 <span class="text-sm text-text-dim leading-relaxed" v-html="prop" />
               </li>
             </template>
             <template v-else>
               <li v-for="i in 4" :key="i" class="flex items-start gap-3">
-                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
                 <span class="text-sm text-text-muted italic leading-relaxed">Key property {{ i }}...</span>
               </li>
             </template>
@@ -1817,18 +1881,18 @@
 
         <!-- 7. Use Cases -->
         <div class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
-          <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Use Cases</h2>
+          <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Use Cases</h2>
           <div class="h-px bg-gray-100" />
           <div class="flex flex-col divide-y divide-gray-50">
             <template v-if="selectedSection.content?.useCases?.length">
               <div v-for="uc in selectedSection.content.useCases" :key="uc" class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
                 <span class="text-sm text-text-dim leading-relaxed" v-html="uc" />
               </div>
             </template>
             <template v-else>
               <div v-for="i in 3" :key="i" class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                <span class="mt-1.5 w-1.5 h-1.5 rounded-lg bg-gray-300 shrink-0" />
                 <span class="text-sm text-text-muted italic leading-relaxed">Use case {{ i }}...</span>
               </div>
             </template>
@@ -1838,7 +1902,7 @@
         <!-- 8. Visuals & Examples -->
         <div v-if="!selectedSection.content?.isClusterIntro && !selectedSection.content?.madeSimple" class="bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Visuals & Examples</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Visuals & Examples</h2>
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Concrete</span>
               <div class="relative group">
@@ -1886,7 +1950,7 @@
         <!-- 9. Code -->
         <div v-if="!selectedSection.content?.isClusterIntro" class="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
           <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Code</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Code</h2>
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-mono text-text-muted border border-gray-400 rounded px-1.5 py-0.5">Implementation</span>
               <div class="relative group">
@@ -1911,164 +1975,15 @@
         </div>
 
         <!-- 10. Sandbox -->
-        <div v-if="!selectedSection.content?.isClusterIntro && sectionProblem" class="flex flex-col gap-4">
-
-          <!-- Problem info card (white) -->
-          <div v-if="sectionProblem" class="rounded-xl border border-gray-200 bg-white px-6 py-5 flex flex-col gap-5 shadow-sm">
-            <!-- Title + difficulty -->
-            <div class="flex items-center gap-3">
-              <span class="text-2xl font-semibold text-text">{{ sectionProblem.title }}</span>
-              <span
-                class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full shrink-0"
-                :style="sectionProblem.difficulty === 'easy'
-                  ? 'background:#dcfce7;color:#16a34a'
-                  : sectionProblem.difficulty === 'medium'
-                    ? 'background:#fef9c3;color:#ca8a04'
-                    : 'background:#fee2e2;color:#dc2626'"
-              >{{ sectionProblem.difficulty }}</span>
-            </div>
-            <!-- Description -->
-            <p class="text-[14px] leading-relaxed text-text-dim" v-html="sectionProblem.description" />
-            <!-- Examples -->
-            <div v-if="sectionProblem.examples?.length" class="flex flex-col gap-2">
-              <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Examples</span>
-              <div
-                v-for="(ex, i) in sectionProblem.examples"
-                :key="i"
-                class="rounded-lg px-4 py-3 flex flex-col gap-1.5 text-[12.5px] font-mono bg-gray-50 border border-gray-100"
-              >
-                <div><span class="text-text-muted">Input: </span><span class="text-text">{{ ex.input }}</span></div>
-                <div><span class="text-text-muted">Output: </span><span class="text-text">{{ ex.output }}</span></div>
-                <div v-if="ex.explanation" class="font-sans text-[12px] text-text-muted mt-0.5">{{ ex.explanation }}</div>
-              </div>
-            </div>
-            <!-- Constraints -->
-            <div v-if="sectionProblem.constraints.length" class="flex flex-col gap-1.5">
-              <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Constraints</span>
-              <ul class="flex flex-col gap-1">
-                <li v-for="c in sectionProblem.constraints" :key="c" class="text-[13px] text-text-dim font-mono">{{ c }}</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Editor + Console row -->
-          <div class="flex gap-3 items-stretch">
-
-            <!-- Dark editor card -->
-            <div class="flex-1 min-w-0 rounded-xl overflow-hidden flex flex-col" style="background:#1e1e1e;box-shadow:0 4px 24px rgba(0,0,0,0.18)">
-              <!-- Editor header bar -->
-              <!-- Title bar with reset -->
-              <div class="flex items-center justify-end px-4 py-2.5 shrink-0" style="border-bottom:1px solid rgba(255,255,255,0.06);background:#252526">
-                <button
-                  @click="resetSandbox"
-                  class="flex items-center gap-1.5 px-2.5 py-1 rounded transition-all text-[11px]"
-                  style="color:rgba(255,255,255,0.3)"
-                  title="Reset to starter code"
-                  onmouseover="this.style.color='rgba(255,255,255,0.65)';this.style.background='rgba(255,255,255,0.07)'"
-                  onmouseout="this.style.color='rgba(255,255,255,0.3)';this.style.background='transparent'"
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  Reset
-                </button>
-              </div>
-              <!-- Editor fills remaining height -->
-              <div class="flex-1 min-h-0">
-                <CodeEditor v-model="sandboxCode" />
-              </div>
-              <!-- Bottom bar -->
-              <div class="flex items-center justify-between px-4 py-2.5 shrink-0" style="border-top:1px solid rgba(255,255,255,0.06);background:#252526">
-                <!-- Console toggle -->
-                <button
-                  class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all"
-                  :style="consoleOpen
-                    ? 'background:rgba(255,255,255,0.12);color:#d4d4d4'
-                    : 'background:transparent;color:rgba(255,255,255,0.4)'"
-                  @click="consoleOpen = !consoleOpen"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-                  </svg>
-                  <span class="text-[12px] font-medium">Test Results</span>
-                  <span
-                    v-if="testResults.length"
-                    class="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                    :style="testResults.every(r => r.passed)
-                      ? 'background:rgba(74,222,128,0.15);color:#4ade80'
-                      : 'background:rgba(248,113,113,0.15);color:#f87171'"
-                  >{{ testResults.filter(r => r.passed).length }}/{{ testResults.length }}</span>
-                </button>
-                <button
-                  @click="runSandbox"
-                  :disabled="sandboxLoading"
-                  class="flex items-center gap-2 text-[13px] font-semibold px-5 py-2 rounded-md transition-all disabled:opacity-40"
-                  style="background:#16a34a;color:#fff;box-shadow:0 1px 8px rgba(22,163,74,0.35)"
-                >
-                  <svg v-if="!sandboxLoading" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-                  <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                  {{ sandboxLoading ? 'Running…' : 'Run' }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Console panel -->
-            <div
-              class="shrink-0 rounded-xl overflow-hidden transition-all duration-300 flex flex-col"
-              :style="consoleOpen ? 'width:300px;opacity:1' : 'width:0;opacity:0;pointer-events:none'"
-              style="background:#1e1e1e;box-shadow:0 4px 24px rgba(0,0,0,0.18)"
-            >
-              <!-- Console header -->
-              <div class="px-4 py-3 flex items-center justify-between shrink-0" style="background:#252526;border-bottom:1px solid rgba(255,255,255,0.06)">
-                <div class="flex items-center gap-2.5">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:rgba(255,255,255,0.4)">
-                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-                  </svg>
-                  <span class="text-[12px] font-semibold" style="color:rgba(255,255,255,0.6)">Test Results</span>
-                </div>
-                <button
-                  @click="consoleOpen = false"
-                  class="w-6 h-6 flex items-center justify-center rounded transition-all"
-                  style="color:rgba(255,255,255,0.3)"
-                  onmouseover="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)'"
-                  onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,0.3)'"
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                </button>
-              </div>
-              <!-- Console content -->
-              <div class="flex-1 overflow-y-auto">
-                <!-- Test results (normal run) -->
-                <TestResults v-if="sectionProblem && testResults.length" :results="testResults" />
-                <!-- Error or stdout output -->
-                <div v-else-if="sandboxOutput" class="p-4 flex flex-col gap-2">
-                  <div
-                    class="rounded-lg px-3 py-2.5 text-[12px] font-mono leading-relaxed whitespace-pre-wrap"
-                    :style="sandboxOutput.startsWith('Error:')
-                      ? 'background:rgba(248,113,113,0.08);color:#f87171;border-left:2px solid rgba(248,113,113,0.4)'
-                      : 'background:rgba(255,255,255,0.04);color:#4ade80'"
-                  >{{ sandboxOutput }}</div>
-                </div>
-                <!-- Empty state -->
-                <div v-else class="flex flex-col items-center justify-center h-full gap-3 py-12 px-6">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.05)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:rgba(255,255,255,0.2)">
-                      <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-                    </svg>
-                  </div>
-                  <div class="text-center">
-                    <p class="text-[12px] font-medium" style="color:rgba(255,255,255,0.25)">No output yet</p>
-                    <p class="text-[11px] mt-1" style="color:rgba(255,255,255,0.15)">Run your code to see results</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
+        <PracticeProblemSandbox
+          v-if="!selectedSection.content?.isClusterIntro && sectionProblem"
+          :problem="sectionProblem"
+          :key="sectionProblem?.id"
+        />
 
         <!-- 11. Key Insight -->
         <div v-if="selectedSection.content?.keyInsight" class="flex gap-4">
-          <div class="w-1 rounded-full bg-accent shrink-0" />
+          <div class="w-1 rounded-lg bg-accent shrink-0" />
           <div class="flex flex-col gap-2 py-1">
             <span class="text-[10px] font-mono text-accent border border-accent rounded px-1.5 py-0.5 w-fit">Key insight</span>
             <p class="text-base font-medium text-text leading-relaxed" v-html="selectedSection.content.keyInsight.heading" />
@@ -2077,9 +1992,9 @@
         </div>
 
         <!-- 12. Connections -->
-        <div class="bg-white rounded-2xl p-6 flex flex-col gap-5 shadow-sm border border-[#3a9ae8]/25">
+        <div class="bg-white rounded-2xl p-6 flex flex-col gap-5 shadow-sm">
           <div class="flex items-center gap-2">
-            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Connections</h2>
+            <h2 class="text-[11px] font-medium font-mono uppercase tracking-widest  text-text-muted">Connections</h2>
             <span class="text-[10px] font-mono text-[#3a9ae8] border border-[#3a9ae8] rounded px-1.5 py-0.5">Graph</span>
           </div>
           <div class="h-px bg-gray-100" />
@@ -2095,15 +2010,10 @@
                 </template>
               </div>
             </div>
-            <div class="flex flex-col gap-2">
+            <div v-if="selectedSection.content?.connections?.unlocks?.length" class="flex flex-col gap-2">
               <span class="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Unlocks</span>
               <div class="flex flex-wrap gap-2">
-                <template v-if="selectedSection.content?.connections?.unlocks?.length">
-                  <button v-for="u in selectedSection.content.connections.unlocks" :key="u" class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 hover:border-gray-600 transition-colors" @click="navigateToLabel(u)">→ {{ u }}</button>
-                </template>
-                <template v-else>
-                  <span v-for="i in 3" :key="i" class="text-xs font-mono text-text-muted border border-gray-200 rounded px-1.5 py-0.5 italic">→ Next concept {{ i }}</span>
-                </template>
+                <button v-for="u in selectedSection.content.connections.unlocks" :key="u" class="text-xs font-mono text-text border border-gray-400 rounded px-1.5 py-0.5 hover:border-gray-600 transition-colors" @click="navigateToLabel(u)">→ {{ u }}</button>
               </div>
             </div>
             <div class="flex flex-col gap-2">
@@ -2197,9 +2107,7 @@ import PatternVisualizer from '@/components/visualizers/PatternVisualizer.vue'
 import ClusterMap from '@/components/learn-map/ClusterMap.vue'
 import TopicSearch from '@/components/learn-map/TopicSearch.vue'
 import ComplexityGraph from '@/components/ComplexityGraph.vue'
-import CodeEditor from '@/components/sandbox/CodeEditor.vue'
-import TestResults from '@/components/sandbox/TestResults.vue'
-import { usePyodide } from '@/composables/usePyodide'
+import PracticeProblemSandbox from '@/components/sandbox/PracticeProblemSandbox.vue'
 import { PROBLEMS, problemForConcept } from '@/data/problems'
 import { CLUSTERS, clusterForSection } from '@/data/clusters'
 
@@ -2220,50 +2128,14 @@ const bfsDfsTab = ref('bfs')
 const stacksQueuesTab = ref('stack')
 const slidingWindowVisualTab = ref('fixed')
 
-const consoleOpen = ref(false)
-const sandboxCode = ref('# Write Python here...')
-const sandboxOutput = ref(null)
-const sandboxLoading = ref(false)
-const testResults = ref([])
-
-const sectionProblem = computed(() =>
-  selectedSection.value ? problemForConcept(selectedSection.value.id) : null
-)
-
-const { runPython, runTests } = usePyodide()
-
-function resetSandbox() {
-  sandboxCode.value = sectionProblem.value ? sectionProblem.value.starterCode : '# Write Python here...'
-  testResults.value = []
-  sandboxOutput.value = null
-  consoleOpen.value = false
-}
-
-async function runSandbox() {
-  sandboxLoading.value = true
-  sandboxOutput.value = null
-  testResults.value = []
-  consoleOpen.value = true
-  try {
-    if (sectionProblem.value) {
-      testResults.value = await runTests(
-        sandboxCode.value,
-        sectionProblem.value.functionName,
-        sectionProblem.value.testCases,
-        sectionProblem.value.runnerSetup,
-      )
-    } else {
-      sandboxOutput.value = await runPython(sandboxCode.value)
-    }
-  } catch (e) {
-    const msg = e.message ?? String(e)
-    sandboxOutput.value = msg.includes('timed out')
-      ? `Error: Execution timed out after 5s.\nCheck for infinite loops or very slow code.`
-      : `Error: ${msg}`
-  } finally {
-    sandboxLoading.value = false
+const sectionProblem = computed(() => {
+  if (!selectedSection.value) return null
+  if (selectedSection.value.id === 'stacks-queues') {
+    const id = stacksQueuesTab.value === 'stack' ? 'valid-parentheses' : 'implement-queue-using-stacks'
+    return PROBLEMS.find(p => p.id === id)
   }
-}
+  return problemForConcept(selectedSection.value.id)
+})
 
 const BFS_SIGNALS = [
   { cue: '"Shortest path" or "minimum steps"', why: 'BFS guarantees the shortest path in unweighted graphs — nodes are dequeued in order of increasing distance.' },
@@ -2564,7 +2436,7 @@ const sectionVisualizer = {
   'python-lists':        'python-list',
   'strings':             'array-access',
   'linked-lists':        'linked-list-insert',
-  'stacks-queues':       'stack-queue',
+  'stacks-queues':       ['stack-ops', 'queue-ops'],
   'hash-maps':           'hash-map',
   'graphs':              'graph-bfs',
   'recursion':           'recursion-tree',
@@ -2582,6 +2454,12 @@ const sectionVisualizer = {
   'matrix-rotation':     'matrix-rotate',
   'multi-pass-patterns': 'grid-multi-pass',
   'recursion-dp-bridge': 'recursion-memo-bridge',
+  'prefix-sums':         'prefix-sums',
+  'list-reversal':       'list-reversal',
+  'top-k':               'top-k',
+  'dp-2d':               'dp-2d',
+  'dp-intervals':        'dp-intervals',
+  'dp-knapsack':         'dp-knapsack',
 }
 
 const completed = ref(new Set())
@@ -2709,7 +2587,7 @@ const careerSysDesignInterview = [
 
 const flatSections = computed(() => {
   const allSections = categories.flatMap(cat =>
-    cat.subsections.map(sub => ({ ...sub, category: cat.label, categoryId: cat.id }))
+    cat.subsections.map(sub => ({ ...sub, category: cat.label, categoryId: sub.categoryOverride ?? cat.id }))
   )
   const sectionMap = new Map(allSections.map(s => [s.id, s]))
   const clusteredIds = new Set(CLUSTERS.flatMap(c => c.concepts.map(concept => concept.id)))
@@ -2737,6 +2615,8 @@ const currentIndex = computed(() =>
   selectedSection.value ? flatSections.value.findIndex(s => s.id === selectedSection.value.id) : -1
 )
 
+const currentClusterColor = computed(() => clusterForSection(selectedSection.value?.id)?.color)
+
 const prevSection = computed(() =>
   currentIndex.value > 0 ? flatSections.value[currentIndex.value - 1] : null
 )
@@ -2749,11 +2629,11 @@ const nextSection = computed(() =>
 
 watch(selectedSection, (section) => {
   router.replace({ query: section ? { section: section.id } : {} })
-  consoleOpen.value = false
-  testResults.value = []
-  sandboxOutput.value = null
-  const problem = section ? problemForConcept(section.id) : null
-  sandboxCode.value = problem ? problem.starterCode : '# Write Python here...'
+
+  const owningCluster = section ? clusterForSection(section.id) : null
+  if (owningCluster && !openClusters.value.includes(owningCluster.id)) {
+    openClusters.value.push(owningCluster.id)
+  }
 })
 
 onMounted(() => {
@@ -2808,11 +2688,6 @@ function navigateToId(id) {
   if (found) {
     selectedSection.value = found
     activeView.value = 'section'
-    // Open the cluster that owns this concept in the sidebar
-    const owningCluster = clusterForSection(id)
-    if (owningCluster && !openClusters.value.includes(owningCluster.id)) {
-      openClusters.value.push(owningCluster.id)
-    }
   } else {
     // Section not yet built — still navigate so the cluster is visible
     selectedSection.value = { id, label: id, category: '', categoryId: '', content: null }
@@ -3679,6 +3554,7 @@ def top_k_smallest(nums, k):
       {
         id: 'top-k',
         label: 'Top-K Patterns',
+        categoryOverride: 'patterns',
         content: {
           analogy: 'You want the ten best restaurants in your city. You do not need a complete ranked list of every place — you just need the top ten. A min-heap of size 10 does exactly this: scan each restaurant, and if it scores higher than the worst in your current top-10, swap it in. The heap stays at size 10 the whole time.',
           what: '<strong>Top-K problems</strong> ask for the K largest, K smallest, or K most frequent elements. A <strong>min-heap of size K</strong> answers "K largest" in <strong>O(n log K)</strong> — far better than sorting everything at O(n log n). At each element, if it beats the heap root (the current worst of the top K), pop the root and push the new element. The heap always holds the K best candidates seen so far.',
@@ -3686,10 +3562,10 @@ def top_k_smallest(nums, k):
           how: 'For <strong>K largest</strong>: maintain a min-heap of size K. For each element, push it; if heap size exceeds K, pop the minimum. At the end, the heap contains the K largest elements. For <strong>K most frequent</strong>: count frequencies with a hash map, then run the same heap strategy on (count, element) pairs.',
           complexity: { time: 'O(n log K)', space: 'O(K)' },
           signals: [
-            '"Find the K largest / K smallest elements"',
-            '"K most frequent elements"',
-            '"Kth largest element in a stream"',
-            '"Top K frequent words"',
+            'Find the K largest / K smallest elements',
+            'K most frequent elements',
+            'Kth largest element in a stream',
+            'Top K frequent words',
             'Any problem where you need to maintain a running best-K without full sorting',
           ],
           keyProperties: [
@@ -3885,12 +3761,19 @@ def dfs(graph, node, visited=None):
       {
         id: '2d-array-traversal',
         label: '2D Array Traversal',
+        categoryOverride: 'patterns',
         content: {
           analogy: 'Reading a page of text: left to right, then drop down a line and repeat. That is row-major traversal. Reading the same page down each column instead is column-major. Reading it in a spiral from the outside in, or diagonal by diagonal, is the same grid — just a different rule for which cell comes next.',
           what: '<strong>2D array traversal</strong> is the family of standard patterns for visiting the cells of a grid in a specific order: row by row (<strong>row-major</strong>), column by column (<strong>column-major</strong>), diagonally, or in a spiral. Each pattern is a nested loop (or a loop with a direction vector) whose shape encodes the order cells are visited in.',
           why: 'A huge share of grid problems boil down to "visit every cell and do something," where the something is trivial but the order matters — printing a matrix in spiral order, summing each diagonal, rotating an image. Getting comfortable with the small number of standard traversal shapes means you can recognize which one a new problem needs instead of re-deriving loop bounds from scratch under time pressure.',
           how: 'Row-major is the default: <strong>for r in range(rows): for c in range(cols)</strong>. Column-major swaps the loop order. Diagonal traversal exploits the fact that every cell on the same diagonal shares a constant r - c (for one diagonal direction) or r + c (for the other) — grouping cells by that constant visits one diagonal at a time. Spiral traversal tracks four shrinking boundaries (top, bottom, left, right) and walks right along the top, down the right side, left along the bottom, and up the left side, shrinking each boundary after its pass.',
           complexity: { time: 'O(rows × cols) — every cell visited once', space: 'O(1) beyond the output, unless the traversal order must be stored' },
+          signals: [
+            'The problem asks you to return or print a matrix in spiral order',
+            'You need to process a matrix diagonal by diagonal',
+            'The problem specifies row-major or column-major order explicitly',
+            'You\'re summing, counting, or transforming every cell, and the order you visit them in changes the result',
+          ],
           keyProperties: [
             'Row-major (rows outer, columns inner) is the natural default and matches how grid is usually laid out',
             'Cells with the same r - c lie on one diagonal (\\); cells with the same r + c lie on the other (/)',
@@ -3950,6 +3833,7 @@ def spiral_order(grid):
       {
         id: 'grid-bfs-dfs',
         label: 'Grid BFS & DFS',
+        categoryOverride: 'patterns',
         content: {
           analogy: 'Spilling a drop of ink onto graph paper. It spreads outward, cell by cell, into every connected cell it touches — but stops the instant it reaches a boundary or a cell that is already inked. That spreading is exactly BFS or DFS on a grid: start at one cell, spread to its neighbors, and keep going until the connected region is fully explored.',
           what: '<strong>Grid BFS & DFS</strong> is graph BFS and DFS applied to a grid, where each cell is an implicit node and its up-to-four neighbors are its edges — no adjacency list needs to be built explicitly, because the neighbor offsets generate it on the fly. BFS explores level by level using a queue (shortest path in an unweighted grid); DFS explores as deep as possible before backtracking, using recursion or an explicit stack.',
@@ -4028,12 +3912,19 @@ def num_islands(grid):
       {
         id: 'matrix-rotation',
         label: 'Matrix Rotation & Transformation',
+        categoryOverride: 'patterns',
         content: {
           analogy: 'Rotating a square photograph 90 degrees is the same as flipping it along its diagonal (swapping every pixel at (r, c) with the one at (c, r)) and then flipping it left-to-right. Two simple, well-understood moves combine into a rotation — no need to compute a new position for every pixel from a rotation formula.',
           what: '<strong>Matrix rotation and transformation</strong> covers rearranging a grid\'s cells according to a fixed geometric rule: rotating 90/180/270 degrees, transposing (swapping rows and columns), or reflecting across an axis. The distinguishing challenge in interviews is usually doing this <strong>in place</strong>, using O(1) extra space instead of building a brand-new grid.',
           why: 'Building a new rotated grid from scratch is easy but costs O(rows × cols) extra space. The in-place version is the actual interview question, and it depends on recognizing that a 90-degree rotation decomposes into two simpler operations you can each do in place: <strong>transpose</strong> (swap grid[r][c] with grid[c][r]) followed by <strong>reverse each row</strong> (for clockwise) or reverse each column first then transpose (for counter-clockwise).',
           how: 'For a 90-degree clockwise rotation in place: (1) transpose the matrix by swapping grid[r][c] with grid[c][r] for all r &lt; c, (2) reverse each row. For 90 degrees counter-clockwise: reverse each row first, then transpose (or equivalently, transpose then reverse each column). For an arbitrary-size (non-square) rotation where in-place is not possible, build the result directly: <strong>result[c][rows - 1 - r] = grid[r][c]</strong> for clockwise. For a full 180-degree rotation, reverse every row and then reverse the whole list of rows (or equivalently, reverse each row and each column).',
           complexity: { time: 'O(rows × cols) — every cell touched a constant number of times', space: 'O(1) for in-place square rotation, O(rows × cols) if the matrix is not square and a new grid is required' },
+          signals: [
+            'The problem asks you to rotate an image or matrix, especially in place',
+            'You\'re told to use O(1) extra space — no second matrix allowed',
+            'The problem asks whether one matrix is a rotated or reflected version of another',
+            'You need to transpose a matrix as a preprocessing step for another algorithm',
+          ],
           keyProperties: [
             'Transpose (swap grid[r][c] and grid[c][r] for r < c) plus reverse each row = 90° clockwise rotation, in place',
             'Reverse each row first, then transpose = 90° counter-clockwise rotation, in place',
@@ -4088,6 +3979,7 @@ def rotate_new(grid):
       },
       {
         id: 'multi-pass-patterns',
+        categoryOverride: 'patterns',
         label: 'Multi-pass Patterns',
         content: {
           analogy: "Grading a stack of exams by reading through it once to record scores, and only afterward computing the class average — you can't compute the average correctly if you try to do it while you're still reading the first paper, because you don't yet know the total. Some grid problems have the same shape: you cannot correctly update a cell until you know something about the whole grid, which means one pass is not enough.",
@@ -4543,10 +4435,10 @@ def coin_change(coins, amount):
           how: 'Define dp[i][j] as the answer for subproblem (i, j). Write the base cases (usually row 0 and column 0). Write the recurrence relating dp[i][j] to previously computed cells. Fill in order so every cell you reference has already been computed. The answer is typically dp[n][m] or the maximum/minimum over some slice of the table.',
           complexity: { time: 'O(n × m)', space: 'O(n × m), often reducible to O(min(n, m)) with row compression' },
           signals: [
-            '"Edit distance between two strings"',
-            '"Longest common subsequence of two sequences"',
-            '"Unique paths in a grid" — 2D position with movement constraints',
-            '"Minimum path sum through a grid"',
+            'Edit distance between two strings',
+            'Longest common subsequence of two sequences',
+            'Unique paths in a grid — 2D position with movement constraints',
+            'Minimum path sum through a grid',
             'Any problem with two independent sequences or a 2D traversal',
           ],
           keyProperties: [
@@ -4604,7 +4496,7 @@ def edit_distance(word1, word2):
           },
           connections: {
             prereqs: ['Dynamic Programming', 'Arrays', 'Strings'],
-            unlocks: [],
+            unlocks: ['Interval DP'],
             related: ['Dynamic Programming', 'Interval DP', 'Knapsack Variants'],
           },
         },
@@ -4619,10 +4511,10 @@ def edit_distance(word1, word2):
           how: 'Let dp[i][j] = answer for the subarray from i to j. Fill by interval length: first solve all length-1 intervals, then length-2, up to length-n. For each interval [i, j], try every split point k from i to j-1, compute the cost of splitting there (using already-solved subproblems), and take the optimum.',
           complexity: { time: 'O(n³) in most cases', space: 'O(n²)' },
           signals: [
-            '"Burst balloons" — removing elements where the cost depends on neighbors',
-            '"Minimum cost to merge stones" or split an array into groups',
-            '"Matrix chain multiplication" — order of operations optimization',
-            '"Palindrome partitioning" — minimum cuts to split a string into palindromes',
+            'Burst balloons — removing elements where the cost depends on neighbors',
+            'Minimum cost to merge stones or split an array into groups',
+            'Matrix chain multiplication — order of operations optimization',
+            'Palindrome partitioning — minimum cuts to split a string into palindromes',
             'Any problem where you optimize over all ways to split a range',
           ],
           keyProperties: [
@@ -4676,10 +4568,10 @@ def max_coins(nums):
           how: 'Build dp[i][w] = max value considering items 0..i with capacity w. For each item i and capacity w: either skip item i (dp[i-1][w]) or take it if it fits (dp[i-1][w - weight[i]] + value[i]). Take the max. Final answer is dp[n][W]. Space optimization: since row i only depends on row i-1, you can use a single 1D array updated in reverse.',
           complexity: { time: 'O(n × W)', space: 'O(n × W), reducible to O(W) with 1D array' },
           signals: [
-            '"Can you partition a set into two equal-sum subsets?"',
-            '"Minimum coins to make change" — unbounded variant (items reusable)',
-            '"Count distinct ways to reach a target sum" — 0/1 or unbounded',
-            '"Maximum value subject to a weight limit"',
+            'Can you partition a set into two equal-sum subsets?',
+            'Minimum coins to make change — unbounded variant (items reusable)',
+            'Count distinct ways to reach a target sum — 0/1 or unbounded',
+            'Maximum value subject to a weight limit',
             'Any "select a subset meeting a constraint, optimize a quantity" problem',
           ],
           keyProperties: [
@@ -5024,10 +4916,10 @@ def is_palindrome(s):
           how: 'For a <strong>fixed window</strong>: advance both left and right together, keeping window size constant. For a <strong>variable window</strong>: expand right until the window violates a condition, then shrink left until valid again. At each step, update your answer from the current window state in <strong>O(n)</strong>.',
           complexity: { time: 'O(n)', space: 'O(k) where k is window size or alphabet' },
           signals: [
-            '"Maximum or minimum sum subarray of size k"',
-            '"Longest substring with at most k distinct characters"',
-            '"Find smallest subarray with sum ≥ target"',
-            '"Minimum window substring containing all characters of a pattern"',
+            'Maximum or minimum sum subarray of size k',
+            'Longest substring with at most k distinct characters',
+            'Find smallest subarray with sum ≥ target',
+            'Minimum window substring containing all characters of a pattern',
           ],
           keyProperties: [
             'Window is always a contiguous range [left, right] — both pointers only move forward',
@@ -5081,10 +4973,10 @@ def length_of_longest_substring(s):
           how: 'Initialize both pointers at the <strong>head</strong>. Each iteration: move slow one step, fast two steps. If fast or fast.next is None — no cycle. If slow == fast — <strong>cycle</strong> detected. For finding the middle: when fast is None, slow is at the <strong>midpoint</strong>.',
           complexity: { time: 'O(n)', space: 'O(1)' },
           signals: [
-            '"Detect a cycle in a linked list"',
-            '"Find the middle of a linked list"',
-            '"Find the start of a cycle"',
-            '"Happy number" or any problem with repeated state detection',
+            'Detect a cycle in a linked list',
+            'Find the middle of a linked list',
+            'Find the start of a cycle',
+            'Happy number or any problem with repeated state detection',
           ],
           keyProperties: [
             'Fast moves 2 steps, slow moves 1 — if a cycle exists, they will always meet',
@@ -5141,10 +5033,10 @@ def find_middle(head):
           how: '<strong>Sort</strong> intervals by start time in <strong>O(n log n)</strong>. Initialize result with the first interval. For each subsequent interval: if it <strong>overlaps</strong> with result[-1] (current.start <= result[-1].end), merge by setting result[-1].end = max(result[-1].end, current.end). Otherwise append as a new interval.',
           complexity: { time: 'O(n log n)', space: 'O(n)' },
           signals: [
-            '"Merge overlapping intervals"',
-            '"Find all non-overlapping intervals"',
-            '"Insert a new interval into a sorted list"',
-            '"Meeting rooms — can all meetings fit? How many rooms needed?"',
+            'Merge overlapping intervals',
+            'Find all non-overlapping intervals',
+            'Insert a new interval into a sorted list',
+            'Meeting rooms — can all meetings fit? How many rooms needed?',
           ],
           keyProperties: [
             'Sort by start time first — the linear merge only works after sorting',
@@ -5204,10 +5096,10 @@ def insert_interval(intervals, new_interval):
           how: '<strong>BFS</strong>: add start to a <strong>queue</strong> and <strong>visited</strong> set. Loop: dequeue a node, process it, add unvisited neighbors to the queue. <strong>DFS</strong>: call recursively (or use a stack) — mark as visited, process, recurse on unvisited neighbors. Always maintain a <strong>visited</strong> set for graphs (trees do not need one since there are no cycles).',
           complexity: { time: 'O(V + E)', space: 'O(V)' },
           signals: [
-            '"Shortest path" or "minimum steps" in an unweighted graph → BFS',
-            '"All paths" or "can we reach X?" → DFS',
-            '"Level by level" processing → BFS',
-            '"Connected components" or "number of islands" → either BFS or DFS',
+            'Shortest path or minimum steps in an unweighted graph → BFS',
+            'All paths or can we reach X? → DFS',
+            'Level by level processing → BFS',
+            'Connected components or number of islands → either BFS or DFS',
           ],
           keyProperties: [
             'BFS: queue (deque) + visited set. Guarantees shortest path in unweighted graphs.',
@@ -5281,9 +5173,9 @@ def num_islands(grid):
           how: "Kahn's algorithm: count incoming edges (<strong>in-degree</strong>) for each node. Add all nodes with in-degree 0 to a <strong>queue</strong>. Repeatedly dequeue a node, add to result, decrement in-degree for its neighbors — adding any that reach 0 to the queue. If the result contains all nodes, a valid ordering exists. Otherwise, a <strong>cycle</strong> exists.",
           complexity: { time: 'O(V + E)', space: 'O(V + E)' },
           signals: [
-            '"Course prerequisite" ordering problems',
-            '"Task scheduling with dependencies"',
-            '"Build order" or "compilation order"',
+            'Course prerequisite ordering problems',
+            'Task scheduling with dependencies',
+            'Build order" or "compilation order',
             'Detect a cycle in a directed graph',
           ],
           keyProperties: [
@@ -5343,10 +5235,10 @@ def can_finish(num_courses, prerequisites):
           how: 'Initialize parent[i] = i for each element. <strong>find(x)</strong>: follow parent pointers to the root — with <strong>path compression</strong>, point every visited node directly to the root. <strong>union(x, y)</strong>: find roots of both; link the smaller tree under the larger one (<strong>union by rank</strong>) to keep the structure flat.',
           complexity: { time: 'O(α(n)) ≈ O(1) amortized', space: 'O(n)' },
           signals: [
-            '"Number of connected components"',
-            '"Detect a cycle in an undirected graph"',
-            '"Are these two nodes in the same group?"',
-            '"Redundant connection" — find the edge that creates a cycle',
+            'Number of connected components',
+            'Detect a cycle in an undirected graph',
+            'Are these two nodes in the same group?',
+            'Redundant connection — find the edge that creates a cycle',
           ],
           keyProperties: [
             'Path compression: after find(), point every visited node directly to the root — flattens the tree',
@@ -5408,10 +5300,10 @@ def count_components(n, edges):
           how: 'For <strong>next greater element</strong>: iterate through the array maintaining a <strong>stack</strong> of indices in decreasing order of their values. For each new element, pop all elements from the stack that are smaller — the current element is their answer. Push the current index. Elements still in the stack at the end have no greater element to their right.',
           complexity: { time: 'O(n)', space: 'O(n)' },
           signals: [
-            '"Next greater element" or "next smaller element"',
-            '"Previous greater element" or "previous smaller element"',
-            '"Largest rectangle in histogram"',
-            '"Daily temperatures" — days until a warmer day',
+            'Next greater element" or "next smaller element',
+            'Previous greater element" or "previous smaller element',
+            'Largest rectangle in histogram',
+            'Daily temperatures — days until a warmer day',
           ],
           keyProperties: [
             'Each element is pushed once and popped once — O(n) total work',
@@ -5470,9 +5362,9 @@ def daily_temperatures(temps):
           how: 'Build <code>prefix[0..n]</code> where <code>prefix[0] = 0</code> and <code>prefix[i] = prefix[i-1] + nums[i-1]</code>. Range sum: <code>prefix[r+1] - prefix[l]</code>. For counting subarrays summing to k: track prefix sums in a hash map — at each index, check how many times <code>prefix[i] - k</code> has appeared.',
           complexity: { time: 'O(n) build, O(1) per query', space: 'O(n)' },
           signals: [
-            '"Sum of any subarray" asked repeatedly — prefix sums give O(1) per query',
-            '"Count subarrays that sum to k" — prefix sums + hash map',
-            '"Pivot index where left sum equals right sum"',
+            'Sum of any subarray asked repeatedly — prefix sums give O(1) per query',
+            'Count subarrays that sum to k — prefix sums + hash map',
+            'Pivot index where left sum equals right sum',
             'Running total needed across multiple queries on the same static array',
           ],
           keyProperties: [
@@ -5531,10 +5423,10 @@ def subarray_sum(nums, k):
           how: 'For a linked list: keep three pointers — <code>prev = None</code>, <code>curr = head</code>, <code>next_node</code>. Each step: save <code>curr.next</code>, point <code>curr.next</code> back to <code>prev</code>, advance both. When <code>curr</code> is None, <code>prev</code> is the new head. For a sublist reversal, locate the node before the start — it becomes the reconnection anchor.',
           complexity: { time: 'O(n)', space: 'O(1)' },
           signals: [
-            '"Reverse a linked list" or "reverse a sublist from m to n"',
-            '"Reverse nodes in k-group" — process the list in segments',
-            '"Rotate a list by k positions"',
-            '"Check if a linked list is a palindrome" — reverse the second half, compare',
+            'Reverse a linked list" or "reverse a sublist from m to n',
+            'Reverse nodes in k-group — process the list in segments',
+            'Rotate a list by k positions',
+            'Check if a linked list is a palindrome — reverse the second half, compare',
           ],
           keyProperties: [
             'Three pointers are always enough: prev, curr, next — draw it out if stuck',
@@ -5602,9 +5494,9 @@ def reverse_array(arr):
           how: 'Identify what you are searching over (array indices, or a range of possible answer values). Define the <strong>monotonic predicate</strong>. Set <code>lo</code> and <code>hi</code> to the extremes. At each <code>mid</code>, evaluate the predicate. If satisfied, record <code>mid</code> as a candidate and narrow toward smaller values. The loop exits when the search space collapses.',
           complexity: { time: 'O(log n) on arrays; O(log(range) × f(n)) for answer-space search', space: 'O(1)' },
           signals: [
-            '"Find first or last occurrence of a value"',
-            '"Search in a rotated sorted array" — one half is always fully sorted',
-            '"Minimum capacity / speed / days to complete task" — minimize-the-maximum pattern',
+            'Find first or last occurrence of a value',
+            'Search in a rotated sorted array — one half is always fully sorted',
+            'Minimum capacity / speed / days to complete task — minimize-the-maximum pattern',
             'Any problem where you can check "is answer ≤ x feasible?" in O(n)',
           ],
           keyProperties: [
@@ -5687,10 +5579,10 @@ def min_eating_speed(piles, h):
           how: 'Insert: if <code>num ≤ max_heap.top</code>, push to the max-heap; otherwise push to the min-heap. Rebalance so sizes differ by at most 1 — move the root of the larger heap to the smaller. Median: if sizes are equal, average both tops; if max-heap is larger, its top is the median.',
           complexity: { time: 'O(log n) insert, O(1) find median', space: 'O(n)' },
           signals: [
-            '"Median of a data stream"',
-            '"Sliding window median"',
+            'Median of a data stream',
+            'Sliding window median',
             'Need simultaneous access to the max of the lower half and the min of the upper half',
-            '"Maximize capital" — scheduling problems where you pick the best available option below a threshold',
+            'Maximize capital — scheduling problems where you pick the best available option below a threshold',
           ],
           keyProperties: [
             'Python heapq is a min-heap — negate values to simulate a max-heap for the lower half',
@@ -5748,9 +5640,9 @@ class MedianFinder:
           how: 'Walk index i from 0 to n-1. While <code>nums[i]</code> is not at its correct position (<code>nums[i] - 1 ≠ i</code> for a [1..n] array), swap it there. But if <code>nums[i] == nums[nums[i]-1]</code>, stop — that is a duplicate. After the full pass, scan once for any index where <code>nums[i] ≠ i + 1</code>.',
           complexity: { time: 'O(n) — each element is placed at most once', space: 'O(1)' },
           signals: [
-            '"Find the missing number" in an array of [1..n]',
-            '"Find all duplicates" in an array where values are in [1..n]',
-            '"First missing positive integer"',
+            'Find the missing number in an array of [1..n]',
+            'Find all duplicates in an array where values are in [1..n]',
+            'First missing positive integer',
             'Array values are in a bounded, known range where values map to indices',
           ],
           keyProperties: [
@@ -5813,10 +5705,10 @@ def find_duplicate(nums):
           how: 'Push the first element of each list into a min-heap as tuples: <code>(value, list_index, element_index)</code>. Pop the minimum, append to result, push the next element from that same source list. The source index inside the tuple tells you which list to draw from. Repeat until the heap is empty.',
           complexity: { time: 'O(n log k) where n = total elements, k = number of lists', space: 'O(k) for the heap' },
           signals: [
-            '"Merge k sorted lists or arrays"',
-            '"Kth smallest element in a sorted matrix"',
-            '"Smallest range covering elements from k lists"',
-            '"Sort a nearly-sorted array where each element is at most k positions from sorted position"',
+            'Merge k sorted lists or arrays',
+            'Kth smallest element in a sorted matrix',
+            'Smallest range covering elements from k lists',
+            'Sort a nearly-sorted array where each element is at most k positions from sorted position',
           ],
           keyProperties: [
             'Heap holds exactly one candidate per source — size stays at k throughout',
@@ -6041,7 +5933,7 @@ def single_number_iii(nums):
           complexity: { time: 'O(2^n) to enumerate all subsets, O(3^n) for common submask-enumeration DP', space: 'O(2^n) for a DP table indexed by mask' },
           signals: [
             'n is explicitly small (roughly n ≤ 20) — a strong hint that an O(2^n) solution is intended',
-            'The problem is phrased in terms of "which subset of items" rather than "which single item"',
+            'The problem is phrased in terms of which subset of items rather than which single item',
             'A DP state needs to track "which items have been used so far" as part of what makes two states different',
             'The problem resembles a small-scale traveling salesman or assignment problem',
           ],
@@ -6539,4 +6431,12 @@ function navigateToLabel(label) {
 </script>
 
 <style scoped>
+/* Every white content card within a cluster-scoped region (the selected-cluster
+   detail view and the concept "section skeleton") gets a soft glow matching
+   that cluster's color dot, instead of a hard stroke. Falls back to
+   transparent for unclustered concepts (e.g. Python Tips) so nothing
+   regresses when there's no cluster to tie to. */
+.cluster-scoped :is(div.bg-white.rounded-2xl, div.bg-white.rounded-xl) {
+  box-shadow: 0 0 10px 0 color-mix(in srgb, var(--cluster-color, transparent) 30%, transparent);
+}
 </style>

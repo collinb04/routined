@@ -8,20 +8,23 @@ export default {
     { input: 's = "aaa"', output: '6 (a, a, a, aa, aa, aaa)' },
   ],
   constraints: ['1 <= s.length <= 1000', 's consists of lowercase English letters'],
-  starterCode: `def count_substrings(s):
-  pass`,
+  starterCode: `class Solution:
+    def count_substrings(self, s):
+        pass`,
+  runnerSetup: 'count_substrings = Solution().count_substrings',
   functionName: 'count_substrings',
   conceptId: 'dp-1d',
   testCases: [
     { label: '"abc"', args: ['abc'], expected: 3 },
     { label: '"aaa"', args: ['aaa'], expected: 6 },
   ],
-  bruteHint: 'Describe the naive approach of checking every substring for the palindrome property, and its resulting O(n³) time complexity',
-  optimizeHint: 'Name the technique that reuses a shorter palindrome\'s result to check a longer one in O(1), whether via a DP table or expanding around centers',
+  bruteHint: 'The brute-force approach checks every one of the O(n²) substrings of s and, for each one, spends up to O(n) time comparing characters from both ends to confirm it reads the same forwards and backwards, giving O(n³) time overall. At n = 1,000, that is close to a billion character comparisons, far too slow to run in time. When checking whether s[l..r] is a palindrome, how much of that comparison work was already done while checking the shorter substring s[l+1..r-1]?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 1000 tells you…',
+      question: 'Constraints often reveal the time complexity budget before you write a single line of code. s.length ≤ 1000 tells you…',
+      highlight: { location: 'constraint', text: '1 <= s.length <= 1000' },
       options: [
         { label: 'O(n³) is acceptable', isCorrect: false, feedback: 'At n = 1,000, O(n³) is 1 billion operations — too slow in Python. You need O(n²).' },
         { label: 'O(n²) is the target complexity', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'count-not-longest',
-      question: 'The output is a count of palindromic substrings, not the longest one. This means…',
+      question: 'Paying close attention to exactly what value the problem asks you to return often reveals what your solution actually needs to track. The output is a count of palindromic substrings, not the longest one. This means…',
+      highlight: { location: 'description', text: 'return the number of palindromic substrings in it' },
       options: [
         { label: 'Find the longest palindrome, then count substrings of it', isCorrect: false, feedback: 'Substrings of the longest palindrome aren\'t all the palindromic substrings of s. "aaa" has 6 palindromic substrings; you can\'t derive that by looking inside the longest one only.' },
         { label: 'Increment a counter for every palindrome found', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'palindrome-expansion',
-      question: 'A palindrome reads the same forward and backward. The most natural way to enumerate all of them is…',
+      question: 'A problem\'s core definition often points directly at the algorithmic technique needed to solve it efficiently. A palindrome reads the same forward and backward. The most natural way to enumerate all of them is…',
+      highlight: { location: 'description', text: 'A string is a palindrome when it reads the same backward as forward.' },
       options: [
         { label: 'Check every substring with a reverse comparison', isCorrect: false, feedback: 'Reversing and comparing each of the O(n²) substrings costs O(n) per check — O(n³) total. That\'s too slow at n = 1,000.' },
         { label: 'Expand outward from each center', isCorrect: true },
@@ -66,7 +71,7 @@ export default {
     },
     {
       id: 'odd-even-centers',
-      question: '"aaa" produces 6 substrings including "aa". This means…',
+      question: 'Worked examples often expose an edge case that a careless implementation would miss. "aaa" produces 6 substrings including "aa". This means…',
       options: [
         { label: 'Only odd-length palindromes need centers', isCorrect: false, feedback: '"aa" is an even-length palindrome — it has no single-character center. If you only expand from single characters, you miss all even-length palindromes like "aa", "abba", etc.' },
         { label: 'Both odd- and even-length centers must be tried', isCorrect: true },
@@ -80,4 +85,23 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def count_substrings(self, s):
+        n = len(s)
+        count = 0
+
+        def expand(l, r):
+            nonlocal count
+            while l >= 0 and r < n and s[l] == s[r]:
+                count += 1
+                l -= 1
+                r += 1
+
+        for i in range(n):
+            expand(i, i)
+            expand(i, i + 1)
+        return count`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(1)' },
+  solutionCaveat: 'Both <code>expand(i, i)</code> and <code>expand(i, i + 1)</code> run at every index — the first finds odd-length palindromes centered on a single character, the second finds even-length ones centered on the gap between two characters, and neither call can substitute for the other since an even-length palindrome like "aa" has no single-character center to expand from.',
+  solutionExplanation: 'Every palindrome is symmetric around some center, so instead of testing all O(n²) substrings individually, expanding outward from each of the 2n-1 possible centers and incrementing the count on every step the two sides still match directly counts each palindrome exactly once, stopping the moment symmetry breaks. Because every single character is trivially a palindrome of length 1, this approach never risks under-counting the smallest cases — they fall out naturally as the first, always-successful step of every odd-centered expansion.',
 }

@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [10]', output: '0' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁵', '0 ≤ nums[i] ≤ 10⁹'],
-  starterCode: `def maximum_gap(nums):
-  pass`,
+  starterCode: `class Solution:
+    def maximum_gap(self, nums):
+        pass`,
+  runnerSetup: 'maximum_gap = Solution().maximum_gap',
   functionName: 'maximum_gap',
   conceptId: 'sorting',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Two elements', args: [[1,10000000]], expected: 9999999 },
     { label: 'Consecutive', args: [[1,2,3,4,5]], expected: 1 },
   ],
-  bruteHint: 'Describe sorting the array with a comparison sort and scanning adjacent pairs, and why that\'s O(n log n) rather than O(n)',
-  optimizeHint: 'Name the technique — bucket-style sorting that exploits the pigeonhole principle — that achieves O(n)',
+  bruteHint: 'The brute-force approach sorts the array with a standard comparison-based sort and then scans adjacent pairs in the sorted result to track the largest difference. Comparison sorts run in O(n log n) time, and the linear scan afterward adds only O(n), so the overall approach is O(n log n) — correct, but it doesn\'t meet the problem\'s explicit O(n) requirement. Since comparison sorts can\'t beat O(n log n) in the worst case, what kind of non-comparison sorting could get you to O(n)?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'time-constraint',
-      question: '"Solve in O(n) time." Comparison-based sorting is O(n log n). What does the O(n) requirement tell you?',
+      highlight: { location: 'description', text: 'Solve in O(n) time.' },
+      question: 'An explicit time-complexity requirement in the problem statement often rules out entire categories of solutions. "Solve in O(n) time." Comparison-based sorting is O(n log n). What does the O(n) requirement tell you?',
       options: [
         { label: 'Sort the array, then scan adjacent pairs — O(n log n) is close enough', isCorrect: false, feedback: 'The problem explicitly requires O(n). With n ≤ 10⁵, O(n log n) is about 1.7 million operations and would likely pass, but the problem is testing whether you know a non-comparison-based linear sort.' },
         { label: 'You need a non-comparison-based approach like bucket sort or radix sort', isCorrect: true },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'bucket-insight',
-      question: 'The key insight is: the maximum gap cannot come from within a single bucket — it must span across buckets. Why?',
+      question: 'Counting arguments like pigeonhole reasoning can guarantee structural properties you can exploit algorithmically. The key insight is: the maximum gap cannot come from within a single bucket — it must span across buckets. Why?',
       options: [
         { label: 'Because each bucket contains exactly one element', isCorrect: false, feedback: 'Buckets can hold multiple elements — the insight doesn\'t require one element per bucket. It relies on the bucket width being chosen so that the max gap exceeds any within-bucket spread.' },
         { label: 'If n elements span range R, at least one gap is ≥ R/(n−1), which exceeds the bucket width', isCorrect: true },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'gap-computation',
-      question: 'Once you\'ve distributed elements into buckets, how do you find the maximum gap?',
+      question: 'Recognizing exactly which summary values you need from each group can turn an expensive step into a cheap one. Once you\'ve distributed elements into buckets, how do you find the maximum gap?',
       options: [
         { label: 'Sort each bucket and compare all adjacent pairs', isCorrect: false, feedback: 'Sorting within buckets defeats the O(n) goal — sorting each bucket is O(k log k) per bucket. The key insight is you only need the min and max of each bucket, not the full sorted order within it.' },
         { label: 'Track only bucket min and max; compare max of one bucket to min of the next non-empty bucket', isCorrect: true },
@@ -67,4 +70,33 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def maximum_gap(self, nums):
+        n = len(nums)
+        if n < 2:
+            return 0
+        lo, hi = min(nums), max(nums)
+        if lo == hi:
+            return 0
+        bucket_size = max(1, (hi - lo) // (n - 1))
+        bucket_count = (hi - lo) // bucket_size + 1
+        buckets = [[None, None] for _ in range(bucket_count)]
+        for num in nums:
+            idx = (num - lo) // bucket_size
+            if buckets[idx][0] is None:
+                buckets[idx][0] = buckets[idx][1] = num
+            else:
+                buckets[idx][0] = min(buckets[idx][0], num)
+                buckets[idx][1] = max(buckets[idx][1], num)
+        max_gap = 0
+        prev_max = lo
+        for b_min, b_max in buckets:
+            if b_min is None:
+                continue
+            max_gap = max(max_gap, b_min - prev_max)
+            prev_max = b_max
+        return max_gap`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Sizing each bucket to roughly <code>(max - min) / (n - 1)</code> is what guarantees the true maximum gap can never be found *inside* a single bucket — with n numbers spread across n-1 (or fewer) bucket widths, the pigeonhole principle guarantees at least one bucket stays empty, so the largest gap must occur *between* two buckets, not within one.',
+  solutionExplanation: 'Since the maximum gap is provably a gap *between* buckets rather than within one, each bucket only ever needs to remember its own min and max — never a fully sorted list of everything inside it. Walking the buckets left to right and comparing each one\'s minimum against the running maximum of everything seen so far finds every between-bucket gap in one linear pass, entirely avoiding the O(n log n) a comparison sort would cost.',
 }

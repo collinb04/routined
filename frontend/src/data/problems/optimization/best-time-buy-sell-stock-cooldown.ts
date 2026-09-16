@@ -7,8 +7,10 @@ export default {
     { input: 'prices = [1,2,3,0,2]', output: '3', explanation: 'Buy day 1, sell day 2 (profit 1), cooldown day 3, buy day 4, sell day 5 (profit 2). Total = 3.' },
   ],
   constraints: ['1 ≤ prices.length ≤ 5000', '0 ≤ prices[i] ≤ 1000'],
-  starterCode: `def max_profit(prices):
-  pass`,
+  starterCode: `class Solution:
+    def max_profit(self, prices):
+        pass`,
+  runnerSetup: 'max_profit = Solution().max_profit',
   functionName: 'max_profit',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Descending', args: [[3,2,1]], expected: 0 },
     { label: 'Two days', args: [[1,2]], expected: 1 },
   ],
-  bruteHint: 'Describe the recursive approach that branches into buy, sell, or rest on every day, re-exploring the same day/state combinations, and explain why it\'s exponential in the number of days.',
-  optimizeHint: 'Name the handful of states (holding stock, free to buy, cooling down) whose best value per day you can memoize to collapse the recursion.',
+  bruteHint: 'The brute-force approach recursively branches into buy, sell, or rest on each day, exploring every possible sequence of decisions across all days. Since each day roughly doubles the number of branches, this costs O(2ⁿ) time overall, and the same day/state combinations get re-explored repeatedly. With prices.length up to 5000, could you identify the handful of distinct states that keep recurring, so each is computed only once?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'prices.length ≤ 5000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ prices.length ≤ 5000' },
+      question: 'Constraints reveal the complexity budget you are working within before you design your algorithm. prices.length ≤ 5000 tells you…',
       options: [
         { label: 'O(n log n) is required',      isCorrect: false, feedback: 'O(n log n) would work, but the constraint doesn\'t demand it. At n = 5000, even O(n²) is only 25 million operations — well within budget.' },
         { label: 'O(n) or O(n²) both fit',       isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'cooldown-rule',
-      question: 'After selling, you must wait one day before buying. What does this constraint introduce into your state?',
+      highlight: { location: 'description', text: 'After selling, you must wait one day before buying again (cooldown)' },
+      question: 'Special rules that restrict when an action can be taken often force extra information into your state. After selling, you must wait one day before buying. What does this constraint introduce into your state?',
       options: [
         { label: 'You can only sell on odd-numbered days',        isCorrect: false, feedback: 'The cooldown applies after each sale, not on fixed calendar positions. You can sell on any day — you just can\'t buy the very next day afterward.' },
         { label: 'You need to track whether you\'re in cooldown', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is maximum profit, not a transaction schedule. What does this tell you about your approach?',
+      highlight: { location: 'description', text: 'find the maximum profit you can achieve' },
+      question: 'The shape of the expected output often tells you how much information you actually need to retain while solving. The output is maximum profit, not a transaction schedule. What does this tell you about your approach?',
       options: [
         { label: 'Record every buy/sell pair you make',                isCorrect: false, feedback: 'Storing the actual transactions uses more memory and does more work than needed. You only need the profit total — not a record of when each transaction happened.' },
         { label: 'Optimize a value, not reconstruct a sequence',        isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'state-dependencies',
-      question: 'The cooldown means buying on day i depends on what happened on day i−2, not i−1. What does this imply?',
+      highlight: { location: 'description', text: 'After selling, you must wait one day before buying again (cooldown)' },
+      question: 'Understanding how far back a decision depends shapes exactly how much history your DP state must carry. The cooldown means buying on day i depends on what happened on day i−2, not i−1. What does this imply?',
       options: [
         { label: 'You need the full price history to decide',    isCorrect: false, feedback: 'You don\'t need every historical price — only the best outcomes from recent days. Three state values (holding, free, cooling) updated day by day are enough.' },
         { label: 'Your DP state must look back two days',        isCorrect: true },
@@ -81,4 +87,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_profit(self, prices):
+        if not prices:
+            return 0
+        hold = -prices[0]
+        sold = 0
+        rest = 0
+        for price in prices[1:]:
+            prev_hold, prev_sold, prev_rest = hold, sold, rest
+            hold = max(prev_hold, prev_rest - price)
+            sold = prev_hold + price
+            rest = max(prev_rest, prev_sold)
+        return max(sold, rest)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Buying can only happen from the <code>rest</code> state, never directly from <code>sold</code> — that\'s exactly what enforces the one-day cooldown, since the day right after selling only ever transitions into <code>rest</code>, not into a fresh purchase.',
+  solutionExplanation: 'Every day, being in one of exactly three states — holding a share, having just sold, or resting (free to buy, no cooldown) — captures everything the cooldown rule requires: <code>hold</code> either keeps yesterday\'s position or buys today from <code>rest</code>, <code>sold</code> can only arise by selling out of yesterday\'s <code>hold</code>, and <code>rest</code> carries forward the best of yesterday\'s <code>rest</code> or <code>sold</code> — which is precisely why a sale becomes available to reinvest one day later, not immediately.',
 }

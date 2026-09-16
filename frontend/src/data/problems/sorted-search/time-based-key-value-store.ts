@@ -26,14 +26,15 @@ export default {
       elif op == 'get': results.append(tm.get(*a))
   return results`,
   testCases: [
-    { label: 'set/get', args: [['set','get','get','set','get','get','get'],[[['foo','bar',1]],[['foo',1]],[['foo',3]],[['foo','bar2',4]],[['foo',4]],[['foo',5]],[['foo',0]]]], expected: ['bar','bar','bar2','bar2',''] },
+    { label: 'set/get', args: [['set','get','get','set','get','get','get'],[['foo','bar',1],['foo',1],['foo',3],['foo','bar2',4],['foo',4],['foo',5],['foo',0]]], expected: ['bar','bar','bar2','bar2',''] },
   ],
-  bruteHint: 'Describe scanning through all stored values for a key to find the largest timestamp ≤ the query, and its time complexity',
-  optimizeHint: 'Name the search technique that exploits the timestamps being stored in sorted order to find the answer in O(log n)',
+  bruteHint: "The brute-force approach stores each key's (timestamp, value) pairs in a plain list and, on every get call, scans through all of them to find the one with the largest timestamp that's still ≤ the query. That scan costs O(n) per get, where n is the number of values stored for that key. Given the guarantee that timestamps are stored in increasing order, what property of that list could let you avoid checking every entry one by one?",
+  optimizeComplexity: { time: 'O(log n)', space: 'O(n)' },
   clues: [
     {
       id: 'strictly-increasing-timestamps',
-      question: '"All timestamps for set are strictly increasing." What does this guarantee about the stored values for each key?',
+      question: 'Recognizing what a constraint guarantees about ordering often unlocks a faster search strategy. "All timestamps for set are strictly increasing." What does this guarantee about the stored values for each key?',
+      highlight: { location: 'constraint', text: 'All timestamps for set are strictly increasing' },
       options: [
         { label: 'Each key has at most one stored value', isCorrect: false, feedback: 'A key can have many values — one per set call. "Strictly increasing" means each new timestamp is larger than all previous ones for that key, not that there\'s only one.' },
         { label: 'Values for each key are appended in sorted timestamp order', isCorrect: true },
@@ -48,7 +49,8 @@ export default {
     },
     {
       id: 'get-semantics',
-      question: 'get(key, timestamp) returns the value with the largest stored timestamp ≤ given timestamp. What kind of search does "largest ≤ t" describe?',
+      question: 'Recognizing what kind of lookup a query describes tells you which search strategy applies. get(key, timestamp) returns the value with the largest stored timestamp ≤ given timestamp. What kind of search does "largest ≤ t" describe?',
+      highlight: { location: 'description', text: 'returns the value with the largest timestamp ≤ given timestamp' },
       options: [
         { label: 'Exact match search', isCorrect: false, feedback: 'Exact match returns a value only when the stored timestamp equals t exactly. "Largest ≤ t" must also return a value when t falls between stored timestamps — that\'s a floor search, not an exact match.' },
         { label: 'Floor (predecessor) binary search', isCorrect: true },
@@ -63,12 +65,12 @@ export default {
     },
     {
       id: 'data-structure-design',
-      question: 'Each key maps to multiple (timestamp, value) pairs. What storage structure best supports O(1) set and O(log n) get?',
+      question: 'The complexity targets required by an operation often dictate which combination of structures can achieve them. Each key maps to multiple (timestamp, value) pairs. What storage structure best supports O(1) set and O(log n) get?',
       options: [
-        { label: 'A sorted list of all (key, timestamp, value) triples', isCorrect: false, feedback: 'A single sorted list mixes keys together — each get would need to filter by key before binary searching. Separating by key first avoids that cost.' },
-        { label: 'A hash map from key to list of (timestamp, value) pairs', isCorrect: true },
-        { label: 'A sorted tree (BST) per key', isCorrect: false, feedback: 'A BST supports O(log n) insert and floor-search, but since timestamps are strictly increasing, appending to a list is O(1) and binary search gives O(log n). The simpler structure wins.' },
-        { label: 'A 2D array indexed by key and timestamp', isCorrect: false, feedback: 'A 2D array indexed by timestamp would need up to 10^7 slots per key — far too much space. Most timestamps are sparse.' },
+        { label: 'One shared collection holding every key\'s entries together, requiring a scan to the right key before searching within it', isCorrect: false, feedback: 'A single sorted list mixes keys together — each get would need to filter by key before binary searching. Separating by key first avoids that cost.' },
+        { label: 'A direct per-key lookup that leads straight to that key\'s own ordered history', isCorrect: true },
+        { label: 'A separate ordered structure per key that rebalances as entries are added', isCorrect: false, feedback: 'A BST supports O(log n) insert and floor-search, but since timestamps are strictly increasing, appending to a list is O(1) and binary search gives O(log n). The simpler structure wins.' },
+        { label: 'A fixed-size structure with a slot reserved for every possible timestamp, for every key', isCorrect: false, feedback: 'A 2D array indexed by timestamp would need up to 10^7 slots per key — far too much space. Most timestamps are sparse.' },
       ],
       correctFeedback: 'A dict mapping each key to a list of (timestamp, value) pairs: set appends in O(1), get binary-searches the list in O(log n). The strictly-increasing guarantee keeps the list sorted without any extra work.',
       wrongFeedback: [
@@ -77,4 +79,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class TimeMap:
+    def __init__(self):
+        self.store = {}
+
+    def set(self, key, value, timestamp):
+        self.store.setdefault(key, []).append((timestamp, value))
+
+    def get(self, key, timestamp):
+        entries = self.store.get(key, [])
+        lo, hi = 0, len(entries) - 1
+        result = ""
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if entries[mid][0] <= timestamp:
+                result = entries[mid][1]
+                lo = mid + 1
+            else:
+                hi = mid - 1
+        return result`,
+  solutionComplexity: { time: 'O(1) for set, O(log n) for get', space: 'O(n)' },
+  solutionCaveat: 'The guarantee that timestamps for a given key arrive strictly increasing means every new entry can just be appended to the end of that key\'s list — it is automatically in sorted order, with no separate insertion-position search needed on <code>set</code>.',
+  solutionExplanation: 'A hash map gets each key\'s own history in O(1), and because that history is already sorted by timestamp (thanks to the strictly-increasing guarantee), finding "the entry with the largest timestamp ≤ the query" is exactly the same binary-search-for-the-rightmost-valid-position pattern used elsewhere for sorted sequences — tracking the best candidate found so far while narrowing the search range, rather than scanning the whole history on every <code>get</code>.',
 }

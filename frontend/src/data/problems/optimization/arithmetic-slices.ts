@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [1]', output: '0' },
   ],
   constraints: ['1 ≤ nums.length ≤ 5000', '-1000 ≤ nums[i] ≤ 1000'],
-  starterCode: `def number_of_arithmetic_slices(nums):
-  pass`,
+  starterCode: `class Solution:
+    def number_of_arithmetic_slices(self, nums):
+        pass`,
+  runnerSetup: 'number_of_arithmetic_slices = Solution().number_of_arithmetic_slices',
   functionName: 'number_of_arithmetic_slices',
   conceptId: 'dp-1d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Single', args: [[1]], expected: 0 },
     { label: 'Not arithmetic', args: [[1,2,4]], expected: 0 },
   ],
-  bruteHint: 'Describe checking every subarray directly for the arithmetic property and the time complexity of that exhaustive scan.',
-  optimizeHint: 'Name the single running count you can carry forward in one pass instead of re-checking subarrays that share the same run.',
+  bruteHint: 'The brute-force approach checks every possible subarray of length 3 or more, scanning through each one to verify all consecutive differences are equal. With roughly O(n²) subarrays to consider and O(n) work to verify each, this exhaustive scan costs O(n³) overall. Given nums.length can reach 5000, is that fast enough, and what repeated work between overlapping subarrays could you avoid?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 5000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 5000' },
+      question: 'Constraints reveal the complexity budget you must fit within before you design an algorithm. nums.length ≤ 5000 tells you…',
       options: [
         { label: 'O(n³) is acceptable',         isCorrect: false, feedback: 'At n = 5000, O(n³) is 125 billion operations — nowhere near feasible. The constraint rules out cubic solutions.' },
         { label: 'O(n²) is the upper limit',     isCorrect: false, feedback: 'At n = 5000, O(n²) is 25 million operations — borderline but not ideal. The constraint should push you toward linear or near-linear approaches.' },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a count of subarrays, not the subarrays themselves. This means…',
+      highlight: { location: 'description', text: 'return the number of arithmetic subarrays' },
+      question: 'The shape of the expected output often tells you how much information you actually need to retain while solving. The output is a count of subarrays, not the subarrays themselves. This means…',
       options: [
         { label: 'You must store every valid subarray',         isCorrect: false, feedback: 'Storing all subarrays wastes memory and work. A count only needs an integer — you never need to know which subarrays are valid, only how many there are.' },
         { label: 'You only need to track a running count',      isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'minimum-length',
-      question: 'A valid slice requires at least 3 elements. What does this imply about how you extend slices?',
+      highlight: { location: 'description', text: 'A sequence of at least 3 elements is arithmetic if consecutive differences are equal' },
+      question: 'Definitional details such as a minimum valid length often determine how results accumulate as a sequence grows. A valid slice requires at least 3 elements. What does this imply about how you extend slices?',
       options: [
         { label: 'Every pair of equal-difference neighbors counts', isCorrect: false, feedback: 'Two elements always have a consistent difference — you need at least three to confirm the pattern holds. A pair alone is not a valid arithmetic slice.' },
         { label: 'You need to check groups of exactly 3 at a time',  isCorrect: false, feedback: 'Checking only triples misses longer slices. A valid arithmetic slice of length 4 contains multiple overlapping triples — and the longer slice itself counts separately.' },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'dp-recurrence',
-      question: 'Consecutive differences tell you whether a run continues. What local state is sufficient to count slices in one pass?',
+      highlight: { location: 'description', text: 'consecutive differences are equal' },
+      question: 'Finding the smallest piece of state that fully captures a subproblem is the key move in turning a scan into a DP recurrence. Consecutive differences tell you whether a run continues. What local state is sufficient to count slices in one pass?',
       options: [
         { label: 'The full array of differences',                       isCorrect: false, feedback: 'You don\'t need the entire difference array at once. Only the current run length — or equivalently, how many new slices the last extension added — is needed at each step.' },
         { label: 'How many slices end at the current position',         isCorrect: true },
@@ -81,4 +87,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def number_of_arithmetic_slices(self, nums):
+        n = len(nums)
+        total = 0
+        run = 0
+        for i in range(2, n):
+            if nums[i] - nums[i - 1] == nums[i - 1] - nums[i - 2]:
+                run += 1
+                total += run
+            else:
+                run = 0
+        return total`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>run</code> resets to 0 the instant the arithmetic pattern breaks, rather than just stopping the count — a broken run contributes nothing further until a fresh run of at least 3 elements starts building again.',
+  solutionExplanation: 'Every time an arithmetic run extends by one more matching element, it creates exactly one additional valid slice ending at that position — the previous slices are all still valid, plus a new one spanning the whole current run. Tracking just <code>run</code>, the number of slices ending at the current index, and adding it to a running total at every step accumulates every valid subarray without ever needing to enumerate or store one.',
 }

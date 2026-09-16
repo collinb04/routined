@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [9,8,1,0,1,9,4,0,4,1]', output: '7' },
   ],
   constraints: ['2 ≤ nums.length ≤ 5 × 10⁴', '0 ≤ nums[i] ≤ 5 × 10⁴'],
-  starterCode: `def max_width_ramp(nums):
-  pass`,
+  starterCode: `class Solution:
+    def max_width_ramp(self, nums):
+        pass`,
+  runnerSetup: 'max_width_ramp = Solution().max_width_ramp',
   functionName: 'max_width_ramp',
   conceptId: 'monotonic-stack',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Descending', args: [[3,2,1]], expected: 0 },
     { label: 'Single ramp', args: [[1,2]], expected: 1 },
   ],
-  bruteHint: 'Describe checking every pair (i, j) and its time complexity',
-  optimizeHint: 'Name the structure that lets you scan from the right while tracking a monotonic decreasing set of candidate left indices',
+  bruteHint: 'The brute-force approach checks every pair (i, j) with i < j, testing whether nums[i] ≤ nums[j] and tracking the widest width seen so far. That is roughly n²/2 pairs examined. At n up to 50,000, how many comparisons does that come out to, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 5 × 10⁴ tells you…',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. What does n ≤ 5 × 10⁴ tell you?',
+      highlight: { location: 'constraint', text: '2 ≤ nums.length ≤ 5 × 10⁴' },
       options: [
         { label: 'O(n²) is fine for n = 50,000', isCorrect: false, feedback: 'At n = 50,000, O(n²) is 2.5 billion operations — far too slow. The constraint is signaling that a quadratic brute-force over all pairs will time out.' },
         { label: 'O(n log n) or better is needed', isCorrect: true },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'ramp-start-candidates',
-      question: 'A ramp requires nums[i] ≤ nums[j] with i < j. To maximize j − i, what kind of left endpoints i are worth keeping?',
+      question: 'We can rule out certain left endpoints entirely based on how the ramp condition is defined. A ramp requires nums[i] ≤ nums[j] with i < j. To maximize j − i, what kind of left endpoints i are worth keeping?',
       options: [
         { label: 'All indices in sorted order', isCorrect: false, feedback: 'Sorting loses the original indices, which define the width j − i. The positions are exactly what you need to preserve.' },
         { label: 'Indices where nums[i] is a new prefix minimum', isCorrect: true },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'scan-direction',
-      question: 'After identifying useful left endpoints, which direction should you scan for right endpoints j to find the widest ramp?',
+      question: 'We can determine the right scanning strategy based on how ramp width is maximized. After identifying useful left endpoints, which direction should you scan for right endpoints j to find the widest ramp?',
       options: [
         { label: 'Left to right, greedily', isCorrect: false, feedback: 'Scanning left to right for j finds a valid ramp early but not necessarily the widest one — you want j as far right as possible.' },
         { label: 'Right to left, matching greedily', isCorrect: true },
@@ -67,4 +70,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_width_ramp(self, nums):
+        stack = []
+        for i, n in enumerate(nums):
+            if not stack or n < nums[stack[-1]]:
+                stack.append(i)
+        best = 0
+        for j in range(len(nums) - 1, -1, -1):
+            while stack and nums[stack[-1]] <= nums[j]:
+                best = max(best, j - stack[-1])
+                stack.pop()
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'This must be two separate passes, not one combined left-to-right scan — popping and computing widths *while* still building the candidate stack would consume an index (like the true global minimum) before a later, wider-reaching j ever got the chance to pair with it.',
+  solutionExplanation: 'Only indices that are a new running minimum can ever be the "i" side of the *widest* possible ramp — any index with a value higher than something already seen to its left is strictly dominated by that earlier, smaller value, since anything the later index could pair with, the earlier one could pair with too, at a wider width. Building that decreasing-value stack first captures every real candidate, and only then scanning <code>j</code> from the rightmost index inward lets each candidate be tested against the largest possible <code>j</code> before ever being discarded.',
 }

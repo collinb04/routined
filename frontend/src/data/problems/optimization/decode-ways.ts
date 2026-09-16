@@ -9,8 +9,10 @@ export default {
     { input: 's = "06"', output: '0' },
   ],
   constraints: ['1 <= s.length <= 100', 's contains only digits and may contain leading zeros'],
-  starterCode: `def num_decodings(s):
-  pass`,
+  starterCode: `class Solution:
+    def num_decodings(self, s):
+        pass`,
+  runnerSetup: 'num_decodings = Solution().num_decodings',
   functionName: 'num_decodings',
   conceptId: 'dp-1d',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: '"226"', args: ['226'], expected: 3 },
     { label: '"06"', args: ['06'], expected: 0 },
   ],
-  bruteHint: 'Describe the recursive approach that branches into a one-digit or two-digit decode at each position, and explain why the same remaining suffixes get re-explored exponentially.',
-  optimizeHint: 'Name the technique for caching the number of ways to decode each prefix so each position is computed only once.',
+  bruteHint: 'The brute-force approach recursively branches at each position, trying a one-digit decode and, when valid, a two-digit decode, exploring every combination of splits. Since each position can fork into two recursive calls, the recursion tree grows to O(2^n) calls in the worst case, even though most of those calls re-derive the same suffix decode count from scratch. If the same starting index gets revisited across many different branches, what does that overlap tell you about how much of this work is redundant?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 100 tells you…',
+      question: 'Constraint bounds tell you exactly which time complexities are actually required, so you do not waste effort optimizing past what is needed or undershoot into something too slow. s.length ≤ 100 tells you…',
+      highlight: { location: 'constraint', text: '1 <= s.length <= 100' },
       options: [
         { label: 'O(2^n) is fine — n is small',    isCorrect: false, feedback: 'At n = 100, O(2^100) is astronomical. Small n in DP problems permits polynomial slowness, not exponential — naive recursion without memoization will time out.' },
         { label: 'Any polynomial approach works',   isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'zero-handling',
-      question: '"s may contain leading zeros" is explicitly stated. What does this signal about edge cases?',
+      question: 'Constraints that call out an unusual input case explicitly are a signal that the naive solution breaks exactly there, so they are worth checking before you code. "s may contain leading zeros" is explicitly stated. What does this signal about edge cases?',
+      highlight: { location: 'constraint', text: 's contains only digits and may contain leading zeros' },
       options: [
         { label: 'Strip leading zeros before decoding',    isCorrect: false, feedback: 'Stripping zeros would change the string\'s meaning. "06" is not decodable at all — "0" has no valid single-digit mapping (A=1, not A=0). You must handle zeros in-place.' },
         { label: 'A \'0\' digit can never be decoded alone', isCorrect: true },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'two-choices-at-each-step',
-      question: 'At each position, you can decode one digit or two digits. What does this imply about subproblem structure?',
+      question: 'How the problem lets you consume input at each step determines exactly which prior states your recurrence needs to reach back to, so this framing is worth translating into DP terms early. At each position, you can decode one digit or two digits. What does this imply about subproblem structure?',
+      highlight: { location: 'description', text: 'A=1, B=2, ..., Z=26' },
       options: [
         { label: 'dp[i] depends only on dp[i-1]',                isCorrect: false, feedback: 'If you take a two-digit step, you skip back two positions, not one. dp[i] can depend on both dp[i-1] (one-digit decode) and dp[i-2] (two-digit decode).' },
         { label: 'dp[i] can depend on dp[i-1] and dp[i-2]',     isCorrect: true },
@@ -68,7 +73,8 @@ export default {
     },
     {
       id: 'valid-two-digit-range',
-      question: 'Two-digit codes are valid only from 10 to 26. What does this bound rule out?',
+      question: 'Precise numeric bounds baked into the problem tell you exactly which transitions are legal, and getting them exactly right is what separates a correct recurrence from an off-by-one bug. Two-digit codes are valid only from 10 to 26. What does this bound rule out?',
+      highlight: { location: 'description', text: 'Z=26' },
       options: [
         { label: 'Any two-digit number is a valid code',         isCorrect: false, feedback: '"27" through "99" have no letter mapping — only 1–26 are valid. And "01", "02" etc. are invalid because no letter maps to a code with a leading zero.' },
         { label: 'Codes starting with 0, or above 26, are invalid', isCorrect: true },
@@ -82,4 +88,24 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def num_decodings(self, s):
+        n = len(s)
+        if n == 0 or s[0] == '0':
+            return 0
+        dp_prev2 = 1
+        dp_prev1 = 1
+        for i in range(1, n):
+            curr = 0
+            if s[i] != '0':
+                curr += dp_prev1
+            two_digit = int(s[i - 1:i + 1])
+            if 10 <= two_digit <= 26:
+                curr += dp_prev2
+            dp_prev2 = dp_prev1
+            dp_prev1 = curr
+        return dp_prev1`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'A leading <code>\'0\'</code> anywhere the one-digit path is tried is simply skipped (<code>curr</code> gets no contribution from <code>dp_prev1</code>) rather than crashing or defaulting to some fallback value — a standalone zero has no letter mapping, so that path correctly contributes zero ways, not an error.',
+  solutionExplanation: 'At each position, the count of ways to decode the prefix ending there is the sum of two independent contributions: treating the current character as its own one-digit code (carrying forward <code>dp_prev1</code>, valid whenever it isn\'t <code>\'0\'</code>) and treating the current and previous characters together as a two-digit code (carrying forward <code>dp_prev2</code>, valid only when that two-digit value falls between 10 and 26). Both contributions can apply at the same position, which is exactly why a string like "226" has more than one decoding — the DP just needs the two most recent counts, never the full history, so it collapses to O(1) space.',
 }

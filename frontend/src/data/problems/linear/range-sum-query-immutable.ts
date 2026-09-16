@@ -7,23 +7,23 @@ export default {
     { input: 'nums=[−2,0,3,−5,2,−1], sumRange(0,2), sumRange(2,5), sumRange(0,5)', output: '1, −1, −3', explanation: 'Prefix sums allow O(1) range queries.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁴', '-10⁵ ≤ nums[i] ≤ 10⁵', 'At most 10⁴ calls to sumRange'],
-  starterCode: `def range_sum_query(nums, queries):
-  prefix = [0] * (len(nums) + 1)
-  for i, v in enumerate(nums):
-      prefix[i+1] = prefix[i] + v
-  return [prefix[r+1] - prefix[l] for l, r in queries]`,
+  starterCode: `class Solution:
+    def range_sum_query(self, nums, queries):
+        pass`,
+  runnerSetup: 'range_sum_query = Solution().range_sum_query',
   functionName: 'range_sum_query',
   conceptId: 'prefix-sum',
   testCases: [
     { label: 'Multiple queries', args: [[-2,0,3,-5,2,-1],[[0,2],[2,5],[0,5]]], expected: [1,-1,-3] },
     { label: 'Single query', args: [[1,2,3,4],[[1,3]]], expected: [9] },
   ],
-  bruteHint: 'Describe summing the elements in the range from scratch on every query, and name its time complexity per query',
-  optimizeHint: 'Name the precomputed structure that answers each query in O(1)',
+  bruteHint: 'For each query, imagine looping from left to right and adding every element you pass along the way — that costs O(n) in the worst case, since the range can span the whole array. Now imagine repeating that scan for up to 10⁴ separate queries. What does the total cost become, and does it still fit comfortably within the time limit?',
+  optimizeComplexity: { time: 'O(1)', space: 'O(n)' },
   clues: [
     {
       id: 'multiple-queries',
-      question: '"At most 10⁴ calls to sumRange." Why does the number of queries matter?',
+      question: 'Query volume tells you how much total work your solution can afford. "At most 10⁴ calls to sumRange." Why does the number of queries matter?',
+      highlight: { location: 'constraint', text: 'At most 10⁴ calls to sumRange' },
       options: [
         { label: 'More queries means a longer output array', isCorrect: false, feedback: 'The output length equals the number of queries, but that is not why query count affects strategy. The key concern is total computation cost.' },
         { label: 'Each naive query costs O(n); 10⁴ queries costs O(n·q) total', isCorrect: true },
@@ -38,7 +38,7 @@ export default {
     },
     {
       id: 'prefix-sum-definition',
-      question: 'prefix[i] stores the sum of nums[0..i−1]. How do you compute sumRange(left, right) from this?',
+      question: 'Which structure fits often comes down to getting its arithmetic exactly right. prefix[i] stores the sum of nums[0..i−1]. How do you compute sumRange(left, right) from this?',
       options: [
         { label: 'prefix[right] − prefix[left]', isCorrect: false, feedback: 'This gives sum of nums[0..right−1] minus nums[0..left−1], which excludes nums[left]. The correct formula includes nums[left]: prefix[right+1] − prefix[left].' },
         { label: 'prefix[right+1] − prefix[left]', isCorrect: true },
@@ -53,7 +53,7 @@ export default {
     },
     {
       id: 'immutable-constraint',
-      question: '"Immutable" means nums does not change after construction. How does this affect your strategy?',
+      question: 'Whether the input can change tells you if precomputed work stays valid across future calls. "Immutable" means nums does not change after construction. How does this affect your strategy?',
       options: [
         { label: 'You must copy nums before modifying it', isCorrect: false, feedback: 'Nothing in the solution requires modifying nums. "Immutable" is a signal about query semantics, not about copying.' },
         { label: 'Precompute once; answer all queries from the precomputed data', isCorrect: true },
@@ -67,4 +67,13 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def range_sum_query(self, nums, queries):
+        prefix = [0] * (len(nums) + 1)
+        for i, v in enumerate(nums):
+            prefix[i + 1] = prefix[i] + v
+        return [prefix[r + 1] - prefix[l] for l, r in queries]`,
+  solutionComplexity: { time: 'O(1) per query after O(n) precomputation', space: 'O(n)' },
+  solutionCaveat: 'The prefix array is padded with a leading 0 (<code>prefix[0] = 0</code>) so that <code>sumRange(0, r)</code> works the same as any other query — without it, querying from index 0 would need its own special case.',
+  solutionExplanation: 'Since the array never changes, the sum of any range can be derived once and reused forever: <code>prefix[i]</code> holds the sum of everything before index <code>i</code>, so <code>sumRange(l, r) = prefix[r+1] - prefix[l]</code> subtracts away everything before <code>l</code> from everything before <code>r+1</code>, leaving exactly the elements from <code>l</code> to <code>r</code>. Building that array costs O(n) once, and every one of the up to 10⁴ queries afterward is a single subtraction.',
 }

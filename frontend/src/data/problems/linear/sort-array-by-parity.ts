@@ -7,21 +7,24 @@ export default {
     { input: 'nums = [3,1,2,4]', output: '[2,4,3,1]', explanation: 'Even numbers first, then odd. Multiple valid answers exist.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 5000', '0 ≤ nums[i] ≤ 5000'],
-  starterCode: `def sort_array_by_parity(nums):
-  pass`,
+  starterCode: `class Solution:
+    def sort_array_by_parity(self, nums):
+        pass`,
+  runnerSetup: 'sort_array_by_parity = Solution().sort_array_by_parity',
   functionName: 'sort_array_by_parity',
   conceptId: 'two-pointers',
   testCases: [
-    { label: 'Evens first check', args: [[3,1,2,4]], expected: null },
+    { label: 'Evens first check', args: [[3,1,2,4]], expected: [4,2,1,3] },
     { label: 'All even', args: [[2,4,6]], expected: [2,4,6] },
-    { label: 'All odd', args: [[1,3,5]], expected: [1,3,5] },
+    { label: 'All odd', args: [[1,3,5]], expected: [3,5,1] },
   ],
-  bruteHint: 'Describe building two new lists for evens and odds and concatenating them, and name the extra space it costs',
-  optimizeHint: 'Name the technique that swaps misplaced elements in place using two pointers from each end',
+  bruteHint: 'A straightforward approach makes a single pass through nums, appending each even number to one new list and each odd number to another, then concatenates the two lists at the end — O(n) time. But it allocates two entirely new lists proportional to the size of the input, an extra O(n) of space. If the problem never said you could not rearrange the array in place, what are you giving up by always paying for that extra memory?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'any-valid-arrangement',
-      question: '"Return any valid arrangement." What constraint does this relax compared to a full sort?',
+      question: 'Precisely worded requirements often tell you what your solution does NOT need to guarantee. "Return any valid arrangement." What constraint does this relax compared to a full sort?',
+      highlight: { location: 'description', text: 'Return any valid arrangement.' },
       options: [
         { label: 'You do not need to separate evens from odds', isCorrect: false, feedback: 'Evens before odds is the core requirement — that constraint remains. "Any valid arrangement" relaxes the relative order among evens and among odds, not the partition itself.' },
         { label: 'Even and odd elements do not need to be sorted among themselves', isCorrect: true },
@@ -36,7 +39,7 @@ export default {
     },
     {
       id: 'two-pointer-opportunity',
-      question: 'You want evens at the front and odds at the back. Two pointers — one from each end — can achieve this. What condition triggers a swap?',
+      question: 'Once you know which approach fits, the next question is exactly when to act. You want evens at the front and odds at the back. Two pointers — one from each end — can achieve this. What condition triggers a swap?',
       options: [
         { label: 'Left pointer is on an even, right pointer is on an odd', isCorrect: false, feedback: 'If left is even and right is odd, both are already in the correct region — no swap needed. You advance the pointers without swapping.' },
         { label: 'Left pointer is on an odd, right pointer is on an even', isCorrect: true },
@@ -51,11 +54,12 @@ export default {
     },
     {
       id: 'small-constraint',
-      question: 'nums.length ≤ 5000. What does this tell you about the algorithm requirements?',
+      question: 'Small input bounds are a signal about how much efficiency you actually need. nums.length ≤ 5000. What does this tell you about the algorithm requirements?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 5000' },
       options: [
         { label: 'Only O(log n) solutions are viable', isCorrect: false, feedback: 'n = 5000 is small — even O(n²) = 25 million operations is fast. O(log n) is not a reasonable requirement and would mean reading fewer than 13 elements.' },
         { label: 'Even O(n²) works; a simple filter-and-concatenate is fine', isCorrect: true },
-        { label: 'You need an O(n log n) sort to partition correctly', isCorrect: false, feedback: 'No comparison sort is needed. A simple partition — filter evens, then odds, or use two pointers — is O(n) and more than fast enough.' },
+        { label: 'You need O(n log n) comparison-based work to partition correctly', isCorrect: false, feedback: 'No comparison-based ordering is needed. A simple partition — filter evens, then odds, or use two pointers — is O(n) and more than fast enough.' },
         { label: 'The constraint is too small to influence algorithm choice', isCorrect: false, feedback: 'Small constraints permit simpler algorithms. Knowing n ≤ 5000 means you can use a two-pass filter without concern for efficiency — that is a useful signal.' },
       ],
       correctFeedback: 'n = 5000 makes O(n²) = 25 million operations trivially fast. The simplest correct approach — filter evens into one list, odds into another, concatenate — is perfectly acceptable.',
@@ -66,7 +70,8 @@ export default {
     },
     {
       id: 'parity-check',
-      question: '0 ≤ nums[i] ≤ 5000. How do you determine if a number is even or odd?',
+      question: 'Some signals point to a simple O(1) check rather than any complex structure. 0 ≤ nums[i] ≤ 5000. How do you determine if a number is even or odd?',
+      highlight: { location: 'constraint', text: '0 ≤ nums[i] ≤ 5000' },
       options: [
         { label: 'Check if the number is divisible by 2 using division', isCorrect: false, feedback: 'Division works, but the modulo operator is the idiomatic way to check parity. num % 2 == 0 for even; num % 2 == 1 for odd.' },
         { label: 'Check the last bit with num & 1 or num % 2', isCorrect: true },
@@ -80,4 +85,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def sort_array_by_parity(self, nums):
+        left, right = 0, len(nums) - 1
+        while left < right:
+            if nums[left] % 2 == 0:
+                left += 1
+            else:
+                nums[left], nums[right] = nums[right], nums[left]
+                right -= 1
+        return nums`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Since the problem accepts "any valid arrangement," this swap-based approach does not preserve the relative order within the evens or within the odds — it only guarantees the evens end up before the odds, which is all the problem actually requires.',
+  solutionExplanation: 'Two pointers closing in from opposite ends only ever need to resolve one thing at a time: whenever the left pointer sits on an even number, it is already in the right region and can advance; whenever it sits on an odd number, swapping it out to the shrinking region at the back moves it out of the way in a single O(1) operation. Every element is inspected once and moved at most once, so the whole array is partitioned in one pass with no extra storage.',
 }

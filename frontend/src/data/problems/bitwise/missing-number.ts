@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [0,1]', output: '2', explanation: '2 is missing from [0,2].' },
   ],
   constraints: ['n = nums.length', '0 ≤ nums[i] ≤ n', 'All numbers are distinct'],
-  starterCode: `def missing_number(nums):
-  pass`,
+  starterCode: `class Solution:
+    def missing_number(self, nums):
+        pass`,
+  runnerSetup: 'missing_number = Solution().missing_number',
   functionName: 'missing_number',
   conceptId: 'bit-manipulation',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Single element 0', args: [[0]], expected: 1 },
     { label: 'Missing first', args: [[1,2,3]], expected: 0 },
   ],
-  bruteHint: 'Describe checking each value in [0, n] against a set of nums, and its time or space cost',
-  optimizeHint: 'Name the arithmetic property that finds the missing value in one pass without extra storage',
+  bruteHint: 'The brute-force approach checks each value from 0 to n against the array, either rescanning the array each time or first loading it into extra storage for faster lookups. Repeated scanning costs O(n²) time, while the extra-storage version costs O(n) time but O(n) space. Either way, you\'re paying in time or space just to locate one missing value. Is there a way to find that value using only arithmetic over the numbers you already have, with no extra storage at all?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'range-guarantee',
-      question: 'The array contains n distinct numbers from [0, n]. What does the closed range guarantee?',
+      question: 'Knowing exactly how many values should exist in a range tells you exactly how many can be missing. The array contains n distinct numbers from [0, n]. What does the closed range guarantee?',
+      highlight: { location: 'description', text: '<code>n</code> distinct numbers in the range <code>[0, n]</code>' },
       options: [
         { label: 'Exactly one number is missing from the range', isCorrect: true },
         { label: 'Multiple numbers could be missing', isCorrect: false, feedback: 'The array has n elements covering n + 1 possible values (0 through n). Exactly one slot is empty — the pigeonhole math leaves no room for two gaps.' },
@@ -38,9 +41,10 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a single integer — the missing number. What does "exactly one missing" let you skip?',
+      question: 'The type of answer you\'re asked for often tells you how much you need to track along the way. The output is a single integer — the missing number. What does "exactly one missing" let you skip?',
+      highlight: { location: 'description', text: 'return the only number in the range that is missing' },
       options: [
-        { label: 'Sorting the array to find the gap', isCorrect: false, feedback: 'Sorting takes O(n log n) and O(1) space, but the single-missing guarantee lets you do O(n) work without sorting — you don\'t need elements in order to compute a sum or XOR.' },
+        { label: 'Putting every element in increasing order first', isCorrect: false, feedback: 'Sorting takes O(n log n) and O(1) space, but the single-missing guarantee lets you do O(n) work without sorting — you don\'t need elements in order to compute a sum or XOR.' },
         { label: 'Collecting all candidate missing values', isCorrect: true },
         { label: 'Checking every element against the range', isCorrect: false, feedback: 'You do need to process every element — but only once, as part of an aggregate operation, not to collect candidates. The guarantee is about how many answers to track, not whether to read the input.' },
         { label: 'Handling the case where nothing is missing', isCorrect: false, feedback: 'The guarantee already rules that out: with n elements in [0, n], something is always missing. You never need a "nothing missing" branch.' },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'xor-property',
-      question: '"All numbers are distinct" and the range is [0, n]. XOR has the property that a ^ a = 0 and a ^ 0 = a. What does this suggest?',
+      question: 'Recognizing a mathematical property tied to a specific operator can point straight at the technique to use. "All numbers are distinct" and the range is [0, n]. XOR has the property that a ^ a = 0 and a ^ 0 = a. What does this suggest?',
+      highlight: { location: 'constraint', text: 'All numbers are distinct' },
       options: [
         { label: 'XOR every element; the result is the missing number', isCorrect: false, feedback: 'XORing only the array elements leaves an imbalanced result — you need to also XOR the full expected range [0, n]. Only when each present number is XORed twice does it cancel to zero, leaving the missing one.' },
         { label: 'XOR the array elements with the indices 0..n', isCorrect: true },
@@ -68,7 +73,7 @@ export default {
     },
     {
       id: 'sum-approach',
-      question: 'The expected sum of [0, n] is n*(n+1)/2. What does comparing it to the actual sum tell you?',
+      question: 'An arithmetic identity for a known range can let you compute an answer without scanning for it directly. The expected sum of [0, n] is n*(n+1)/2. What does comparing it to the actual sum tell you?',
       options: [
         { label: 'Nothing — sums don\'t identify which number is missing', isCorrect: false, feedback: 'With exactly one number missing, the difference between the expected sum and the actual sum is precisely that missing number. Sums are a direct path to the answer.' },
         { label: 'The missing number equals expected_sum − actual_sum', isCorrect: false },
@@ -82,4 +87,13 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def missing_number(self, nums):
+        result = len(nums)
+        for i, n in enumerate(nums):
+            result ^= i ^ n
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Starting <code>result</code> at <code>len(nums)</code> (rather than 0) accounts for the index <code>n</code> itself — the full expected range is <code>0..n</code>, which has <code>n+1</code> values, but only indices <code>0..n-1</code> exist to XOR against during the loop.',
+  solutionExplanation: 'XOR-ing every index <code>0..n-1</code> together with every value actually present cancels out any number that appears in both roles — index and value — leaving only whichever number never got paired with its matching index because it was missing. This works for the same reason as the classic single-number XOR trick: pairing something with itself always cancels, so everything that lines up perfectly vanishes and only the true mismatch survives.',
 }

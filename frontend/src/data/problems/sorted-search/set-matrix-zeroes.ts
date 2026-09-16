@@ -7,21 +7,24 @@ export default {
     { input: 'matrix = [[1,1,1],[1,0,1],[1,1,1]]', output: '[[1,0,1],[0,0,0],[1,0,1]]', explanation: 'Row 1 and column 1 become zero.' },
   ],
   constraints: ['m == matrix.length', 'n == matrix[0].length', '1 ≤ m, n ≤ 200', '-2³¹ ≤ matrix[i][j] ≤ 2³¹ − 1'],
-  starterCode: `def set_zeroes(matrix):
-  pass`,
+  starterCode: `class Solution:
+    def set_zeroes(self, matrix):
+        pass`,
+  runnerSetup: 'set_zeroes = Solution().set_zeroes',
   functionName: 'set_zeroes',
-  conceptId: 'math-geometry',
+  conceptId: 'multi-pass-patterns',
   testCases: [
     { label: 'Center zero', args: [[[1,1,1],[1,0,1],[1,1,1]]], expected: [[1,0,1],[0,0,0],[1,0,1]] },
     { label: 'Corner zero', args: [[[0,1,2],[3,4,5],[6,7,8]]], expected: [[0,0,0],[0,4,5],[0,7,8]] },
     { label: 'No zeroes', args: [[[1,2],[3,4]]], expected: [[1,2],[3,4]] },
   ],
-  bruteHint: 'Describe recording the rows and columns that contain a zero in extra sets, then zeroing them in a second pass, and its space complexity',
-  optimizeHint: 'Name the technique that reuses the matrix\'s own first row and first column as markers to achieve O(1) extra space',
+  bruteHint: 'A brute-force approach scans the matrix once and records every row and column containing a zero into two separate sets, then makes a second pass zeroing any cell whose row or column appears in those sets. This runs in O(m · n) time but costs O(m + n) extra space for the sets. Since the problem requires O(1) extra space, what could you reuse instead of allocating new sets?',
+  optimizeComplexity: { time: 'O(m · n)', space: 'O(1)' },
   clues: [
     {
       id: 'order-of-operations',
-      question: 'If you set an entire row to 0 as soon as you find a zero, what goes wrong when you scan the rest of the matrix?',
+      question: 'In-place mutations can corrupt data you haven\'t read yet. If you set an entire row to 0 as soon as you find a zero, what goes wrong when you scan the rest of the matrix?',
+      highlight: { location: 'description', text: 'in-place' },
       options: [
         { label: 'Nothing — setting rows early is fine', isCorrect: false, feedback: 'Setting a row to 0 immediately introduces new zeros in that row. When you continue scanning, you\'ll treat those newly created zeros as original zeros and incorrectly zero their columns.' },
         { label: 'New zeros from zeroing contaminate later scans', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'space-constraint',
-      question: 'You must use O(1) extra space. A naive approach records zero positions in a set — what does O(1) force you to use instead?',
+      question: 'Explicit space bounds in a problem statement often point directly at the intended technique. You must use O(1) extra space. A naive approach records zero positions in a set — what does O(1) force you to use instead?',
+      highlight: { location: 'description', text: 'Use O(1) extra space.' },
       options: [
         { label: 'A copy of the matrix', isCorrect: false, feedback: 'Copying the matrix costs O(m × n) space — far from O(1). That approach also violates the in-place requirement.' },
         { label: 'The first row and first column as markers', isCorrect: true },
@@ -51,7 +55,7 @@ export default {
     },
     {
       id: 'first-row-column-edge-case',
-      question: 'When using the first row and column as markers, what edge case must you handle separately?',
+      question: 'Repurposing existing storage as markers can create ambiguity wherever marker and real data overlap. When using the first row and column as markers, what edge case must you handle separately?',
       options: [
         { label: 'What if the matrix has only one row or one column', isCorrect: false, feedback: 'Single-row and single-column matrices work correctly with the marker approach — the first row is the entire matrix in that case. The edge case is about the markers themselves being overwritten.' },
         { label: 'Whether the first row or first column originally contained a zero', isCorrect: true },
@@ -65,4 +69,32 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def set_zeroes(self, matrix):
+        rows, cols = len(matrix), len(matrix[0])
+        first_row_has_zero = any(matrix[0][c] == 0 for c in range(cols))
+        first_col_has_zero = any(matrix[r][0] == 0 for r in range(rows))
+
+        for r in range(1, rows):
+            for c in range(1, cols):
+                if matrix[r][c] == 0:
+                    matrix[r][0] = 0
+                    matrix[0][c] = 0
+
+        for r in range(1, rows):
+            for c in range(1, cols):
+                if matrix[r][0] == 0 or matrix[0][c] == 0:
+                    matrix[r][c] = 0
+
+        if first_row_has_zero:
+            for c in range(cols):
+                matrix[0][c] = 0
+        if first_col_has_zero:
+            for r in range(rows):
+                matrix[r][0] = 0
+
+        return matrix`,
+  solutionComplexity: { time: 'O(m × n)', space: 'O(1)' },
+  solutionCaveat: 'Row 0 and column 0 get reused as the marker storage, which means whether *they themselves* originally contained a zero has to be recorded up front — otherwise that information is gone by the time the markers get written and there\'d be no way to tell a real original zero from a marker.',
+  solutionExplanation: 'Zeroing a cell the moment a zero is found would immediately start corrupting the row/column boundaries other cells still need to check — a single pass can\'t safely mutate and read at the same time. Splitting it into passes fixes that: first record *where* zeros are (using the matrix\'s own first row and column as free storage, avoiding a separate O(m+n) structure), then zero out the interior based on those markers, and finally handle row 0 and column 0 last, using the two flags captured before any of this began.',
 }

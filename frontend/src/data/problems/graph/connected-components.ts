@@ -3,9 +3,11 @@ export default {
   title: 'Number of Connected Components',
   difficulty: 'medium',
   description: 'Given <code>n</code> nodes labeled 0 to n-1 and a list of undirected edges, return the number of connected components in the graph. Use Union-Find.',
-  starterCode: `def count_components(n, edges):
-  # Hint: initialize parent[i] = i, then union each edge, count unique roots
-  pass`,
+  starterCode: `class Solution:
+    def count_components(self, n, edges):
+        # Hint: initialize parent[i] = i, then union each edge, count unique roots
+        pass`,
+  runnerSetup: 'count_components = Solution().count_components',
   examples: [
     { input: 'n=5, edges=[[0,1],[1,2],[3,4]]', output: '2' },
     { input: 'n=5, edges=[[0,1],[1,2],[2,3],[3,4]]', output: '1' },
@@ -23,12 +25,13 @@ export default {
     { label: 'No edges', args: [4, []], expected: 4 },
     { label: 'All isolated', args: [3, []], expected: 3 },
   ],
-  bruteHint: 'Describe testing connectivity between every pair of nodes independently, and the complexity that results',
-  optimizeHint: 'Name the structure that merges nodes into groups and lets you check group membership in near-constant time',
+  bruteHint: 'A brute-force approach is to test connectivity between every pair of nodes independently — for each pair, run a BFS or DFS across the edge list to see if a path exists between them. With n nodes, that\'s O(n²) pair checks, and each connectivity check can itself cost O(n + E), giving a total that\'s far worse than linear. What structure would let you avoid re-checking the same connectivity relationship over and over?',
+  optimizeComplexity: { time: 'O(E · α(V))', space: 'O(V)' },
   clues: [
     {
       id: 'constraint-size',
-      question: 'n ≤ 2000 nodes and up to 5000 edges. What complexity is acceptable?',
+      question: 'Constraint bounds tell you which time complexities are safe and which will be too slow, guiding your choice of data structure. n ≤ 2000 nodes and up to 5000 edges. What complexity is acceptable?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 2000' },
       options: [
         { label: 'O(n²) — 4 million ops, borderline', isCorrect: false, feedback: 'At n = 2000, O(n²) is 4 million operations — fast in practice, but the edge count only goes to 5000. An O(n + E) approach with Union-Find is both correct and clearly efficient.' },
         { label: 'O(n + E) with Union-Find is ideal', isCorrect: true },
@@ -43,7 +46,7 @@ export default {
     },
     {
       id: 'no-edges-case',
-      question: 'When edges is empty, the answer equals n. What does this tell you about initialization?',
+      question: 'Thinking through the simplest possible input often reveals exactly how your algorithm\'s state should be initialized. When edges is empty, the answer equals n. What does this tell you about initialization?',
       options: [
         { label: 'Start with component count = 0 and increment on each edge', isCorrect: false, feedback: 'Starting at 0 and incrementing on edges counts edges, not components. With no edges and n = 4, you\'d return 0, not 4. The base state is n isolated nodes — n components.' },
         { label: 'Start with component count = n, decrement when two roots merge', isCorrect: true },
@@ -58,7 +61,7 @@ export default {
     },
     {
       id: 'union-find-root',
-      question: '"Count unique roots" — after processing all edges, how do you count components in a Union-Find structure?',
+      question: 'Understanding what a data structure\'s internal invariant looks like after processing tells you how to extract your final answer from it. "Count unique roots" — after processing all edges, how do you count components in a Union-Find structure?',
       options: [
         { label: 'Count nodes where parent[i] == i', isCorrect: true },
         { label: 'Count nodes where parent[i] != i', isCorrect: false, feedback: 'Nodes where parent[i] != i are non-root members of a component, not representatives. Roots are nodes that point to themselves — they are the canonical representative of each component.' },
@@ -73,7 +76,7 @@ export default {
     },
     {
       id: 'path-compression',
-      question: 'Path compression in Union-Find flattens the tree during find(). Why does this matter here?',
+      question: 'Recognizing which optimizations affect correctness versus which only affect performance helps you prioritize what to implement first. Path compression in Union-Find flattens the tree during find(). Why does this matter here?',
       options: [
         { label: 'It reduces the number of components', isCorrect: false, feedback: 'Path compression doesn\'t change which nodes are grouped together — it only restructures the parent pointers to make future finds faster. Component count is unaffected.' },
         { label: 'It makes repeated find() calls near O(1) amortized', isCorrect: true },
@@ -87,4 +90,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def count_components(self, n, edges):
+        parent = list(range(n))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(a, b):
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[ra] = rb
+
+        for a, b in edges:
+            union(a, b)
+
+        return len({find(x) for x in range(n)})`,
+  solutionComplexity: { time: 'O(n + e) amortized', space: 'O(n)' },
+  solutionCaveat: 'The path-compression line inside <code>find</code> — <code>parent[x] = parent[parent[x]]</code> — is what keeps this fast. Without it, a chain of unions can leave <code>find</code> walking a long linked-list-shaped chain every single call, degrading toward O(n) per lookup instead of near O(1).',
+  solutionExplanation: 'Each node starts as its own group leader. Union-find just merges groups: <code>union(a, b)</code> finds each side\'s current group leader and points one at the other, so from then on both sides trace back to the same root. After processing every edge, however many *distinct* roots remain is exactly the number of separate connected components — nodes that were never connected to anything still point at themselves and count as their own component.',
 }

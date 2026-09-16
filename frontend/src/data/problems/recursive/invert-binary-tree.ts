@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def invert_tree(root):
-  pass`,
+class Solution:
+    def invert_tree(self, root):
+        pass`,
   functionName: 'invert_tree_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -41,17 +42,17 @@ def _level(root):
   while res and res[-1] is None: res.pop()
   return res
 def invert_tree_run(arr):
-  return _level(invert_tree(_build(arr)))`,
+  return _level(Solution().invert_tree(_build(arr)))`,
   testCases: [
     { label: '[4,2,7,1,3,6,9]', args: [[4,2,7,1,3,6,9]], expected: [4,7,2,9,6,3,1] },
     { label: '[2,1,3]', args: [[2,1,3]], expected: [2,3,1] },
   ],
-  bruteHint: 'Describe collecting all node values into a separate structure and building an entirely new mirrored tree instead of modifying the existing one',
-  optimizeHint: 'Name the single operation you can perform at each node, using only its own left and right pointers, to mirror the tree in place during one pass',
+  bruteHint: 'One brute-force approach collects every node\'s value into a separate structure — say, a list or a fresh set of nodes — and then reconstructs an entirely new mirrored tree from that structure, rather than modifying the nodes you were given. This still visits every node exactly once, so it costs O(n) time, but it also allocates O(n) extra space for the new tree on top of the recursion stack. Do you actually need to build a second tree, or could you rearrange the pointers already sitting in the one you have?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'what-invert-means',
-      question: 'Input [4,2,7,1,3,6,9] produces [4,7,2,9,6,3,1]. At every node, what operation produces this mirror?',
+      question: 'Worked examples often show you the exact transformation you need to reproduce, if you compare input and output structurally rather than just numerically. Input [4,2,7,1,3,6,9] produces [4,7,2,9,6,3,1]. At every node, what operation produces this mirror?',
       options: [
         { label: 'Swap the values of left and right children', isCorrect: false, feedback: 'Swapping values without swapping subtrees would change the root-level numbers but leave the subtree structures unreflected. [4,7,2,...] is correct at the root, but the full subtrees of 2 and 7 also need to be swapped — not just their values.' },
         { label: 'Swap the left and right child pointers', isCorrect: true },
@@ -63,10 +64,11 @@ def invert_tree_run(arr):
         'In the output, node 4\'s children changed from (2,7) to (7,2). Then 7\'s children changed from (6,9) to (9,6). What operation at each node produces this?',
         'Swap the child pointers at every node. The recursive calls ensure this happens at every level of the tree, not just the root.',
       ],
+      highlight: { location: 'description', text: 'invert the tree (mirror it)' },
     },
     {
       id: 'null-base-case',
-      question: 'The constraint allows 0 nodes (empty tree). What base case does your recursion need?',
+      question: 'Constraints that permit an empty or minimal input are a signal for exactly which edge case your base case must handle. The constraint allows 0 nodes (empty tree). What base case does your recursion need?',
       options: [
         { label: 'if root.left is None and root.right is None: return root', isCorrect: false, feedback: 'This stops recursion only at leaf nodes, but null nodes (children of leaves) are what actually terminate the recursion. A null child still gets passed to the recursive call — you need to catch None, not just leaves.' },
         { label: 'if root is None: return None', isCorrect: true },
@@ -78,10 +80,11 @@ def invert_tree_run(arr):
         'When you recurse into node.left, what happens if node.left is None? What must you check before accessing root.left or root.right?',
         'if root is None: return None is the guard. Without it, the first null child causes an AttributeError when you try root.left on None.',
       ],
+      highlight: { location: 'constraint', text: 'The number of nodes is in [0, 100]' },
     },
     {
       id: 'return-root',
-      question: 'The function returns the root. Why is this necessary?',
+      question: 'The exact contract a function promises to return tells you what every code path — including the empty-input path — must produce. The function returns the root. Why is this necessary?',
       options: [
         { label: 'To allow the caller to chain calls', isCorrect: false, feedback: 'Method chaining is a style concern, not the reason. The structural reason is that if the input is an empty tree (None), the caller needs to receive None — without a return value there is no way to communicate that.' },
         { label: 'So the caller can access the (possibly null) result', isCorrect: true },
@@ -93,10 +96,11 @@ def invert_tree_run(arr):
         'What does the caller of invert_tree need to do with the result? What if the input tree is empty?',
         'The function must return the root so the caller can assign and use the result. For an empty tree (root=None), the return value is None — the caller has no other way to receive it.',
       ],
+      highlight: { location: 'description', text: 'return its root' },
     },
     {
       id: 'traversal-order',
-      question: 'Does the order in which you recurse — preorder (swap then recurse) vs. postorder (recurse then swap) — affect correctness?',
+      question: 'Not every implementation choice affects correctness — recognizing which parts of an algorithm are flexible versus fixed keeps you from over-constraining your solution. Does the order in which you recurse — preorder (swap then recurse) vs. postorder (recurse then swap) — affect correctness?',
       options: [
         { label: 'Yes — you must swap before recursing (preorder only)', isCorrect: false, feedback: 'Swapping after recursing (postorder) works equally well. The children are swapped at each node regardless of when during the visit — the final tree is the same either way.' },
         { label: 'No — both preorder and postorder produce the same result', isCorrect: true },
@@ -110,4 +114,13 @@ def invert_tree_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def invert_tree(self, root):
+        if not root:
+            return None
+        root.left, root.right = self.invert_tree(root.right), self.invert_tree(root.left)
+        return root`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The tuple assignment <code>root.left, root.right = invert_tree(root.right), invert_tree(root.left)</code> both recurses <code>and</code> swaps in a single expression — Python evaluates the right-hand side completely (inverting both subtrees) before assigning either pointer, so there\'s no risk of assigning a half-inverted subtree to the wrong side.',
+  solutionExplanation: 'Inverting a tree is nothing more than swapping the left and right child pointers at every single node — values themselves never move — so a recursive call that inverts each subtree and then (or first — order doesn\'t matter, since each side is handled independently) swaps the two pointers at the current node mirrors the whole tree one level at a time. The base case of returning <code>None</code> immediately for an empty subtree is what lets every recursive call safely dereference <code>.left</code> and <code>.right</code> without ever hitting a null-pointer error, and it\'s also the correct answer for the empty-tree input itself.',
 }

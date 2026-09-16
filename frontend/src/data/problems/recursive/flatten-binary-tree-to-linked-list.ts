@@ -7,20 +7,50 @@ export default {
     { input: 'root = [1,2,5,3,4,null,6]', output: '[1,null,2,null,3,null,4,null,5,null,6]' },
   ],
   constraints: ['0 ≤ tree nodes ≤ 2000', '-100 ≤ Node.val ≤ 100'],
-  starterCode: `def flatten(root):
-  pass`,
-  functionName: 'flatten',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def flatten(self, root):
+        pass`,
+  functionName: 'flatten_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def flatten_run(arr):
+  root = _build(arr)
+  Solution().flatten(root)
+  result = []
+  node = root
+  while node:
+      result.append(node.val)
+      node = node.right
+  return result`,
   testCases: [
     { label: 'Standard', args: [[1,2,5,3,4,null,6]], expected: [1,2,3,4,5,6] },
     { label: 'Already flat', args: [[1,null,2,null,3]], expected: [1,2,3] },
   ],
-  bruteHint: 'Describe flattening node by node while walking all the way to the end of the growing chain each time to reattach the next subtree, and why that repeated walk is costly',
-  optimizeHint: 'Name the traversal order — working from the bottom of the tree upward — that lets each subtree be reattached in O(1) without ever re-walking the chain',
+  bruteHint: 'One brute-force approach flattens the tree node by node: after splicing in each subtree, it walks all the way to the end of the growing chain to find where to reattach the next piece. On a left-skewed tree of n nodes, that walk gets longer at every step — n-1, then n-2, then n-3 — so the total work sums to O(n²). Can you avoid re-walking the same chain over and over?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'traversal-order',
-      question: '"Flatten in preorder traversal order." Looking at root=[1,2,5,3,4,null,6] → [1,2,3,4,5,6], what does preorder mean here?',
+      highlight: { location: 'description', text: 'the preorder traversal order' },
+      question: 'A description that spells out an explicit traversal order is telling you exactly which recursive structure to build, so it pays to parse it literally. "Flatten in preorder traversal order." Looking at root=[1,2,5,3,4,null,6] → [1,2,3,4,5,6], what does preorder mean here?',
       options: [
         { label: 'Root, then left subtree, then right subtree', isCorrect: true },
         { label: 'Left subtree, then root, then right subtree', isCorrect: false, feedback: 'That is inorder traversal. Inorder on a BST gives sorted values, but this tree is not a BST and the output [1,2,3,4,5,6] follows root-first ordering: 1 (root), then the left subtree rooted at 2, then the right subtree rooted at 5.' },
@@ -35,7 +65,8 @@ export default {
     },
     {
       id: 'in-place-constraint',
-      question: '"Flatten it in-place." Left child should be null; right child points to next. What must you preserve before modifying any pointers?',
+      highlight: { location: 'description', text: 'in-place' },
+      question: 'An in-place requirement is a signal that you can\'t rely on extra storage to hold data you\'re about to overwrite, so pointer updates must be sequenced carefully. "Flatten it in-place." Left child should be null; right child points to next. What must you preserve before modifying any pointers?',
       options: [
         { label: 'Save the right subtree before overwriting the right pointer', isCorrect: true },
         { label: 'Save the left subtree before overwriting the left pointer', isCorrect: false, feedback: 'You will process the left subtree before the right, so you need a reference to it — but the more critical save is the right subtree. Once you move the left subtree into the right slot, the original right subtree is unreachable unless you saved it first.' },
@@ -50,7 +81,8 @@ export default {
     },
     {
       id: 'connecting-subtrees',
-      question: 'After placing the left subtree into the right slot, how do you attach the original right subtree?',
+      highlight: { location: 'description', text: 'the right child points to the next node' },
+      question: 'The exact sequence in which you reconnect pointers after moving a subtree determines whether your final structure matches the required output, so trace each step carefully. After placing the left subtree into the right slot, how do you attach the original right subtree?',
       options: [
         { label: 'Append it at the end of the newly placed chain', isCorrect: true },
         { label: 'Attach it as the left child of the root', isCorrect: false, feedback: 'The output requires left = null at every node. Attaching the right subtree as a left child would violate the output format immediately.' },
@@ -65,7 +97,8 @@ export default {
     },
     {
       id: 'node-count-complexity',
-      question: 'The tree has up to 2000 nodes. If "walk to end of chain" is O(n) per node, what is the overall complexity of the iterative approach?',
+      highlight: { location: 'constraint', text: '0 ≤ tree nodes ≤ 2000' },
+      question: 'Constraints on input size tell you what time complexity is acceptable, so check them before committing to an approach. The tree has up to 2000 nodes. If "walk to end of chain" is O(n) per node, what is the overall complexity of the iterative approach?',
       options: [
         { label: 'O(n) — each node visited once', isCorrect: false, feedback: 'The iterative approach visits each of the n nodes as the outer step, and for each one may walk up to n nodes to find the chain tail. That is O(n²) in the worst case (a left-skewed tree).' },
         { label: 'O(n²) in the worst case', isCorrect: true },
@@ -79,4 +112,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def flatten(self, root):
+        node = root
+        while node:
+            if node.left:
+                rightmost = node.left
+                while rightmost.right:
+                    rightmost = rightmost.right
+                rightmost.right = node.right
+                node.right = node.left
+                node.left = None
+            node = node.right`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The original right subtree is saved into <code>rightmost.right</code> — the tail of the left subtree\'s own right-chain — <code>before</code> <code>node.right</code> gets overwritten with the left subtree; reversing that order would lose the original right subtree the instant <code>node.right = node.left</code> ran.',
+  solutionExplanation: 'This processes the tree left to right along the growing flattened chain, and at each node whose left child still exists, it moves that left subtree into the right slot and reattaches the node\'s original right subtree at the tail of what just moved in — exactly preorder order, since the left subtree (and everything under it) is threaded in before the original right subtree resumes. Because each node\'s left-subtree tail is only ever walked once, over the life of the whole traversal every node is visited a constant number of times, keeping the total work O(n) despite the per-node "walk to the tail" step.',
 }

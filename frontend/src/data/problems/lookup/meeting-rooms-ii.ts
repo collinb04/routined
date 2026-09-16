@@ -8,8 +8,10 @@ export default {
     { input: 'intervals = [[7,10],[2,4]]', output: '1' },
   ],
   constraints: ['1 ≤ intervals.length ≤ 10⁴', '0 ≤ start < end ≤ 10⁶'],
-  starterCode: `def min_meeting_rooms(intervals):
-  pass`,
+  starterCode: `class Solution:
+    def min_meeting_rooms(self, intervals):
+        pass`,
+  runnerSetup: 'min_meeting_rooms = Solution().min_meeting_rooms',
   functionName: 'min_meeting_rooms',
   conceptId: 'intervals',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'All at same time', args: [[[1,5],[1,5],[1,5]]], expected: 3 },
     { label: 'Sequential', args: [[[1,2],[2,3],[3,4]]], expected: 1 },
   ],
-  bruteHint: 'Describe comparing every meeting against every other meeting to count overlaps, and its time complexity',
-  optimizeHint: 'Name the data structure that tracks the earliest-ending active meeting so a freed room can be reused',
+  bruteHint: 'The brute-force approach compares every meeting against every other meeting, checking whether their time ranges overlap so it can count how many are simultaneously active in the worst case. Doing this pairwise comparison for all n meetings costs O(n²) time, and it re-derives overlap information from scratch instead of tracking room usage as it goes. What would let you determine room needs with a single sweep instead of pairwise comparisons?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'intervals.length ≤ 10⁴ tells you…',
+      question: 'Input-size constraints usually reveal the time complexity the intended solution must hit. intervals.length ≤ 10⁴ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ intervals.length ≤ 10⁴' },
       options: [
         { label: 'O(n²) is fine', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million comparisons — borderline at best in Python. The constraint is nudging you toward a more efficient approach.' },
         { label: 'O(n log n) or better is needed', isCorrect: false, feedback: 'O(n log n) works here and is a natural fit for sorting-based interval approaches. But O(n²) is not clearly ruled out — the constraint is more permissive than n = 10⁶.' },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is the minimum number of rooms, not a list of assignments. This means…',
+      question: 'The shape of the return value tells you exactly what to compute, not how to compute it. The output is the minimum number of rooms, not a list of assignments. This means…',
+      highlight: { location: 'description', text: 'return the minimum number of conference rooms required to hold all meetings.' },
       options: [
         { label: 'Track which room each meeting goes to', isCorrect: false, feedback: 'Assigning meetings to specific rooms does more than required. You only need to know how many rooms are in use at the peak moment — not which meeting is in which room.' },
         { label: 'Track peak concurrent overlap only', isCorrect: true },
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'overlap-detection',
-      question: 'Two meetings overlap when one starts before the other ends. What does this tell you about how to process intervals?',
+      question: 'The way overlap is defined determines what processing order will let you detect it efficiently. Two meetings overlap when one starts before the other ends. What does this tell you about how to process intervals?',
       options: [
         { label: 'Compare every pair of meetings', isCorrect: false, feedback: 'Checking all pairs is O(n²). There\'s a pattern in how starts and ends relate that lets you track concurrent meetings without comparing each pair to every other.' },
         { label: 'Sort by start, use a min-heap of end times', isCorrect: true },
@@ -68,7 +72,7 @@ export default {
     },
     {
       id: 'endpoint-touching',
-      question: 'The hint code shows <code>end <= s or start >= e</code> as non-overlapping. Meetings that touch at an endpoint do not overlap. What does this mean for room counting?',
+      question: 'Explicit rules about boundary cases tell you exactly which comparison operator to use. The hint code shows <code>end <= s or start >= e</code> as non-overlapping. Meetings that touch at an endpoint do not overlap. What does this mean for room counting?',
       options: [
         { label: 'A room frees up exactly when a meeting ends', isCorrect: true },
         { label: 'Touching meetings still need separate rooms', isCorrect: false, feedback: 'The problem defines touching endpoints as non-overlapping — so a meeting ending at time 10 and one starting at 10 can share a room. The room becomes available the moment the first meeting ends.' },
@@ -82,4 +86,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def min_meeting_rooms(self, intervals):
+        if not intervals:
+            return 0
+        intervals.sort(key=lambda x: x[0])
+        heap = []
+        for start, end in intervals:
+            if heap and heap[0] <= start:
+                heapq.heapreplace(heap, end)
+            else:
+                heapq.heappush(heap, end)
+        return len(heap)`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: '<code>heap[0] &lt;= start</code>, not <code>&lt;</code>, is what lets a meeting reuse a room that just freed up at the exact moment the new one begins — matching the "ending at the same instant another starts" case explicitly called out as fine in the same room.',
+  solutionExplanation: 'Sorting by start time lets each meeting be considered in the order rooms would actually be requested, and a min-heap of "end times of rooms currently in use" always exposes the room that frees up soonest at its top. If that soonest-freeing room already ended by the time the current meeting starts, reusing it (via <code>heapreplace</code>) avoids allocating a new room; otherwise every currently-tracked room is still busy, and a new one has to be added. The heap\'s final size is exactly the peak number of rooms that were ever simultaneously in use.',
 }

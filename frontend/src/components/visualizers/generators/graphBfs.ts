@@ -14,7 +14,7 @@ const EDGES: GraphEdge[] = [
   { from: 3, to: 4 }, { from: 4, to: 5 },
 ]
 
-function f(step: number, phase: string, message: string, nodeHL: Record<number, CellKind>): GraphFrame {
+function f(step: number, phase: 'init' | 'compare' | 'update' | 'done', message: string, nodeHL: Record<number, CellKind>): GraphFrame {
   return { step, phase, message, nodes: NODES, edges: EDGES, directed: false, nodeHL, edgeHL: {} }
 }
 

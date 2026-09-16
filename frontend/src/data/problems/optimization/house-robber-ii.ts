@@ -8,20 +8,23 @@ export default {
     { input: 'nums = [1,2,3,1]', output: '4' },
   ],
   constraints: ['1 <= nums.length <= 100', '0 <= nums[i] <= 1000'],
-  starterCode: `def rob(nums):
-  pass`,
+  starterCode: `class Solution:
+    def rob(self, nums):
+        pass`,
+  runnerSetup: 'rob = Solution().rob',
   functionName: 'rob',
   conceptId: 'dp-1d',
   testCases: [
     { label: '[2,3,2]', args: [[2,3,2]], expected: 3 },
     { label: '[1,2,3,1]', args: [[1,2,3,1]], expected: 4 },
   ],
-  bruteHint: 'Describe the naive recursion that tries robbing or skipping each house, and why it recomputes the same suffix repeatedly',
-  optimizeHint: 'Name how splitting the circle into two linear runs (excluding house 0, then excluding house n-1) lets you reuse the standard House Robber DP',
+  bruteHint: 'The brute-force approach recursively considers, at each house, robbing it (and skipping the next one) or leaving it (and moving on) — branching into both choices every time. Since the same suffix of houses gets explored again from many different earlier decisions, the naive recursion runs in O(2^n). What single value per house could you compute once and reuse instead of re-deriving it down every branch?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'circular-constraint',
-      question: 'Houses are arranged in a circle — the first and last are adjacent. What does this change compared to the linear House Robber problem?',
+      question: 'A structural rule buried in the problem description often forces a variant of the standard approach rather than a totally new one. Houses are arranged in a circle — the first and last are adjacent. What does this change compared to the linear House Robber problem?',
+      highlight: { location: 'description', text: 'The first and last houses are adjacent.' },
       options: [
         { label: 'You must rob at least one house', isCorrect: false, feedback: 'The circular layout doesn\'t force you to rob anything — it restricts which houses can be robbed together. The first and last house can\'t both be robbed.' },
         { label: 'You cannot rob both the first and last house', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'decomposition-insight',
-      question: 'Since houses 0 and n-1 can\'t both be robbed, you can split this into two subproblems. What are they?',
+      question: 'When a global constraint blocks one clean approach, look for a way to split the problem into pieces where that constraint no longer applies. Since houses 0 and n-1 can\'t both be robbed, you can split this into two subproblems. What are they?',
+      highlight: { location: 'description', text: 'houses arranged in a circle' },
       options: [
         { label: 'Rob even-indexed vs. odd-indexed houses', isCorrect: false, feedback: 'Even/odd indexing doesn\'t capture the circular constraint. The restriction is specifically about houses 0 and n-1 being adjacent, not about parity.' },
         { label: 'Rob houses [0..n-2] and rob houses [1..n-1], take the max', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 100 tells you…',
+      question: 'Constraints define the complexity budget your solution has to fit inside. nums.length ≤ 100 tells you…',
+      highlight: { location: 'constraint', text: '1 <= nums.length <= 100' },
       options: [
         { label: 'O(n²) or better is acceptable', isCorrect: true },
         { label: 'Only O(n) will pass', isCorrect: false, feedback: 'At n = 100, even O(n³) is just a million operations — far within limits. The constraint is generous; it doesn\'t demand a linear solution.' },
@@ -66,7 +71,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is the maximum amount you can rob. This means you need to…',
+      question: 'The shape of the return value tells you what you actually need to compute rather than merely check. The output is the maximum amount you can rob. This means you need to…',
+      highlight: { location: 'description', text: 'return the maximum amount you can rob tonight without alerting the police' },
       options: [
         { label: 'Return true if any valid robbery plan exists', isCorrect: false, feedback: 'The output is an integer — the maximum money — not a boolean. You need to optimize, not just check feasibility.' },
         { label: 'Track the running best across all valid subsets', isCorrect: false, feedback: 'Enumerating all subsets is exponential. The DP formulation encodes the optimal choice at each step — you track a running max within the DP, not over all subsets.' },
@@ -80,4 +86,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def rob(self, nums):
+        def rob_linear(houses):
+            prev, curr = 0, 0
+            for x in houses:
+                prev, curr = curr, max(curr, prev + x)
+            return curr
+
+        n = len(nums)
+        if n == 1:
+            return nums[0]
+        return max(rob_linear(nums[:-1]), rob_linear(nums[1:]))`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The <code>n == 1</code> case is handled separately before either slice is built — slicing a single-house array both ways would otherwise run the linear solver on the same one house twice, which happens to still give the right answer here, but only because there is nothing else to also exclude by mistake.',
+  solutionExplanation: 'Since houses 0 and n-1 can never both be robbed, one of them must always be excluded, which splits the circular problem into exactly two linear ones: rob among houses <code>[0, n-2]</code> (excluding the last) or among houses <code>[1, n-1]</code> (excluding the first). Solving plain House Robber on each slice and taking the better result covers every valid circular arrangement, since any valid plan already excludes at least one of the two endpoints and therefore fits entirely within one of the two slices.',
 }

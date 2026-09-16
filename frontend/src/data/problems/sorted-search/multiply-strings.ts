@@ -8,22 +8,25 @@ export default {
     { input: 'num1 = "123", num2 = "456"', output: '"56088"' },
   ],
   constraints: ['1 ≤ num1.length, num2.length ≤ 200', 'num1 and num2 consist of digits only', 'Neither input has leading zeros except "0"'],
-  starterCode: `def multiply(num1, num2):
-  pass`,
+  starterCode: `class Solution:
+    def multiply(self, num1, num2):
+        pass`,
+  runnerSetup: 'multiply = Solution().multiply',
   functionName: 'multiply',
-  conceptId: 'math-geometry',
+  conceptId: 'strings',
   testCases: [
     { label: 'Single digits', args: ['2','3'], expected: '6' },
     { label: 'Multi-digit', args: ['123','456'], expected: '56088' },
     { label: 'Multiply by zero', args: ['0','52'], expected: '0' },
     { label: '99×99', args: ['99','99'], expected: '9801' },
   ],
-  bruteHint: 'Describe the tempting approach of converting both strings to integers, multiplying, and converting back — and why the constraints forbid it',
-  optimizeHint: 'Name the digit-by-digit simulation technique that avoids built-in integer conversion and correctly handles carries and leading zeros',
+  bruteHint: 'The tempting brute-force shortcut is to call int() on both strings, multiply them as native integers, and convert the product back to a string — trivial in a language with arbitrary-precision integers, but explicitly banned by the problem. Even setting the ban aside, num1 and num2 can each be 200 digits long, far beyond what fixed-width integer types in most languages can represent natively. What would you need to do instead to compute the product without ever forming the whole number?',
+  optimizeComplexity: { time: 'O(n · m)', space: 'O(n + m)' },
   clues: [
     {
       id: 'no-integer-conversion',
-      question: '"You may not convert inputs directly to integers." What approach does this constraint force?',
+      highlight: { location: 'description', text: 'You may not convert inputs directly to integers.' },
+      question: 'Constraints that explicitly rule out an easy shortcut are pointing you toward the technique the problem actually expects. "You may not convert inputs directly to integers." What approach does this constraint force?',
       options: [
         { label: 'Use floating-point arithmetic', isCorrect: false, feedback: 'Float conversion is still a conversion — and floats lose precision above ~15 significant digits, which matters here since inputs can be 200 digits long.' },
         { label: 'Simulate digit-by-digit multiplication', isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'constraint-size',
-      question: 'num1 and num2 can each be up to 200 digits long. What does that imply about the result array size?',
+      highlight: { location: 'constraint', text: '1 ≤ num1.length, num2.length ≤ 200' },
+      question: 'Size constraints on the inputs often translate directly into a required size for your output buffer. num1 and num2 can each be up to 200 digits long. What does that imply about the result array size?',
       options: [
         { label: 'Result is at most 200 digits', isCorrect: false, feedback: 'The product of two m-digit and n-digit numbers has at most m + n digits. 200 × 200 produces a result up to 400 digits — not 200.' },
         { label: 'Result needs at most m + n positions', isCorrect: true },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output must be a string. When do you need to handle leading zeros in the result?',
+      highlight: { location: 'constraint', text: 'Neither input has leading zeros except "0"' },
+      question: 'The required output type can hide extra cleanup work you must do before returning. The output must be a string. When do you need to handle leading zeros in the result?',
       options: [
         { label: 'Never — the inputs guarantee no leading zeros', isCorrect: false, feedback: 'The inputs have no leading zeros (except "0"), but intermediate digit accumulation can leave leading zeros in the result array. "0" × anything is the key case to handle.' },
         { label: 'Only when one input is "0"', isCorrect: false, feedback: 'Multiplying by zero always produces "0", but leading zeros can also arise from the way you accumulate carries — you need to strip them before returning.' },
@@ -68,7 +73,7 @@ export default {
     },
     {
       id: 'positional-indexing',
-      question: 'When digit num1[i] × num2[j] contributes to the result, where in the result array does it land?',
+      question: 'Working out the exact index math up front prevents off-by-one errors once you start accumulating partial products. When digit num1[i] × num2[j] contributes to the result, where in the result array does it land?',
       options: [
         { label: 'At index i + j', isCorrect: true },
         { label: 'At index i × j', isCorrect: false, feedback: 'Multiplication of indices has no positional meaning. Positional value is determined by how far each digit is from the right end — that\'s an addition of offsets, not a product.' },
@@ -82,4 +87,23 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def multiply(self, num1, num2):
+        if num1 == "0" or num2 == "0":
+            return "0"
+        n1, n2 = len(num1), len(num2)
+        result = [0] * (n1 + n2)
+        for i in range(n1 - 1, -1, -1):
+            for j in range(n2 - 1, -1, -1):
+                d1 = ord(num1[i]) - ord('0')
+                d2 = ord(num2[j]) - ord('0')
+                pos_low, pos_high = i + j + 1, i + j
+                total = d1 * d2 + result[pos_low]
+                result[pos_low] = total % 10
+                result[pos_high] += total // 10
+        result_str = ''.join(map(str, result)).lstrip('0')
+        return result_str if result_str else '0'`,
+  solutionComplexity: { time: 'O(n · m)', space: 'O(n + m)' },
+  solutionCaveat: 'Each digit-pair product is *added* into <code>result[pos_low]</code> rather than overwriting it, and any resulting carry is immediately folded into <code>result[pos_high]</code> — since multiple digit pairs from different (i, j) combinations can land on the very same result position, and each one might independently push a carry into its neighbor.',
+  solutionExplanation: 'This mirrors grade-school long multiplication digit by digit: the product of the digit at position <code>i</code> in <code>num1</code> and position <code>j</code> in <code>num2</code> always contributes to result position <code>i + j</code> (with any overflow carrying into position <code>i + j - 1</code>), since that positional relationship holds regardless of the specific digits involved. Accumulating every digit-pair\'s contribution into a fixed-size result array — sized generously at <code>len(num1) + len(num2)</code> to always fit the largest possible product — avoids ever forming the actual integers, so arbitrarily long digit strings are handled without relying on big-integer support.',
 }

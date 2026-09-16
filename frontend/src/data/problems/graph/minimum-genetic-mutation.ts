@@ -8,8 +8,10 @@ export default {
     { input: 'startGene="AACCGGTT", endGene="AAACGGTA", bank=["AACCGGTA","AACCGCTA","AAACGGTA"]', output: '2' },
   ],
   constraints: ['startGene.length == endGene.length == bank[i].length == 8', '0 ≤ bank.length ≤ 10'],
-  starterCode: `def min_mutation(start_gene, end_gene, bank):
-  pass`,
+  starterCode: `class Solution:
+    def min_mutation(self, start_gene, end_gene, bank):
+        pass`,
+  runnerSetup: 'min_mutation = Solution().min_mutation',
   functionName: 'min_mutation',
   conceptId: 'graphs',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '2 mutations', args: ['AACCGGTT','AAACGGTA',['AACCGGTA','AACCGCTA','AAACGGTA']], expected: 2 },
     { label: 'Impossible', args: ['AACCGGTT','AAACGGTA',['AACCGGTA']], expected: -1 },
   ],
-  bruteHint: 'Describe exploring mutation sequences with DFS without tracking path length, and why that doesn\'t guarantee the fewest mutations',
-  optimizeHint: 'Name the traversal technique that expands one mutation at a time to guarantee the shortest path',
+  bruteHint: 'A brute-force approach explores mutation sequences with DFS, following one chain of one-character changes as deep as possible before backtracking, without tracking how many steps each path took to reach a valid gene. Because DFS finds *a* path to endGene without comparing it against shorter alternatives, it can return a valid but non-minimal mutation count, or waste time exploring long chains before stumbling onto a short one. With up to 10 bank genes and 8 positions × 3 possible substitutions per position, the search space is small, but depth-first order still gives no guarantee about which path it finds first. How could you guarantee that the first time you reach endGene, you\'ve used the fewest possible mutations?',
+  optimizeComplexity: { time: 'O(n · m)', space: 'O(n)' },
   clues: [
     {
       id: 'minimum-mutations',
-      question: '"Find the minimum number of mutations" — what algorithm finds shortest paths in an unweighted graph?',
+      highlight: { location: 'description', text: 'find the minimum mutations from start to end' },
+      question: 'The way a problem phrases its goal often points directly at which graph-traversal algorithm applies. "Find the minimum number of mutations" — what algorithm finds shortest paths in an unweighted graph?',
       options: [
         { label: 'DFS with backtracking', isCorrect: false, feedback: 'DFS explores one path fully before trying others — it finds a path, not necessarily the shortest one. Minimum steps requires exploring all paths at equal depth before going deeper.' },
         { label: 'BFS, expanding one mutation at a time', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'bank-constraint',
-      question: 'Every intermediate gene must be in the bank. What does that mean for the graph structure?',
+      highlight: { location: 'description', text: 'a gene bank (valid mutations)' },
+      question: 'The description also specifies exactly which states are legal to visit, shaping how you model the graph itself. Every intermediate gene must be in the bank. What does that mean for the graph structure?',
       options: [
         { label: 'The bank is the set of valid nodes to visit', isCorrect: true },
         { label: 'Each bank entry is an edge, not a node', isCorrect: false, feedback: 'Bank entries are gene strings — they represent states (nodes), not transitions. An edge exists between two genes when they differ by exactly one character and both are reachable.' },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'small-bank',
-      question: 'bank.length ≤ 10 and gene length is exactly 8. What does the small bank size tell you?',
+      highlight: { location: 'constraint', text: '0 ≤ bank.length ≤ 10' },
+      question: 'Small constraint bounds can be a signal that a naive approach is perfectly acceptable, freeing you from premature optimization. bank.length ≤ 10 and gene length is exactly 8. What does the small bank size tell you?',
       options: [
         { label: 'At most 10 nodes in the graph', isCorrect: false, feedback: 'startGene is also a node (11 total at most), but the key insight is that with at most 10 valid intermediate genes, the search space is tiny — even brute force would work here.' },
         { label: 'The search space is tiny — no pruning needed', isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'impossible-case',
-      question: 'The function returns -1 when the end gene is unreachable. When does this happen?',
+      highlight: { location: 'description', text: 'or -1 if impossible' },
+      question: 'The description\'s failure-case wording tells you exactly when your algorithm should give up and what it should return. The function returns -1 when the end gene is unreachable. When does this happen?',
       options: [
         { label: 'When endGene is not in the bank', isCorrect: true },
         { label: 'When startGene equals endGene', isCorrect: false, feedback: 'If start equals end, the answer is 0 mutations — not -1. The -1 case is specifically when no valid path exists through the bank to reach endGene.' },
@@ -81,4 +87,29 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def min_mutation(self, start_gene, end_gene, bank):
+        bank_set = set(bank)
+        if end_gene not in bank_set:
+            return -1
+
+        queue = deque([(start_gene, 0)])
+        visited = {start_gene}
+        while queue:
+            gene, steps = queue.popleft()
+            if gene == end_gene:
+                return steps
+            for i in range(len(gene)):
+                for c in 'ACGT':
+                    if c != gene[i]:
+                        mutated = gene[:i] + c + gene[i+1:]
+                        if mutated in bank_set and mutated not in visited:
+                            visited.add(mutated)
+                            queue.append((mutated, steps + 1))
+        return -1`,
+  solutionComplexity: { time: 'O(L · 4 · N)', space: 'O(N · L)' },
+  solutionCaveat: 'Checking <code>end_gene not in bank_set</code> up front is not just an optimization — since every intermediate and final gene visited must be a member of the bank, a target gene missing from the bank is provably unreachable, so returning <code>-1</code> immediately is correct, not just faster.',
+  solutionExplanation: 'Treating each valid single-character mutation as an edge to another bank gene turns this into an unweighted shortest-path problem, which BFS solves optimally: the first time <code>end_gene</code> is dequeued, the <code>steps</code> value it carries is the minimum number of mutations, since BFS explores genes in strictly increasing distance order. Generating every one-character variant of the current gene and filtering to only those actually present in the bank keeps the branching factor bounded to <code>gene length × 3</code> alternative bases per position.',
 }

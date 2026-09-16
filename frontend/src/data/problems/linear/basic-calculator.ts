@@ -9,8 +9,10 @@ export default {
     { input: 's = "(1+(4+5+2)-3)+(6+8)"', output: '23' },
   ],
   constraints: ['1 ≤ s.length ≤ 3 × 10⁵', 's contains only digits, \'+\', \'-\', \'(\', \')\', and spaces', 'Expression is valid'],
-  starterCode: `def calculate(s):
-  pass`,
+  starterCode: `class Solution:
+    def calculate(self, s):
+        pass`,
+  runnerSetup: 'calculate = Solution().calculate',
   functionName: 'calculate',
   conceptId: 'stack',
   testCases: [
@@ -18,14 +20,14 @@ export default {
     { label: 'With subtraction', args: [' 2-1 + 2 '], expected: 3 },
     { label: 'With parens', args: ['(1+(4+5+2)-3)+(6+8)'], expected: 23 },
   ],
-  bruteHint: 'Describe recursively re-parsing the substring inside each pair of parentheses, and why that repeats work',
-  optimizeHint: 'Name the data structure that lets you evaluate in a single pass, pushing the running result and sign whenever you enter a new parenthesis',
+  bruteHint: 'A brute-force approach recursively locates each matching closing parenthesis, evaluates the substring inside it, and substitutes the result back into the string before continuing outward. Finding each match requires its own scan, and every substitution means the surrounding expression gets rescanned from where it left off. For deeply nested expressions near the 3 × 10⁵ character limit, this repeated substitution-and-rescan pattern costs O(n²) time. What would let you evaluate the whole expression in a single pass instead of rebuilding the string each time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'parentheses-nesting',
-      question: 'The expression contains nested parentheses like "(1+(4+5+2)-3)". What does nesting imply about processing?',
+      question: 'Certain syntax in a problem signals that you can\'t process the input in one flat left-to-right pass — you need to pause and resume partial work. The expression contains nested parentheses like "(1+(4+5+2)-3)". What does nesting imply about processing?',
       options: [
-        { label: 'Find matching parens with two pointers', isCorrect: false, feedback: 'Two pointers find one matching pair, but nesting means you must handle the inner result before the outer can proceed — a linear scan with two pointers cannot track that recursively.' },
+        { label: 'Scan ahead for each closing paren\'s match, then evaluate', isCorrect: false, feedback: 'Two pointers find one matching pair, but nesting means you must handle the inner result before the outer can proceed — a linear scan with two pointers cannot track that recursively.' },
         { label: 'Replace parens with their values first', isCorrect: false, feedback: 'Replacing innermost parens iteratively works but requires multiple passes over the string — O(n²) for deeply nested expressions at n = 3 × 10⁵.' },
         { label: 'Save context on open paren, restore on close paren', isCorrect: true },
         { label: 'Evaluate left to right, parens don\'t change order', isCorrect: false, feedback: 'Parentheses explicitly override left-to-right order. "(1+(4+5+2)-3)" requires the inner sum to complete before it is subtracted.' },
@@ -38,7 +40,7 @@ export default {
     },
     {
       id: 'no-multiplication-division',
-      question: 'The problem explicitly excludes * and /. What does this simplify?',
+      question: 'The operators a problem explicitly excludes tell you what logic you get to skip entirely. The problem explicitly excludes * and /. What does this simplify?',
       options: [
         { label: 'No precedence differences to handle', isCorrect: true },
         { label: 'Evaluation is still non-trivial due to parens', isCorrect: false, feedback: 'This is true but not the simplification implied by the constraint. The absence of * and / specifically removes the need to handle operator precedence between terms.' },
@@ -50,15 +52,16 @@ export default {
         'Compare Basic Calculator I and II. What does II need that I does not, given the operators each contains?',
         'Precedence only matters when * or / mix with + or -. Without them, what is the only thing you need to track per term?',
       ],
+      highlight: { location: 'description', text: 'No multiplication or division.' },
     },
     {
       id: 'sign-tracking',
-      question: 'Subtraction like "2-1" is the same as "2 + (-1)". What does this suggest?',
+      question: 'Recognizing that one operation is just a special case of another can collapse two code paths into one. Subtraction like "2-1" is the same as "2 + (-1)". What does this suggest?',
       options: [
         { label: 'Parse subtraction as a separate operator type', isCorrect: false, feedback: 'Treating subtraction as its own operator requires extra branching. Converting it to signed addition unifies the logic.' },
         { label: 'Track a sign multiplier (+1 or -1) per term', isCorrect: true },
         { label: 'Negate the entire expression on a minus', isCorrect: false, feedback: 'A minus only negates the immediately following term, not everything that follows. Negating the whole expression would corrupt subsequent additions.' },
-        { label: 'Use a second stack for subtracted terms', isCorrect: false, feedback: 'A second stack adds unnecessary complexity. A single sign variable (+1 or -1) applied to each number before adding it to the total is sufficient.' },
+        { label: 'Track subtracted terms completely separately from added ones', isCorrect: false, feedback: 'Tracking them separately adds unnecessary complexity. A single sign variable (+1 or -1) applied to each number before adding it to the total is sufficient.' },
       ],
       correctFeedback: 'Maintain a sign variable that flips on -. Multiply each number by the current sign before adding it to the running total. This works uniformly across flat and nested expressions.',
       wrongFeedback: [
@@ -68,11 +71,11 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 3 × 10⁵ tells you…',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. s.length ≤ 3 × 10⁵ tells you…',
       options: [
         { label: 'Multiple passes over the string are fine', isCorrect: false, feedback: 'Even two passes is acceptable, but nested parentheses require saving state that makes a stack natural. Multiple passes scanning for matching parens would be O(n²) in the worst case.' },
         { label: 'O(n) single-pass is the target', isCorrect: true },
-        { label: 'O(log n) is achievable with binary search', isCorrect: false, feedback: 'You cannot evaluate an expression in less than O(n) time — you must read every character. O(log n) would require skipping input, which is not possible here.' },
+        { label: 'O(log n) is achievable', isCorrect: false, feedback: 'You cannot evaluate an expression in less than O(n) time — you must read every character. O(log n) would require skipping input, which is not possible here.' },
         { label: 'Length is irrelevant since only + and - are used', isCorrect: false, feedback: 'The length still bounds complexity. At 3 × 10⁵ characters, a quadratic approach — like repeated inner-expression substitution — would time out.' },
       ],
       correctFeedback: 'One left-to-right pass handles every character in O(1) per step. The stack depth is bounded by nesting level, not string length, so total space is also O(n).',
@@ -80,6 +83,35 @@ export default {
         'At 300,000 characters, how many operations does your approach use in the worst case?',
         'Each character is visited once. What is the overall time complexity if each step is O(1)?',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 3 × 10⁵' },
     },
   ],
+  solutionCode: `class Solution:
+    def calculate(self, s):
+        stack = []
+        total = 0
+        num = 0
+        sign = 1
+        for ch in s:
+            if ch.isdigit():
+                num = num * 10 + int(ch)
+            elif ch in '+-':
+                total += sign * num
+                num = 0
+                sign = 1 if ch == '+' else -1
+            elif ch == '(':
+                stack.append(total)
+                stack.append(sign)
+                total = 0
+                sign = 1
+            elif ch == ')':
+                total += sign * num
+                num = 0
+                total *= stack.pop()
+                total += stack.pop()
+                sign = 1
+        return total + sign * num`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'On <code>(</code>, both the running <code>total</code> *and* the current <code>sign</code> get pushed — not just the total. That sign is what a later <code>)</code> multiplies back in, which is exactly what correctly distributes a leading minus across an entire parenthesized group, e.g. the <code>-3</code> in <code>(1+(4+5+2)-3)</code>.',
+  solutionExplanation: 'A running <code>sign</code> variable turns every subtraction into an addition of a negated number, so there is only one code path for <code>+</code> and <code>-</code> instead of two. Parentheses are handled the way a call stack handles nested calls: hitting <code>(</code> freezes the outer expression\'s partial total and sign by pushing them, and hitting <code>)</code> resumes exactly where it left off by popping them back and folding the inner result in — which is what lets the sign in front of a <code>(</code> apply correctly to everything inside it.',
 }

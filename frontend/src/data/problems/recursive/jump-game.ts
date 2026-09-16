@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [3,2,1,0,4]', output: 'false', explanation: 'You always reach index 3 with value 0.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁴', '0 ≤ nums[i] ≤ 10⁵'],
-  starterCode: `def can_jump(nums):
-  pass`,
+  starterCode: `class Solution:
+    def can_jump(self, nums):
+        pass`,
+  runnerSetup: 'can_jump = Solution().can_jump',
   functionName: 'can_jump',
   conceptId: 'greedy',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Single element', args: [[0]], expected: true },
     { label: 'All zeros except first', args: [[2,0,0]], expected: true },
   ],
-  bruteHint: 'Describe trying every possible jump length from every position recursively and why the branching makes this blow up exponentially',
-  optimizeHint: 'Name the single running value you could update in one left-to-right pass that tells you the farthest index reachable so far',
+  bruteHint: 'The brute-force approach recursively tries every possible jump length from each position — from index i, branch into jumps of 1, 2, …, up to nums[i] — and checks whether any path reaches the last index. Each position can branch into up to 10⁵ recursive calls, and with up to 10⁴ positions, the recursion tree grows exponentially, roughly O(2ⁿ) in the worst case. What single running value could replace this entire branching search with one linear pass?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'max-reach-signal',
-      question: 'nums[i] is the maximum jump length, not the exact jump. What does "maximum" imply about your choices?',
+      highlight: { location: 'description', text: '<code>nums[i]</code> is the maximum jump length from position <code>i</code>' },
+      question: 'The precise wording of a problem\'s description often defines the exact moves you\'re allowed to make. nums[i] is the maximum jump length, not the exact jump. What does "maximum" imply about your choices?',
       options: [
         { label: 'You must always jump nums[i] steps', isCorrect: false, feedback: 'nums[i] is a ceiling, not a requirement. From index i you can jump 1, 2, … or nums[i] steps. You are free to land anywhere within that range — choosing a shorter jump may open better paths.' },
         { label: 'You can jump any number of steps from 1 to nums[i]', isCorrect: true },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'zero-trap',
-      question: '[3,2,1,0,4] always returns false. What makes index 3 (value 0) a trap that cannot be avoided?',
+      question: 'Tracing through a concrete example by hand often exposes the exact failure mode a correct algorithm must guard against. [3,2,1,0,4] always returns false. What makes index 3 (value 0) a trap that cannot be avoided?',
       options: [
         { label: 'Index 3 has value 0, so you cannot jump from it', isCorrect: false, feedback: 'That is true — but the question is why you cannot avoid landing there. Every path from index 0 must pass through indices 1, 2, or 3 to reach index 4. With values [3,2,1], the farthest any of those indices can reach is 0+3=3, 1+2=3, 2+1=3 — all land at 3 at most.' },
         { label: 'Every reachable index can reach at most index 3', isCorrect: true },
@@ -53,7 +56,8 @@ export default {
     },
     {
       id: 'greedy-max-reach',
-      question: 'A greedy approach tracks max_reach as you scan left to right. What condition means you can reach the last index?',
+      highlight: { location: 'description', text: 'Return <code>true</code> if you can reach the last index starting from index 0.' },
+      question: 'Turning a problem\'s exact success condition into a numeric comparison is what lets you check for a solution in a single pass. A greedy approach tracks max_reach as you scan left to right. What condition means you can reach the last index?',
       options: [
         { label: 'max_reach > 0 at any point', isCorrect: false, feedback: 'max_reach > 0 just means you can move at all — it says nothing about whether the last index is within reach. You need max_reach >= len(nums) - 1 specifically.' },
         { label: 'max_reach >= len(nums) - 1 after scanning', isCorrect: true },
@@ -68,7 +72,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁴ and nums[i] ≤ 10⁵. Could a brute-force approach (try every path) be fast enough?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁴' },
+      question: 'Input-size constraints are a strong signal for which time complexity is actually required. nums.length ≤ 10⁴ and nums[i] ≤ 10⁵. Could a brute-force approach (try every path) be fast enough?',
       options: [
         { label: 'Yes — 10⁴ is small enough for brute force', isCorrect: false, feedback: 'In the worst case, the number of distinct jump sequences is exponential. From each position you can jump up to nums[i] ≤ 10⁵ places — the branching factor makes exhaustive search completely infeasible.' },
         { label: 'No — the branching factor makes it exponential', isCorrect: true },
@@ -82,4 +87,15 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def can_jump(self, nums):
+        max_reach = 0
+        for i, x in enumerate(nums):
+            if i > max_reach:
+                return False
+            max_reach = max(max_reach, i + x)
+        return True`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The check <code>i &gt; max_reach</code> happens <code>before</code> updating <code>max_reach</code> with the current index\'s own jump range — if the scan has already walked past every reachable position, the current index is unreachable and its own jump length is irrelevant.',
+  solutionExplanation: 'Since <code>nums[i]</code> is a maximum, not a fixed jump length, trying every possible jump distance from every index is unnecessary — what actually matters is the single farthest index reachable so far, updated as <code>max(max_reach, i + nums[i])</code> while scanning left to right. The scan fails the instant it reaches an index beyond every previously-computed reach, since that means no sequence of jumps from index 0 could have landed there at all; reaching the end of the array without that ever happening proves a valid jump sequence exists.',
 }

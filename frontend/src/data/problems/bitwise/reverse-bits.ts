@@ -8,8 +8,10 @@ export default {
     { input: 'n = 4294967293', output: '3221225471', explanation: 'Binary 11111111111111111111111111111101 reversed is 10111111111111111111111111111111.' },
   ],
   constraints: ['Input is a 32-bit unsigned integer'],
-  starterCode: `def reverse_bits(n):
-  pass`,
+  starterCode: `class Solution:
+    def reverse_bits(self, n):
+        pass`,
+  runnerSetup: 'reverse_bits = Solution().reverse_bits',
   functionName: 'reverse_bits',
   conceptId: 'bit-manipulation',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Zero', args: [0], expected: 0 },
     { label: 'One', args: [1], expected: 2147483648 },
   ],
-  bruteHint: 'Describe converting to a padded binary string, reversing it, and parsing it back',
-  optimizeHint: 'Name the bitwise operations that extract and place each bit without string conversion',
+  bruteHint: 'The brute-force approach converts n to its binary string representation, pads it to 32 characters with leading zeros, reverses the string, and parses it back into an integer. This runs in O(1) time and space, since the width is fixed at 32 characters — but it pays the overhead of building and manipulating strings instead of working with the bits directly. Could you produce the same reversed value using only bitwise operations, without ever leaving numeric form?',
+  optimizeComplexity: { time: 'O(1)', space: 'O(1)' },
   clues: [
     {
       id: 'fixed-width-constraint',
-      question: 'The input is a 32-bit unsigned integer. What does the fixed width mean for your loop?',
+      question: 'A fixed input width tells you exactly how many positions your loop needs to cover — no more, no less. The input is a 32-bit unsigned integer. What does the fixed width mean for your loop?',
+      highlight: { location: 'constraint', text: 'Input is a 32-bit unsigned integer' },
       options: [
         { label: 'Loop until n becomes 0', isCorrect: false, feedback: 'Stopping when n reaches 0 would drop trailing zero bits. For a 32-bit integer, those zeros are significant bit positions — 1 reversed must become 10000000…0 (bit 31 set), not 1.' },
         { label: 'Always process exactly 32 bit positions', isCorrect: true },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'bit-extraction-and-placement',
-      question: 'To reverse bits, you extract each bit from n and place it in the mirror position of the result. What operations handle extraction and placement?',
+      question: 'Building a result bit by bit usually requires one operation to read a bit and a separate one to write it. To reverse bits, you extract each bit from n and place it in the mirror position of the result. What operations handle extraction and placement?',
       options: [
         { label: 'Extract with n & 1, place by shifting result left and ORing', isCorrect: true },
         { label: 'Extract with n >> 1, place by ANDing into result', isCorrect: false, feedback: 'n >> 1 shifts out all bits at once — it doesn\'t extract a single bit. AND also can\'t set bits; it can only clear them. You need & 1 to read a bit and | to write one.' },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'output-scale',
-      question: 'The test case shows n = 1 (binary: 00…001) produces 2147483648. What does 2147483648 represent in binary?',
+      question: 'Checking a concrete example against its numeric magnitude can confirm whether your approach covers the full bit width. The test case shows n = 1 (binary: 00…001) produces 2147483648. What does 2147483648 represent in binary?',
       options: [
         { label: '2147483648 = 2³¹, so bit 31 is set (10000…0)', isCorrect: true },
         { label: '2147483648 is a sentinel for "no set bits"', isCorrect: false, feedback: '2147483648 is a valid output — it\'s 2³¹, which is 1 followed by 31 zeros in binary. It\'s the correct result of reversing a 32-bit integer that has only bit 0 set.' },
@@ -67,4 +70,14 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def reverse_bits(self, n):
+        result = 0
+        for i in range(32):
+            bit = (n >> i) & 1
+            result |= bit << (31 - i)
+        return result`,
+  solutionComplexity: { time: 'O(1)', space: 'O(1)' },
+  solutionCaveat: 'The loop always runs exactly 32 times regardless of <code>n</code>\'s value — bit position <code>i</code> from the original always belongs at position <code>31 - i</code> in the reversed result, so every position needs to be visited even if the original number\'s high bits are all zero.',
+  solutionExplanation: 'Reversing 32 bits just means bit 0 and bit 31 swap places, bit 1 and bit 30 swap, and so on — extracting each bit with <code>(n >> i) & 1</code> and placing it at its mirrored position <code>31 - i</code> in the result does exactly that, one position at a time, entirely with fixed-width bitwise operations and no string conversion involved.',
 }

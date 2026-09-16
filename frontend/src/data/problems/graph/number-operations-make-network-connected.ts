@@ -8,8 +8,10 @@ export default {
     { input: 'n=6, connections=[[0,1],[0,2],[0,3],[1,2],[1,3]]', output: '2' },
   ],
   constraints: ['1 ≤ n ≤ 10⁵', '1 ≤ connections.length ≤ min(n*(n-1)/2, 10⁵)'],
-  starterCode: `def make_connected(n, connections):
-  pass`,
+  starterCode: `class Solution:
+    def make_connected(self, n, connections):
+        pass`,
+  runnerSetup: 'make_connected = Solution().make_connected',
   functionName: 'make_connected',
   conceptId: 'graphs',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '2 operations', args: [6,[[0,1],[0,2],[0,3],[1,2],[1,3]]], expected: 2 },
     { label: 'Impossible', args: [4,[[0,1]]], expected: -1 },
   ],
-  bruteHint: 'Describe a brute-force approach that checks each edge by rerunning a full connectivity traversal to see if its endpoints are already connected, and the time complexity that results',
-  optimizeHint: 'Name the data structure that lets you detect redundant edges and count components in near-O(1) per edge',
+  bruteHint: 'Picture processing each connection one at a time: for every edge, run a full traversal over the computers and cables seen so far to check whether its two endpoints are already reachable from each other, marking the edge as redundant if they are. With up to E connections and n computers, each traversal costs O(n + E), and repeating that check for every edge gives roughly O(E · (n + E)) total work. With n and E both up to 10⁵, what would that runtime look like, and how could you avoid re-traversing the whole graph for every single edge?',
+  optimizeComplexity: { time: 'O(E · α(V))', space: 'O(V)' },
   clues: [
     {
       id: 'impossibility-condition',
-      question: 'To connect n computers into one network, you need at least n−1 cables. What does this tell you about when the answer is -1?',
+      question: 'Some problems bake an edge case directly into the output requirements, and spotting it early lets you handle it before diving into the general algorithm. To connect n computers into one network, you need at least n−1 cables. What does this tell you about when the answer is -1?',
+      highlight: { location: 'description', text: 'or -1 if impossible' },
       options: [
         { label: 'When the graph has a cycle', isCorrect: false, feedback: 'A cycle means you have a spare cable — that\'s the opposite of impossible. The -1 case is when you don\'t have enough cables to wire all n computers even optimally.' },
         { label: 'When connections.length < n−1', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'spare-cables',
-      question: 'Each connected component with k nodes and k edges contains exactly one cycle — meaning one spare cable. What is the total number of spare cables?',
+      question: 'Bounds on the input size also hint at how much extra capacity a structure may contain, which is key to figuring out what is reusable. Each connected component with k nodes and k edges contains exactly one cycle — meaning one spare cable. What is the total number of spare cables?',
+      highlight: { location: 'constraint', text: '1 ≤ connections.length ≤ min(n*(n-1)/2, 10⁵)' },
       options: [
         { label: 'connections.length − (n − 1)', isCorrect: false, feedback: 'That formula gives the total number of extra edges above a spanning tree, but not the number of spare cables available to reconnect isolated components. Each cycle in each component yields one spare cable.' },
         { label: 'connections.length − (n − number of components)', isCorrect: false, feedback: 'Close — this counts extras within each component, but the answer to the problem is simpler. The number of moves needed equals the number of isolated components minus 1, and you only need to check if you have enough spares.' },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'component-counting-tool',
-      question: 'You need to count connected components and detect cycles. What data structure handles both efficiently?',
+      question: 'When the input size reaches the constraint\'s upper bound, only near-linear or near-constant per-operation structures remain fast enough, so identify what the bound rules out first. You need to count connected components and detect cycles. What data structure handles both efficiently?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 10⁵' },
       options: [
         { label: 'Union-Find (disjoint set union)', isCorrect: true },
         { label: 'DFS with a visited array', isCorrect: false, feedback: 'DFS can count components and detect cycles, but Union-Find does both in near-O(1) per edge and also directly gives you the component count after processing all edges.' },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'minimum-moves',
-      question: 'After identifying the number of connected components, what is the minimum number of cable moves needed?',
+      question: 'The problem statement\'s phrasing of what you must return often maps directly onto the final formula you compute, so re-reading it precisely pays off. After identifying the number of connected components, what is the minimum number of cable moves needed?',
+      highlight: { location: 'description', text: 'Find the minimum number of moves to connect all computers' },
       options: [
         { label: 'n − 1', isCorrect: false, feedback: 'n−1 is the total edges in a spanning tree, not the number of moves. If there are c components, you already have edges within each one — you only need c−1 more connections to merge them all.' },
         { label: 'components − 1', isCorrect: true },
@@ -81,4 +87,29 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def make_connected(self, n, connections):
+        if len(connections) < n - 1:
+            return -1
+        parent = list(range(n))
+        components = [n]
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(x, y):
+            rx, ry = find(x), find(y)
+            if rx != ry:
+                parent[rx] = ry
+                components[0] -= 1
+
+        for u, v in connections:
+            union(u, v)
+        return components[0] - 1`,
+  solutionComplexity: { time: 'O(n + E)', space: 'O(n)' },
+  solutionCaveat: 'A connected graph on n nodes needs at least n-1 edges, so <code>len(connections) &lt; n - 1</code> is checked first and returns <code>-1</code> immediately — with too few cables, there simply aren\'t enough physical connections to reach 1 component regardless of how the extras are moved.',
+  solutionExplanation: 'Every redundant cable — one connecting two computers already in the same component — is a "free" spare that can be unplugged and moved to bridge two different components instead, so the answer only depends on how many components remain once union-find merges everything the existing cables already connect. Merging c separate components into one always takes exactly c-1 moves, since each move can only combine two components into one at a time.',
 }

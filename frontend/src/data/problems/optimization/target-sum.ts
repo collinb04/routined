@@ -8,8 +8,10 @@ export default {
     { input: 'nums=[1], target=1', output: '1' },
   ],
   constraints: ['1 ≤ nums.length ≤ 20', '0 ≤ nums[i] ≤ 1000', '0 ≤ sum(nums[i]) ≤ 1000', '-1000 ≤ target ≤ 1000'],
-  starterCode: `def find_target_sum_ways(nums, target):
-  pass`,
+  starterCode: `class Solution:
+    def find_target_sum_ways(self, nums, target):
+        pass`,
+  runnerSetup: 'find_target_sum_ways = Solution().find_target_sum_ways',
   functionName: 'find_target_sum_ways',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '1 way', args: [[1],1], expected: 1 },
     { label: 'No way', args: [[1],2], expected: 0 },
   ],
-  bruteHint: 'Describe the naive recursion that branches on assigning + or - to each number, and why the number of sign assignments is exponential',
-  optimizeHint: 'Name the DP state — index plus running sum, or equivalently a subset-sum/knapsack reformulation — that collapses repeated sums into one entry',
+  bruteHint: 'The brute-force approach recursively tries both + and - for every element, building the full binary tree of sign assignments and counting the leaves that sum to target. Since each of the n elements doubles the branching, this explores O(2ⁿ) assignments — up to 2²⁰ for the given constraints — and many branches revisit the exact same (index, running-sum) pair. What could you cache to avoid recomputing those repeated (index, sum) states?',
+  optimizeComplexity: { time: 'O(n·sum)', space: 'O(sum)' },
   clues: [
     {
       id: 'counting-not-boolean',
-      question: 'The output is the number of ways to reach the target, not just whether it\'s reachable. This means…',
+      question: 'The output specification tells you whether the DP needs to track feasibility or an exact count, which changes what each state accumulates. The output is the number of ways to reach the target, not just whether it\'s reachable. This means…',
+      highlight: { location: 'description', text: 'Return the number of ways to assign signs to reach the target sum.' },
       options: [
         { label: 'Return true as soon as any assignment reaches the target', isCorrect: false, feedback: 'Stopping at the first valid assignment gives you a boolean, not a count. All valid sign assignments must be enumerated or accumulated.' },
         { label: 'Accumulate a count instead of a boolean', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'constraint-size',
-      question: 'nums.length ≤ 20 and sum(nums) ≤ 1000. What does this tell you about feasible approaches?',
+      question: 'Constraints on input size and value range tell you how large the DP state space becomes, which determines whether an approach is computationally feasible. nums.length ≤ 20 and sum(nums) ≤ 1000. What does this tell you about feasible approaches?',
+      highlight: { location: 'constraint', text: '0 ≤ sum(nums[i]) ≤ 1000' },
       options: [
         { label: 'Brute force all 2²⁰ sign assignments', isCorrect: false, feedback: '2²⁰ is about 1 million — technically feasible but unnecessary. The DP over (index, sum) states is cleaner and faster at O(n × sum).' },
         { label: 'DP with O(n × sum) states fits well', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'two-branches',
-      question: 'Each element is assigned either + or -. How does the DP transition work?',
+      question: 'When a problem states a discrete choice made at every step, that choice defines exactly what each DP transition must branch into. Each element is assigned either + or -. How does the DP transition work?',
+      highlight: { location: 'description', text: 'you can assign + or - to each number' },
       options: [
         { label: 'dp[i][s] = dp[i-1][s - nums[i]] (take positive only)', isCorrect: false, feedback: 'That transition only considers assigning "+" to nums[i]. You must also consider assigning "-" — both branches contribute to the count.' },
         { label: 'dp[i][s] = dp[i-1][s - nums[i]] + dp[i-1][s + nums[i]]', isCorrect: true },
@@ -66,4 +71,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import defaultdict
+
+class Solution:
+    def find_target_sum_ways(self, nums, target):
+        dp = defaultdict(int)
+        dp[0] = 1
+        for num in nums:
+            new_dp = defaultdict(int)
+            for s, cnt in dp.items():
+                new_dp[s + num] += cnt
+                new_dp[s - num] += cnt
+            dp = new_dp
+        return dp[target]`,
+  solutionComplexity: { time: 'O(n · sum)', space: 'O(sum)' },
+  solutionCaveat: 'Both the <code>+</code> and <code>-</code> branches are added into <code>new_dp</code>, never chosen between — every way of reaching a given sum through the first <code>i-1</code> elements branches into two independent ways of reaching a new sum at step <code>i</code>, and both must be counted since they represent genuinely different sign assignments.',
+  solutionExplanation: 'A dict mapping each reachable running sum to how many sign assignments produce it starts at <code>{0: 1}</code> (zero elements processed, sum 0, exactly one way — assign nothing) and, for every number, every existing <code>(sum, count)</code> entry spawns two new entries — one for assigning <code>+</code>, one for <code>-</code> — accumulating counts when different paths land on the same sum. After processing all of <code>nums</code>, the count of ways to have reached exactly <code>target</code> is read directly out of the final dict.',
 }

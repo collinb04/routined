@@ -13,8 +13,9 @@ export default {
       self.val = val
       self.next = next
 
-def remove_nth_from_end(head, n):
-  pass`,
+class Solution:
+    def remove_nth_from_end(self, head, n):
+        pass`,
   functionName: 'remove_nth_from_end_run',
   conceptId: 'linked-list',
   runnerSetup: `def _tol(h):
@@ -27,23 +28,24 @@ def _ton(a):
   for v in a[1:]: c.next=ListNode(v); c=c.next
   return h
 def remove_nth_from_end_run(arr, n):
-  return _tol(remove_nth_from_end(_ton(arr), n))`,
+  return _tol(Solution().remove_nth_from_end(_ton(arr), n))`,
   testCases: [
     { label: '[1,2,3,4,5] n=2', args: [[1,2,3,4,5], 2], expected: [1,2,3,5] },
     { label: 'single n=1', args: [[1], 1], expected: [] },
     { label: '[1,2] n=1', args: [[1,2], 1], expected: [1] },
   ],
-  bruteHint: 'Describe counting the list length in one pass, then walking to the node before the target in a second pass',
-  optimizeHint: 'Name the two-pointer technique that keeps a fixed gap of n nodes to find the target in one pass',
+  bruteHint: "The naive approach makes two passes: first traverse the whole list to count its length sz, then compute the target's position as sz - n and walk a second time to the node just before it so you can unlink it. Both passes are O(sz) time, so the naive solution is O(sz) time and O(1) space overall — only the number of passes is suboptimal. Could you track that same offset with two pointers so a single traversal finds both the length and the target position at once?",
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'end-relative-position',
-      question: 'The target is the nth node from the end — a position measured from the tail. Without knowing the list length, you can\'t compute this position directly. The naive approach requires…',
+      question: 'When a target position is defined relative to the end rather than the start, that framing itself is a signal about what traversal strategy you\'ll need. The target is the nth node from the end — a position measured from the tail. Without knowing the list length, you can\'t compute this position directly. The naive approach requires…',
+      highlight: { location: 'description', text: 'the <code>n</code>th node from the end of the list' },
       options: [
-        { label: 'One pass using a stack', isCorrect: false, feedback: 'A stack lets you reverse traversal order in one pass, but it uses O(sz) space. The two-pointer technique finds the nth-from-end node in one pass with O(1) space.' },
+        { label: 'One pass that stores nodes in extra memory as you go', isCorrect: false, feedback: 'This lets you reverse traversal order in one pass, but it uses O(sz) space. The two-pointer technique finds the nth-from-end node in one pass with O(1) space.' },
         { label: 'Two passes: one to count length, one to reach position (sz - n)', isCorrect: true },
-        { label: 'Binary search to find the target index', isCorrect: false, feedback: 'Binary search requires random access, which linked lists don\'t support. Finding a node by index still requires linear traversal from the head.' },
-        { label: 'Reversing the list first', isCorrect: false, feedback: 'Reversing the list converts "nth from end" to "nth from start," but it requires O(n) traversal and then another to find position n. A two-pointer approach reaches the same answer without reversing.' },
+        { label: 'Jumping directly to the target index without traversing from the head', isCorrect: false, feedback: 'That requires random access, which linked lists don\'t support. Finding a node by index still requires linear traversal from the head.' },
+        { label: 'Flipping the entire list\'s direction first', isCorrect: false, feedback: 'Reversing the list converts "nth from end" to "nth from start," but it requires O(n) traversal and then another to find position n. A two-pointer approach reaches the same answer without reversing.' },
       ],
       correctFeedback: 'Naive: traverse once to count sz nodes, then walk to node at position (sz - n) and remove it. Total: two passes, O(1) space. The one-pass alternative uses two pointers offset by n steps.',
       wrongFeedback: [
@@ -53,7 +55,7 @@ def remove_nth_from_end_run(arr, n):
     },
     {
       id: 'one-pass-two-pointer',
-      question: 'To find the nth node from the end in one pass, you can use two pointers separated by a gap of n. When the fast pointer reaches the end, the slow pointer is…',
+      question: 'Tracking a fixed gap between two pointers is a common way to translate a relative position into an absolute one during a single traversal. To find the nth node from the end in one pass, you can use two pointers separated by a gap of n. When the fast pointer reaches the end, the slow pointer is…',
       options: [
         { label: 'At the head of the list', isCorrect: false, feedback: 'If both pointers start at the head and fast advances n steps first, when fast reaches null slow is at position (sz - n) — not the head. The gap between them equals n.' },
         { label: 'At the node just before the target', isCorrect: true },
@@ -68,7 +70,8 @@ def remove_nth_from_end_run(arr, n):
     },
     {
       id: 'head-removal-edge-case',
-      question: 'The test case [1] with n = 1 returns []. The test case [1,2] with n = 1 returns [1]. This means n can equal sz, removing the head. How does this affect your returned value?',
+      question: 'Constraint ranges that allow the extremes point to edge cases your logic must not special-case away. The test case [1] with n = 1 returns []. The test case [1,2] with n = 1 returns [1]. This means n can equal sz, removing the head. How does this affect your returned value?',
+      highlight: { location: 'constraint', text: '1 <= n <= sz' },
       options: [
         { label: 'Always return the original head', isCorrect: false, feedback: 'When n = sz, the head is removed. Returning the original head gives back a deleted node. For [1] with n = 1, the correct return is null.' },
         { label: 'The new head may be head.next or null', isCorrect: true },
@@ -82,4 +85,18 @@ def remove_nth_from_end_run(arr, n):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def remove_nth_from_end(self, head, n):
+        dummy = ListNode(0, head)
+        slow = fast = dummy
+        for _ in range(n):
+            fast = fast.next
+        while fast.next:
+            slow = slow.next
+            fast = fast.next
+        slow.next = slow.next.next
+        return dummy.next`,
+  solutionComplexity: { time: 'O(sz)', space: 'O(1)' },
+  solutionCaveat: 'The dummy node placed before <code>head</code> is what lets <code>slow</code> end up pointing at the node *before* the one to remove even when the target is the head itself — without it, removing the first node would need its own special case instead of the uniform <code>slow.next = slow.next.next</code>.',
+  solutionExplanation: 'Advancing <code>fast</code> <code>n</code> steps ahead of <code>slow</code> first means that once <code>fast</code> reaches the end of the list, <code>slow</code> is sitting exactly <code>n</code> nodes behind it — one position before the node that needs removing — all discovered in a single pass with no need to know the list\'s length up front. From there, unlinking is a single pointer reassignment.',
 }

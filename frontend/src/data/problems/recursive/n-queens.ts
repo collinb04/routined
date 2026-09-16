@@ -8,22 +8,24 @@ export default {
     { input: 'n = 1', output: '[["Q"]]' },
   ],
   constraints: ['1 <= n <= 9'],
-  starterCode: `def solve_n_queens(n):
-  pass`,
+  starterCode: `class Solution:
+    def solve_n_queens(self, n):
+        pass`,
   functionName: 'solve_n_queens_run',
   conceptId: 'backtracking',
   runnerSetup: `def solve_n_queens_run(n):
-  return sorted(solve_n_queens(n))`,
+  return sorted(Solution().solve_n_queens(n))`,
   testCases: [
     { label: 'n=4', args: [4], expected: [['..Q.','Q...','...Q','.Q..'],['.Q..','...Q','Q...','..Q.']] },
     { label: 'n=1', args: [1], expected: [['Q']] },
   ],
-  bruteHint: 'Describe generating every possible placement of n queens and filtering for validity only after each placement is complete',
-  optimizeHint: 'Name the technique of abandoning a partial placement the moment a conflict appears, instead of completing it first',
+  bruteHint: 'The brute-force approach generates every possible placement of n queens — for example, one queen per row tried against every column — and only checks the completed board for conflicts once all n queens are placed, giving roughly O(n^n) candidate boards to build and validate. Because a conflict introduced by an early queen dooms every arrangement built on top of it, most of that generation work is wasted. What if you checked each queen against the columns and diagonals already in use the instant you placed it, rather than waiting until the board is full?',
+  optimizeComplexity: { time: 'O(n!)', space: 'O(n²)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 9. What does this small bound signal about the intended approach?',
+      highlight: { location: 'constraint', text: '1 <= n <= 9' },
+      question: 'Constraint bounds tell you upfront whether an exhaustive search is computationally feasible. n ≤ 9. What does this small bound signal about the intended approach?',
       options: [
         { label: 'Use dynamic programming to build up solutions', isCorrect: false, feedback: 'DP requires overlapping subproblems with optimal substructure. N-queens placements do not decompose that way — you cannot combine partial solutions independently. The tiny n signals exhaustive search.' },
         { label: 'Exhaustive backtracking is intended and feasible', isCorrect: true },
@@ -38,7 +40,8 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is a list of board configurations, each represented as a list of strings. What does this require you to build?',
+      highlight: { location: 'description', text: "Each solution contains a distinct board configuration where <code>'Q'</code> indicates a queen and <code>'.'</code> indicates an empty space." },
+      question: 'The exact shape of the expected return value determines what data structure you need to build during your search. The output is a list of board configurations, each represented as a list of strings. What does this require you to build?',
       options: [
         { label: 'A count of valid placements', isCorrect: false, feedback: 'N-Queens II asks for the count. This problem asks for the actual boards — each valid placement must be converted into n strings of \'Q\' and \'.\' characters.' },
         { label: 'A string grid for each valid solution', isCorrect: true },
@@ -53,7 +56,8 @@ export default {
     },
     {
       id: 'one-queen-per-row',
-      question: 'Queens attack along rows — placing one queen per row eliminates row conflicts entirely. What does this simplify?',
+      highlight: { location: 'description', text: 'such that no two queens attack each other' },
+      question: 'Recognizing structural guarantees already built into the problem lets you eliminate entire categories of conflict checks. Queens attack along rows — placing one queen per row eliminates row conflicts entirely. What does this simplify?',
       options: [
         { label: 'No conflict checking is needed at all', isCorrect: false, feedback: 'Row conflicts are eliminated, but column and diagonal conflicts remain. You still need to check whether the column and both diagonals are free before placing each queen.' },
         { label: 'Only column and diagonal conflicts need tracking', isCorrect: true },
@@ -68,7 +72,7 @@ export default {
     },
     {
       id: 'backtrack-signal',
-      question: 'When you have placed queens in rows 0 through k and no column is valid for row k+1, what must you do?',
+      question: 'Understanding precisely when and how to undo a decision is what separates backtracking from a plain brute-force search. When you have placed queens in rows 0 through k and no column is valid for row k+1, what must you do?',
       options: [
         { label: 'Skip row k+1 and continue to row k+2', isCorrect: false, feedback: 'Skipping a row would leave a queen unplaced — you need exactly n queens, one per row. If row k+1 has no valid column, the current placement of earlier rows is invalid and must be revised.' },
         { label: 'Remove the queen from row k and try its next column', isCorrect: true },
@@ -82,4 +86,30 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def solve_n_queens(self, n):
+        results = []
+        cols = set()
+        diag1 = set()
+        diag2 = set()
+        board = [['.'] * n for _ in range(n)]
+
+        def backtrack(row):
+            if row == n:
+                results.append([''.join(r) for r in board])
+                return
+            for col in range(n):
+                if col in cols or (row - col) in diag1 or (row + col) in diag2:
+                    continue
+                cols.add(col); diag1.add(row - col); diag2.add(row + col)
+                board[row][col] = 'Q'
+                backtrack(row + 1)
+                board[row][col] = '.'
+                cols.remove(col); diag1.remove(row - col); diag2.remove(row + col)
+
+        backtrack(0)
+        return results`,
+  solutionComplexity: { time: 'O(n!)', space: 'O(n²)' },
+  solutionCaveat: 'Placing exactly one queen per row (the recursion\'s <code>row</code> parameter) eliminates row conflicts by construction — the three sets only ever need to track columns and the two diagonal directions, never rows, since two queens can never end up on the same row in the first place.',
+  solutionExplanation: 'Each diagonal has a constant identifier — <code>row - col</code> for one direction, <code>row + col</code> for the other — so checking whether a candidate square is under attack from any previously placed queen is an O(1) set-membership test rather than an O(n) scan of the board. The moment a row has no valid column left, the search backtracks by removing the most recently placed queen and its three markers, trying the next column in that same row — this is what lets the search explore every valid configuration without ever re-deriving conflicts already ruled out.',
 }

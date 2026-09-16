@@ -8,20 +8,23 @@ export default {
     { input: 'nums = [3,2,3,1,2,4,5,5,6], k = 4', output: '4' },
   ],
   constraints: ['1 <= k <= nums.length <= 10^5', '-10^4 <= nums[i] <= 10^4'],
-  starterCode: `def find_kth_largest(nums, k):
-  pass`,
+  starterCode: `class Solution:
+    def find_kth_largest(self, nums, k):
+        pass`,
+  runnerSetup: 'find_kth_largest = Solution().find_kth_largest',
   functionName: 'find_kth_largest',
   conceptId: 'heap',
   testCases: [
     { label: 'k=2', args: [[3,2,1,5,6,4], 2], expected: 5 },
     { label: 'k=4', args: [[3,2,3,1,2,4,5,5,6], 4], expected: 4 },
   ],
-  bruteHint: 'Describe the approach of sorting the whole array and indexing into it, and why that violates the required time complexity.',
-  optimizeHint: 'Name the partition-based selection technique that finds the k-th largest without fully sorting.',
+  bruteHint: 'The brute-force approach sorts the entire array of up to 10^5 elements, then indexes directly to the k-th position. Sorting costs O(n log n) time, which is simple to implement correctly and comfortably fits within limits for a single run. But the problem explicitly requires O(n) average time, and a full sort does more ordering work than finding a single rank actually requires. What technique finds a single rank without fully ordering the array?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-o-n-required',
-      question: '"You must solve it in O(n) average time complexity." What does this rule out?',
+      highlight: { location: 'description', text: 'You must solve it in O(n) average time complexity.' },
+      question: 'An explicit performance requirement in a problem statement rules out entire categories of otherwise-valid solutions. "You must solve it in O(n) average time complexity." What does this rule out?',
       options: [
         { label: 'Using any heap', isCorrect: false, feedback: 'A min-heap of size k processes n elements at O(log k) each, giving O(n log k) — which satisfies the constraint when k is small. The O(n) requirement rules out O(n log n) sorting, not all heaps.' },
         { label: 'Sorting the full array first', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'kth-largest-definition',
-      question: '"Kth largest in sorted order, not kth distinct." What does this clarification signal?',
+      highlight: { location: 'description', text: 'Note that it is the <code>k</code>th largest element in sorted order, not the <code>k</code>th distinct element.' },
+      question: 'A clarifying note in a problem statement usually exists to head off a specific, subtly wrong interpretation. "Kth largest in sorted order, not kth distinct." What does this clarification signal?',
       options: [
         { label: 'Duplicate values count separately toward the rank', isCorrect: true },
         { label: 'You must deduplicate before finding the answer', isCorrect: false, feedback: 'Deduplicating would change the answer. The problem says the 4th largest in [3,2,3,1,2,4,5,5,6] is 4, counting duplicates — deduplication would give a wrong result.' },
@@ -51,7 +55,7 @@ export default {
     },
     {
       id: 'quickselect-partition',
-      question: 'Quickselect finds the k-th element in O(n) average by partitioning. What is the key operation in each step?',
+      question: 'Knowing the core operation behind a technique is what lets you actually implement it correctly, not just name it. Quickselect finds the k-th element in O(n) average by partitioning. What is the key operation in each step?',
       options: [
         { label: 'Choose a pivot; partition array so elements left < pivot < elements right', isCorrect: true },
         { label: 'Merge two sorted halves like merge sort', isCorrect: false, feedback: 'Merge sort is O(n log n) and does not stop early at the k-th element. Quickselect partitions and recurses into only one side, achieving O(n) average.' },
@@ -66,7 +70,7 @@ export default {
     },
     {
       id: 'worst-case-awareness',
-      question: 'Quickselect is O(n) average but O(n²) worst case. What causes the worst case?',
+      question: 'Knowing an algorithm\'s failure mode tells you whether it is safe to use as-is or needs a safeguard like randomization. Quickselect is O(n) average but O(n²) worst case. What causes the worst case?',
       options: [
         { label: 'Choosing the median as the pivot every time', isCorrect: false, feedback: 'Choosing the true median as pivot is the ideal case — it halves the partition every time, giving O(n) guaranteed. The problem is with a bad pivot, not a good one.' },
         { label: 'Consistently choosing the min or max as pivot on a sorted input', isCorrect: true },
@@ -80,4 +84,36 @@ export default {
       ],
     },
   ],
+  solutionCode: `import random
+
+class Solution:
+    def find_kth_largest(self, nums, k):
+        target_idx = len(nums) - k
+
+        def partition(left, right, pivot_idx):
+            pivot = nums[pivot_idx]
+            nums[pivot_idx], nums[right] = nums[right], nums[pivot_idx]
+            store_idx = left
+            for i in range(left, right):
+                if nums[i] < pivot:
+                    nums[store_idx], nums[i] = nums[i], nums[store_idx]
+                    store_idx += 1
+            nums[right], nums[store_idx] = nums[store_idx], nums[right]
+            return store_idx
+
+        left, right = 0, len(nums) - 1
+        while True:
+            if left == right:
+                return nums[left]
+            pivot_idx = random.randint(left, right)
+            pivot_idx = partition(left, right, pivot_idx)
+            if pivot_idx == target_idx:
+                return nums[pivot_idx]
+            elif pivot_idx < target_idx:
+                left = pivot_idx + 1
+            else:
+                right = pivot_idx - 1`,
+  solutionComplexity: { time: 'O(n) average', space: 'O(1)' },
+  solutionCaveat: 'Picking the pivot *randomly* rather than always using, say, the first or last element is what keeps this O(n) on average — a fixed pivot choice is exactly what an adversarial or already-sorted input can exploit to force the O(n²) worst case the bruteHint warns about.',
+  solutionExplanation: 'The kth largest element is exactly the element at index <code>len(nums) - k</code> once the array is fully sorted — but reaching that one specific position never requires sorting everything else. Partitioning around a pivot (like in quicksort) tells you exactly how many elements are smaller than the pivot, which either confirms the target position directly or narrows the search to just one side, discarding the other side\'s internal order entirely. Because a random pivot is expected to split the array roughly in half, the search region shrinks geometrically, giving O(n) total work on average instead of the O(n log n) a full sort would cost.',
 }

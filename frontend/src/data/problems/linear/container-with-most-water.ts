@@ -8,20 +8,22 @@ export default {
     { input: 'height = [1,1]', output: '1' },
   ],
   constraints: ['n == height.length', '2 <= n <= 10^5', '0 <= height[i] <= 10^4'],
-  starterCode: `def max_area(height):
-  pass`,
+  starterCode: `class Solution:
+    def max_area(self, height):
+        pass`,
+  runnerSetup: 'max_area = Solution().max_area',
   functionName: 'max_area',
   conceptId: 'two-pointers',
   testCases: [
     { label: '[1,8,6,2,5,4,8,3,7]', args: [[1,8,6,2,5,4,8,3,7]], expected: 49 },
     { label: '[1,1]', args: [[1,1]], expected: 1 },
   ],
-  bruteHint: 'Describe checking every pair of walls and computing the area for each, and its time complexity',
-  optimizeHint: 'Name the two-pointer technique that starts at both ends and always moves the pointer at the shorter wall inward',
+  bruteHint: 'The brute-force approach checks every pair of lines — for each pair, compute width × min(height[left], height[right]) and keep the largest result seen. That works, but it checks roughly n² pairs. At n up to 100,000, how many area calculations is that, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'area-formula',
-      question: 'Water volume = width × min(height[left], height[right]). What does the min() tell you about which wall limits capacity?',
+      question: 'A formula that combines quantities with min() or max() tells you which one actually constrains the result. Water volume = width × min(height[left], height[right]) — what does the min() tell you about which wall limits capacity?',
       options: [
         { label: 'The taller wall always determines area', isCorrect: false, feedback: 'The container can only hold water up to the shorter wall — anything above it spills over. The taller wall is irrelevant above the shorter one\'s height.' },
         { label: 'The shorter wall is the bottleneck', isCorrect: true },
@@ -36,7 +38,7 @@ export default {
     },
     {
       id: 'two-pointer-strategy',
-      question: 'Starting with the widest possible container, why should you move the pointer at the shorter wall inward?',
+      question: 'Before committing to a one-directional move, you need proof that the move you\'re skipping could never help. Starting with the widest possible container, why should you move the pointer at the shorter wall inward?',
       options: [
         { label: 'Moving the taller wall might increase height', isCorrect: false, feedback: 'Moving the taller wall inward reduces width and keeps the min height at most the same — area can only decrease or stay equal.' },
         { label: 'Moving the shorter wall is the only way area can increase', isCorrect: true },
@@ -51,10 +53,10 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 10⁵ tells you…',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. What does 2 ≤ n ≤ 10⁵ tell you?',
       options: [
         { label: 'O(n²) brute force over all pairs is acceptable', isCorrect: false, feedback: 'At n = 100,000, O(n²) means 10 billion pair evaluations — too slow. A two-pointer approach solves it in O(n).' },
-        { label: 'O(n) two-pointer scan is the target', isCorrect: true },
+        { label: 'O(n) is achievable with a single pass', isCorrect: true },
         { label: 'O(n log n) sorting will help find the answer', isCorrect: false, feedback: 'Sorting destroys the position information needed for width calculation. The two-pointer approach needs the original indices intact.' },
         { label: 'Binary search on heights gives O(log n)', isCorrect: false, feedback: 'You cannot find the optimal pair in O(log n) — you must consider many candidate pairs. The two-pointer approach does it in O(n) by being smart about which pairs to skip.' },
       ],
@@ -63,10 +65,11 @@ export default {
         'At n = 100,000, how many pairs does a brute-force O(n²) approach check? What does two-pointer do instead?',
         'Each pointer moves inward at most n times total. What is the overall complexity of the two-pointer pass?',
       ],
+      highlight: { location: 'constraint', text: '2 <= n <= 10^5' },
     },
     {
       id: 'output-is-max-value',
-      question: 'The output is a single integer — the maximum area. What does this imply about tracking?',
+      question: 'The type of output you\'re asked for tells you how much of the problem you actually need to solve. The output is a single integer — the maximum area. What does this imply about tracking?',
       options: [
         { label: 'Record which pair of indices gives the max', isCorrect: false, feedback: 'The problem only asks for the area value, not the specific line indices. Tracking indices adds complexity without contributing to the answer.' },
         { label: 'Maintain a running maximum and return it', isCorrect: true },
@@ -78,6 +81,21 @@ export default {
         'You need the best area across all valid pointer positions. How do you track "best so far" as you scan?',
         'Initialize max_area = 0. At each step, update it with the current area if it is larger. What do you return at the end?',
       ],
+      highlight: { location: 'description', text: 'Return the maximum amount of water the container can store.' },
     },
   ],
+  solutionCode: `class Solution:
+    def max_area(self, height):
+        left, right = 0, len(height) - 1
+        best = 0
+        while left < right:
+            best = max(best, (right - left) * min(height[left], height[right]))
+            if height[left] < height[right]:
+                left += 1
+            else:
+                right -= 1
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Moving the taller line\'s pointer inward can never help — the container\'s height is capped by the *shorter* of the two lines, so keeping the taller one and shrinking the width only ever makes things worse. Moving the shorter one is the only move that has any chance of finding a taller container.',
+  solutionExplanation: 'Starting from the widest possible container (the two ends) and moving inward, the shorter line is always the one holding the area back, since area = width × min(height[left], height[right]). Discarding that shorter line is safe because no wider container containing it could ever beat the one already checked — anything still to be found must come from the narrower range that remains, so moving the shorter pointer inward is the only move guaranteed not to skip the true best answer.',
 }

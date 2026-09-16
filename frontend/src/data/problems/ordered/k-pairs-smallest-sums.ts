@@ -8,20 +8,23 @@ export default {
     { input: 'nums1=[1,1,2], nums2=[1,2,3], k=2', output: '[[1,1],[1,1]]' },
   ],
   constraints: ['1 ≤ nums1.length, nums2.length ≤ 10⁵', '-10⁹ ≤ nums1[i], nums2[j] ≤ 10⁹', '1 ≤ k ≤ 10⁴'],
-  starterCode: `def k_smallest_pairs(nums1, nums2, k):
-  pass`,
+  starterCode: `class Solution:
+    def k_smallest_pairs(self, nums1, nums2, k):
+        pass`,
+  runnerSetup: 'k_smallest_pairs = Solution().k_smallest_pairs',
   functionName: 'k_smallest_pairs',
   conceptId: 'heap',
   testCases: [
     { label: 'Three pairs', args: [[1,7,11],[2,4,6],3], expected: [[1,2],[1,4],[1,6]] },
     { label: 'Duplicate values', args: [[1,1,2],[1,2,3],2], expected: [[1,1],[1,1]] },
   ],
-  bruteHint: 'Describe what happens if you generate every possible pair and sort them by sum, and why the constraints rule that out.',
-  optimizeHint: 'Name the data structure that lets you expand outward from the smallest pair without generating every combination.',
+  bruteHint: 'The brute-force approach generates every possible pair (nums1[i], nums2[j]) across both arrays, computes each sum, sorts all pairs by sum, and takes the first k. With both arrays able to hold up to 10^5 elements, the total number of pairs reaches 10^10, so generating and sorting them all is far too slow and memory-heavy to run. Since only k ≤ 10^4 pairs are ever needed, nearly all of that work is wasted before you even look at the result. How could you explore only the most promising pairs instead of every combination?',
+  optimizeComplexity: { time: 'O(k log k)', space: 'O(k)' },
   clues: [
     {
       id: 'constraint-brute-force',
-      question: 'nums1.length and nums2.length can each reach 10⁵. The total number of pairs is up to 10¹⁰. What does this rule out?',
+      highlight: { location: 'constraint', text: '1 ≤ nums1.length, nums2.length ≤ 10⁵' },
+      question: 'Multiplying two input-size bounds together often reveals that a seemingly reasonable approach is actually computationally infeasible. nums1.length and nums2.length can each reach 10⁵. The total number of pairs is up to 10¹⁰. What does this rule out?',
       options: [
         { label: 'Generating all pairs and sorting them', isCorrect: true },
         { label: 'Using a heap at all', isCorrect: false, feedback: '10¹⁰ pairs rules out generating all pairs, not heap usage. A heap-based approach that avoids generating all pairs is exactly what the constraint motivates.' },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'sorted-input-signal',
-      question: 'Both arrays are sorted in ascending order. How does this structure your search?',
+      highlight: { location: 'description', text: 'sorted in ascending order' },
+      question: 'A stated property like sort order rarely appears by accident — it usually exists so you can exploit structure instead of searching blindly. Both arrays are sorted in ascending order. How does this structure your search?',
       options: [
         { label: 'The globally smallest pair must start at (nums1[0], nums2[0])', isCorrect: true },
         { label: 'You can binary search for each next smallest pair', isCorrect: false, feedback: 'Binary search finds a specific value, not the next smallest pair in a 2D grid. The sorted property tells you where to start and how to expand the search, not how to jump to it directly.' },
@@ -51,7 +55,7 @@ export default {
     },
     {
       id: 'heap-expansion-strategy',
-      question: 'You want to expand the search from the current smallest pair to its neighbors. What risk must you manage?',
+      question: 'Anticipating the risks of an expansion strategy before you code it prevents subtle correctness bugs like redundant work. You want to expand the search from the current smallest pair to its neighbors. What risk must you manage?',
       options: [
         { label: 'Heap size growing to n × m', isCorrect: false, feedback: 'A well-managed heap stays small. You only push new candidates when you pop, so heap size grows by at most one per extraction — it stays bounded by the frontier, not by all pairs.' },
         { label: 'Visiting the same pair (i, j) multiple times', isCorrect: true },
@@ -66,7 +70,8 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is a list of k pairs, each a [u, v] from the two arrays. What does this tell you about what to store in the heap?',
+      highlight: { location: 'description', text: 'the <code>k</code> pairs <code>(u, v)</code> (one from each array)' },
+      question: 'What a problem asks you to return often dictates exactly what auxiliary data you must carry through your algorithm, not just how you order it. The output is a list of k pairs, each a [u, v] from the two arrays. What does this tell you about what to store in the heap?',
       options: [
         { label: 'Store only the sum of each pair', isCorrect: false, feedback: 'The sum is used for ordering, but the output requires the actual values u and v. If you only store the sum, you cannot reconstruct the pair to return it.' },
         { label: 'Store indices (i, j) and the sum for ordering', isCorrect: true },
@@ -80,4 +85,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def k_smallest_pairs(self, nums1, nums2, k):
+        if not nums1 or not nums2:
+            return []
+        heap = [(nums1[i] + nums2[0], i, 0) for i in range(min(k, len(nums1)))]
+        result = []
+        while heap and len(result) < k:
+            s, i, j = heapq.heappop(heap)
+            result.append([nums1[i], nums2[j]])
+            if j + 1 < len(nums2):
+                heapq.heappush(heap, (nums1[i] + nums2[j + 1], i, j + 1))
+        return result`,
+  solutionComplexity: { time: 'O(k log k)', space: 'O(k)' },
+  solutionCaveat: 'Seeding the heap with only <code>min(k, len(nums1))</code> starting pairs — one per index of <code>nums1</code>, each paired with <code>nums2[0]</code> — is enough, because the true k smallest pairs can never need more than k distinct <code>nums1</code> indices to start from.',
+  solutionExplanation: 'Since both arrays are sorted, pairing <code>nums1[i]</code> with <code>nums2[0]</code> for every <code>i</code> gives a starting point that already includes each row\'s smallest possible pair — the heap always has access to the next-best candidate without needing to consider a whole row at once. Popping the smallest sum and pushing that same row\'s next pair (one index over in <code>nums2</code>) mirrors merging k sorted lists, and the process stops the moment k pairs have been collected, so it never explores pairs that couldn\'t possibly make the cut.',
 }

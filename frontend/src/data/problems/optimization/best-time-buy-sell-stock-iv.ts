@@ -8,8 +8,10 @@ export default {
     { input: 'k=2, prices=[3,2,6,5,0,3]', output: '7', explanation: 'Buy on day 2, sell day 3 (profit 4); buy day 5, sell day 6 (profit 3).' },
   ],
   constraints: ['1 ≤ k ≤ 100', '1 ≤ prices.length ≤ 1000', '0 ≤ prices[i] ≤ 1000'],
-  starterCode: `def max_profit(k, prices):
-  pass`,
+  starterCode: `class Solution:
+    def max_profit(self, k, prices):
+        pass`,
+  runnerSetup: 'max_profit = Solution().max_profit',
   functionName: 'max_profit',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'k=2, standard', args: [2,[3,2,6,5,0,3]], expected: 7 },
     { label: 'k=0', args: [0,[1,2,3]], expected: 0 },
   ],
-  bruteHint: 'Describe the recursive approach that branches into buy/sell/skip at every day up to k times, re-exploring the same day/transaction combinations, and why that\'s exponential.',
-  optimizeHint: 'Name the two things the DP state needs to track — day and transactions used (plus holding status) — to memoize away the repeated subproblems.',
+  bruteHint: 'The brute-force approach recursively branches into buy, sell, or skip at every day, tracking how many of the k transactions have been used so far, and explores every combination of choices across all n days. With roughly three choices at each of n days, this recursion runs in O(3ⁿ) time, since the same (day, transactions-used) combination gets re-explored across many different branches instead of being solved once. Where do you see the same day/transaction combination being recomputed as this recursion unwinds?',
+  optimizeComplexity: { time: 'O(n·k)', space: 'O(k)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'k ≤ 100 and prices.length ≤ 1000. What complexity does this permit?',
+      highlight: { location: 'constraint', text: '1 ≤ k ≤ 100' },
+      question: 'Constraints tell you the complexity budget you must fit within, so reading them first tells you whether to reach for a brute-force or an optimized approach. k ≤ 100 and prices.length ≤ 1000. What complexity does this permit?',
       options: [
         { label: 'O(n) only — k is a constant',          isCorrect: false, feedback: 'k is a variable input, not a fixed constant. An O(n) solution ignoring k would be wrong for k = 1 vs k = 50. You need k in your complexity.' },
         { label: 'O(k × n) is the natural target',        isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'k-as-resource',
-      question: 'k is the maximum number of transactions allowed. What does treating k as a resource imply?',
+      highlight: { location: 'description', text: 'using at most <code>k</code> transactions' },
+      question: 'When a parameter caps how many operations you\'re allowed, that cap shapes exactly what your solution needs to track at each step. k is the maximum number of transactions allowed. What does treating k as a resource imply?',
       options: [
         { label: 'You must use exactly k transactions',             isCorrect: false, feedback: '"At most k" permits using fewer. If k = 100 but there are only 2 profitable opportunities, you\'d use 2 — spending extra transactions gains nothing.' },
         { label: 'Each transaction slot has a cost — spend wisely', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'k-upper-bound',
-      question: 'When k ≥ n/2, you can complete any number of profitable trades. What does this special case let you do?',
+      highlight: { location: 'constraint', text: '1 ≤ k ≤ 100' },
+      question: 'Spotting when a general constraint becomes non-binding in a special case can unlock a much simpler algorithm for that case. When k ≥ n/2, you can complete any number of profitable trades. What does this special case let you do?',
       options: [
         { label: 'Use a different algorithm entirely',              isCorrect: true },
         { label: 'Return 0 — no trades are possible',              isCorrect: false, feedback: 'k ≥ n/2 means the transaction cap is no longer binding — you can take every profitable day-to-day gain. That\'s a reason for more profit, not zero.' },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'dp-dimensions',
-      question: 'The problem has two varying quantities: transactions used and days elapsed. What does this suggest about your DP table?',
+      highlight: { location: 'constraint', text: '1 ≤ prices.length ≤ 1000' },
+      question: 'Identifying every quantity that independently affects the answer tells you how many dimensions your DP state actually needs. The problem has two varying quantities: transactions used and days elapsed. What does this suggest about your DP table?',
       options: [
         { label: 'A 1D array indexed by day',                       isCorrect: false, feedback: 'A 1D array loses the transaction dimension. At the same day, you might have used 1 or 3 transactions — those lead to different available profits, so they\'re different states.' },
         { label: 'A 2D table: dp[transaction][day]',                isCorrect: true },
@@ -81,4 +87,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_profit(self, k, prices):
+        n = len(prices)
+        if n == 0 or k == 0:
+            return 0
+        if k >= n // 2:
+            profit = 0
+            for i in range(1, n):
+                if prices[i] > prices[i - 1]:
+                    profit += prices[i] - prices[i - 1]
+            return profit
+
+        buy = [float('-inf')] * (k + 1)
+        sell = [0] * (k + 1)
+        for price in prices:
+            for j in range(1, k + 1):
+                buy[j] = max(buy[j], sell[j - 1] - price)
+                sell[j] = max(sell[j], buy[j] + price)
+        return sell[k]`,
+  solutionComplexity: { time: 'O(n · k)', space: 'O(k)' },
+  solutionCaveat: 'When <code>k &gt;= n // 2</code>, the transaction cap can never actually bind — an n-day array has at most n/2 non-overlapping buy/sell pairs — so the code switches to a plain greedy sum of every positive day-to-day gain instead of paying for a k-sized DP table it doesn\'t need.',
+  solutionExplanation: 'Generalizing the two-transaction problem\'s five running values to <code>k</code> transactions gives <code>buy[j]</code> / <code>sell[j]</code> pairs for <code>j</code> from 1 to <code>k</code>, each updated in the same dependency order — <code>buy[j]</code> only ever draws on <code>sell[j-1]</code>, so the j-th purchase can only happen after the (j-1)-th sale, correctly enforcing "sell before you buy again" at every transaction level. Capping the loop at exactly <code>k</code> transaction slots is what respects the "at most k" limit, since each slot\'s running maximum can also just stay unused when spending it wouldn\'t help.',
 }

@@ -8,8 +8,10 @@ export default {
     { input: 's1="aabcc", s2="dbbca", s3="aadbbbaccc"', output: 'false' },
   ],
   constraints: ['0 ≤ s1.length, s2.length ≤ 100', 's3.length == s1.length + s2.length'],
-  starterCode: `def is_interleave(s1, s2, s3):
-  pass`,
+  starterCode: `class Solution:
+    def is_interleave(self, s1, s2, s3):
+        pass`,
+  runnerSetup: 'is_interleave = Solution().is_interleave',
   functionName: 'is_interleave',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Invalid interleave', args: ['aabcc','dbbca','aadbbbaccc'], expected: false },
     { label: 'Empty strings', args: ['','',''], expected: true },
   ],
-  bruteHint: 'Describe the naive recursion that branches on taking the next character from s1 or s2 at every step, and why the same (i, j) position gets revisited many times',
-  optimizeHint: 'Name the 2D state (index into s1, index into s2) you\'d memoize to avoid recomputing overlapping subproblems',
+  bruteHint: 'The brute-force approach recursively branches at every position, trying to match s3\'s next character against either s1\'s next character or s2\'s next character, and continuing until both strings are exhausted or a mismatch occurs. Without memoization, this explores an exponential number of paths, since the same (i, j) position is reached and re-explored many different ways. Given that there are only (m+1)×(n+1) distinct (i, j) pairs, why is recomputing each one from scratch so much more expensive than computing it once?',
+  optimizeComplexity: { time: 'O(m·n)', space: 'O(m·n)' },
   clues: [
     {
       id: 'length-constraint',
-      question: 's3.length == s1.length + s2.length. What does this guarantee?',
+      question: 'A constraint tying input sizes together often doubles as a free, instant correctness check before any real computation begins. s3.length == s1.length + s2.length. What does this guarantee?',
+      highlight: { location: 'constraint', text: 's3.length == s1.length + s2.length' },
       options: [
         { label: 'You can immediately return false if this fails', isCorrect: true },
         { label: 's3 always contains s1 as a substring', isCorrect: false, feedback: 'Interleaving preserves relative order of characters, not contiguous runs. s1 does not need to appear as a substring in s3.' },
@@ -37,11 +40,12 @@ export default {
     },
     {
       id: 'two-string-state',
-      question: 'You\'re consuming characters from s1 and s2 simultaneously. What state captures where you are in the matching process?',
+      question: 'Figuring out the minimal information that distinguishes one subproblem from another is the key to defining a correct state. You\'re consuming characters from s1 and s2 simultaneously. What state captures where you are in the matching process?',
+      highlight: { location: 'description', text: '<code>s3</code> can be formed by interleaving <code>s1</code> and <code>s2</code>' },
       options: [
         { label: 'Current index in s3 only', isCorrect: false, feedback: 'Knowing where you are in s3 doesn\'t tell you which characters came from s1 vs. s2. You need to track progress in both source strings independently.' },
         { label: 'Index i into s1 and index j into s2', isCorrect: true },
-        { label: 'A bitmask of which s3 characters are matched', isCorrect: false, feedback: 'A bitmask over s3 of length up to 200 would have 2²⁰⁰ states — completely infeasible. The DP state needs to be polynomial.' },
+        { label: 'Track every distinct combination of which s3 positions are already matched', isCorrect: false, feedback: 'A bitmask over s3 of length up to 200 would have 2²⁰⁰ states — completely infeasible. The DP state needs to be polynomial.' },
         { label: 'The remaining unmatched portion of s3', isCorrect: false, feedback: 'Storing remaining s3 substrings creates too many distinct states and doesn\'t directly encode progress in s1 and s2 separately.' },
       ],
       correctFeedback: 'State (i, j) means you\'ve consumed i characters from s1 and j characters from s2, matching s3[0..i+j-1]. With both lengths ≤ 100, that\'s at most 101 × 101 = 10,201 states.',
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 's1.length, s2.length ≤ 100 tells you…',
+      question: 'Constraint bounds tell you how large a state space you can afford to fill in exhaustively. s1.length, s2.length ≤ 100 tells you…',
+      highlight: { location: 'constraint', text: '0 ≤ s1.length, s2.length ≤ 100' },
       options: [
         { label: 'A recursive approach without memoization is fine', isCorrect: false, feedback: 'Without memoization, the recursion branches at each character and revisits the same (i, j) states many times. At lengths up to 100 that\'s up to 2¹⁰⁰ paths — completely infeasible.' },
         { label: 'O(m × n) DP with a 101 × 101 table is sufficient', isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'order-preservation',
-      question: 'The interleaving must preserve the relative orders of both s1 and s2. What does this tell you about the DP transition?',
+      question: 'Ordering constraints on the input often dictate exactly which transitions between states are legal. The interleaving must preserve the relative orders of both s1 and s2. What does this tell you about the DP transition?',
+      highlight: { location: 'description', text: 'preserving relative orders of s1 and s2' },
       options: [
         { label: 'You can pick any character from s1 or s2 in any order', isCorrect: false, feedback: 'You must take the next character in sequence from whichever string you choose. Skipping or reordering characters within s1 or s2 is not allowed.' },
         { label: 'At each (i, j), the next character comes from s1[i] or s2[j] — not earlier', isCorrect: true },
@@ -81,4 +87,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_interleave(self, s1, s2, s3):
+        m, n = len(s1), len(s2)
+        if m + n != len(s3):
+            return False
+
+        dp = [[False] * (n + 1) for _ in range(m + 1)]
+        dp[0][0] = True
+        for i in range(1, m + 1):
+            dp[i][0] = dp[i - 1][0] and s1[i - 1] == s3[i - 1]
+        for j in range(1, n + 1):
+            dp[0][j] = dp[0][j - 1] and s2[j - 1] == s3[j - 1]
+
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                dp[i][j] = (dp[i - 1][j] and s1[i - 1] == s3[i + j - 1]) or \\
+                           (dp[i][j - 1] and s2[j - 1] == s3[i + j - 1])
+        return dp[m][n]`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: 'The length check (<code>m + n != len(s3)</code>) is a correctness requirement, not just an optimization — with a mismatched length no interleaving can possibly exist, and skipping the check would let the DP index into <code>s3</code> out of bounds instead of cleanly returning false.',
+  solutionExplanation: 'State <code>(i, j)</code> means the first <code>i + j</code> characters of <code>s3</code> have been matched using exactly <code>i</code> characters from <code>s1</code> and <code>j</code> from <code>s2</code>, so <code>dp[i][j]</code> is reachable exactly when either the previous state <code>(i-1, j)</code> was reachable and <code>s1[i-1]</code> matches the next character of <code>s3</code>, or <code>(i, j-1)</code> was reachable and <code>s2[j-1]</code> does. Since both source strings are always consumed strictly left-to-right, there\'s no other way to have produced the first <code>i + j</code> characters of <code>s3</code>, which is what makes this pair of indices a complete and sufficient state.',
 }

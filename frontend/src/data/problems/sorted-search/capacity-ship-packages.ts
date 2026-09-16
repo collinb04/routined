@@ -7,8 +7,10 @@ export default {
     { input: 'weights=[1,2,3,4,5,6,7,8,9,10], days=5', output: '15', explanation: 'With capacity 15, ship [1-5],[6-8],[9],[10],[nothing] in 5 days.' },
   ],
   constraints: ['1 ≤ days ≤ weights.length ≤ 500', '1 ≤ weights[i] ≤ 500'],
-  starterCode: `def ship_within_days(weights, days):
-  pass`,
+  starterCode: `class Solution:
+    def ship_within_days(self, weights, days):
+        pass`,
+  runnerSetup: 'ship_within_days = Solution().ship_within_days',
   functionName: 'ship_within_days',
   conceptId: 'binary-search',
   testCases: [
@@ -16,12 +18,13 @@ export default {
     { label: '3 days', args: [[3,2,2,4,1,4],3], expected: 6 },
     { label: '1 day', args: [[1,2,3,1,1],1], expected: 8 },
   ],
-  bruteHint: 'Describe testing every possible capacity one by one and why that\'s too slow',
-  optimizeHint: 'Name the technique that binary searches over the range of possible capacities',
+  bruteHint: 'A direct approach tests every possible capacity value from max(weights) up to sum(weights), one at a time, running an O(n) simulation to check whether that capacity ships everything within the day limit. Since the capacity range can span up to 250,000 values, testing each one individually costs roughly O(n × sum) in the worst case. Given that feasibility only gets easier as capacity increases, is checking every single value the fastest way to find the smallest one that works?',
+  optimizeComplexity: { time: 'O(n log(sum))', space: 'O(1)' },
   clues: [
     {
       id: 'search-space',
-      question: 'You\'re asked for the minimum capacity. The capacity must be at least max(weights) and at most sum(weights). What does this bounded range suggest?',
+      question: 'A bounded, monotone range in the problem often signals that you can binary search over candidate answers rather than the input itself. You\'re asked for the minimum capacity. The capacity must be at least max(weights) and at most sum(weights). What does this bounded range suggest?',
+      highlight: { location: 'constraint', text: '1 ≤ weights[i] ≤ 500' },
       options: [
         { label: 'Simulate every possible capacity linearly', isCorrect: false, feedback: 'With weights up to 500 and up to 500 packages, sum(weights) could reach 250,000. Simulating every integer capacity from max to sum would be 250,000 × 500 operations — far too slow.' },
         { label: 'Binary search over the capacity range', isCorrect: true },
@@ -36,10 +39,11 @@ export default {
     },
     {
       id: 'order-constraint',
-      question: '"Packages must be shipped in order." What does this rule out?',
+      question: 'Explicit ordering constraints in the problem description often restrict which simulation strategies are valid. "Packages must be shipped in order." What does this rule out?',
+      highlight: { location: 'description', text: 'Packages must be shipped in order' },
       options: [
-        { label: 'Using a greedy simulation', isCorrect: false, feedback: 'Greedy simulation (load a day until it\'s full, then start the next) works fine here and respects order. The order constraint rules out a different approach.' },
-        { label: 'Binary searching on the capacity', isCorrect: false, feedback: 'Binary search on capacity is still valid — you\'re searching over capacity values, not rearranging packages. The order constraint affects how you simulate, not whether you can binary search.' },
+        { label: 'Loading each day until capacity is full, then moving to the next', isCorrect: false, feedback: 'Greedy simulation (load a day until it\'s full, then start the next) works fine here and respects order. The order constraint rules out a different approach.' },
+        { label: 'Checking one candidate capacity value directly', isCorrect: false, feedback: 'Binary search on capacity is still valid — you\'re searching over capacity values, not rearranging packages. The order constraint affects how you simulate, not whether you can binary search.' },
         { label: 'Reordering packages to fill days optimally', isCorrect: true },
         { label: 'Checking if a given capacity is feasible', isCorrect: false, feedback: 'You can still check feasibility by simulating a greedy load while respecting order. The constraint restricts which assignments are legal, not whether feasibility checking is possible.' },
       ],
@@ -51,7 +55,7 @@ export default {
     },
     {
       id: 'feasibility-check',
-      question: 'To binary search, you need to test whether a candidate capacity C is feasible. What does that check look like?',
+      question: 'Once you commit to binary searching over an answer range, everything hinges on how quickly you can test whether one candidate value is feasible. To binary search, you need to test whether a candidate capacity C is feasible. What does that check look like?',
       options: [
         { label: 'Count total weight and compare to C × days', isCorrect: false, feedback: 'Total weight ÷ days gives an average, but you can\'t split a package across days. The order constraint means you must simulate the actual day boundaries greedily.' },
         { label: 'Greedily assign packages in order, count days used', isCorrect: true },
@@ -65,4 +69,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def ship_within_days(self, weights, days):
+        def days_needed(capacity):
+            d = 1
+            load = 0
+            for w in weights:
+                if load + w > capacity:
+                    d += 1
+                    load = w
+                else:
+                    load += w
+            return d
+
+        lo, hi = max(weights), sum(weights)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if days_needed(mid) <= days:
+                hi = mid
+            else:
+                lo = mid + 1
+        return lo`,
+  solutionComplexity: { time: 'O(n log(sum))', space: 'O(1)' },
+  solutionCaveat: 'The search range starts at <code>max(weights)</code>, not 1 — any capacity smaller than the heaviest single package could never ship that package at all, so it is never a valid candidate and starting the search there saves scanning through guaranteed-infeasible capacities.',
+  solutionExplanation: 'Feasibility here is monotonic: if some capacity C can ship everything within the day limit, then any capacity larger than C can too — packing more per day only ever needs fewer or equal days. That monotonicity is exactly what makes binary search valid on a "checkable" property instead of a sorted array of values, letting the search zero in on the smallest feasible capacity in O(log(sum)) probes, each one a cheap O(n) greedy simulation of loading packages day by day.',
 }

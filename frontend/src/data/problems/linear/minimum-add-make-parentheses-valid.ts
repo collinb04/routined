@@ -8,8 +8,10 @@ export default {
     { input: 's = "((("', output: '3', explanation: 'Add three close brackets.' },
   ],
   constraints: ['1 ≤ s.length ≤ 1000', 's[i] is either \'(\' or \')\''],
-  starterCode: `def min_add_to_make_valid(s):
-  pass`,
+  starterCode: `class Solution:
+    def min_add_to_make_valid(self, s):
+        pass`,
+  runnerSetup: 'min_add_to_make_valid = Solution().min_add_to_make_valid',
   functionName: 'min_add_to_make_valid',
   conceptId: 'strings',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Valid', args: ['()'], expected: 0 },
     { label: 'Mixed', args: ['()))(('], expected: 4 },
   ],
-  bruteHint: 'Describe repeatedly rescanning the string to fix mismatched brackets and why that wastes work',
-  optimizeHint: 'Name what you could track with a running counter in a single pass to count unmatched brackets',
+  bruteHint: 'One brute-force approach repeatedly rescans the string, fixing one mismatch at a time and starting over until the string is valid — each rescan costs O(n), and you may need up to O(n) rescans. That is roughly O(n²) overall for a string of length up to 1,000. Can you track what is needed in a single left-to-right pass instead of restarting each time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'output-type',
-      question: 'The output is a count of additions, not the corrected string. What does that mean for your approach?',
+      question: 'We can figure out how much work is actually needed based on what the problem asks you to return. The output is a count of additions, not the corrected string. What does that mean for your approach?',
+      highlight: { location: 'description', text: 'return the minimum number of additions to make it valid' },
       options: [
         { label: 'Build the corrected string, then measure it', isCorrect: false, feedback: 'Constructing the result and measuring it works, but the output only needs a count — you can track unmatched brackets directly without building anything.' },
         { label: 'Count unmatched brackets directly', isCorrect: true },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'close-bracket-ordering',
-      question: 'A \')\' without a preceding \'(\' cannot be matched later. What does this imply about how you process characters?',
+      question: 'We can determine the right processing order based on how brackets can or cannot be matched retroactively. A \')\' without a preceding \'(\' cannot be matched later. What does this imply about how you process characters?',
       options: [
         { label: 'Collect all brackets, then match greedily', isCorrect: false, feedback: 'Collecting first loses the left-to-right ordering that determines which close brackets are unmatched.' },
         { label: 'Process left to right; unmatched \')\' is immediately counted', isCorrect: true },
@@ -53,7 +56,8 @@ export default {
     },
     {
       id: 'string-length-constraint',
-      question: 's.length ≤ 1000. What complexity does this permit?',
+      question: 'We can understand how much performance headroom we have based on the size constraint of the input. s.length ≤ 1000. What complexity does this permit?',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 1000' },
       options: [
         { label: 'O(n²) or worse is fine', isCorrect: true },
         { label: 'O(n log n) is required', isCorrect: false, feedback: 'A string of length 1,000 can tolerate much worse than O(n log n). This constraint is quite small.' },
@@ -67,4 +71,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def min_add_to_make_valid(self, s):
+        open_needed = 0
+        additions = 0
+        for ch in s:
+            if ch == '(':
+                open_needed += 1
+            else:
+                if open_needed > 0:
+                    open_needed -= 1
+                else:
+                    additions += 1
+        return additions + open_needed`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionExplanation: 'A single counter of "unmatched opens seen so far" is enough to track validity without an actual stack, since every open bracket is interchangeable — only the count matters. A close bracket either cancels one pending open (decrementing the counter) or, if none are pending, is itself unmatched and needs an insertion right there. Whatever opens remain unmatched at the very end also each need a closing insertion, so the total additions are the closes-needed-immediately plus the opens-left-over.',
 }

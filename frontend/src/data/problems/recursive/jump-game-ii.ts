@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [2,3,0,1,4]', output: '2' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁴', '0 ≤ nums[i] ≤ 1000', 'Answer is always reachable'],
-  starterCode: `def jump(nums):
-  pass`,
+  starterCode: `class Solution:
+    def jump(self, nums):
+        pass`,
+  runnerSetup: 'jump = Solution().jump',
   functionName: 'jump',
   conceptId: 'greedy',
   testCases: [
@@ -18,12 +20,12 @@ export default {
     { label: 'Single', args: [[0]], expected: 0 },
     { label: 'Three jumps', args: [[1,1,1,1]], expected: 3 },
   ],
-  bruteHint: 'Describe trying every possible jump length from each position recursively (or checking reachability from every index with DP) and the complexity that results',
-  optimizeHint: 'Name the greedy idea of tracking the farthest index reachable within your current "jump window," and what event tells you it\'s time to use another jump',
+  bruteHint: 'The brute-force approach tries every possible jump length from each position — recursively exploring how far to jump from index i, or equivalently filling a DP table where dp[i] is the minimum jumps needed to reach index i by checking every earlier index that could reach it. Either way, for each of the n positions you may examine up to n possible jump targets, giving O(n²) time overall. With nums.length up to 10⁴, that\'s on the order of 10⁸ operations. Can you avoid re-examining every possible jump target at every single position?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'always-reachable-guarantee',
-      question: '"The answer is always reachable." What does this guarantee let you skip?',
+      question: 'Guarantees stated outright in the problem eliminate entire classes of edge-case handling you\'d otherwise need to write. "The answer is always reachable." What does this guarantee let you skip?',
       options: [
         { label: 'You do not need to count jumps', isCorrect: false, feedback: 'The problem asks for the minimum number of jumps — counting is the entire task. The guarantee removes the need to handle the impossible case, not the counting.' },
         { label: 'No need to handle a not-reachable return value', isCorrect: true },
@@ -35,10 +37,11 @@ export default {
         'In Jump Game I, you returned true/false for reachability. This problem skips that question. What else does "always reachable" eliminate from your code?',
         'No dead-end check, no "return -1" path. The guarantee means every valid greedy choice eventually reaches the end — your only job is to count the minimum jumps.',
       ],
+      highlight: { location: 'description', text: 'The answer is always reachable.' },
     },
     {
       id: 'greedy-farthest-reach',
-      question: 'From index 1 in [2,3,1,1,4], you can jump to index 2, 3, or 4. To minimize total jumps, which position should you jump to?',
+      question: 'When multiple valid moves are available, comparing what each one unlocks next — not just its immediate value — is the core of a greedy strategy. From index 1 in [2,3,1,1,4], you can jump to index 2, 3, or 4. To minimize total jumps, which position should you jump to?',
       options: [
         { label: 'The position with the largest value (most future range)', isCorrect: false, feedback: 'The position with the largest value is not always the farthest reachable from there. In [2,3,1,1,4], jumping to index 4 (value 4) reaches index 8 — but you only need index 4, so you are already done. Maximize i + nums[i], not just nums[i].' },
         { label: 'The position that extends your farthest reachable index the most', isCorrect: true },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'window-expansion',
-      question: 'The greedy approach tracks a "current window" and a "next window". When do you increment the jump counter?',
+      question: 'Knowing exactly when to trigger a state transition — rather than updating on every single step — is often what separates an O(n) greedy pass from something slower. The greedy approach tracks a "current window" and a "next window". When do you increment the jump counter?',
       options: [
         { label: 'Every time you move to a new index', isCorrect: false, feedback: 'Incrementing at every index would give you n-1 jumps for an n-element array — one per step. A jump covers multiple indices at once; the counter increases only when you exhaust the current window and must commit to the next.' },
         { label: 'When you exhaust all positions in the current jump\'s window', isCorrect: true },
@@ -68,7 +71,7 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁴. A BFS approach visits each index once. A DP approach also visits each index once. What separates them in practice?',
+      question: 'Size constraints alone often cannot distinguish between approaches that share the same time complexity — that is when space usage becomes the deciding factor. nums.length ≤ 10⁴. A BFS approach visits each index once. A DP approach also visits each index once. What separates them in practice?',
       options: [
         { label: 'BFS uses a queue that grows to O(n) space; greedy uses O(1)', isCorrect: true },
         { label: 'BFS is O(n²); greedy is O(n)', isCorrect: false, feedback: 'Both BFS and the greedy window approach are O(n) time. The difference is space: BFS queues up to n nodes while the greedy approach tracks only a few integer variables.' },
@@ -80,6 +83,22 @@ export default {
         'BFS stores all currently reachable nodes in a queue. The greedy approach stores what instead?',
         'Greedy tracks three integers: current window end, farthest reach so far, and jump count. Constant space regardless of n.',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁴' },
     },
   ],
+  solutionCode: `class Solution:
+    def jump(self, nums):
+        n = len(nums)
+        jumps = 0
+        current_end = 0
+        farthest = 0
+        for i in range(n - 1):
+            farthest = max(farthest, i + nums[i])
+            if i == current_end:
+                jumps += 1
+                current_end = farthest
+        return jumps`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The loop only runs through <code>n - 1</code>, never reaching the last index itself — once <code>current_end</code> reaches or passes the last index, the jump that got it there has already been counted, so there\'s nothing left to decide at the final position.',
+  solutionExplanation: 'Rather than deciding at each index exactly where to jump, this tracks the farthest position reachable using the jumps taken so far (<code>current_end</code>) and, while scanning within that window, the farthest position reachable with <code>one more</code> jump (<code>farthest</code>) — the jump count only increments when the scan reaches the edge of the current window, at which point committing to the best option found during that window is provably optimal. This never needs to know which specific index was jumped to, only how far reach has been extended, collapsing what could be an O(n²) exploration into a single O(n) pass.',
 }

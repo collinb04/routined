@@ -11,9 +11,9 @@ export default {
     '1 ≤ nums.length ≤ 10⁴',
     '-10⁴ ≤ nums[i] ≤ 10⁴',
   ],
-  starterCode: `def merge_sort(nums):
-  # Hint: base case is len <= 1; split in half, sort each, then merge
-  pass`,
+  starterCode: `class Solution:
+    def merge_sort(self, nums):
+        pass`,
   functionName: 'merge_sort',
   conceptId: 'sorting',
   runnerSetup: `
@@ -23,7 +23,7 @@ def __no_sort(*a, **kw):
   raise RuntimeError("sorted() and list.sort() are disabled — implement the algorithm manually.")
 
 __b.sorted = __no_sort
-list.sort = lambda *a, **kw: __no_sort()
+merge_sort = Solution().merge_sort
 `,
   testCases: [
     { label: 'Basic', args: [[38, 27, 43, 3, 9, 82, 10]], expected: [3, 9, 10, 27, 38, 43, 82] },
@@ -32,16 +32,17 @@ list.sort = lambda *a, **kw: __no_sort()
     { label: 'Duplicates', args: [[3, 1, 2, 1, 3]], expected: [1, 1, 2, 3, 3] },
     { label: 'Single element', args: [[5]], expected: [5] },
   ],
-  bruteHint: 'Describe merge sort\'s core mechanism — recursively dividing in half and merging sorted halves — and why it guarantees O(n log n)',
-  optimizeHint: 'Explain merge sort\'s stability, contrasted with in-place alternatives like quicksort that risk O(n²) worst case',
+  bruteHint: 'The simplest correct sort repeatedly scans the remaining unsorted elements to find the next-smallest one and swaps it into place — a nested-loop approach like selection sort. That costs O(n) work per placement across n placements, so O(n²) total time, with no extra space needed. At n up to 10,000, O(n²) is 100 million operations, and the problem explicitly wants merge sort besides. What could you do to each half of the array first, so the final combination step doesn\'t need a full rescan for the next-smallest element?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 10,000 and you\'re asked to implement merge sort explicitly. What does that tell you about expected time complexity?',
+      question: 'When a problem names the exact algorithm and gives you its input bound, that combination tells you the complexity class you\'re expected to hit. n ≤ 10,000 and you\'re asked to implement merge sort explicitly. What does that tell you about expected time complexity?',
+      highlight: { location: 'description', text: 'Implement merge sort' },
       options: [
         { label: 'O(n²) is acceptable here', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations — too slow. The problem explicitly names merge sort, which runs in O(n log n). That naming is the signal.' },
         { label: 'O(n log n) is the target', isCorrect: true },
-        { label: 'O(log n) divide-and-conquer suffices', isCorrect: false, feedback: 'O(log n) would mean processing only log₂(10,000) ≈ 13 elements total — you can\'t sort an array without reading all n of it. Divide-and-conquer does O(log n) levels, but each level does O(n) work.' },
+        { label: 'O(log n) suffices since you only touch a fraction of the array', isCorrect: false, feedback: 'O(log n) would mean processing only log₂(10,000) ≈ 13 elements total — you can\'t sort an array without reading all n of it. Splitting the input does O(log n) levels, but each level does O(n) work.' },
         { label: 'Input size doesn\'t constrain the approach', isCorrect: false, feedback: 'Input size always constrains the approach. n ≤ 10,000 rules out O(n²) bubblesort-style solutions and the problem title confirms the expected class of algorithm.' },
       ],
       correctFeedback: 'Merge sort divides log₂(10,000) ≈ 14 levels deep, doing O(n) merge work at each level — O(n log n) total. At n = 10,000 that\'s about 140,000 operations, well within budget.',
@@ -52,7 +53,8 @@ list.sort = lambda *a, **kw: __no_sort()
     },
     {
       id: 'divide-conquer-structure',
-      question: 'The description says "divide the array in half recursively, sort each half, then merge." What is the required base case?',
+      question: 'Recursive definitions always hinge on a base case that stops the recursion correctly. The description says "divide the array in half recursively, sort each half, then merge." What is the required base case?',
+      highlight: { location: 'description', text: 'Divide the array in half recursively, sort each half, then merge the sorted halves back together.' },
       options: [
         { label: 'When the array is already sorted', isCorrect: false, feedback: 'Checking whether an array is sorted takes O(n) time and doesn\'t stop the recursion correctly — a sorted array of length 5 still needs to be split. The base case is about size, not sortedness.' },
         { label: 'When length ≤ 1', isCorrect: true },
@@ -67,12 +69,12 @@ list.sort = lambda *a, **kw: __no_sort()
     },
     {
       id: 'merge-step',
-      question: 'The merge step combines two sorted halves into one sorted array. What must it preserve?',
+      question: 'Steps that combine data often have subtle correctness properties you must not silently break. The merge step combines two sorted halves into one sorted array. What must it preserve?',
       options: [
         { label: 'The original unsorted order', isCorrect: false, feedback: 'The merge step is exactly where you establish sorted order. Preserving the original order would undo the purpose of sorting.' },
         { label: 'Relative order of equal elements (stability)', isCorrect: true },
         { label: 'Only the minimum of each pair', isCorrect: false, feedback: 'Taking only the minimum discards elements — you\'d lose half the array. The merge must incorporate every element from both halves.' },
-        { label: 'The pivot element from the split', isCorrect: false, feedback: 'Pivots are a quicksort concept. Merge sort splits at the midpoint without designating any element as a pivot — it merges by comparing front elements of each half.' },
+        { label: 'A single designated element chosen as a reference point for the split', isCorrect: false, feedback: 'Pivots are a quicksort concept. Merge sort splits at the midpoint without designating any element as a pivot — it merges by comparing front elements of each half.' },
       ],
       correctFeedback: 'Merge sort is stable: when two elements are equal, the one from the left half comes first, preserving their relative order from the input.',
       wrongFeedback: [
@@ -82,7 +84,7 @@ list.sort = lambda *a, **kw: __no_sort()
     },
     {
       id: 'output-structure',
-      question: 'The output is a sorted array (not an index, not a boolean). What does the merge step need to return?',
+      question: 'What a function is asked to return shapes what each recursive call must hand back. The output is a sorted array (not an index, not a boolean). What does the merge step need to return?',
       options: [
         { label: 'The index where the split occurred', isCorrect: false, feedback: 'The split index is used internally to divide the array, but the caller needs the merged sorted elements — not a position.' },
         { label: 'A new sorted list combining both halves', isCorrect: false, feedback: 'This is acceptable, but merge sort is often implemented to sort in-place by writing back into the original array slice — both approaches are valid.' },
@@ -96,4 +98,26 @@ list.sort = lambda *a, **kw: __no_sort()
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def merge_sort(self, nums):
+        if len(nums) <= 1:
+            return nums
+        mid = len(nums) // 2
+        left = self.merge_sort(nums[:mid])
+        right = self.merge_sort(nums[mid:])
+        result = []
+        i = j = 0
+        while i < len(left) and j < len(right):
+            if left[i] <= right[j]:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+        result.extend(left[i:])
+        result.extend(right[j:])
+        return result`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'A single element (or empty list) is trivially sorted and returned as-is — without that base case, the recursive split would never terminate, since halving a list of length 1 or 0 forever produces the same-sized (or smaller) list.',
+  solutionExplanation: 'Splitting the array in half recursively until each piece has at most one element reduces sorting to the easy part: merging two lists that are *already* sorted, which only takes a single pass comparing their fronts. Every level of recursion hands back a fully sorted list to the level above it, so by the time the two top-level halves return, merging them one last time produces the fully sorted whole array — the same divide-and-conquer structure as merging two sorted linked lists, just applied recursively.',
 }

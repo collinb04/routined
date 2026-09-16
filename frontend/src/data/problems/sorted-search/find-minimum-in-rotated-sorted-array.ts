@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [4,5,6,7,0,1,2]', output: '0' },
   ],
   constraints: ['n == nums.length', '1 <= n <= 5000', '-5000 <= nums[i] <= 5000', 'All elements are unique'],
-  starterCode: `def find_min(nums):
-  pass`,
+  starterCode: `class Solution:
+    def find_min(self, nums):
+        pass`,
+  runnerSetup: 'find_min = Solution().find_min',
   functionName: 'find_min',
   conceptId: 'binary-search',
   testCases: [
@@ -17,14 +19,14 @@ export default {
     { label: '[4,5,6,7,0,1,2]', args: [[4,5,6,7,0,1,2]], expected: 0 },
     { label: '[11,13,15,17]', args: [[11,13,15,17]], expected: 11 },
   ],
-  bruteHint: 'Describe the linear-scan approach and its time complexity',
-  optimizeHint: 'Name the technique that exploits the fact one half of the array is always fully sorted',
+  bruteHint: 'The brute-force approach is a linear scan: iterate through nums once, keeping track of the smallest value seen, in O(n) time and O(1) space. It\'s simple and always correct, but the problem explicitly caps you at O(log n) time. Since nums is sorted and only rotated, what could you compare at each step to eliminate half of the remaining array?',
   clues: [
     {
       id: 'time-constraint',
-      question: '"Must run in O(log n) time." With n ≤ 5000, what does this requirement rule out?',
+      highlight: { location: 'description', text: 'You must write an algorithm that runs in O(log n) time.' },
+      question: 'An explicit complexity requirement is one of the strongest signals a problem gives you about which approaches are even allowed. "Must run in O(log n) time." With n ≤ 5000, what does this requirement rule out?',
       options: [
-        { label: 'Linear scan for the minimum', isCorrect: true },
+        { label: 'Checking every element one by one to find the minimum', isCorrect: true },
         { label: 'Any comparison-based approach', isCorrect: false, feedback: 'Comparison-based approaches are fine — binary search is comparison-based and runs in O(log n). O(log n) rules out linear work, not comparisons in general.' },
         { label: 'Accessing elements by index', isCorrect: false, feedback: 'Index access is O(1) and is used in every array algorithm including binary search. The O(log n) requirement restricts how many elements you visit, not how you access them.' },
         { label: 'Nothing — O(n) is fine for n = 5000', isCorrect: false, feedback: 'The problem explicitly requires O(log n), regardless of n\'s size. A linear scan would be trivially correct but violates the stated complexity requirement.' },
@@ -37,7 +39,8 @@ export default {
     },
     {
       id: 'rotation-structure',
-      question: 'A rotated sorted array like [4,5,6,7,0,1,2] has a pivot where the order "resets." What property lets binary search still work?',
+      highlight: { location: 'description', text: 'sorted in ascending order is rotated between 1 and <code>n</code> times' },
+      question: 'Recognizing structural guarantees about how the input is arranged is often the key to eliminating large chunks of it at once. A rotated sorted array like [4,5,6,7,0,1,2] has a pivot where the order "resets." What property lets binary search still work?',
       options: [
         { label: 'The minimum is always at index n//2', isCorrect: false, feedback: 'The rotation can land the minimum anywhere from index 1 to n-1 — it\'s not fixed at the midpoint. In [3,4,5,1,2] the minimum is at index 3, not index 2.' },
         { label: 'One half of the array is always fully sorted', isCorrect: true },
@@ -52,12 +55,13 @@ export default {
     },
     {
       id: 'unique-elements-guarantee',
-      question: '"All elements are unique." How does this simplify the binary search decision?',
+      highlight: { location: 'constraint', text: 'All elements are unique' },
+      question: 'A uniqueness constraint can quietly remove an entire category of edge cases you\'d otherwise have to handle. "All elements are unique." How does this simplify the binary search decision?',
       options: [
         { label: 'You can skip duplicate checks in the comparison', isCorrect: false, feedback: 'That\'s a consequence but not the key insight. Uniqueness matters because it ensures nums[mid] ≠ nums[right], so the comparison nums[mid] < nums[right] always resolves unambiguously.' },
         { label: 'nums[mid] ≠ nums[right] always, so < or > is never ambiguous', isCorrect: true },
         { label: 'The minimum is guaranteed to be distinct, so you can stop early', isCorrect: false, feedback: 'Early stopping is always available (stop when left == right), but it doesn\'t depend on uniqueness. Uniqueness removes the ambiguous case where nums[mid] == nums[right].' },
-        { label: 'Sorting is unnecessary because all elements differ', isCorrect: false, feedback: 'The array comes pre-sorted (then rotated) — sorting isn\'t your job. Uniqueness matters for the binary search comparison, not for whether the array is ordered.' },
+        { label: 'Rearranging the array into order first is unnecessary because all elements differ', isCorrect: false, feedback: 'The array comes pre-sorted (then rotated) — sorting isn\'t your job. Uniqueness matters for the binary search comparison, not for whether the array is ordered.' },
       ],
       correctFeedback: 'With all unique elements, nums[mid] is never equal to nums[right]. Every comparison resolves to strictly less than or strictly greater than, so you always know which half to eliminate.',
       wrongFeedback: [
@@ -66,4 +70,16 @@ export default {
       ],
     },
   ],
+  optimizeComplexity: { time: 'O(log n)', space: 'O(1)' },
+  solutionCode: `class Solution:
+    def find_min(self, nums):
+        lo, hi = 0, len(nums) - 1
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if nums[mid] > nums[hi]:
+                lo = mid + 1
+            else:
+                hi = mid
+        return nums[lo]`,
+  solutionExplanation: 'Comparing the middle element to the rightmost element always reveals which half contains the rotation point: if <code>nums[mid] > nums[hi]</code>, the array must wrap around somewhere to the right of <code>mid</code> (since a normal ascending run couldn\'t have a bigger value followed later by a smaller one), so the minimum lives in the right half; otherwise the right half from <code>mid</code> onward is already in ascending order, and the minimum is <code>mid</code> or somewhere to its left. Because every comparison is guaranteed to eliminate half the remaining search space, the loop narrows to a single element in O(log n) steps — the uniqueness guarantee is what makes this comparison always decisive.',
 }

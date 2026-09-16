@@ -8,26 +8,28 @@ export default {
     { input: 'tokens = ["4","13","5","/","+"]', output: '6 (4+(13/5))' },
   ],
   constraints: ['1 <= tokens.length <= 10^4', 'tokens[i] is either an operator or an integer'],
-  starterCode: `def eval_rpn(tokens):
-  pass`,
+  starterCode: `class Solution:
+    def eval_rpn(self, tokens):
+        pass`,
+  runnerSetup: 'eval_rpn = Solution().eval_rpn',
   functionName: 'eval_rpn',
   conceptId: 'stack',
   testCases: [
     { label: '(2+1)*3', args: [['2','1','+','3','*']], expected: 9 },
     { label: '4+(13/5)', args: [['4','13','5','/','+']],  expected: 6 },
-    { label: 'negative', args: [['10','6','9','3','+','-11','*','/','+','17','+','5','+']], expected: 22 },
+    { label: 'negative', args: [['10','6','9','3','+','-11','*','/','*','17','+','5','+']], expected: 22 },
   ],
-  bruteHint: 'Describe recursively re-scanning the expression to evaluate it, and why that approach is awkward here',
-  optimizeHint: 'Name the data structure that lets you evaluate the expression in a single left-to-right pass',
+  bruteHint: 'A brute-force approach could repeatedly scan the token list from the start looking for the next operator, splice out that operator and its two preceding operands, compute the result, and splice it back in — then rescan from the beginning for the next operator. Each pass is O(n), and you repeat it roughly n times as operators get resolved, so the rescanning alone costs O(n²), on top of the overhead of repeatedly splicing the list. What would let you process each token exactly once instead of rescanning after every operator?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'rpn-operand-order',
-      question: 'In RPN, an operator always applies to the two most recently seen operands. What data structure matches this "most recent first" access pattern?',
+      question: 'How a problem\'s operations retrieve their inputs often reveals exactly which data structure fits. In RPN, an operator always applies to the two most recently seen operands. What data structure matches this "most recent first" access pattern?',
       options: [
-        { label: 'Queue (FIFO)', isCorrect: false, feedback: 'A queue returns the oldest element first. RPN operators need the two most recent operands — the exact opposite of FIFO order.' },
-        { label: 'Stack (LIFO)', isCorrect: true },
-        { label: 'Hash map for operand lookup', isCorrect: false, feedback: 'A hash map stores key-value pairs — there are no keys here, only a sequence of numbers to consume in arrival order. You need positional recency, not lookup.' },
-        { label: 'Sorted array of operands', isCorrect: false, feedback: 'Sorting destroys the order in which operands arrived, which is exactly what determines what each operator acts on. RPN evaluation depends entirely on arrival sequence.' },
+        { label: 'Return items in the order they arrived', isCorrect: false, feedback: 'A queue returns the oldest element first. RPN operators need the two most recent operands — the exact opposite of FIFO order.' },
+        { label: 'Return the most recently added item first', isCorrect: true },
+        { label: 'Look up an item by a key', isCorrect: false, feedback: 'A hash map stores key-value pairs — there are no keys here, only a sequence of numbers to consume in arrival order. You need positional recency, not lookup.' },
+        { label: 'Rearrange operands into sorted order', isCorrect: false, feedback: 'Sorting destroys the order in which operands arrived, which is exactly what determines what each operator acts on. RPN evaluation depends entirely on arrival sequence.' },
       ],
       correctFeedback: 'A stack pushes each number and pops the top two when an operator appears. LIFO order gives you exactly the most recently pushed pair every time.',
       wrongFeedback: [
@@ -37,7 +39,7 @@ export default {
     },
     {
       id: 'constraint-token-count',
-      question: 'tokens.length ≤ 10^4. What does this tell you about acceptable complexity?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. tokens.length ≤ 10^4. What does this tell you about acceptable complexity?',
       options: [
         { label: 'O(n²) is fine at 10,000 tokens', isCorrect: false, feedback: 'O(n²) at n = 10,000 is 100 million operations. More importantly, each token requires at most one push or one pop — there is no reason for nested iteration.' },
         { label: 'O(n) is achievable and expected', isCorrect: true },
@@ -49,10 +51,11 @@ export default {
         'How many times do you need to look at each token to evaluate it? Does any token require scanning others?',
         'Each token triggers either a push or a pop-pop-push. Count the operations per token — what total complexity does that give?',
       ],
+      highlight: { location: 'constraint', text: '1 <= tokens.length <= 10^4' },
     },
     {
       id: 'division-truncation',
-      question: '"Integer division truncates toward zero." How does this differ from Python\'s default floor division?',
+      question: 'Precise wording about how an operation behaves can flag a mismatch with your language\'s default behavior. "Integer division truncates toward zero." How does this differ from Python\'s default floor division?',
       options: [
         { label: 'They differ only for positive results', isCorrect: false, feedback: 'Positive results are identical for both: 7 // 2 = 3 and int(7 / 2) = 3. The difference only surfaces with negative operands.' },
         { label: 'They differ when the result is negative', isCorrect: true },
@@ -64,10 +67,11 @@ export default {
         'Try -7 ÷ 2 in Python with //. Now try int(-7 / 2). Do they give the same answer?',
         'Floor division rounds toward negative infinity. Truncation rounds toward zero. For negative results those are different directions — which does the problem require?',
       ],
+      highlight: { location: 'description', text: 'Integer division truncates toward zero.' },
     },
     {
       id: 'operator-operand-guarantee',
-      question: '"tokens[i] is either an operator or an integer" — every token is valid and the expression is well-formed. What error handling does this let you skip?',
+      question: 'Guarantees in a problem statement tell you what edge cases you can skip handling. "tokens[i] is either an operator or an integer" — every token is valid and the expression is well-formed. What error handling does this let you skip?',
       options: [
         { label: 'Checking for division by zero', isCorrect: false, feedback: 'Well-formed expression doesn\'t mean division by zero is impossible — the integer 0 is a valid token. Division by zero can still occur and must be handled if the problem allows it (though test cases here avoid it).' },
         { label: 'Validating that tokens are parseable', isCorrect: true },
@@ -79,6 +83,28 @@ export default {
         'If the problem guarantees every token is valid, what defensive checks become unnecessary?',
         'Think about what could go wrong parsing a token: unknown characters, malformed numbers. Does the guarantee eliminate those cases?',
       ],
+      highlight: { location: 'constraint', text: 'tokens[i] is either an operator or an integer' },
     },
   ],
+  solutionCode: `class Solution:
+    def eval_rpn(self, tokens):
+        stack = []
+        for t in tokens:
+            if t in ('+', '-', '*', '/'):
+                b = stack.pop()
+                a = stack.pop()
+                if t == '+':
+                    stack.append(a + b)
+                elif t == '-':
+                    stack.append(a - b)
+                elif t == '*':
+                    stack.append(a * b)
+                else:
+                    stack.append(int(a / b))
+            else:
+                stack.append(int(t))
+        return stack[0]`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The two operands must be popped in the right order — the first value popped is the *second* operand (<code>b</code>), and the one popped after it is the *first* operand (<code>a</code>). Swapping that order silently breaks non-commutative operators like <code>-</code> and <code>/</code> without ever raising an error.',
+  solutionExplanation: 'Reverse Polish Notation puts every operator right after its two operands, so a stack processes it in exactly one left-to-right pass: numbers get pushed, and an operator always finds its two operands sitting right on top, ready to combine. Because the operands were pushed in the order they appeared (first operand pushed before second), the second pop recovers the first operand — getting that order backwards is the one subtle way this natural-looking solution goes wrong.',
 }

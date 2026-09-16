@@ -50,12 +50,13 @@ def codec_run(arr):
     { label: '[1,2,3,null,null,4,5]', args: [[1,2,3,null,null,4,5]], expected: [1,2,3,null,null,4,5] },
     { label: 'empty', args: [[]], expected: [] },
   ],
-  bruteHint: 'Describe why storing just node values (e.g. a level-order list without null markers) makes the serialization ambiguous and unable to reconstruct the exact tree shape',
-  optimizeHint: 'Name the traversal order and marker convention that lets deserialize rebuild the tree unambiguously in one pass',
+  bruteHint: 'A naive approach might serialize only node values in level order, without recording where null children fall. That still costs O(n) time and space to build, like any traversal, but dropping the nulls means two different tree shapes can produce the identical sequence of values. Deserialize then has no way to tell which shape produced the string, so the round trip can silently rebuild the wrong tree. What information would you need to add to the string so every branching decision becomes unambiguous?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-node-count',
-      question: 'Up to 10^4 nodes must survive a round-trip through a string. What does this tell you about null handling?',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [0, 10^4]' },
+      question: 'A constraint on how large the tree can grow signals how much structural detail your encoding must preserve to survive a full round-trip. Up to 10^4 nodes must survive a round-trip through a string. What does this tell you about null handling?',
       options: [
         { label: 'Skip nulls — they waste space', isCorrect: false, feedback: 'Skipping nulls destroys structural information. A tree with 10^4 nodes can have many different shapes even with identical values — you need the null markers to reconstruct exactly the right one.' },
         { label: 'Encode nulls explicitly in the string', isCorrect: true },
@@ -70,12 +71,13 @@ def codec_run(arr):
     },
     {
       id: 'output-round-trip',
-      question: 'The output of serialize is a string; deserialize returns the original tree. What property must these two functions share?',
+      highlight: { location: 'description', text: 'Implement a <code>Codec</code> class with <code>serialize(root)</code> → string and <code>deserialize(data)</code> → TreeNode.' },
+      question: 'When a problem defines two paired functions like these, the contract between what one produces and the other consumes is often the real design constraint. The output of serialize is a string; deserialize returns the original tree. What property must these two functions share?',
       options: [
         { label: 'The same traversal order', isCorrect: true },
         { label: 'The same time complexity', isCorrect: false, feedback: 'Matching time complexity is not required — serialize and deserialize can differ. What they must share is a common format so each knows how to produce or consume the string.' },
-        { label: 'Both must use BFS', isCorrect: false, feedback: 'Either BFS or DFS works — the problem imposes no restriction. What matters is that both functions agree on the same traversal order and encoding, whatever you choose.' },
-        { label: 'The same queue size', isCorrect: false, feedback: 'Queue size is an implementation detail, not a correctness requirement. The critical shared contract is the format of the serialized string.' },
+        { label: 'Both must visit nodes level by level', isCorrect: false, feedback: 'Either BFS or DFS works — the problem imposes no restriction. What matters is that both functions agree on the same traversal order and encoding, whatever you choose.' },
+        { label: 'The same amount of memory held at once', isCorrect: false, feedback: 'Queue size is an implementation detail, not a correctness requirement. The critical shared contract is the format of the serialized string.' },
       ],
       correctFeedback: 'Exactly — serialize and deserialize form a paired contract: one writes tokens in a fixed traversal order and the other reads them back in the same order to rebuild the tree.',
       wrongFeedback: [
@@ -85,7 +87,8 @@ def codec_run(arr):
     },
     {
       id: 'no-restriction-freedom',
-      question: '"There is no restriction on how your algorithm works." What does this freedom suggest about the best encoding strategy?',
+      highlight: { location: 'description', text: 'There is no restriction on how your serialization/deserialization algorithm should work.' },
+      question: 'When a problem explicitly grants you freedom in how you solve it, that is usually an invitation to reach for whichever standard approach is simplest to implement correctly. "There is no restriction on how your algorithm works." What does this freedom suggest about the best encoding strategy?',
       options: [
         { label: 'Match the LeetCode level-order format exactly', isCorrect: false, feedback: 'The problem explicitly says there is no restriction — you are free to use any format that round-trips correctly. Matching LeetCode\'s specific format adds constraint without benefit.' },
         { label: 'Use a simple preorder traversal with null markers', isCorrect: true },
@@ -100,7 +103,8 @@ def codec_run(arr):
     },
     {
       id: 'empty-tree-guarantee',
-      question: 'The number of nodes can be 0. What edge case must both serialize and deserialize handle?',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [0, 10^4]' },
+      question: 'A constraint\'s lower bound often calls out an edge case your solution must handle explicitly, even when the rest of the logic ignores it. The number of nodes can be 0. What edge case must both serialize and deserialize handle?',
       options: [
         { label: 'An empty string', isCorrect: false, feedback: 'An empty string is fragile — deserialize has to distinguish "no data provided" from "the string encoding an empty tree." A dedicated null token is safer and unambiguous.' },
         { label: 'A null root in both directions', isCorrect: true },
@@ -114,4 +118,35 @@ def codec_run(arr):
       ],
     },
   ],
+  solutionCode: `class Codec:
+    def serialize(self, root):
+        vals = []
+
+        def dfs(node):
+            if not node:
+                vals.append('#')
+                return
+            vals.append(str(node.val))
+            dfs(node.left)
+            dfs(node.right)
+
+        dfs(root)
+        return ','.join(vals)
+
+    def deserialize(self, data):
+        vals = iter(data.split(','))
+
+        def build():
+            val = next(vals)
+            if val == '#':
+                return None
+            node = TreeNode(int(val))
+            node.left = build()
+            node.right = build()
+            return node
+
+        return build()`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Every <code>None</code> child gets its own explicit <code>\'#\'</code> token in the serialized string — omitting them is exactly what would make two differently-shaped trees with the same values produce identical output, since without null markers there would be no way to tell where a branch actually ends.',
+  solutionExplanation: 'Serializing in preorder (root, then left, then right) and deserializing by consuming tokens in that same fixed order is what makes reconstruction unambiguous: the very first token read is always the root, and recursively building the left subtree before the right means each recursive call knows exactly which tokens belong to it without needing any extra bookkeeping like explicit subtree lengths. An <code>iterator</code> over the split tokens (rather than an index variable) lets nested recursive calls consume tokens from a single shared stream, so each call to <code>build()</code> naturally picks up wherever the previous call left off.',
 }

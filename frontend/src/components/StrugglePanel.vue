@@ -208,7 +208,7 @@ async function handleEvaluate() {
     <!-- ── Commit ─────────────────────────────────────────────────────────── -->
     <template v-if="store.step === 'commit'">
       <div class="shrink-0 flex items-center justify-between px-5 py-3 border-b border-gray-100">
-        <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Commit to a Strategy</span>
+        <span class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Commit to a Strategy</span>
         <span class="text-[12px] text-text-muted">pick, predict, order</span>
       </div>
 
@@ -216,7 +216,7 @@ async function handleEvaluate() {
 
         <!-- Strategy select -->
         <div class="flex flex-col gap-2">
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Strategy</label>
+          <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Strategy</label>
           <select
             v-model="store.strategyId"
             class="w-full px-3 py-2.5 text-sm text-text-dim bg-surface border border-border rounded-xl appearance-none focus:outline-none focus:border-accent/60"
@@ -236,7 +236,7 @@ async function handleEvaluate() {
         <!-- Complexity -->
         <div class="flex gap-3">
           <div class="flex-1 flex flex-col gap-2">
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Time</label>
+            <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Time</label>
             <select
               v-model="store.timeComplexity"
               class="w-full px-3 py-2.5 text-sm text-text-dim bg-surface border border-border rounded-xl appearance-none focus:outline-none focus:border-accent/60"
@@ -246,7 +246,7 @@ async function handleEvaluate() {
             </select>
           </div>
           <div class="flex-1 flex flex-col gap-2">
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Space</label>
+            <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Space</label>
             <select
               v-model="store.spaceComplexity"
               class="w-full px-3 py-2.5 text-sm text-text-dim bg-surface border border-border rounded-xl appearance-none focus:outline-none focus:border-accent/60"
@@ -259,7 +259,7 @@ async function handleEvaluate() {
 
         <!-- Plan ordering -->
         <div v-if="orderedSteps.length > 0" class="flex flex-col gap-2">
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Order the Plan Steps</label>
+          <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Order the Plan Steps</label>
           <p class="text-[12px] text-text-muted -mt-1">Drag to arrange in execution order.</p>
           <div class="flex flex-col gap-1.5 mt-1">
             <div
@@ -286,7 +286,7 @@ async function handleEvaluate() {
 
         <!-- Your read on this problem (optional) -->
         <div class="flex flex-col gap-2">
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Your Read on This Problem <span class="normal-case font-normal">(optional)</span></label>
+          <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Your Read on This Problem <span class="normal-case font-normal">(optional)</span></label>
           <p class="text-[12px] text-text-muted -mt-1">Summarize what the clues tell you — this gets passed to the tutor as extra context, not graded.</p>
           <textarea
             v-model="store.synthesisText"
@@ -335,7 +335,7 @@ async function handleEvaluate() {
         >
           <div
             v-if="msg.role === 'assistant'"
-            class="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"
+            class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"
           >R</div>
           <div
             class="max-w-[80%] px-4 py-2.5 text-sm leading-relaxed"
@@ -345,7 +345,7 @@ async function handleEvaluate() {
           >{{ msg.content }}</div>
           <div
             v-if="msg.role === 'user'"
-            class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0 mb-0.5"
+            class="w-6 h-6 rounded-lg bg-gray-200 flex items-center justify-center shrink-0 mb-0.5"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="text-text-muted">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -354,7 +354,7 @@ async function handleEvaluate() {
         </div>
         <!-- Typing indicator -->
         <div v-if="store.chatLoading" class="flex items-end gap-2 justify-start">
-          <div class="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5">R</div>
+          <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5">R</div>
           <div class="px-4 py-3 bg-white rounded-2xl rounded-bl-sm border border-gray-100 shadow-sm">
             <div class="flex gap-1 items-center">
               <span class="typing-dot" style="animation-delay: 0ms" />
@@ -373,7 +373,7 @@ async function handleEvaluate() {
         <button
           v-for="seed in selectedOption.socraticSeeds"
           :key="seed"
-          class="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-[12px] text-text-dim hover:border-accent/40 hover:text-accent transition-colors"
+          class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[12px] text-text-dim hover:border-accent/40 hover:text-accent transition-colors"
           :disabled="store.chatLoading"
           @click="sendChatMessage(seed)"
         >{{ seed }}</button>
@@ -407,7 +407,7 @@ async function handleEvaluate() {
     <!-- ── Revise ──────────────────────────────────────────────────────────── -->
     <template v-else>
       <div class="shrink-0 flex items-center justify-between px-5 py-3 border-b border-gray-100">
-        <span class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Revise Your Commitment</span>
+        <span class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Revise Your Commitment</span>
         <button class="text-[11px] text-accent hover:opacity-70" @click="store.step = 'chat'">← Back to chat</button>
       </div>
 
@@ -415,7 +415,7 @@ async function handleEvaluate() {
 
         <!-- Strategy -->
         <div class="flex flex-col gap-2">
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Strategy</label>
+          <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Strategy</label>
           <select
             v-model="store.strategyId"
             class="w-full px-3 py-2.5 text-sm text-text-dim bg-surface border border-border rounded-xl appearance-none focus:outline-none focus:border-accent/60"
@@ -431,7 +431,7 @@ async function handleEvaluate() {
         <!-- Complexity -->
         <div class="flex gap-3">
           <div class="flex-1 flex flex-col gap-2">
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Time</label>
+            <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Time</label>
             <select
               v-model="store.timeComplexity"
               class="w-full px-3 py-2.5 text-sm text-text-dim bg-surface border border-border rounded-xl appearance-none focus:outline-none focus:border-accent/60"
@@ -440,7 +440,7 @@ async function handleEvaluate() {
             </select>
           </div>
           <div class="flex-1 flex flex-col gap-2">
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Space</label>
+            <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Space</label>
             <select
               v-model="store.spaceComplexity"
               class="w-full px-3 py-2.5 text-sm text-text-dim bg-surface border border-border rounded-xl appearance-none focus:outline-none focus:border-accent/60"
@@ -452,7 +452,7 @@ async function handleEvaluate() {
 
         <!-- Plan ordering -->
         <div v-if="reviseSteps.length > 0" class="flex flex-col gap-2">
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Order the Plan Steps</label>
+          <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Order the Plan Steps</label>
           <p class="text-[12px] text-text-muted -mt-1">Drag to arrange in execution order.</p>
           <div class="flex flex-col gap-1.5 mt-1">
             <div
@@ -477,7 +477,7 @@ async function handleEvaluate() {
 
         <!-- Insight textarea -->
         <div class="flex flex-col gap-2">
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Key Insight</label>
+          <label class="text-[11px] font-mono font-light uppercase tracking-widest text-text-muted">Key Insight</label>
           <p class="text-[12px] text-text-muted -mt-1">In your own words — what structural property of this problem makes the optimal approach work?</p>
           <textarea
             v-model="store.insightText"

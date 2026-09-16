@@ -11,10 +11,12 @@ export default {
     '1 ≤ s.length ≤ 1000',
     's consists only of lowercase English letters',
   ],
-  starterCode: `def longest_palindrome_subseq(s):
-  # Hint: dp[i][j] = length of longest palindromic subseq in s[i..j]
-  # If s[i]==s[j]: dp[i][j] = dp[i+1][j-1] + 2, else max(dp[i+1][j], dp[i][j-1])
-  pass`,
+  starterCode: `class Solution:
+    def longest_palindrome_subseq(self, s):
+        # Hint: dp[i][j] = length of longest palindromic subseq in s[i..j]
+        # If s[i]==s[j]: dp[i][j] = dp[i+1][j-1] + 2, else max(dp[i+1][j], dp[i][j-1])
+        pass`,
+  runnerSetup: 'longest_palindrome_subseq = Solution().longest_palindrome_subseq',
   functionName: 'longest_palindrome_subseq',
   conceptId: 'dp-intervals',
   testCases: [
@@ -24,14 +26,15 @@ export default {
     { label: 'All same', args: ['aaaa'], expected: 4 },
     { label: '"agbdba"', args: ['agbdba'], expected: 5 },
   ],
-  bruteHint: 'Describe the naive recursion that tries matching or skipping s[i] and s[j] for every substring interval, and why the same interval gets recomputed repeatedly',
-  optimizeHint: 'Name the 2D state (interval start i, interval end j) you\'d memoize so each substring interval is solved once',
+  bruteHint: 'The brute-force approach recursively tries every possible pair of matching or skipped ends for each substring interval [i, j], branching into subproblems whenever characters differ. Because the same interval [i, j] gets revisited from many different recursive paths, this exponential recursion runs in roughly O(2ⁿ) time without memoization. Notice how many times the identical subproblem s[i..j] would be recomputed as the recursion branches. What if you could solve each distinct interval exactly once?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(n²)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 1000 tells you…',
+      question: 'Constraints often reveal the time complexity budget before you write a single line of code. s.length ≤ 1000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 1000' },
       options: [
-        { label: 'O(n²) DP over intervals is the target', isCorrect: true },
+        { label: 'O(n²) is the target complexity', isCorrect: true },
         { label: 'O(n) linear time is required', isCorrect: false, feedback: 'O(n) isn\'t achievable here — you need to compare characters from both ends of every substring, which requires examining O(n²) interval pairs.' },
         { label: 'O(n³) is acceptable', isCorrect: false, feedback: 'At n = 1,000, O(n³) is 1 billion operations — too slow. The interval DP runs in O(n²) = 1 million operations, which is the right target.' },
         { label: 'Enumerate all 2ⁿ subsequences', isCorrect: false, feedback: 'At n = 1,000, 2¹⁰⁰⁰ subsequences is astronomically large. The DP over intervals reduces this to O(n²) states.' },
@@ -44,7 +47,7 @@ export default {
     },
     {
       id: 'interval-state',
-      question: 'dp[i][j] represents the longest palindromic subsequence in s[i..j]. Why does the recurrence shrink the interval?',
+      question: 'The way a DP recurrence relates smaller subproblems to bigger ones exposes the structure you need to exploit. dp[i][j] represents the longest palindromic subsequence in s[i..j]. Why does the recurrence shrink the interval?',
       options: [
         { label: 'Because palindromes always start at index 0', isCorrect: false, feedback: 'Palindromic subsequences can start anywhere in the string — the interval [i,j] is defined by the current left and right boundaries, not anchored to index 0.' },
         { label: 'Because checking if s[i]==s[j] lets you expand or contract the problem', isCorrect: true },
@@ -59,7 +62,8 @@ export default {
     },
     {
       id: 'subsequence-vs-substring',
-      question: '"Subsequence does not need to be contiguous." What does this allow?',
+      question: 'Precise problem wording like "contiguous" versus "subsequence" changes which characters you\'re allowed to skip. "Subsequence does not need to be contiguous." What does this allow?',
+      highlight: { location: 'description', text: 'A subsequence does not need to be contiguous.' },
       options: [
         { label: 'Skipping characters between the two matching ends', isCorrect: true },
         { label: 'Reordering characters to form a palindrome', isCorrect: false, feedback: 'A subsequence preserves relative order — you can skip characters but not rearrange them. "abc" cannot form "cba" as a subsequence.' },
@@ -73,4 +77,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def longest_palindrome_subseq(self, s):
+        n = len(s)
+        dp = [[0] * n for _ in range(n)]
+        for i in range(n - 1, -1, -1):
+            dp[i][i] = 1
+            for j in range(i + 1, n):
+                if s[i] == s[j]:
+                    dp[i][j] = dp[i + 1][j - 1] + 2
+                else:
+                    dp[i][j] = max(dp[i + 1][j], dp[i][j - 1])
+        return dp[0][n - 1]`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(n²)' },
+  solutionCaveat: 'The fill order is deliberate: <code>i</code> runs backward and <code>j</code> forward from <code>i</code>, which guarantees <code>dp[i+1][j-1]</code>, <code>dp[i+1][j]</code>, and <code>dp[i][j-1]</code> — all shorter intervals — are already filled by the time a longer one needs them. Looping <code>i</code> forward instead would read cells that don\'t exist yet.',
+  solutionExplanation: '<code>dp[i][j]</code> is the longest palindromic subsequence inside <code>s[i..j]</code>. If the two ends match, they can both be part of the palindrome, so the answer is 2 plus whatever\'s palindromic strictly inside them. If they don\'t match, at least one end can\'t be used, so the answer is just the best of dropping the left end or dropping the right end — whichever leaves a longer palindrome. Every subproblem is a shorter interval, which is exactly the interval-DP shape: solve small ranges first, then combine.',
 }

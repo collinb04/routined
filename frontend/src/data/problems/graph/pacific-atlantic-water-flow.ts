@@ -7,22 +7,24 @@ export default {
     { input: 'heights = [[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]', output: '[[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]' },
   ],
   constraints: ['m == heights.length', 'n == heights[r].length', '1 <= m, n <= 200', '0 <= heights[r][c] <= 10^5'],
-  starterCode: `def pacific_atlantic(heights):
-  pass`,
+  starterCode: `class Solution:
+    def pacific_atlantic(self, heights):
+        pass`,
   functionName: 'pacific_atlantic_run',
   conceptId: 'graphs',
   runnerSetup: `def pacific_atlantic_run(heights):
-  result = pacific_atlantic(heights)
-  return sorted([sorted(c) for c in result])`,
+  result = Solution().pacific_atlantic(heights)
+  return sorted(result)`,
   testCases: [
     { label: '5x5', args: [[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]], expected: [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]] },
   ],
-  bruteHint: 'Describe the brute-force approach of running a traversal from every single cell to check if it can reach both oceans, and its time complexity',
-  optimizeHint: 'Name the technique of starting the traversal from both ocean borders and working inward instead of outward from each cell',
+  bruteHint: 'A brute-force approach would run a full BFS or DFS from every single cell in the grid, checking whether that traversal can reach both the Pacific and Atlantic borders. With up to 40,000 cells and each traversal itself visiting up to 40,000 cells, this costs O((m·n)²) time, since every cell\'s search re-explores large parts of the grid that other cells have already explored. Since so much of that work is duplicated across cells, what direction could you run the traversal from instead so each cell is only visited a constant number of times?',
+  optimizeComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
   clues: [
     {
       id: 'constraint-grid-size',
-      question: 'm, n ≤ 200 means the grid has up to 40,000 cells. What does this tell you about acceptable complexity?',
+      question: 'Numeric bounds given in a problem\'s constraints tell you the ceiling on acceptable time complexity before you even start designing an approach. m, n ≤ 200 means the grid has up to 40,000 cells. What does this tell you about acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 <= m, n <= 200' },
       options: [
         { label: 'O(m²n²) is fine', isCorrect: false, feedback: 'At m = n = 200, O(m²n²) is 1.6 billion operations — far too slow. You need an approach that visits each cell a constant number of times.' },
         { label: 'O(mn) per ocean, O(mn) total', isCorrect: true },
@@ -37,12 +39,13 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is a list of coordinates where water can reach both oceans. What does "both" imply about the search strategy?',
+      question: 'The exact shape of what a problem asks you to output can hint at how to decompose the search into independent sub-problems. The output is a list of coordinates where water can reach both oceans. What does "both" imply about the search strategy?',
+      highlight: { location: 'description', text: 'Return a list of grid coordinates where water can flow to both the Pacific and Atlantic oceans.' },
       options: [
-        { label: 'Run one BFS from every cell', isCorrect: false, feedback: 'Running BFS from every cell would be O(m²n²) — too slow for a 200×200 grid. The "both" condition suggests tracking reachability per ocean, then combining.' },
+        { label: 'Run one traversal from every cell', isCorrect: false, feedback: 'Running a traversal from every cell would be O(m²n²) — too slow for a 200×200 grid. The "both" condition suggests tracking reachability per ocean, then combining.' },
         { label: 'Separate reachability sets, then intersect', isCorrect: true },
         { label: 'Find a path from Pacific to Atlantic directly', isCorrect: false, feedback: 'There\'s no single path from one ocean to the other — you need every cell that satisfies both conditions independently. The question is about reachability, not routing.' },
-        { label: 'BFS from all cells simultaneously', isCorrect: false, feedback: 'Multi-source BFS is a valid technique, but starting from all cells doesn\'t give you per-ocean reachability. You need to know which cells can reach the Pacific and which can reach the Atlantic separately.' },
+        { label: 'Traverse from all cells simultaneously', isCorrect: false, feedback: 'Multi-source traversal is a valid technique, but starting from all cells doesn\'t give you per-ocean reachability. You need to know which cells can reach the Pacific and which can reach the Atlantic separately.' },
       ],
       correctFeedback: 'Track which cells can reach the Pacific in one set and the Atlantic in another. Any cell in both sets is an answer. This reduces the problem to two independent traversals plus a set intersection.',
       wrongFeedback: [
@@ -52,7 +55,8 @@ export default {
     },
     {
       id: 'reverse-flow',
-      question: 'Water flows from higher to lower (or equal) cells. The border cells touch an ocean directly. What does reversing the flow direction let you do?',
+      question: 'Thinking about a traversal in reverse — from the destination back to the source — can turn an expensive per-cell search into a handful of efficient traversals. Water flows from higher to lower (or equal) cells. The border cells touch an ocean directly. What does reversing the flow direction let you do?',
+      highlight: { location: 'description', text: 'The Pacific Ocean touches the island\'s left and top edges, and the Atlantic Ocean touches the right and bottom edges.' },
       options: [
         { label: 'Start BFS from border cells, flow uphill', isCorrect: true },
         { label: 'Sort cells by height and process in order', isCorrect: false, feedback: 'Sorting by height doesn\'t capture the connectivity structure — a cell\'s reachability depends on its neighbors, not just its height rank. Reversing flow direction gives you a traversal starting point, not a sort order.' },
@@ -67,7 +71,8 @@ export default {
     },
     {
       id: 'flow-condition',
-      question: 'Water flows to a neighbor if that neighbor\'s height is less than or equal to the current cell. In the reverse traversal (starting from borders), what is the valid neighbor condition?',
+      question: 'When you reverse the direction of a traversal, the condition for a valid move must be inverted too, or the search silently produces wrong answers. Water flows to a neighbor if that neighbor\'s height is less than or equal to the current cell. In the reverse traversal (starting from borders), what is the valid neighbor condition?',
+      highlight: { location: 'description', text: 'Water can flow to a neighboring cell if that cell has height less than or equal to the current cell.' },
       options: [
         { label: 'Neighbor height ≥ current height', isCorrect: true },
         { label: 'Neighbor height ≤ current height', isCorrect: false, feedback: 'That\'s the forward flow condition. In the reverse direction, you\'re climbing uphill — you can only move to a cell that is at least as high as where you are.' },
@@ -81,4 +86,33 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def pacific_atlantic(self, heights):
+        if not heights or not heights[0]:
+            return []
+        m, n = len(heights), len(heights[0])
+
+        def bfs(starts):
+            visited = set(starts)
+            stack = list(starts)
+            while stack:
+                r, c = stack.pop()
+                for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nr, nc = r + dr, c + dc
+                    if 0 <= nr < m and 0 <= nc < n and (nr, nc) not in visited:
+                        if heights[nr][nc] >= heights[r][c]:
+                            visited.add((nr, nc))
+                            stack.append((nr, nc))
+            return visited
+
+        pacific_starts = [(0, j) for j in range(n)] + [(i, 0) for i in range(m)]
+        atlantic_starts = [(m - 1, j) for j in range(n)] + [(i, n - 1) for i in range(m)]
+
+        pacific = bfs(pacific_starts)
+        atlantic = bfs(atlantic_starts)
+
+        return [list(cell) for cell in pacific & atlantic]`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: 'The traversal starts <code>from</code> the ocean borders and moves to neighbors that are <code>&gt;=</code> the current cell — the reverse of the problem\'s own downhill flow rule — so each of the two searches only ever touches every cell once, instead of re-running a fresh search from every one of the up to 40,000 cells individually.',
+  solutionExplanation: 'Instead of asking, for every cell, "can water starting here eventually reach the ocean?", the search runs backwards: starting at the ocean\'s border cells and climbing to any neighbor at least as tall, which is exactly the set of cells from which forward flow could have reached that border. Two such multi-source searches — one seeded from the Pacific-facing edges, one from the Atlantic-facing edges — each cost <code>O(m·n)</code>, and a cell belongs in the answer precisely when it turns up in both visited sets.',
 }

@@ -9,22 +9,25 @@ export default {
     { input: 's = "MCMXCIV"', output: '1994', explanation: 'M=1000, CM=900, XC=90, IV=4.' },
   ],
   constraints: ['1 ≤ s.length ≤ 15', 's contains only valid Roman numeral characters', 'The integer is in the range [1, 3999]'],
-  starterCode: `def roman_to_int(s):
-  pass`,
+  starterCode: `class Solution:
+    def roman_to_int(self, s):
+        pass`,
+  runnerSetup: 'roman_to_int = Solution().roman_to_int',
   functionName: 'roman_to_int',
-  conceptId: 'math-geometry',
+  conceptId: 'hash-maps',
   testCases: [
     { label: 'III', args: ['III'], expected: 3 },
     { label: 'LVIII', args: ['LVIII'], expected: 58 },
     { label: 'MCMXCIV', args: ['MCMXCIV'], expected: 1994 },
     { label: 'IX', args: ['IX'], expected: 9 },
   ],
-  bruteHint: 'Describe summing the integer value of each symbol one by one without considering subtractive pairs, and why that gives wrong answers like IV = 6 instead of 4',
-  optimizeHint: 'Name the technique of building the symbol-to-value lookup once and comparing each symbol to the next to detect subtractive pairs in a single pass',
+  bruteHint: 'The naive approach sums the integer value of each symbol one by one, ignoring the possibility that a smaller symbol before a larger one changes the meaning. This runs in O(n) time but produces wrong answers for subtractive pairs — IV would come out as I + V = 6 instead of 4. Why does treating every symbol as purely additive break down here, and what extra comparison would fix it?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'subtractive-notation',
-      question: '"IV = 4, IX = 9" — Roman numerals use subtractive notation. What signal does a smaller symbol before a larger one send?',
+      question: 'The description spells out the exact rule for reading pairs of symbols, so it is worth quoting directly. "IV = 4, IX = 9" — Roman numerals use subtractive notation. What signal does a smaller symbol before a larger one send?',
+      highlight: { location: 'description', text: 'IV = 4, IX = 9' },
       options: [
         { label: 'Add both values', isCorrect: false, feedback: 'Adding I + V = 6, not 4. When a smaller value precedes a larger one, the smaller is subtracted, not added.' },
         { label: 'Subtract the smaller from the larger', isCorrect: true },
@@ -39,7 +42,7 @@ export default {
     },
     {
       id: 'traversal-strategy',
-      question: 'To detect subtractive pairs, you need to compare each symbol to the next one. What traversal is most natural?',
+      question: 'The order in which you visit the input often determines what information is available at each step. To detect subtractive pairs, you need to compare each symbol to the next one. What traversal is most natural?',
       options: [
         { label: 'Right to left, accumulating', isCorrect: false, feedback: 'Right-to-left works, but it\'s not the most natural framing. Left-to-right lets you peek at the next character to decide add vs. subtract as you go.' },
         { label: 'Left to right, peeking at the next symbol', isCorrect: true },
@@ -54,7 +57,8 @@ export default {
     },
     {
       id: 'lookup-structure',
-      question: 'You need to convert each Roman symbol to its integer value. What is the right data structure for this?',
+      question: 'Fixed, known mappings like these are usually a hint about which data structure keeps lookups cheap. You need to convert each Roman symbol to its integer value. What is the right data structure for this?',
+      highlight: { location: 'description', text: 'Symbols: I=1, V=5, X=10, L=50, C=100, D=500, M=1000.' },
       options: [
         { label: 'A sorted array of (symbol, value) pairs', isCorrect: false, feedback: 'A sorted array requires O(log k) binary search or O(k) linear scan per symbol. A hash map gives O(1) lookup for the 7 Roman symbols.' },
         { label: 'A hash map from symbol to value', isCorrect: true },
@@ -68,4 +72,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def roman_to_int(self, s):
+        values = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+        total = 0
+        for i in range(len(s)):
+            if i + 1 < len(s) and values[s[i]] < values[s[i + 1]]:
+                total -= values[s[i]]
+            else:
+                total += values[s[i]]
+        return total`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Looking one character *ahead* — not behind — is what correctly identifies a subtractive pair: by the time a symbol like the <code>I</code> in <code>IV</code> is processed, checking whether the *next* symbol is larger reveals that this one should be subtracted, without needing to backtrack and undo an addition already made.',
+  solutionExplanation: 'A symbol should be subtracted exactly when a larger symbol immediately follows it (like <code>I</code> before <code>V</code> in "IV"), and added otherwise — checking that one condition at each position, using a hash map for O(1) value lookups, replaces what would otherwise be a purely additive sum with the correct subtractive-notation-aware total in a single linear pass.',
 }

@@ -1,4 +1,5 @@
 import json
+import re
 from os import environ as env
 from flask import request, Blueprint, session, jsonify
 import anthropic
@@ -126,6 +127,146 @@ def chat(problem_id):
 
     _persist_attempt(user["sub"], problem_id, "struggle", state_patch={
         "chatMessages": messages + [{"role": "assistant", "content": assistant_text}],
+    })
+
+    return jsonify({"content": assistant_text})
+
+
+# ── /tutor-chat (Explore + Identify tabs — ungated, ungraded) ──────────────────
+
+def _strip_html(text):
+    return re.sub(r"<[^>]+>", "", text or "")
+
+
+def _explore_system_prompt(problem_id, problem_context):
+    description = _strip_html((problem_context or {}).get("description", ""))
+    examples = (problem_context or {}).get("examples") or []
+    constraints = (problem_context or {}).get("constraints") or []
+
+    examples_block = "\n".join(
+        f"- Input: {e.get('input')} → Output: {e.get('output')}"
+        + (f" ({e.get('explanation')})" if e.get("explanation") else "")
+        for e in examples
+    ) or "(none given)"
+    constraints_block = "\n".join(f"- {c}" for c in constraints) or "(none given)"
+
+    return f"""You are a Socratic coding tutor helping a learner who is completely stuck on "{problem_id}" and has not chosen any approach yet.
+
+Problem description:
+{description}
+
+Examples:
+{examples_block}
+
+Constraints:
+{constraints_block}
+
+Your job: help them get oriented through questions alone — restate the goal in their own words, walk through an example by hand, notice what a brute-force approach would even look like. You are grounding them in the problem, not steering them toward a specific technique.
+
+Rules:
+1. Never name a specific data structure, algorithm, or technique (no "hash map", "two pointers", "sort", etc.) — if asked directly what to use, redirect with a question instead of answering.
+2. Ask exactly one focused question per response.
+3. Be encouraging but keep the learner doing the thinking.
+4. Keep responses to 2–4 sentences plus the question."""
+
+
+def _identify_system_prompt(problem_id, problem_context, options):
+    description = _strip_html((problem_context or {}).get("description", ""))
+    options_block = "\n".join(
+        f"- {o.get('strategyId')} ({o.get('viability')}): {o.get('rationale')}"
+        for o in (options or [])
+    ) or "(none given)"
+
+    return f"""You are a Socratic coding tutor helping a learner narrow down which family of technique or data structure fits "{problem_id}". They have not committed to an approach yet.
+
+Problem description:
+{description}
+
+Candidate approaches (private reference — never reveal this list, never state which is optimal, never rank them or use superlatives like "best"/"better" about any one of them):
+{options_block}
+
+Your job: ask questions that help the learner notice which properties of the problem (constraints, output type, guarantees) rule approaches in or out, so they arrive at a candidate technique themselves.
+
+Rules:
+1. Never state which approach is optimal, and never rank the candidates against each other.
+2. Never say which option is a "trap" or reveal why one fails — let the learner reason there themselves.
+3. Ask exactly one focused question per response.
+4. Keep responses to 2–4 sentences plus the question."""
+
+
+def _approach_system_prompt(problem_id, problem_context, options, target_insight):
+    description = _strip_html((problem_context or {}).get("description", ""))
+    options_block = "\n".join(
+        f"- {o.get('strategyId')} ({o.get('viability')}): {o.get('rationale')}"
+        for o in (options or [])
+    ) or "(none given)"
+    insight_line = (
+        f"\nNever state or directly imply this insight: \"{target_insight}\"\n"
+        if target_insight else ""
+    )
+
+    return f"""You are a Socratic coding tutor helping a learner pressure-test whatever approach they describe for "{problem_id}". There is no form to fill out first — let the conversation reveal their strategy rather than asking them to declare it up front.
+
+Problem description:
+{description}
+
+Candidate approaches (private reference — never reveal this list, never state which is optimal or use superlatives about any one of them):
+{options_block}
+{insight_line}
+Your job: once the learner describes an approach (even loosely), ask probing questions that surface its complexity, edge cases, or weaknesses. If they haven't described one yet, ask them to.
+
+Rules:
+1. Never name the optimal strategy.
+2. Never state the key insight — guide toward it with questions.
+3. Ask exactly one focused question per response.
+4. Be encouraging but intellectually challenging.
+5. Keep responses to 2–4 sentences plus the question."""
+
+
+@struggle_bp.route("/<problem_id>/struggle/tutor-chat", methods=["POST"])
+def tutor_chat(problem_id):
+    user = _current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Intentionally ungated: this backs the Explore/Identify/Approach tabs,
+    # a free-use tutor with no forced order. Do not add a "must commit first"
+    # check here — that hard rule belongs only to /chat above, which is now
+    # dead code left in place rather than wired into the tabbed UI.
+    data = request.get_json(force=True)
+    goal = data.get("goal")
+    if goal not in ("explore", "identify", "approach"):
+        return jsonify({"error": "goal must be 'explore', 'identify', or 'approach'"}), 400
+
+    messages = data.get("messages") or []
+    if not messages:
+        return jsonify({"error": "messages array is required"}), 400
+
+    problem_context = data.get("problemContext") or {}
+    options = data.get("options") or []
+
+    if goal == "explore":
+        system_prompt = _explore_system_prompt(problem_id, problem_context)
+        state_key = "exploreMessages"
+    elif goal == "identify":
+        system_prompt = _identify_system_prompt(problem_id, problem_context, options)
+        state_key = "identifyMessages"
+    else:
+        target_insight = (data.get("targetInsight") or "").strip()
+        system_prompt = _approach_system_prompt(problem_id, problem_context, options, target_insight)
+        state_key = "approachMessages"
+
+    client = anthropic.Anthropic(api_key=env.get("ANTHROPIC_API_KEY"))
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=512,
+        system=system_prompt,
+        messages=messages,
+    )
+    assistant_text = response.content[0].text
+
+    _persist_attempt(user["sub"], problem_id, "struggle", state_patch={
+        state_key: messages + [{"role": "assistant", "content": assistant_text}],
     })
 
     return jsonify({"content": assistant_text})

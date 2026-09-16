@@ -19,12 +19,20 @@ interface DissectClue {
   options: ClueOption[];         // exactly 4; exactly one isCorrect: true
   correctFeedback: string;       // shown on correct answer
   wrongFeedback: string[];       // per-attempt escalation, 1–3 entries (see Escalation)
+  highlight?: ClueHighlight;     // OPTIONAL — powers the "Show in problem" reveal button
 }
 
 interface ClueOption {
   label: string;                 // short — under ~8 words
   isCorrect: boolean;
   feedback?: string;             // OPTIONAL misconception-specific feedback, shown on first miss of this option
+}
+
+interface ClueHighlight {
+  location: 'description' | 'constraint';
+  text?: string;                 // exact substring to wrap/highlight. Omit to highlight
+                                  // the whole description block instead of a sub-phrase.
+                                  // For 'constraint', text must exactly match one entry in constraints[].
 }
 ```
 
@@ -45,12 +53,21 @@ interface ClueOption {
 
 ### Question stems
 
-- Quote or closely paraphrase the signal, then ask what it implies: `'n ≤ 10,000 tells you…'`, `'The output is two indices, not values. This means you need to…'`
+- Open with one short sentence naming **why this category of signal matters** — what kind of reasoning it unlocks (efficiency, how much work is needed, which structure fits, what edge cases are ruled out). This orients the learner on *why they're being asked*, without giving away the answer to this specific clue.
+- Then quote or closely paraphrase the signal as a direct question: `'We can understand how efficient we need to be based on the size constraint of the input. What does n ≤ 10,000 tell you?'`, `'The type of output you're asked for tells you how much of the problem you actually need to solve. The output is two indices, not values — what does that tell you?'`
 - The question must be answerable from the signal alone. Never require the final solution.
+
+### highlight (optional, but author it whenever the signal is quotable)
+
+- Set `location: 'constraint'` with `text` set to the exact string from `constraints[]` when the clue is about a size/value bound.
+- Set `location: 'description'` with `text` set to the exact substring (tag-free) from the problem's `description` when the clue is about output type, a guarantee, or specific wording. Omit `text` only when no single phrase captures it — then the whole description block highlights.
+- `text` must match **exactly** (including punctuation/case) — the frontend does a literal substring search and silently no-ops if it doesn't find a match. Copy it directly from the `constraints`/`description` string, don't paraphrase.
+- This powers the "Show in problem" button shown after a clue is solved; clues without `highlight` simply don't get that button — not a hard requirement, but skipping it degrades the experience.
 
 ### Options and distractors
 
 - Exactly 4 options, exactly 1 correct. Labels short enough to scan (< ~8 words).
+- **De-spoil the correct option**: describe the *behavior* the technique gives you, never name the data structure or algorithm outright. Write `'Record each value as you see it, so a repeat is caught instantly'`, not `'A hash set tracking seen values'`. The same applies to distractors where naming the technique would give away the answer to a *later* clue in the same problem — describe what the option does, not what it's called. This keeps the clue testing reasoning about the signal rather than vocabulary recall.
 - **Every distractor must represent a real misconception**, never filler. Draw from these misconception types:
   - **Wrong tool, right neighborhood** — a plausible but insufficient structure (a set when indices are needed)
   - **Destroys what you need** — an operation that discards required information (sorting when original indices must be returned)
@@ -92,7 +109,7 @@ Distractor variety, concrete numbers in feedback, Socratic escalation, and guara
 clues: [
   {
     id: 'constraint-complexity',
-    question: 'n ≤ 10,000 tells you…',
+    question: 'We can understand how efficient we need to be based on the size constraint of the input. What does n ≤ 10,000 tell you?',
     options: [
       { label: 'O(n²) is fine',           isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations. Python handles roughly 10 million simple ops per second — that\'s 10 seconds for a single test case. Think about what the constraint is ruling out.' },
       { label: 'O(n) or better needed',    isCorrect: true  },
@@ -104,10 +121,11 @@ clues: [
       'Think about worst case: with n = 10,000, how many pairs would you check with two nested loops?',
       'A nested loop checks every pair — that\'s n² of them. What does the bound say about whether that finishes in time?',
     ],
+    highlight: { location: 'constraint', text: 'n ≤ 10,000' },
   },
   {
     id: 'output-structure',
-    question: 'The output is two indices, not values. This means you need to…',
+    question: 'The type of output you\'re asked for tells you how much of the problem you actually need to solve. The output is two indices, not values — what does that tell you?',
     options: [
       { label: 'Store values in a set',            isCorrect: false, feedback: 'A set tells you whether a value exists — but not where. The output requires indices. You need a structure that maps a value back to its position.' },
       { label: 'Map each value to its index',      isCorrect: true  },
@@ -119,10 +137,11 @@ clues: [
       'The output asks for indices. What structure lets you look up "I\'ve seen this value — at what index?"',
       'You need value → position lookup, and you need it fast. One structure does that in O(1).',
     ],
+    highlight: { location: 'description', text: 'indices of the two numbers' },
   },
   {
     id: 'one-solution-guarantee',
-    question: 'Exactly one valid answer exists. This means…',
+    question: 'Guarantees in a problem statement tell you what edge cases you can skip handling. Exactly one valid answer exists here — what does that tell you?',
     options: [
       { label: 'You must handle the no-solution case',     isCorrect: false, feedback: 'The problem explicitly guarantees a solution always exists. Handling the no-solution case would be dead code — the constraint is telling you what you can skip.' },
       { label: 'You can return as soon as you find a pair', isCorrect: true  },
@@ -143,11 +162,14 @@ clues: [
 ## Authoring checklist (verify before finishing)
 
 - [ ] 3–5 clues, ordered as an expert would read the problem
+- [ ] Question stem opens with a one-sentence "why this signal matters" framing before the direct question
 - [ ] Exactly 4 options per clue, exactly one correct, correct position varies across clues
+- [ ] Correct option (and any distractor that would spoil a later clue) describes behavior, not the technique's name
 - [ ] Every distractor maps to a named misconception type from this spec
 - [ ] `wrongFeedback` has 1–3 entries; entry 1 is a Socratic redirect, later entries narrow without revealing
 - [ ] No feedback string could apply to a different wrong answer unchanged
 - [ ] Concrete numbers from the problem's actual constraints appear in complexity-related feedback
+- [ ] `highlight` set on each clue where the signal is a quotable phrase, `text` copied exactly from `constraints`/`description`
 - [ ] No banned phrases; every string is 1–3 sentences
 
 ---

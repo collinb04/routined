@@ -13,8 +13,9 @@ export default {
       self.val = val
       self.next = next
 
-def add_two_numbers(l1, l2):
-  pass`,
+class Solution:
+    def add_two_numbers(self, l1, l2):
+        pass`,
   functionName: 'add_two_numbers_run',
   conceptId: 'linked-list',
   runnerSetup: `def _tol(h):
@@ -27,22 +28,23 @@ def _ton(a):
   for v in a[1:]: c.next=ListNode(v); c=c.next
   return h
 def add_two_numbers_run(l1, l2):
-  return _tol(add_two_numbers(_ton(l1), _ton(l2)))`,
+  return _tol(Solution().add_two_numbers(_ton(l1), _ton(l2)))`,
   testCases: [
     { label: '342+465', args: [[2,4,3],[5,6,4]], expected: [7,0,8] },
     { label: '0+0', args: [[0],[0]], expected: [0] },
     { label: '999+99', args: [[9,9,9,9,9,9,9],[9,9,9,9]], expected: [8,9,9,9,0,0,0,1] },
   ],
-  bruteHint: 'Describe converting each list into an integer, summing, and converting the result back into a list',
-  optimizeHint: 'Name the technique that adds digits node-by-node with a running carry in a single pass',
+  bruteHint: 'A brute-force approach walks each list to reconstruct its full integer value, adds the two integers together, then walks the sum apart again into a new list of digits — three full passes over data that can be up to 100 digits long. It works because Python integers have arbitrary precision, but it treats the linked list purely as a slow way to store a number instead of using its structure. What would happen to this approach in a language with fixed-width integers, and why walk the data three times when addition could happen inline?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'reversed-storage',
-      question: '"The digits are stored in reverse order." What does this mean for how you traverse the lists?',
+      question: 'How data is laid out often tells you which traversal order actually works. "The digits are stored in reverse order." What does this mean for how you traverse the lists?',
+      highlight: { location: 'description', text: 'The digits are stored in reverse order, and each node contains a single digit.' },
       options: [
         { label: 'Reverse both lists first', isCorrect: false, feedback: 'Reversing the lists before adding undoes the problem\'s own design — the reversed order is exactly what makes head-to-head traversal add least-significant digits first, which is how addition works.' },
         { label: 'Traverse head-to-tail; digits are already in addition order', isCorrect: true },
-        { label: 'Use a stack to read digits right-to-left', isCorrect: false, feedback: 'A stack would re-reverse the digits, giving you most-significant first — the wrong direction for column-by-column addition.' },
+        { label: 'Buffer all the digits first, then process them from the last one back to the first', isCorrect: false, feedback: 'A stack would re-reverse the digits, giving you most-significant first — the wrong direction for column-by-column addition.' },
         { label: 'Convert to integers, add, then re-encode', isCorrect: false, feedback: 'With up to 100 nodes per list, the numbers can have 100 digits — far beyond standard integer range. You need to add digit by digit.' },
       ],
       correctFeedback: 'Because the least-significant digit is at the head, you can walk both lists from the start and add pairs of digits exactly as pencil-and-paper column addition works.',
@@ -53,12 +55,13 @@ def add_two_numbers_run(l1, l2):
     },
     {
       id: 'output-structure',
-      question: 'The output is a linked list, not an integer. What does this tell you about how to produce the result?',
+      question: 'How you\'re asked to produce the output shapes how much extra work you\'ll do. The output is a linked list, not an integer. What does this tell you about how to produce the result?',
+      highlight: { location: 'description', text: 'return the sum as a linked list' },
       options: [
         { label: 'Compute the full integer sum, then convert', isCorrect: false, feedback: 'Numbers up to 100 digits exceed Python\'s default int only in other languages, but building the result node-by-node is more direct and avoids an unnecessary conversion step.' },
         { label: 'Build result nodes digit by digit as you add', isCorrect: true },
         { label: 'Return the longer input list with modifications', isCorrect: false, feedback: 'The sum can have more digits than either input — 999...9 (100 nines) plus any positive number produces a 101-digit result. You need a fresh list.' },
-        { label: 'Collect digits into an array, then convert', isCorrect: false, feedback: 'An intermediate array works but adds an extra pass. You can emit each result node the moment you compute that digit\'s sum.' },
+        { label: 'Collect all the digits first, then build the result afterward', isCorrect: false, feedback: 'An intermediate array works but adds an extra pass. You can emit each result node the moment you compute that digit\'s sum.' },
       ],
       correctFeedback: 'As you walk the two lists and add digit pairs, you can create a new result node for each digit immediately. A dummy head simplifies attaching the first node.',
       wrongFeedback: [
@@ -68,7 +71,7 @@ def add_two_numbers_run(l1, l2):
     },
     {
       id: 'carry-propagation',
-      question: 'The test case 999...9 (7 nines) + 9999 (4 nines) produces [8,9,9,9,0,0,0,1] — 8 nodes from 7 and 4. What does this imply?',
+      question: 'Concrete examples often expose edge cases that rule out an incomplete approach. The test case 999...9 (7 nines) + 9999 (4 nines) produces [8,9,9,9,0,0,0,1] — 8 nodes from 7 and 4. What does this imply?',
       options: [
         { label: 'Output length equals the longer list\'s length', isCorrect: false, feedback: 'That test case produces 8 nodes from lists of length 7 and 4. A carry out of the final column can add an extra node.' },
         { label: 'A carry after the last pair may need a new node', isCorrect: true },
@@ -83,7 +86,8 @@ def add_two_numbers_run(l1, l2):
     },
     {
       id: 'unequal-lengths',
-      question: 'The two lists can have different lengths (e.g., 7 nodes vs. 4 nodes). How does your loop need to handle the shorter list running out?',
+      question: 'Recognizing input variations like this tells you what edge-case handling your loop can\'t skip. The two lists can have different lengths (e.g., 7 nodes vs. 4 nodes). How does your loop need to handle the shorter list running out?',
+      highlight: { location: 'constraint', text: 'The number of nodes in each linked list is in [1, 100]' },
       options: [
         { label: 'Treat missing nodes as contributing 0', isCorrect: true },
         { label: 'Stop when the shorter list ends', isCorrect: false, feedback: 'Stopping at the shorter list drops all remaining digits of the longer list and any carry — the result would be wrong for any case where the lists differ in length.' },
@@ -97,4 +101,22 @@ def add_two_numbers_run(l1, l2):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def add_two_numbers(self, l1, l2):
+        dummy = ListNode()
+        curr = dummy
+        carry = 0
+        while l1 or l2 or carry:
+            v1 = l1.val if l1 else 0
+            v2 = l2.val if l2 else 0
+            total = v1 + v2 + carry
+            carry = total // 10
+            curr.next = ListNode(total % 10)
+            curr = curr.next
+            l1 = l1.next if l1 else None
+            l2 = l2.next if l2 else None
+        return dummy.next`,
+  solutionComplexity: { time: 'O(max(m, n))', space: 'O(max(m, n))' },
+  solutionCaveat: 'The loop condition includes <code>or carry</code> — without it, a final leftover carry (like the 1 in 999+99=1098) would be silently dropped once both input lists run out, even though it still needs its own extra digit in the result.',
+  solutionExplanation: 'Because both numbers are stored least-significant-digit-first, they can be added exactly the way column addition works on paper — one digit position at a time, left to right through the lists — with a running carry folded into the next column\'s sum. A dummy head node avoids special-casing the first digit of the result, and treating a missing digit as 0 lets lists of different lengths be walked together without extra branching.',
 }

@@ -8,14 +8,22 @@ export default {
     { input: 'head = [1,2]', output: 'false' },
   ],
   constraints: ['1 ≤ list length ≤ 10⁵', '0 ≤ Node.val ≤ 9'],
-  starterCode: `def is_palindrome(head):
-  vals = []
-  cur = head
-  while cur:
-      vals.append(cur.val)
-      cur = cur.next
-  pass`,
-  functionName: 'is_palindrome',
+  starterCode: `class ListNode:
+  def __init__(self, val=0, next=None):
+      self.val = val
+      self.next = next
+
+class Solution:
+    def is_palindrome(self, head):
+        pass`,
+  functionName: 'is_palindrome_run',
+  runnerSetup: `def _ton(a):
+  if not a: return None
+  h=ListNode(a[0]); c=h
+  for v in a[1:]: c.next=ListNode(v); c=c.next
+  return h
+def is_palindrome_run(a):
+  return Solution().is_palindrome(_ton(a))`,
   conceptId: 'linked-list',
   testCases: [
     { label: 'Palindrome', args: [[1,2,2,1]], expected: true },
@@ -23,17 +31,18 @@ export default {
     { label: 'Single', args: [[1]], expected: true },
     { label: 'Odd palindrome', args: [[1,2,1]], expected: true },
   ],
-  bruteHint: 'Describe copying all values into an array and checking it reads the same forwards and backwards',
-  optimizeHint: 'Name the technique of finding the middle and reversing the second half in place to compare without extra space',
+  bruteHint: "The straightforward approach copies every node's value into an array, then checks whether that array reads the same forwards and backwards using two pointers moving toward the middle. Building and scanning the array both take O(n) time, but the array itself costs O(n) extra space. Since the problem explicitly asks for O(1) extra space, what would you need to change to avoid that auxiliary array?",
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-large-n',
-      question: 'List length up to 10⁵. The starter code copies values into an array. What does "try to use O(1) extra space" imply about that approach?',
+      question: 'Constraints often hint at the time and space complexity your solution is expected to hit. List length up to 10⁵. The starter code copies values into an array. What does "try to use O(1) extra space" imply about that approach?',
+      highlight: { location: 'constraint', text: '1 ≤ list length ≤ 10⁵' },
       options: [
-        { label: 'The array approach is preferred — it\'s simpler', isCorrect: false, feedback: 'The array approach uses O(n) space — up to 100,000 entries. The problem explicitly asks you to try O(1) space, which means avoiding any structure that grows with list length.' },
-        { label: 'The array uses O(n) space; O(1) requires working in place', isCorrect: true },
+        { label: 'Copying every value into extra storage is preferred — it\'s simpler', isCorrect: false, feedback: 'The array approach uses O(n) space — up to 100,000 entries. The problem explicitly asks you to try O(1) space, which means avoiding any structure that grows with list length.' },
+        { label: 'Copying every value into extra storage uses O(n) space; O(1) requires working in place', isCorrect: true },
         { label: 'O(1) space is impossible for palindrome checking', isCorrect: false, feedback: 'O(1) space palindrome checking is possible on a linked list: find the middle, reverse the second half in place, compare the two halves, then optionally restore the list.' },
-        { label: 'At n = 10⁵, an array of values is too large to allocate', isCorrect: false, feedback: 'A list of 100,000 integers is trivially small in memory — it\'s not a memory concern. The O(1) goal is about algorithmic discipline: avoid auxiliary structures that scale with input size.' },
+        { label: 'At n = 10⁵, copying every value into extra storage is too large to allocate', isCorrect: false, feedback: 'A list of 100,000 integers is trivially small in memory — it\'s not a memory concern. The O(1) goal is about algorithmic discipline: avoid auxiliary structures that scale with input size.' },
       ],
       correctFeedback: 'The array approach works and is O(n) space. The O(1) in-place approach: find the middle with fast/slow pointers, reverse the second half, compare front and back halves. No extra storage needed.',
       wrongFeedback: [
@@ -43,7 +52,8 @@ export default {
     },
     {
       id: 'palindrome-comparison-challenge',
-      question: 'A singly linked list only has next pointers — you can\'t traverse backward. To compare the first and second halves…',
+      question: 'The structure of a data type determines which operations are cheap and which are impossible. A singly linked list only has next pointers — you can\'t traverse backward. To compare the first and second halves…',
+      highlight: { location: 'description', text: 'the head of a singly linked list' },
       options: [
         { label: 'Compare node i with node (n - 1 - i) by index', isCorrect: false, feedback: 'Linked lists don\'t support index access — reaching node (n - 1 - i) requires a full traversal each time, making this O(n²). There is no direct "reach node by index" operation.' },
         { label: 'Reverse the second half so you can compare forward from both ends', isCorrect: true },
@@ -58,7 +68,7 @@ export default {
     },
     {
       id: 'find-middle-prerequisite',
-      question: 'Before reversing the second half, you must find the middle of the list. For a list of length n, the second half starts at…',
+      question: 'Getting index math right is often the difference between a correct in-place algorithm and an off-by-one bug. Before reversing the second half, you must find the middle of the list. For a list of length n, the second half starts at…',
       options: [
         { label: 'Node at index n - 1', isCorrect: false, feedback: 'Index n - 1 is the last node, not the start of the second half. For [1,2,2,1] (n = 4), the second half starts at index 2 (value 2), not index 3 (value 1).' },
         { label: 'Node at index n // 2 (the second middle for even-length lists)', isCorrect: true },
@@ -73,12 +83,13 @@ export default {
     },
     {
       id: 'values-0-to-9',
-      question: 'Node values are in [0, 9] — single digits. This signals…',
+      question: 'Not every constraint changes your approach — some just rule out extra edge-case handling. Node values are in [0, 9] — single digits. This signals…',
+      highlight: { location: 'constraint', text: '0 ≤ Node.val ≤ 9' },
       options: [
-        { label: 'Use digit sum to check palindrome in O(1)', isCorrect: false, feedback: 'Digit sum is not a palindrome check — [1,2,1] and [1,1,2] have the same digit sum but different palindrome status. Positional comparison is required regardless of value range.' },
+        { label: 'Add all the values together and use that total to check the palindrome in O(1)', isCorrect: false, feedback: 'Digit sum is not a palindrome check — [1,2,1] and [1,1,2] have the same digit sum but different palindrome status. Positional comparison is required regardless of value range.' },
         { label: 'Values are simple to compare — no special equality logic needed', isCorrect: true },
-        { label: 'Sort values to find the median efficiently', isCorrect: false, feedback: 'Sorting destroys positional information. The value range [0,9] doesn\'t suggest sorting — it just means each value is a single digit and integer comparison is straightforward.' },
-        { label: 'Use a frequency count to detect the palindrome', isCorrect: false, feedback: 'Frequency counting can verify that each value appears an even number of times (necessary but not sufficient for a palindrome). Positional ordering still matters — [1,2,1] is a palindrome but [1,1,2] is not, despite the same counts.' },
+        { label: 'Reorder the values to find the middle one efficiently', isCorrect: false, feedback: 'Sorting destroys positional information. The value range [0,9] doesn\'t suggest sorting — it just means each value is a single digit and integer comparison is straightforward.' },
+        { label: 'Count how many times each value appears to detect the palindrome', isCorrect: false, feedback: 'Frequency counting can verify that each value appears an even number of times (necessary but not sufficient for a palindrome). Positional ordering still matters — [1,2,1] is a palindrome but [1,1,2] is not, despite the same counts.' },
       ],
       correctFeedback: 'Values in [0,9] are small integers — == comparison is all you need. The value range is not the key signal here; the constraint mainly tells you not to worry about overflow or complex equality.',
       wrongFeedback: [
@@ -87,4 +98,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_palindrome(self, head):
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+        prev = None
+        while slow:
+            nxt = slow.next
+            slow.next = prev
+            prev = slow
+            slow = nxt
+        left, right = head, prev
+        while right:
+            if left.val != right.val:
+                return False
+            left = left.next
+            right = right.next
+        return True`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'This physically reverses the second half of the list in place — a caller relying on the original list structure afterward would find it altered, since nothing here restores the original pointers once the comparison is done.',
+  solutionExplanation: 'Finding the midpoint with the classic fast/slow pointer trick, then reversing everything from the midpoint onward, turns "compare the list to its own reverse" into "walk two pointers — one from each end of the original arrangement — toward the middle," exactly like the array-based two-pointer palindrome check, but achieved through in-place pointer surgery instead of index access. No auxiliary array of values is ever built, which is what gets this down to O(1) space.',
 }

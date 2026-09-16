@@ -7,21 +7,25 @@ export default {
     { input: 'board=[["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words=["oath","pea","eat","rain"]', output: '["eat","oath"]' },
   ],
   constraints: ['1 ≤ m, n ≤ 12', '1 ≤ words.length ≤ 3 × 10⁴', 'All inputs consist of lowercase English letters'],
-  starterCode: `def find_words(board, words):
-  pass`,
-  functionName: 'find_words',
+  starterCode: `class Solution:
+    def find_words(self, board, words):
+        pass`,
+  functionName: 'find_words_run',
   conceptId: 'tries',
+  runnerSetup: `def find_words_run(board, words):
+  return sorted(Solution().find_words(board, words))`,
   testCases: [
     { label: 'Standard board', args: [[['o','a','a','n'],['e','t','a','e'],['i','h','k','r'],['i','f','l','v']],['oath','pea','eat','rain']], expected: ['eat','oath'] },
     { label: 'Single cell', args: [[['a']],['a']], expected: ['a'] },
     { label: 'No matches', args: [[['a','b'],['c','d']],['xyz']], expected: [] },
   ],
-  bruteHint: 'Describe running an independent word-search DFS over the entire board once for every word in the dictionary, and name why that repeats the same board traversal many times over',
-  optimizeHint: 'Name the data structure that lets you combine all dictionary words into a single DFS over the board, pruning a branch the moment no word shares that prefix',
+  bruteHint: 'The brute-force approach runs a separate DFS over the entire m × n board for every single word in the dictionary, checking whether that one word can be traced out through adjacent cells. With up to 3 × 10⁴ words, each triggering its own O(m · n · 4^L) traversal, the same cells and shared prefixes get explored again and again for words that overlap. How could you combine all the words into one shared structure so a single pass over the board checks all of them at once?',
+  optimizeComplexity: { time: 'O(m · n · 4^L)', space: 'O(total trie characters)' },
   clues: [
     {
       id: 'constraint-many-words',
-      question: 'words.length can be up to 3 × 10⁴. Why does running a separate DFS for each word become prohibitively expensive?',
+      question: 'A large input size on one dimension of the problem, here the word count, often reveals that a naive per-item approach will not scale, even if each individual operation looks cheap. words.length can be up to 3 × 10⁴. Why does running a separate DFS for each word become prohibitively expensive?',
+      highlight: { location: 'constraint', text: '1 ≤ words.length ≤ 3 × 10⁴' },
       options: [
         { label: 'Each DFS is O(n) — 30,000 × n is still linear', isCorrect: false, feedback: 'Each DFS on a 12 × 12 board is O(m × n × 4^L) where L is word length. With 30,000 words that is up to 30,000 separate board sweeps — far from linear.' },
         { label: 'You would repeat the same board traversal 30,000 times', isCorrect: true },
@@ -36,7 +40,8 @@ export default {
     },
     {
       id: 'trie-for-prefix-sharing',
-      question: '"words.length ≤ 3 × 10⁴" combined with a 12 × 12 board. What data structure turns repeated word lookups into a single traversal?',
+      question: 'When constraints hint that many similar items will be searched together, the right shared data structure can turn repeated work into a single pass. "words.length ≤ 3 × 10⁴" combined with a 12 × 12 board. What data structure turns repeated word lookups into a single traversal?',
+      highlight: { location: 'constraint', text: '1 ≤ m, n ≤ 12' },
       options: [
         { label: 'A hash set of all words', isCorrect: false, feedback: 'A hash set checks exact matches in O(1), but during DFS you are building a word character by character. A set cannot tell you whether the current prefix is worth continuing — it only confirms complete words.' },
         { label: 'A trie built from all words', isCorrect: true },
@@ -51,11 +56,12 @@ export default {
     },
     {
       id: 'visited-cells',
-      question: '"The same cell may not be used more than once." How do you enforce this during DFS?',
+      question: 'Constraints on reusing elements within a single path, but not across paths, usually point to a lightweight, reversible way of tracking state rather than a persistent one. "The same cell may not be used more than once." How do you enforce this during DFS?',
+      highlight: { location: 'description', text: 'cells cannot be reused.' },
       options: [
         { label: 'Copy the board at each recursive call', isCorrect: false, feedback: 'Copying a 12 × 12 board at every DFS step creates O(m × n) extra memory per level of recursion. Marking the current cell in place and restoring it on backtrack is the standard approach.' },
         { label: 'Mark the cell in place and restore on backtrack', isCorrect: true },
-        { label: 'Keep a global visited set and never remove entries', isCorrect: false, feedback: 'A global visited set that never removes entries would prevent the same cell from being used in any future word — even after backtracking to a completely different path. Cells must be available again once the current path abandons them.' },
+        { label: 'Keep a single shared collection of visited cells that is never cleared', isCorrect: false, feedback: 'A global visited set that never removes entries would prevent the same cell from being used in any future word — even after backtracking to a completely different path. Cells must be available again once the current path abandons them.' },
         { label: 'Only allow left and down moves to avoid revisiting', isCorrect: false, feedback: 'Restricting to left and down moves prevents valid words that require right or up steps. The path can go in any of the four directions — you must explicitly track which cells are in the current path.' },
       ],
       correctFeedback: 'Temporarily replace board[r][c] with a sentinel (e.g., "#") when you enter a cell. Restore the original character when you backtrack. This marks the cell as used for the current path without affecting other paths.',
@@ -66,10 +72,10 @@ export default {
     },
     {
       id: 'pruning-found-words',
-      question: 'Once a word is found, what optimization prevents finding it again?',
+      question: 'Once you have already found what you were looking for, the next signal to look for is how to stop the search from wasting time finding it again. Once a word is found, what optimization prevents finding it again?',
       options: [
-        { label: 'Remove the word from the trie after finding it', isCorrect: true },
-        { label: 'Add the word to a visited-words set and check before adding to results', isCorrect: false, feedback: 'Checking a visited set prevents duplicates in results, but the DFS still explores paths that lead to already-found words. Removing from the trie prunes those paths entirely, saving traversal work.' },
+        { label: 'Delete the matched word from the shared search structure once it has been found', isCorrect: true },
+        { label: 'Keep a separate collection of already-found words and check it before adding to results', isCorrect: false, feedback: 'Checking a visited set prevents duplicates in results, but the DFS still explores paths that lead to already-found words. Removing from the trie prunes those paths entirely, saving traversal work.' },
         { label: 'Track found words in results and skip duplicates at the end', isCorrect: false, feedback: 'Post-processing removes duplicates but does nothing to prevent the DFS from exploring paths to words already found. Trie pruning stops those paths before they start.' },
         { label: 'No optimization needed — duplicates are impossible given unique words', isCorrect: false, feedback: 'The same word can appear multiple times on the board. Without marking it as found in the trie, the DFS would add it to results once per board occurrence.' },
       ],
@@ -80,4 +86,43 @@ export default {
       ],
     },
   ],
+  solutionCode: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.word = None
+
+class Solution:
+    def find_words(self, board, words):
+        root = TrieNode()
+        for word in words:
+            node = root
+            for ch in word:
+                node = node.children.setdefault(ch, TrieNode())
+            node.word = word
+
+        m, n = len(board), len(board[0])
+        result = []
+
+        def dfs(r, c, node):
+            ch = board[r][c]
+            if ch not in node.children:
+                return
+            child = node.children[ch]
+            if child.word:
+                result.append(child.word)
+                child.word = None
+            board[r][c] = '#'
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < m and 0 <= nc < n and board[nr][nc] != '#':
+                    dfs(nr, nc, child)
+            board[r][c] = ch
+
+        for r in range(m):
+            for c in range(n):
+                dfs(r, c, root)
+        return result`,
+  solutionComplexity: { time: 'O(m · n · 4^L)', space: 'O(total trie characters)' },
+  solutionCaveat: 'Once a word is found, its <code>word</code> marker is cleared (<code>child.word = None</code>) right there in the shared trie — this doesn\'t just prevent duplicate results if the same word appears at another board location, it also prunes future DFS paths, since the search no longer needs to keep pursuing a complete match it has already recorded.',
+  solutionExplanation: 'Building one trie from all the dictionary words lets a single DFS pass over the board check every word simultaneously — walking the trie in lockstep with the board means shared prefixes across many words (like "cat" and "cats") are explored together instead of once per word, which is what collapses what would be thousands of independent board sweeps into one. Marking the current cell with a sentinel during the DFS and restoring it afterward enforces "no cell reused within one path" exactly the way plain Word Search does, and the trie walk itself naturally prunes any board path the instant it no longer matches any word\'s prefix.',
 }

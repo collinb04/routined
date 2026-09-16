@@ -26,9 +26,9 @@ const speeds = [
 <template>
   <div class="flex flex-col gap-2">
     <!-- Progress track -->
-    <div class="h-[3px] bg-surface-raised rounded-full overflow-hidden">
+    <div class="h-[3px] bg-surface-raised rounded-lg overflow-hidden">
       <div
-        class="h-full bg-accent/50 rounded-full transition-all duration-200"
+        class="h-full bg-accent/50 rounded-lg transition-all duration-200"
         :style="`width: ${((index + 1) / total) * 100}%`"
       />
     </div>

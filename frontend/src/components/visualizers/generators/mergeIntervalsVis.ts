@@ -11,7 +11,7 @@ export function generateMergeIntervalsVis(): IntervalFrame[] {
   ]
 
   function f(
-    step: number, phase: string, message: string,
+    step: number, phase: 'init' | 'compare' | 'update' | 'done', message: string,
     highlights: Record<number, CellKind>, merged: Interval[],
   ): IntervalFrame {
     return { step, phase, message, intervals, highlights, merged }

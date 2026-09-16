@@ -8,20 +8,23 @@ export default {
     { input: 'nums = [-2,0,-1]', output: '0' },
   ],
   constraints: ['1 <= nums.length <= 2 * 10^4', '-10 <= nums[i] <= 10', 'The product of any subarray fits in a 32-bit integer'],
-  starterCode: `def max_product(nums):
-  pass`,
+  starterCode: `class Solution:
+    def max_product(self, nums):
+        pass`,
+  runnerSetup: 'max_product = Solution().max_product',
   functionName: 'max_product',
   conceptId: 'dp-1d',
   testCases: [
     { label: '[2,3,-2,4]', args: [[2,3,-2,4]], expected: 6 },
     { label: '[-2,0,-1]', args: [[-2,0,-1]], expected: 0 },
   ],
-  bruteHint: 'Describe the naive approach that checks every subarray\'s product from scratch, and why that\'s O(n²) or worse',
-  optimizeHint: 'Name the second running value you must track alongside the max product — and why a negative number makes it necessary',
+  bruteHint: 'The brute-force approach checks every possible subarray, computing its product from scratch each time, then tracks the best result seen — with O(n) starting points each extended up to O(n) steps, that\'s O(n²) time. Nested loops like this recompute the same partial products over and over instead of reusing work from the previous subarray. Can you update a running product incrementally as you extend the subarray by one element, rather than restarting the multiplication from scratch?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'negative-numbers',
-      question: 'nums[i] can be negative. What does a negative number do to a running product?',
+      highlight: { location: 'constraint', text: '-10 <= nums[i] <= 10' },
+      question: 'Value range constraints like this one often signal edge cases your algorithm must explicitly handle, such as sign changes in a running computation. nums[i] can be negative. What does a negative number do to a running product?',
       options: [
         { label: 'It always resets the product to 0', isCorrect: false, feedback: 'Negative numbers don\'t reset products — they flip the sign. Two negatives multiply to a positive, so a large negative product can become the new maximum after another negative.' },
         { label: 'It flips the sign: the current max becomes the min and vice versa', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'zero-reset',
-      question: 'nums[i] can be 0. What does a 0 in the array do to any product that includes it?',
+      highlight: { location: 'constraint', text: '-10 <= nums[i] <= 10' },
+      question: 'Boundary values within a constraint\'s range — like zero here — can break assumptions your algorithm depends on, so it\'s worth asking what happens when they appear. nums[i] can be 0. What does a 0 in the array do to any product that includes it?',
       options: [
         { label: 'It makes any subarray containing it negative', isCorrect: false, feedback: 'Zero makes any product containing it exactly 0, not negative. After a zero, any subarray extending past it has product 0 at minimum.' },
         { label: 'It forces a restart: any subarray crossing a 0 has product 0', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 2 × 10⁴ tells you…',
+      highlight: { location: 'constraint', text: '1 <= nums.length <= 2 * 10^4' },
+      question: 'Size constraints tell you how much computational headroom you have, which narrows down what time complexity is actually required. nums.length ≤ 2 × 10⁴ tells you…',
       options: [
         { label: 'O(n²) is fine for checking all subarrays', isCorrect: false, feedback: 'At n = 20,000, O(n²) is 400 million operations — borderline and unnecessary. The structure of the problem allows an O(n) single-pass solution.' },
         { label: 'O(n) single-pass is the target', isCorrect: true },
@@ -66,7 +71,7 @@ export default {
     },
     {
       id: 'track-both-extremes',
-      question: 'The running maximum product alone isn\'t sufficient. Why must you also track the running minimum?',
+      question: 'Beyond the given constraints, thinking through what state your recurrence needs to track is what actually shapes a correct DP solution. The running maximum product alone isn\'t sufficient. Why must you also track the running minimum?',
       options: [
         { label: 'To handle the case where all numbers are negative', isCorrect: false, feedback: 'That\'s a consequence, not the root cause. The deeper reason is sign flipping: at any step, the future maximum product might come from the current minimum multiplied by a negative.' },
         { label: 'Because a negative number can turn the minimum into the maximum', isCorrect: true },
@@ -80,4 +85,15 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_product(self, nums):
+        max_prod = min_prod = result = nums[0]
+        for x in nums[1:]:
+            candidates = (x, max_prod * x, min_prod * x)
+            max_prod, min_prod = max(candidates), min(candidates)
+            result = max(result, max_prod)
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>x</code> itself is included among the three candidates at every step — without it, a subarray would be forced to always extend the previous one, but starting fresh at the current element is sometimes better, such as right after a 0 or a large negative product.',
+  solutionExplanation: 'Because multiplying by a negative number flips the sign, the running minimum product isn\'t just useless extra bookkeeping — it\'s the value most likely to become the new maximum on the very next negative multiplication, so both the running max and min must be updated together at every step from the same three candidates (extend the max, extend the min, or restart at the current element). Taking the best of both at each position, rather than tracking only the maximum, is what correctly captures products that swing through a large negative before flipping positive again.',
 }

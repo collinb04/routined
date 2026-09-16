@@ -8,21 +8,24 @@ export default {
     { input: 'points=[[3,12],[-2,5],[-4,1]]', output: '18' },
   ],
   constraints: ['1 ≤ points.length ≤ 1000', '-10⁶ ≤ x, y ≤ 10⁶', 'No two points are the same'],
-  starterCode: `def min_cost_connect_points(points):
-  pass`,
+  starterCode: `class Solution:
+    def min_cost_connect_points(self, points):
+        pass`,
+  runnerSetup: 'min_cost_connect_points = Solution().min_cost_connect_points',
   functionName: 'min_cost_connect_points',
-  conceptId: 'advanced-graphs',
+  conceptId: 'heaps',
   testCases: [
     { label: 'Five points', args: [[[0,0],[2,2],[3,10],[5,2],[7,0]]], expected: 20 },
     { label: 'Three points', args: [[[3,12],[-2,5],[-4,1]]], expected: 18 },
     { label: 'Single point', args: [[[0,0]]], expected: 0 },
   ],
-  bruteHint: 'Describe trying every possible set of edges that connects all points, and its exponential complexity',
-  optimizeHint: 'Name the algorithm (Prim\'s or Kruskal\'s) that builds a Minimum Spanning Tree to connect all points at minimum total cost',
+  bruteHint: 'The brute-force approach considers every possible subset of edges among all pairs of points, checks whether each subset forms a spanning tree connecting all points, and keeps the cheapest valid one. With up to ~500,000 candidate edges among 1000 points, the number of possible edge subsets is exponential, making exhaustive enumeration completely infeasible at this scale. Since you cannot afford to consider every combination of edges, the tree needs to be built up incrementally instead. How could you construct the minimum-cost connecting structure one edge at a time rather than considering every possible combination?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'points.length ≤ 1000. Every pair of points is a potential edge. How many edges exist?',
+      highlight: { location: 'constraint', text: '1 ≤ points.length ≤ 1000' },
+      question: 'Constraints reveal how large the candidate graph really is before you decide how to build the spanning tree. points.length ≤ 1000. Every pair of points is a potential edge. How many edges exist?',
       options: [
         { label: 'About 1000 edges', isCorrect: false, feedback: 'With 1000 points fully connected, the number of edges is 1000 × 999 / 2 ≈ 500,000 — not 1000. Every pair contributes one edge.' },
         { label: 'About 500,000 edges — O(n²)', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'edge-weight-definition',
-      question: '"The cost of connecting two points is their Manhattan distance." What does Manhattan distance mean for computing edge weights?',
+      highlight: { location: 'description', text: 'The cost of connecting two points is their Manhattan distance.' },
+      question: 'The description\'s precise definition of a cost metric determines exactly how you must compute each edge weight. "The cost of connecting two points is their Manhattan distance." What does Manhattan distance mean for computing edge weights?',
       options: [
         { label: 'Use Euclidean (straight-line) distance', isCorrect: false, feedback: 'Euclidean distance is √((x₁−x₂)² + (y₁−y₂)²). Manhattan distance is |x₁−x₂| + |y₁−y₂| — no square root, no squaring. Using the wrong formula gives wrong edge weights.' },
         { label: '|x₁ − x₂| + |y₁ − y₂| for each pair', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'output-minimum-spanning-tree',
-      question: '"Minimum cost to connect all points" — every point must be reachable from every other. What problem structure does this describe?',
+      highlight: { location: 'description', text: 'return the minimum cost to connect all points.' },
+      question: 'The description\'s phrasing about connecting every point together often signals which classic graph structure the problem is really asking for. "Minimum cost to connect all points" — every point must be reachable from every other. What problem structure does this describe?',
       options: [
         { label: 'Shortest path between two points', isCorrect: false, feedback: 'Shortest path connects two specific points. This problem requires all points to be connected to each other with minimum total edge cost — that is a spanning tree problem, not a shortest path.' },
         { label: 'Minimum spanning tree (MST)', isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'single-point-guarantee',
-      question: '"No two points are the same" and points.length can be 1. What edge case does the constraint introduce?',
+      highlight: { location: 'constraint', text: 'No two points are the same' },
+      question: 'Constraints about input size extremes often hide edge cases your general algorithm must still handle correctly. "No two points are the same" and points.length can be 1. What edge case does the constraint introduce?',
       options: [
         { label: 'Handle duplicate coordinates', isCorrect: false, feedback: 'The constraint explicitly guarantees no duplicate points. You do not need to deduplicate. The edge case is a single point, not duplicates.' },
         { label: 'Return 0 when only one point exists', isCorrect: true },
@@ -81,4 +87,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def min_cost_connect_points(self, points):
+        n = len(points)
+        visited = [False] * n
+        heap = [(0, 0)]
+        total = 0
+        count = 0
+        while heap and count < n:
+            cost, u = heapq.heappop(heap)
+            if visited[u]:
+                continue
+            visited[u] = True
+            total += cost
+            count += 1
+            for v in range(n):
+                if not visited[v]:
+                    dist = abs(points[u][0] - points[v][0]) + abs(points[u][1] - points[v][1])
+                    heapq.heappush(heap, (dist, v))
+        return total`,
+  solutionComplexity: { time: 'O(n² log n)', space: 'O(n²)' },
+  solutionCaveat: 'A point can be pushed onto the heap multiple times at different costs as the growing MST discovers shorter connections to it — the <code>visited</code> check on pop, not on push, is what discards the stale, more-expensive heap entries once a cheaper one has already been accepted.',
+  solutionExplanation: 'This is Prim\'s algorithm: grow one connected tree by always adding the cheapest edge from the current tree to any point not yet included, which is exactly the greedy choice that builds a minimum spanning tree. Since the graph is complete (every pair of points has a Manhattan-distance edge), the heap needs to hold candidate edges to every unvisited point from the tree\'s side, but only the cheapest edge to each point is ever actually used once it\'s popped for the first time.',
 }

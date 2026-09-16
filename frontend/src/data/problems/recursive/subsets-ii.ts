@@ -8,23 +8,25 @@ export default {
     { input: 'nums = [0]', output: '[[],[0]]' },
   ],
   constraints: ['1 <= nums.length <= 10', '-10 <= nums[i] <= 10'],
-  starterCode: `def subsets_with_dup(nums):
-  pass`,
+  starterCode: `class Solution:
+    def subsets_with_dup(self, nums):
+        pass`,
   functionName: 'subsets_with_dup_run',
   conceptId: 'backtracking',
   runnerSetup: `def subsets_with_dup_run(nums):
-  result = subsets_with_dup(nums)
+  result = Solution().subsets_with_dup(nums)
   return sorted([sorted(s) for s in result])`,
   testCases: [
     { label: '[1,2,2]', args: [[1,2,2]], expected: [[],[1],[1,2],[1,2,2],[2],[2,2]] },
     { label: '[0]', args: [[0]], expected: [[],[0]] },
   ],
-  bruteHint: 'Describe generating every subset via bitmasking over all 2^n combinations and then filtering out duplicate subsets afterward',
-  optimizeHint: 'Name the backtracking approach that builds subsets incrementally and prunes duplicate branches after sorting the input, to avoid generating the same subset twice',
+  bruteHint: 'The brute-force approach generates every possible subset by bitmasking over all 2^n combinations of nums, treating each bit as an include/exclude decision. Because nums may contain duplicates, many of these bitmask-generated subsets turn out identical, so you\'d need to sort and deduplicate the results afterward, adding extra work on top of the generation itself. This wastes effort building subsets you immediately throw away. What if you could avoid producing the duplicate subsets in the first place?',
+  optimizeComplexity: { time: 'O(2ⁿ)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-size',
-      question: 'nums.length ≤ 10. The power set of 10 elements has 2^10 = 1024 subsets. What does this tell you?',
+      highlight: { location: 'constraint', text: '1 <= nums.length <= 10' },
+      question: 'Constraint bounds tell you what time complexity is actually feasible before you write a single line of code. nums.length ≤ 10. The power set of 10 elements has 2^10 = 1024 subsets. What does this tell you?',
       options: [
         { label: 'You need a greedy approach to prune', isCorrect: false, feedback: 'Greedy is for optimization problems — here you must enumerate every valid subset. At n = 10, 1024 outputs is tiny; no greedy pruning is needed.' },
         { label: 'Exponential time is acceptable here', isCorrect: true },
@@ -39,11 +41,12 @@ export default {
     },
     {
       id: 'duplicates-in-input',
-      question: '"nums may contain duplicates." What does this signal about your approach vs plain Subsets?',
+      highlight: { location: 'description', text: 'may contain duplicates' },
+      question: 'Details about the input\'s properties often determine what preprocessing or bookkeeping your approach needs. "nums may contain duplicates." What does this signal about your approach vs plain Subsets?',
       options: [
         { label: 'Use a set to store results and deduplicate at the end', isCorrect: false, feedback: 'Storing results in a set works but is wasteful — you generate duplicates and then discard them. Pruning during backtracking avoids generating duplicates in the first place.' },
         { label: 'Sort first, then skip duplicate elements at the same recursion level', isCorrect: true },
-        { label: 'Track seen values with a hash map during backtracking', isCorrect: false, feedback: 'A hash map tracks seen values globally, not at the same recursion level — it would incorrectly prune valid subsets that reuse a value from a different branch.' },
+        { label: 'Track seen values with a hash map while generating subsets', isCorrect: false, feedback: 'A hash map tracks seen values globally, not at the same recursion level — it would incorrectly prune valid subsets that reuse a value from a different branch.' },
         { label: 'Generate all subsets then filter out duplicates', isCorrect: false, feedback: 'Filter-after-generate is correct but inefficient. Sorting and skipping duplicates during backtracking avoids ever building the duplicates you would then have to throw away.' },
       ],
       correctFeedback: 'Sorting groups duplicate values together. During backtracking, if the current element equals the previous one at the same recursion level, you skip it — this prevents generating the same subset twice.',
@@ -54,7 +57,8 @@ export default {
     },
     {
       id: 'output-no-duplicate-subsets',
-      question: '"The solution set must not contain duplicate subsets." What structural guarantee does sorting the input provide?',
+      highlight: { location: 'description', text: 'The solution set must not contain duplicate subsets.' },
+      question: 'Output requirements constrain which structural guarantees your algorithm must uphold. "The solution set must not contain duplicate subsets." What structural guarantee does sorting the input provide?',
       options: [
         { label: 'Subsets are automatically in sorted order', isCorrect: false, feedback: 'Sorting the output order is a side effect, not the purpose. The real benefit is that duplicate values become adjacent, making it easy to detect and skip repeated choices at the same level.' },
         { label: 'Duplicate values become adjacent, enabling skip logic', isCorrect: true },
@@ -68,4 +72,24 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def subsets_with_dup(self, nums):
+        nums.sort()
+        result = []
+        path = []
+
+        def backtrack(start):
+            result.append(path[:])
+            for i in range(start, len(nums)):
+                if i > start and nums[i] == nums[i - 1]:
+                    continue
+                path.append(nums[i])
+                backtrack(i + 1)
+                path.pop()
+
+        backtrack(0)
+        return result`,
+  solutionComplexity: { time: 'O(2ⁿ)', space: 'O(n)' },
+  solutionCaveat: 'The duplicate-skip check requires <code>i &gt; start</code>, not just <code>nums[i] == nums[i-1]</code> — the first occurrence of a repeated value at the current recursion level must still be explored, since skipping it entirely would eliminate subsets like <code>[2,2]</code> that legitimately use a repeated value more than once.',
+  solutionExplanation: 'Recording <code>path[:]</code> at the very start of every call (not just at a leaf) is what captures every subset, including the empty one, since every prefix of the search tree is itself a valid subset. Sorting first groups equal values together, so skipping a value that equals its immediate predecessor at the same recursion depth prevents ever generating the same subset twice — without sorting, the same duplicate values scattered at different input positions would still produce the same subset through different branches, and there would be no adjacency to detect and skip.',
 }

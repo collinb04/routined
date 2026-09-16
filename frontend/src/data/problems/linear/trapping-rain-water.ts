@@ -8,20 +8,22 @@ export default {
     { input: 'height = [4,2,0,3,2,5]', output: '9' },
   ],
   constraints: ['n == height.length', '1 <= n <= 2 * 10^4', '0 <= height[i] <= 10^5'],
-  starterCode: `def trap(height):
-  pass`,
+  starterCode: `class Solution:
+    def trap(self, height):
+        pass`,
+  runnerSetup: 'trap = Solution().trap',
   functionName: 'trap',
   conceptId: 'two-pointers',
   testCases: [
     { label: 'classic', args: [[0,1,0,2,1,0,1,3,2,1,2,1]], expected: 6 },
     { label: '[4,2,0,3,2,5]', args: [[4,2,0,3,2,5]], expected: 9 },
   ],
-  bruteHint: 'Describe rescanning left and right for the max height at each index, and its time complexity',
-  optimizeHint: 'Name the technique that tracks running left-max and right-max simultaneously to avoid rescanning',
+  bruteHint: 'A brute-force approach recomputes, for every index i, the maximum height to its left and to its right by rescanning the array each time — an O(n) scan nested inside an O(n) outer loop, giving O(n²) time overall (with O(1) extra space). With n up to 2 × 10⁴, that is on the order of 400 million operations just to find water depths. If max_left and max_right barely change between adjacent indices, how much of that rescanning is actually necessary?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'water-at-each-position',
-      question: 'Water trapped at position i is determined by the heights around it. What formula gives the water at index i?',
+      question: 'Nailing the right per-position formula is what lets you avoid recomputing the water level from scratch at every index. Water trapped at position i is determined by the heights around it. What formula gives the water at index i?',
       options: [
         { label: 'height[i] minus the average of neighbors', isCorrect: false, feedback: 'Averaging neighbors does not account for the full surrounding terrain. Water at i is bounded by the tallest bar to its left and the tallest bar to its right.' },
         { label: 'min(max_left[i], max_right[i]) − height[i]', isCorrect: true },
@@ -36,7 +38,7 @@ export default {
     },
     {
       id: 'naive-precompute-cost',
-      question: 'A brute-force approach precomputes max_left and max_right arrays. What is its time and space complexity?',
+      question: 'Knowing the complexity of the direct approach tells you how much room there is to optimize further. A brute-force approach precomputes max_left and max_right arrays. What is its time and space complexity?',
       options: [
         { label: 'O(n) time, O(1) space', isCorrect: false, feedback: 'The precomputation is O(n) time, but storing max_left and max_right arrays requires O(n) extra space — not O(1).' },
         { label: 'O(n) time, O(n) space', isCorrect: true },
@@ -51,7 +53,7 @@ export default {
     },
     {
       id: 'two-pointer-insight',
-      question: 'Two pointers at each end converge inward. At any moment, the pointer with the smaller max height moves inward. Why?',
+      question: 'Understanding why a technique is correct — not just that it is fast — is what lets you trust it enough to implement it. Two pointers at each end converge inward. At any moment, the pointer with the smaller max height moves inward. Why?',
       options: [
         { label: 'To avoid processing elements twice', isCorrect: false, feedback: 'Both pointers converge without revisiting, regardless of which side moves. The reason to advance the smaller-max side is about what you can safely compute — not about double-processing.' },
         { label: 'The shorter side\'s water is fully determined by its own max', isCorrect: true },
@@ -66,7 +68,8 @@ export default {
     },
     {
       id: 'non-negative-heights',
-      question: '"0 ≤ height[i] ≤ 10^5" — heights are non-negative. What edge case does this prevent you from needing to handle?',
+      question: 'Constraints do not just bound performance — they also rule out edge cases you would otherwise have to special-case. "0 ≤ height[i] ≤ 10^5" — heights are non-negative. What edge case does this prevent you from needing to handle?',
+      highlight: { location: 'constraint', text: '0 <= height[i] <= 10^5' },
       options: [
         { label: 'Negative water depth at a position', isCorrect: true },
         { label: 'Integer overflow in the total', isCorrect: false, feedback: 'With n ≤ 20,000 and max height 100,000, the total water is at most ~2 × 10⁹, which fits in a 32-bit signed integer. Overflow is not a concern, but that is not what the non-negative constraint prevents.' },
@@ -80,4 +83,23 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def trap(self, height):
+        left, right = 0, len(height) - 1
+        left_max, right_max = 0, 0
+        water = 0
+        while left < right:
+            if height[left] < height[right]:
+                left_max = max(left_max, height[left])
+                water += left_max - height[left]
+                left += 1
+            else:
+                right_max = max(right_max, height[right])
+                water += right_max - height[right]
+                right -= 1
+        return water
+`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Moving the pointer on the *shorter* side is what makes this correct without ever computing the true <code>max_right</code> for the left pointer (or vice versa) — whichever side is shorter, its own running max is already known to be the binding constraint, because the taller side guarantees at least that much wall no matter what lies beyond it.',
+  solutionExplanation: 'Water trapped above any bar is bounded by the shorter of the tallest wall to its left and the tallest wall to its right — <code>min(max_left, max_right) - height[i]</code>. Whichever of the two pointers points at the currently-shorter bar, that pointer\'s own <code>left_max</code> or <code>right_max</code> is guaranteed to be the limiting side (the other direction has at least an equally tall bar acting as the far wall), so processing from that side and advancing inward never needs to know the exact value of the taller side\'s maximum.',
 }

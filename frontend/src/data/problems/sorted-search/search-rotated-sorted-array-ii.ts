@@ -8,8 +8,10 @@ export default {
     { input: 'nums=[2,5,6,0,0,1,2], target=3', output: 'false' },
   ],
   constraints: ['1 ≤ nums.length ≤ 5000', '-10⁴ ≤ nums[i], target ≤ 10⁴'],
-  starterCode: `def search(nums, target):
-  pass`,
+  starterCode: `class Solution:
+    def search(self, nums, target):
+        pass`,
+  runnerSetup: 'search = Solution().search',
   functionName: 'search',
   conceptId: 'binary-search',
   testCases: [
@@ -18,17 +20,18 @@ export default {
     { label: 'Single', args: [[1],0], expected: false },
     { label: 'All same', args: [[1,1,1,1],1], expected: true },
   ],
-  bruteHint: 'Describe scanning the array linearly to check for the target, and its time complexity',
-  optimizeHint: 'Name the binary search adaptation that handles the case where duplicate values make it impossible to tell which half is sorted',
+  bruteHint: 'A brute-force approach walks the array one element at a time, comparing each to the target until a match turns up or the array is exhausted. That takes O(n) time in the worst case, checking up to 5,000 elements regardless of rotation or duplicates. Given that duplicates can make it impossible to always tell which half of the array is sorted around a midpoint, can you still avoid a full linear scan most of the time?',
+  optimizeComplexity: { time: 'O(log n) avg, O(n) worst', space: 'O(1)' },
   clues: [
     {
       id: 'duplicates-break-binary-search',
-      question: 'Unlike Part I, this array may contain duplicates. What specific case does that introduce that Part I avoids?',
+      question: 'Relaxing a guarantee the earlier problem relied on can quietly break the assumptions your algorithm depended on. Unlike Part I, this array may contain duplicates. What specific case does that introduce that Part I avoids?',
+      highlight: { location: 'description', text: 'a rotated sorted array that may contain duplicates' },
       options: [
         { label: 'The array might not be rotated at all', isCorrect: false, feedback: 'A non-rotated array is a valid input for both parts. The new difficulty introduced by duplicates is the ambiguous comparison case, not the absence of rotation.' },
         { label: 'nums[lo] == nums[mid] makes it impossible to tell which half is sorted', isCorrect: true },
         { label: 'The target might appear more than once', isCorrect: false, feedback: 'Multiple copies of the target are fine — you only need to return true/false, not a specific index. The problem is that equal boundary values prevent you from knowing which half to eliminate.' },
-        { label: 'Binary search no longer terminates', isCorrect: false, feedback: 'Binary search still terminates — worst case you shrink lo and hi by 1 each iteration. It just degrades to O(n) in the worst case instead of O(log n).' },
+        { label: 'The search process no longer terminates', isCorrect: false, feedback: 'Binary search still terminates — worst case you shrink lo and hi by 1 each iteration. It just degrades to O(n) in the worst case instead of O(log n).' },
       ],
       correctFeedback: 'When nums[lo] == nums[mid], you can\'t determine which half is sorted. The fix is to increment lo (and/or decrement hi) by 1 and try again — degrading to O(n) in the all-duplicates worst case.',
       wrongFeedback: [
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'worst-case-complexity',
-      question: 'The test case [1,1,1,1] with target=1 illustrates the worst case. What is the worst-case complexity when duplicates are present?',
+      question: 'A concrete edge-case input is often the clearest way to expose an algorithm\'s true worst-case behavior. The test case [1,1,1,1] with target=1 illustrates the worst case. What is the worst-case complexity when duplicates are present?',
       options: [
         { label: 'O(log n) still holds', isCorrect: false, feedback: 'O(log n) is the best case and the case when duplicates are sparse. When nums[lo] == nums[mid] repeatedly (e.g., all equal values), you step one index at a time — that\'s O(n).' },
         { label: 'O(n) when all elements are equal', isCorrect: true },
@@ -53,11 +56,12 @@ export default {
     },
     {
       id: 'output-boolean',
-      question: 'This problem returns a boolean, not an index. How does that simplify the logic compared to Part I?',
+      question: 'The exact shape of the expected return value often changes what information your algorithm needs to track along the way. This problem returns a boolean, not an index. How does that simplify the logic compared to Part I?',
+      highlight: { location: 'description', text: 'return <code>true</code> if the target is in the array, <code>false</code> otherwise.' },
       options: [
         { label: 'You can stop as soon as you find the target anywhere', isCorrect: true },
         { label: 'You don\'t need to track lo and hi', isCorrect: false, feedback: 'lo and hi are still needed to maintain the search window. What changes is the return value — instead of returning mid, you return true the moment nums[mid] == target.' },
-        { label: 'Binary search is no longer needed', isCorrect: false, feedback: 'Binary search is still the right approach. The boolean output just means you return true on first hit instead of tracking the exact index.' },
+        { label: 'You no longer need to narrow the search space at all', isCorrect: false, feedback: 'Binary search is still the right approach. The boolean output just means you return true on first hit instead of tracking the exact index.' },
         { label: 'Duplicates no longer cause any problems', isCorrect: false, feedback: 'The boolean output doesn\'t resolve the ambiguous tie case. Duplicates still force you to step one position at a time when nums[lo] == nums[mid].' },
       ],
       correctFeedback: 'Since you only need existence, return true the moment nums[mid] == target. No need to track or return an index — the first hit is sufficient.',
@@ -67,4 +71,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def search(self, nums, target):
+        lo, hi = 0, len(nums) - 1
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if nums[mid] == target:
+                return True
+            if nums[lo] == nums[mid] and nums[mid] == nums[hi]:
+                lo += 1
+                hi -= 1
+            elif nums[lo] <= nums[mid]:
+                if nums[lo] <= target < nums[mid]:
+                    hi = mid - 1
+                else:
+                    lo = mid + 1
+            else:
+                if nums[mid] < target <= nums[hi]:
+                    lo = mid + 1
+                else:
+                    hi = mid - 1
+        return False`,
+  solutionComplexity: { time: 'O(log n) avg, O(n) worst', space: 'O(1)' },
+  solutionCaveat: 'When <code>nums[lo]</code>, <code>nums[mid]</code>, and <code>nums[hi]</code> are all equal, there is no way to tell which half is the "normal" sorted one — the only safe move is to shrink both ends by one and try again, which is what degrades the worst case to O(n) on inputs like <code>[1,1,1,1]</code>.',
+  solutionExplanation: 'This is the same rotated-array binary search as the duplicate-free version, with one added branch: duplicates can make <code>nums[lo] == nums[mid] == nums[hi]</code> true even when the two halves aren\'t actually identical in structure, which breaks the "which half is sorted" test the rotation-search logic depends on. Nudging both pointers inward by one in that ambiguous case sacrifices the worst-case time bound but never sacrifices correctness, since it discards at most one duplicate from each end per step.',
 }

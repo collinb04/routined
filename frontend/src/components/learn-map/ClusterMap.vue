@@ -12,11 +12,23 @@ const hoveredCluster = ref<string | null>(null)
 const hoveredEdge = ref<string | null>(null)
 
 const W = 720
-const H = 480
-const NW = 130  // node width
-const NH = 56   // node height
+const H = 500
+const NW = 118  // node width
+const NH = 50   // node height
 
 function edgeKey(e: ClusterEdge) { return `${e.from}-${e.to}` }
+
+// Pale tint of a cluster color, matching the amber-200-style pastel border
+// used on the "problem with grinding" card (docs/Blog.vue) — a light tint,
+// not the saturated brand color, further softened by stroke-opacity below.
+function pastel(hex: string) {
+  const n = parseInt(hex.replace('#', ''), 16)
+  const mix = (v: number) => Math.round(v + (255 - v) * 0.65)
+  const r = mix((n >> 16) & 255)
+  const g = mix((n >> 8) & 255)
+  const b = mix(n & 255)
+  return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`
+}
 
 function clusterById(id: string) { return CLUSTERS.find(c => c.id === id)! }
 
@@ -97,6 +109,10 @@ function tooltipStyle(cluster: Cluster) {
         <marker id="arr-transfer" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
           <path d="M0,0 L0,6 L6,3 z" fill="currentColor" opacity="0.18" />
         </marker>
+        <!-- Matches Tailwind's shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05) -->
+        <filter id="node-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.05" />
+        </filter>
       </defs>
 
       <!-- ── Edges (drawn first so nodes render on top) ── -->
@@ -152,16 +168,6 @@ function tooltipStyle(cluster: Cluster) {
         @mouseleave="hoveredCluster = null"
         @click="emit('selectCluster', cluster.id)"
       >
-        <!-- Drop shadow -->
-        <rect
-          :x="cluster.position.cx - NW/2 + 1.5"
-          :y="cluster.position.cy - NH/2 + 1.5"
-          :width="NW" :height="NH"
-          rx="9"
-          :fill="cluster.color"
-          opacity="0.06"
-        />
-
         <!-- Node background -->
         <rect
           :x="cluster.position.cx - NW/2"
@@ -169,9 +175,11 @@ function tooltipStyle(cluster: Cluster) {
           :width="NW" :height="NH"
           rx="9"
           fill="white"
-          :stroke="cluster.color"
-          :stroke-width="hoveredCluster === cluster.id ? 2 : 1"
-          :stroke-opacity="hoveredCluster === cluster.id ? 0.7 : 0.22"
+          filter="url(#node-shadow)"
+          :stroke="pastel(cluster.color)"
+          stroke-width="1"
+          vector-effect="non-scaling-stroke"
+          :stroke-opacity="hoveredCluster === cluster.id ? 1 : 0.7"
           class="transition-all duration-150"
         />
 
@@ -197,10 +205,10 @@ function tooltipStyle(cluster: Cluster) {
         <!-- Label -->
         <text
           :x="cluster.position.cx"
-          :y="cluster.position.cy - 7"
+          :y="cluster.position.cy - 6"
           text-anchor="middle"
           dominant-baseline="central"
-          font-size="13"
+          font-size="11.5"
           font-weight="500"
           fill="currentColor"
           opacity="0.9"
@@ -209,13 +217,34 @@ function tooltipStyle(cluster: Cluster) {
         <!-- Primitive subtitle -->
         <text
           :x="cluster.position.cx"
-          :y="cluster.position.cy + 11"
+          :y="cluster.position.cy + 10"
           text-anchor="middle"
           dominant-baseline="central"
-          font-size="9"
+          font-size="8.5"
           fill="currentColor"
           opacity="0.38"
         >{{ cluster.primitive }}</text>
+
+        <!-- Learning-order badge -->
+        <circle
+          :cx="cluster.position.cx - NW/2"
+          :cy="cluster.position.cy - NH/2"
+          r="8"
+          fill="white"
+          :stroke="cluster.color"
+          stroke-width="1.2"
+          :opacity="hoveredCluster === cluster.id ? 1 : 0.85"
+          class="transition-opacity duration-150"
+        />
+        <text
+          :x="cluster.position.cx - NW/2"
+          :y="cluster.position.cy - NH/2 + 0.5"
+          text-anchor="middle"
+          dominant-baseline="central"
+          font-size="8"
+          font-weight="600"
+          :fill="cluster.color"
+        >{{ cluster.order }}</text>
       </g>
 
     </svg>
@@ -231,13 +260,13 @@ function tooltipStyle(cluster: Cluster) {
     >
       <div
         v-if="hoveredClusterData"
-        class="absolute z-20 w-52 bg-white rounded-xl shadow-lg border border-gray-100 p-3.5 pointer-events-none"
-        :style="tooltipStyle(hoveredClusterData)"
+        class="absolute z-20 w-52 bg-white rounded-xl shadow-lg border p-3.5 pointer-events-none"
+        :style="[tooltipStyle(hoveredClusterData), { borderColor: hoveredClusterData.color }]"
       >
         <!-- Primitive -->
         <div class="flex flex-col gap-1 pb-2.5 border-b border-gray-100">
           <span
-            class="text-[10px] font-semibold uppercase tracking-widest"
+            class="text-[10px] font-medium font-mono uppercase tracking-widest "
             :style="{ color: hoveredClusterData.color }"
           >Central Primitive</span>
           <span class="text-[12.5px] font-semibold text-text leading-snug">{{ hoveredClusterData.primitive }}</span>
@@ -246,7 +275,7 @@ function tooltipStyle(cluster: Cluster) {
 
         <!-- Concepts -->
         <div class="flex flex-col gap-1 pt-2.5">
-          <span class="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-0.5">Concepts</span>
+          <span class="text-[10px] font-medium font-mono uppercase tracking-widest  text-text-muted mb-0.5">Concepts</span>
           <button
             v-for="(concept, i) in hoveredClusterData.concepts"
             :key="concept.id"
@@ -273,7 +302,7 @@ function tooltipStyle(cluster: Cluster) {
     >
       <div
         v-if="hoveredEdgeData"
-        class="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/80 backdrop-blur-sm text-white rounded-full px-3.5 py-1.5 pointer-events-none"
+        class="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/80 backdrop-blur-sm text-white rounded-lg px-3.5 py-1.5 pointer-events-none"
       >
         <span class="text-[11px]">{{ hoveredEdgeData.shared }}</span>
         <span class="h-3 w-px bg-white/20" />

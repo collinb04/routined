@@ -13,8 +13,9 @@ export default {
       self.val = val
       self.next = next
 
-def merge_two_lists(list1, list2):
-  pass`,
+class Solution:
+    def merge_two_lists(self, list1, list2):
+        pass`,
   functionName: 'merge_two_lists_run',
   conceptId: 'linked-list',
   runnerSetup: `def _tol(h):
@@ -27,18 +28,19 @@ def _ton(a):
   for v in a[1:]: c.next=ListNode(v); c=c.next
   return h
 def merge_two_lists_run(l1, l2):
-  return _tol(merge_two_lists(_ton(l1), _ton(l2)))`,
+  return _tol(Solution().merge_two_lists(_ton(l1), _ton(l2)))`,
   testCases: [
     { label: '[1,2,4]+[1,3,4]', args: [[1,2,4],[1,3,4]], expected: [1,1,2,3,4,4] },
     { label: 'both empty', args: [[],[]], expected: [] },
     { label: 'one empty', args: [[], [0]], expected: [0] },
   ],
-  bruteHint: 'Describe collecting all values into an array, sorting them, and rebuilding a new list',
-  optimizeHint: 'Name the two-pointer technique that merges by comparing the current heads of both lists',
+  bruteHint: 'One approach walks both lists, collects every value into a single array, sorts that array with a general-purpose sort, and builds a brand-new linked list from the sorted values. That costs O((n + m) log(n + m)) for the sort alone, plus extra space for the array and freshly allocated nodes. Since both input lists are already individually sorted, is a full sort really necessary to produce a sorted result?',
+  optimizeComplexity: { time: 'O(n + m)', space: 'O(1)' },
   clues: [
     {
       id: 'sorted-lists-signal',
-      question: 'Both lists are already sorted. This means…',
+      question: 'Recognizing that both inputs are already ordered tells you which elements can possibly be next in the output. Both lists are already sorted. This means…',
+      highlight: { location: 'description', text: 'two sorted linked lists' },
       options: [
         { label: 'Collect all values then sort them', isCorrect: false, feedback: 'Collecting all values and sorting ignores the existing order — that\'s O(n log n) when you could merge in O(n). The sorted property means you never need to look past the current front of each list.' },
         { label: 'The next output node is always the smaller of the two heads', isCorrect: true },
@@ -53,7 +55,8 @@ def merge_two_lists_run(l1, l2):
     },
     {
       id: 'empty-list-input',
-      question: 'The number of nodes in each list is in [0, 50] — either list can be empty. This means…',
+      question: 'Boundary values in the constraints reveal which edge cases your solution must handle explicitly. The number of nodes in each list is in [0, 50] — either list can be empty. This means…',
+      highlight: { location: 'constraint', text: 'The number of nodes in both lists is in [0, 50]' },
       options: [
         { label: 'Empty input is an error; both lists always have nodes', isCorrect: false, feedback: 'The constraint explicitly allows 0 nodes. Assuming non-empty lists would crash on the [[], []] test case — your code must handle null heads gracefully.' },
         { label: 'When one list is exhausted, return the other\'s remaining nodes', isCorrect: true },
@@ -68,7 +71,8 @@ def merge_two_lists_run(l1, l2):
     },
     {
       id: 'output-structure',
-      question: 'The output is the head of a merged linked list. This means you need to…',
+      question: 'What the return type actually is constrains how you\'re allowed to build the answer. The output is the head of a merged linked list. This means you need to…',
+      highlight: { location: 'description', text: 'return the head of the merged linked list' },
       options: [
         { label: 'Return an array of values', isCorrect: false, feedback: 'The output is a ListNode, not an array. You need to wire next pointers between nodes — collecting into an array and then rebuilding wastes an extra pass.' },
         { label: 'Wire existing nodes together by adjusting next pointers', isCorrect: true },
@@ -83,7 +87,7 @@ def merge_two_lists_run(l1, l2):
     },
     {
       id: 'constraint-small-size',
-      question: 'Up to 50 nodes per list, values in [-100, 100]. This tells you…',
+      question: 'Small numeric bounds tell you that correctness and clarity matter more here than shaving complexity. Up to 50 nodes per list, values in [-100, 100]. This tells you…',
       options: [
         { label: 'O(n²) comparison is necessary for safety', isCorrect: false, feedback: 'With at most 100 total nodes, even O(n²) finishes instantly. But the sorted property makes O(n) straightforward — there\'s no reason to do extra comparisons.' },
         { label: 'O(n) merge with at most 100 total comparisons is sufficient', isCorrect: true },
@@ -97,4 +101,21 @@ def merge_two_lists_run(l1, l2):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def merge_two_lists(self, list1, list2):
+        dummy = ListNode()
+        curr = dummy
+        while list1 and list2:
+            if list1.val <= list2.val:
+                curr.next = list1
+                list1 = list1.next
+            else:
+                curr.next = list2
+                list2 = list2.next
+            curr = curr.next
+        curr.next = list1 if list1 else list2
+        return dummy.next`,
+  solutionComplexity: { time: 'O(m + n)', space: 'O(1)' },
+  solutionCaveat: 'Existing nodes are relinked directly (<code>curr.next = list1</code>) rather than copied into new ones — this reuses the two input lists\' own nodes for the output, which is both simpler and avoids any unnecessary allocation.',
+  solutionExplanation: 'Since both lists are already sorted, the smaller of the two current front nodes is always the correct next node in the merged result — repeatedly picking it and advancing that list\'s pointer builds the merge in one pass. Once one list runs out, everything remaining in the other is already sorted relative to what has been merged so far, so it can be attached wholesale instead of being walked node by node.',
 }

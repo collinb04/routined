@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def is_valid_bst(root):
-  pass`,
+class Solution:
+    def is_valid_bst(self, root):
+        pass`,
   functionName: 'is_valid_bst_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,21 +33,22 @@ def _build(arr):
       i += 1
   return root
 def is_valid_bst_run(arr):
-  return is_valid_bst(_build(arr))`,
+  return Solution().is_valid_bst(_build(arr))`,
   testCases: [
     { label: 'valid', args: [[2,1,3]], expected: true },
     { label: 'invalid', args: [[5,1,4,null,null,3,6]], expected: false },
   ],
-  bruteHint: 'Describe collecting all node values via an in-order traversal into a list and then checking whether that list comes out sorted',
-  optimizeHint: 'Name the technique that passes a valid (min, max) range down through each recursive call so every node is checked against its true ancestor-derived bounds in a single pass',
+  bruteHint: 'The brute-force approach performs an in-order traversal, collecting every node\'s value into a list, then checks whether that list comes out strictly increasing. Both the traversal and the list check take O(n) time, but storing every value in a separate list costs O(n) extra space on top of the traversal itself — a lot of memory for information you only need in passing. Could you validate the ordering as you traverse, without ever materializing the full list of values?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'subtree-constraint',
-      question: 'A BST requires ALL left-subtree values to be less than the node — not just the immediate left child. What does this mean for your validation approach?',
+      highlight: { location: 'description', text: 'the left subtree of a node contains only nodes with keys less than the node\'s key, the right subtree contains only nodes with keys greater than the node\'s key, and both subtrees must also be binary search trees' },
+      question: 'A precise problem definition often hides subtle requirements that a naive per-node check would miss. A BST requires ALL left-subtree values to be less than the node — not just the immediate left child. What does this mean for your validation approach?',
       options: [
         { label: 'Check node.val > node.left.val and node.val < node.right.val', isCorrect: false, feedback: 'Checking only immediate children misses deeper violations. In the example [5,1,4,null,null,3,6], node 4 is a right child of 5 but 4 < 5 — caught by immediate check — but even if 4 > 5, its left child 3 < 5 would still be a violation that immediate-child checks miss.' },
         { label: 'Pass valid min/max bounds down through every recursive call', isCorrect: true },
-        { label: 'Check in-order traversal is strictly increasing', isCorrect: false, feedback: 'In-order traversal being strictly increasing is actually equivalent to a valid BST — but it is a less direct approach that requires storing traversal results or tracking the previous value.' },
+        { label: 'Check that visiting nodes in left-to-right order produces strictly increasing values', isCorrect: false, feedback: 'In-order traversal being strictly increasing is actually equivalent to a valid BST — but it is a less direct approach that requires storing traversal results or tracking the previous value.' },
         { label: 'Compare each node to the root value only', isCorrect: false, feedback: 'Comparing to the root only ignores constraints imposed by intermediate ancestors. A node can satisfy the root constraint but violate a tighter bound set by an ancestor closer to it.' },
       ],
       correctFeedback: 'Each node must fall within a range set by all of its ancestors, not just its parent. Pass (min_bound, max_bound) down: when you go right, the current node becomes the new lower bound; when you go left, it becomes the upper bound.',
@@ -57,7 +59,8 @@ def is_valid_bst_run(arr):
     },
     {
       id: 'value-range-constraint',
-      question: '-2^31 ≤ Node.val ≤ 2^31 - 1. What edge case does this create for your initial bounds?',
+      highlight: { location: 'constraint', text: '-2^31 <= Node.val <= 2^31 - 1' },
+      question: 'Constraints on value ranges often expose edge cases that naive sentinel values would mishandle. -2^31 ≤ Node.val ≤ 2^31 - 1. What edge case does this create for your initial bounds?',
       options: [
         { label: 'Initialize bounds to -1000 and 1000', isCorrect: false, feedback: 'Hard-coded bounds of -1000 and 1000 would incorrectly reject valid nodes with values outside that range. The constraint says values can reach ±2^31.' },
         { label: 'Initialize bounds to -∞ and +∞', isCorrect: true },
@@ -72,7 +75,8 @@ def is_valid_bst_run(arr):
     },
     {
       id: 'strict-inequality',
-      question: 'The BST definition says values must be strictly less than or greater than (not equal). What does this mean for duplicate values?',
+      highlight: { location: 'description', text: 'the left subtree of a node contains only nodes with keys less than the node\'s key, the right subtree contains only nodes with keys greater than the node\'s key' },
+      question: 'The exact wording of a problem\'s definition — strict versus non-strict comparisons — determines what counts as a valid edge case. The BST definition says values must be strictly less than or greater than (not equal). What does this mean for duplicate values?',
       options: [
         { label: 'Duplicates are allowed in the left subtree', isCorrect: false, feedback: 'The definition requires strictly less than — a duplicate in the left subtree would equal the parent, violating the strict inequality.' },
         { label: 'A tree with duplicate values is not a valid BST', isCorrect: true },
@@ -86,4 +90,17 @@ def is_valid_bst_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_valid_bst(self, root):
+        def valid(node, lo, hi):
+            if not node:
+                return True
+            if not (lo < node.val < hi):
+                return False
+            return valid(node.left, lo, node.val) and valid(node.right, node.val, hi)
+
+        return valid(root, float('-inf'), float('inf'))`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'Bounds are initialized to <code>-infinity</code> and <code>+infinity</code>, not fixed sentinel integers — since node values can range all the way to <code>2^31 - 1</code>, any finite sentinel risks incorrectly rejecting a legitimately extreme value that happens to equal the sentinel itself.',
+  solutionExplanation: 'A node isn\'t just constrained by its immediate parent — it must respect every ancestor\'s ordering decision along the path from the root, so passing a tightening <code>(lo, hi)</code> range down through the recursion (narrowing <code>hi</code> to the current value when descending left, narrowing <code>lo</code> when descending right) is what correctly enforces the full inherited constraint at every depth, not just a one-level parent-child check. The strict inequality <code>lo &lt; node.val &lt; hi</code> directly encodes the problem\'s own "strictly less/greater" wording, which is exactly why a value equal to any ancestor anywhere in the tree correctly fails validation.',
 }

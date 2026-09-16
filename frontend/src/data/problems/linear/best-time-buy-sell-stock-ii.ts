@@ -7,8 +7,10 @@ export default {
     { input: 'prices = [7,1,5,3,6,4]', output: '7', explanation: 'Buy on day 2 (price 1) and sell on day 3 (price 5) for profit 4. Then buy on day 4 (price 3) and sell on day 5 (price 6) for profit 3. Total = 7.' },
   ],
   constraints: ['1 ≤ prices.length ≤ 3 × 10⁴', '0 ≤ prices[i] ≤ 10⁴'],
-  starterCode: `def max_profit(prices):
-  pass`,
+  starterCode: `class Solution:
+    def max_profit(self, prices):
+        pass`,
+  runnerSetup: 'max_profit = Solution().max_profit',
   functionName: 'max_profit',
   conceptId: 'arrays',
   testCases: [
@@ -16,12 +18,12 @@ export default {
     { label: 'Ascending', args: [[1,2,3,4,5]], expected: 4 },
     { label: 'Descending', args: [[7,6,4,3,1]], expected: 0 },
   ],
-  bruteHint: 'Describe checking every pair of buy and sell days and its time complexity',
-  optimizeHint: 'Name the single-pass technique that captures profit from price movements without picking specific buy/sell days upfront',
+  bruteHint: 'The brute-force approach treats each day as a decision point — on every day, recursively try buying, selling, or doing nothing, and explore all resulting paths. That works, but it branches into roughly 2ⁿ possible decision sequences, since each of the n days doubles the number of paths. At n up to 3 × 10⁴, how many sequences is that, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'unlimited-transactions',
-      question: '"You may complete as many transactions as you like." How does this change the strategy versus a single-transaction problem?',
+      question: 'Special conditions on how many operations are allowed change what class of strategy even applies. "You may complete as many transactions as you like" — how does this change the strategy versus a single-transaction problem?',
       options: [
         { label: 'Find the single best buy-sell pair', isCorrect: false, feedback: 'The single best pair misses multiple profitable windows. In [7,1,5,3,6,4] the single best pair (buy at 1, sell at 6) gives 5, but two trades give 7.' },
         { label: 'Capture every upward price movement', isCorrect: true },
@@ -33,10 +35,11 @@ export default {
         'Compare [1,5,3,6]: one trade gives at most 5. Two trades (1→5, 3→6) give 7. What pattern lets you capture both gains?',
         'Every time tomorrow is higher than today, you profit from that day. Can you collect all such one-day gains independently?',
       ],
+      highlight: { location: 'description', text: 'You may complete as many transactions as you like' },
     },
     {
       id: 'greedy-correctness',
-      question: 'Summing every positive consecutive difference gives the optimal profit. Why is this greedy approach provably correct?',
+      question: 'Proving that a local, day-by-day decision matches the true global optimum tells you it\'s safe to solve the problem greedily instead of exploring every possible trade sequence. Summing every positive consecutive difference gives the optimal profit — why is this greedy approach provably correct?',
       options: [
         { label: 'Because prices are sorted', isCorrect: false, feedback: 'Prices are not sorted — they are in chronological order. The greedy works for a different reason.' },
         { label: 'Any multi-day gain equals the sum of its single-day gains', isCorrect: true },
@@ -51,7 +54,7 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a single integer — the maximum profit. What does this tell you about the algorithm\'s result?',
+      question: 'The type of output you\'re asked for tells you how much information your algorithm actually needs to track as it runs. The output is a single integer — the maximum profit. What does this tell you about the algorithm\'s result?',
       options: [
         { label: 'Return the list of days to buy and sell', isCorrect: false, feedback: 'The problem only asks for the profit amount, not the specific transaction days. Tracking days adds complexity without contributing to the answer.' },
         { label: 'Accumulate a running profit total', isCorrect: true },
@@ -63,6 +66,16 @@ export default {
         'The return value is just one number. Does your approach need to store anything beyond that single accumulating sum?',
         'You never need to know which specific days you traded — only whether each consecutive difference was positive. How simple does that make the implementation?',
       ],
+      highlight: { location: 'description', text: 'the maximum profit you can achieve' },
     },
   ],
+  solutionCode: `class Solution:
+    def max_profit(self, prices):
+        profit = 0
+        for i in range(1, len(prices)):
+            if prices[i] > prices[i - 1]:
+                profit += prices[i] - prices[i - 1]
+        return profit`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionExplanation: 'Any multi-day gain is just the sum of its one-day gains — buying at 1 and selling at 6 across days that pass through 3 and 5 profits exactly as much as buying-selling on every day the price rises. Since transactions are unlimited, there is no reason to hold through a rise and a fall when you could instead sell right before the fall and buy back right after: summing every positive <code>prices[i] - prices[i-1]</code> captures the same total profit as the true optimal trade sequence.',
 }

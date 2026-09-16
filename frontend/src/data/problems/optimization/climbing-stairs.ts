@@ -10,8 +10,10 @@ export default {
   constraints: [
     '1 ≤ n ≤ 45',
   ],
-  starterCode: `def climb_stairs(n):
-  pass`,
+  starterCode: `class Solution:
+    def climb_stairs(self, n):
+        pass`,
+  runnerSetup: 'climb_stairs = Solution().climb_stairs',
   functionName: 'climb_stairs',
   conceptId: 'dynamic-programming',
   testCases: [
@@ -21,12 +23,13 @@ export default {
     { label: 'n = 1', args: [1], expected: 1 },
     { label: 'n = 10', args: [10], expected: 89 },
   ],
-  bruteHint: 'Describe the recursive approach that branches into a 1-step and a 2-step choice at every step, and explain why it recomputes the same smaller step counts repeatedly.',
-  optimizeHint: 'Name the technique for caching each step count once it\'s computed instead of recomputing it every time it recurs.',
+  bruteHint: 'The brute-force approach recursively tries a 1-step move and a 2-step move from every position, branching into two recursive calls at each step until it reaches the top. Because the same smaller step counts — like the number of ways to reach step 3 — get recomputed many times across different branches, this naive recursion runs in O(2ⁿ) time. Can you see why the recursion tree for reaching step 5 ends up computing the ways to reach step 2 more than once?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 45 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 45' },
+      question: 'A tight bound on the input size tells you which complexities are trivially safe and which are needless overkill. n ≤ 45 tells you…',
       options: [
         { label: 'O(2ⁿ) is fine — n is tiny',        isCorrect: false, feedback: 'At n = 45, O(2ⁿ) is about 35 trillion operations. Even with a tiny n, exponential blows up fast. The constraint doesn\'t permit naive recursion without memoization.' },
         { label: 'Even O(n) is overkill — use a formula', isCorrect: false, feedback: 'A closed-form formula exists (Fibonacci), but the constraint doesn\'t force it. The point of the problem is recognizing the recurrence — n ≤ 45 comfortably fits O(n).' },
@@ -41,7 +44,8 @@ export default {
     },
     {
       id: 'step-choices',
-      question: 'Each step you can climb 1 or 2 stairs. What does this imply about how you can arrive at step n?',
+      highlight: { location: 'description', text: 'Each time you can climb 1 or 2 steps.' },
+      question: 'The exact moves allowed determine which prior states can transition into the current one — the backbone of any DP recurrence. Each step you can climb 1 or 2 stairs. What does this imply about how you can arrive at step n?',
       options: [
         { label: 'You arrive from any earlier step',          isCorrect: false, feedback: 'You can only jump 1 or 2 steps at a time, not any arbitrary distance. Step n is reachable only from step n−1 or step n−2.' },
         { label: 'You arrive from step n−1 or step n−2',     isCorrect: true },
@@ -56,7 +60,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a count of distinct ways. What does "distinct" mean here?',
+      highlight: { location: 'description', text: 'Return the number of distinct ways to reach the top.' },
+      question: 'Understanding precisely what you\'re counting prevents subtle overcounting or undercounting mistakes in your solution. The output is a count of distinct ways. What does "distinct" mean here?',
       options: [
         { label: 'Only count paths with unique step sequences',     isCorrect: false, feedback: 'All paths are unique by definition — they\'re sequences of 1s and 2s. "Distinct" doesn\'t mean deduplication; it just means two paths that make the same choices in the same order are the same path.' },
         { label: 'Count every different sequence of 1s and 2s',    isCorrect: true },
@@ -71,7 +76,8 @@ export default {
     },
     {
       id: 'overlapping-subproblems',
-      question: 'Recursively computing ways(n) = ways(n−1) + ways(n−2) re-computes many subproblems. What does this call for?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 45' },
+      question: 'Spotting repeated recursive calls is the classic signal that memoization or bottom-up DP will save you significant work. Recursively computing ways(n) = ways(n−1) + ways(n−2) re-computes many subproblems. What does this call for?',
       options: [
         { label: 'Recompute them — n is small enough',               isCorrect: false, feedback: 'At n = 45, naive recursion computes O(2⁴⁵) calls due to repeated subproblems. Even though n is small, pure recursion without memoization is still too slow.' },
         { label: 'Memoize or use bottom-up DP to avoid recomputation', isCorrect: true },
@@ -85,4 +91,15 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def climb_stairs(self, n):
+        if n <= 2:
+            return n
+        a, b = 1, 2
+        for _ in range(3, n + 1):
+            a, b = b, a + b
+        return b`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'This is Fibonacci wearing a disguise: the number of ways to reach step n is the ways to reach n-1 (then take one step) plus the ways to reach n-2 (then take two) — same recurrence, same shape, different story.',
+  solutionExplanation: 'You always arrive at step n from either step n-1 (a single step) or step n-2 (a double step), and those are the only two ways in — so the total ways to reach n is just the sum of the ways to reach each of those. Tracking only the last two values instead of a full array is what gets this down to O(1) space; there\'s never a need to remember anything further back than that.',
 }

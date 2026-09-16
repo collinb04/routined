@@ -8,8 +8,10 @@ export default {
     { input: 'n = 1', output: '1' },
   ],
   constraints: ['1 ≤ n ≤ 1000'],
-  starterCode: `def num_tilings(n):
-  pass`,
+  starterCode: `class Solution:
+    def num_tilings(self, n):
+        pass`,
+  runnerSetup: 'num_tilings = Solution().num_tilings',
   functionName: 'num_tilings',
   conceptId: 'dp-2d',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'n=2', args: [2], expected: 2 },
     { label: 'n=4', args: [4], expected: 11 },
   ],
-  bruteHint: 'Describe the recursive approach that tries every way to place the next piece at each column, re-exploring the same remaining board widths repeatedly.',
-  optimizeHint: 'Name the small set of column states (fully filled, or partially filled by a tromino) you can tabulate so each column is solved only once.',
+  bruteHint: 'A brute-force solution recurses column by column, trying every combination of domino and tromino placements at each step and re-exploring the same remaining board width again and again. Because each column branches into a handful of choices across n columns, this naive recursion costs exponential time, roughly O(2^n). What repeated subproblem — the same remaining width — keeps getting solved from scratch, and how could you avoid redoing it?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 1000 tells you…',
+      question: 'Constraints define the complexity ceiling your solution must fit inside, so reading them first tells you whether brute force is even in play. n ≤ 1000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 1000' },
       options: [
         { label: 'O(2^n) is fine — n is small',   isCorrect: false, feedback: 'At n = 1000, O(2^1000) is astronomically large. Small n in DP problems signals polynomial, not exponential complexity.' },
         { label: 'O(n) is achievable',             isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'modulo-requirement',
-      question: 'Return the number of ways modulo 10⁹ + 7. Why does the problem specify a modulus?',
+      question: 'A required modulus is a strong hint that the raw answer would overflow standard integer types, revealing something about how fast the underlying quantity grows. Return the number of ways modulo 10⁹ + 7. Why does the problem specify a modulus?',
+      highlight: { location: 'description', text: 'Return the number of ways modulo 10⁹ + 7.' },
       options: [
         { label: 'To make the problem harder',                           isCorrect: false, feedback: 'The modulus isn\'t difficulty padding — it\'s a practical necessity. Tiling counts grow exponentially with n, quickly exceeding 64-bit integer bounds.' },
         { label: 'Tiling counts grow too large for standard integers',   isCorrect: true },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'partial-column-states',
-      question: 'An L-shaped tromino can leave one cell of a column unfilled. What does this mean for your DP states?',
+      question: 'The exact shapes of the pieces you\'re placing dictate which partial states your DP has to represent, so it pays to think through piece geometry before writing any recurrence. An L-shaped tromino can leave one cell of a column unfilled. What does this mean for your DP states?',
+      highlight: { location: 'description', text: 'L-shaped trominoes' },
       options: [
         { label: 'Only track fully filled columns',                       isCorrect: false, feedback: 'Trominoes create partially filled columns as intermediate states. Ignoring partial fills means you can\'t correctly track the transitions that trominoes introduce.' },
         { label: 'Track both fully filled and partially filled column states', isCorrect: true },
@@ -68,7 +73,8 @@ export default {
     },
     {
       id: 'recurrence-lookback',
-      question: 'Adding column n may use pieces that span back to column n-1 or n-2. What does this say about the recurrence?',
+      question: 'How far back a recurrence has to reach determines both its correctness and how much work each step costs, so pinning down the lookback distance is a key design decision. Adding column n may use pieces that span back to column n-1 or n-2. What does this say about the recurrence?',
+      highlight: { location: 'description', text: '2×1 dominoes and L-shaped trominoes' },
       options: [
         { label: 'dp[n] depends only on dp[n-1]',                isCorrect: false, feedback: 'A horizontal domino spans two columns, making dp[n] depend on dp[n-2] as well. Only looking back one step misses the two-column-wide pieces.' },
         { label: 'dp[n] can depend on dp[n-1] and dp[n-2]',     isCorrect: true },
@@ -82,4 +88,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def num_tilings(self, n):
+        MOD = 10**9 + 7
+        full = [0] * (n + 1)
+        partial = [0] * (n + 1)
+        full[0] = 1
+        full[1] = 1
+        for i in range(2, n + 1):
+            full[i] = (full[i - 1] + full[i - 2] + 2 * partial[i - 1]) % MOD
+            partial[i] = (partial[i - 1] + full[i - 2]) % MOD
+        return full[n]`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: '<code>partial[i-1]</code> is multiplied by <code>2</code> when it feeds into <code>full[i]</code> — a partial state at column <code>i-1</code> can be closed off by either a top-notch or a bottom-notch tromino, and both orientations independently complete the board, so both must be counted.',
+  solutionExplanation: 'A fully-tiled board of width <code>i</code> either extends a fully-tiled width <code>i-1</code> board with one vertical domino, extends a fully-tiled width <code>i-2</code> board with two horizontal dominoes, or closes off a "partial" board of width <code>i-1</code> (one column with an L-shaped notch left over from a tromino) — that third case is exactly what lets a tromino bridge across a column boundary. The <code>partial</code> array tracks that intermediate notched state, extended by one more column either by staying notched (<code>partial[i-1]</code>) or by a tromino newly creating the notch from a fully-tiled width <code>i-2</code> board, and the modulus keeps every intermediate value inside safe integer bounds despite the exponential growth in tiling counts.',
 }

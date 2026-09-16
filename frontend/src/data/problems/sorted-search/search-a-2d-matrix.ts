@@ -8,20 +8,23 @@ export default {
     { input: 'matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 13', output: 'false' },
   ],
   constraints: ['m == matrix.length', 'n == matrix[i].length', '1 <= m, n <= 100', '-10^4 <= matrix[i][j], target <= 10^4'],
-  starterCode: `def search_matrix(matrix, target):
-  pass`,
+  starterCode: `class Solution:
+    def search_matrix(self, matrix, target):
+        pass`,
+  runnerSetup: 'search_matrix = Solution().search_matrix',
   functionName: 'search_matrix',
   conceptId: 'binary-search',
   testCases: [
     { label: 'found', args: [[[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3], expected: true },
     { label: 'not found', args: [[[1,3,5,7],[10,11,16,20],[23,30,34,60]], 13], expected: false },
   ],
-  bruteHint: 'Describe scanning every cell of the matrix to check for the target, and its time complexity',
-  optimizeHint: 'Name the technique that treats the matrix as a single flattened sorted array to enable binary search',
+  bruteHint: 'A brute-force approach checks every cell of the matrix one by one, comparing it against the target until a match turns up or all cells are exhausted. With m rows and n columns, that means up to m × n comparisons, giving O(m × n) time. Given that each row is sorted and every row starts higher than the previous row ends, do you really need to inspect every single cell to find the target?',
+  optimizeComplexity: { time: 'O(log(m · n))', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'You must use an O(log(m * n)) algorithm. With m, n ≤ 100, what does this tell you about the expected approach?',
+      question: 'Explicit runtime requirements in a problem statement often signal which algorithm family is even viable. You must use an O(log(m * n)) algorithm. With m, n ≤ 100, what does this tell you about the expected approach?',
+      highlight: { location: 'description', text: 'You must use an O(log(m * n)) algorithm.' },
       options: [
         { label: 'Search every row linearly', isCorrect: false, feedback: 'Searching every row linearly is O(m × n) = O(10,000) — much worse than O(log(m × n)) ≈ O(13). The constraint is ruling out linear scans entirely.' },
         { label: 'Binary search treating the matrix as a flat sorted array', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'matrix-as-flat-array',
-      question: 'Each row is sorted, and the first element of each row exceeds the last of the previous row. What does this guarantee about the matrix overall?',
+      question: 'Structural guarantees about how pieces of input relate to each other can reveal a simpler, unified way to view the data. Each row is sorted, and the first element of each row exceeds the last of the previous row. What does this guarantee about the matrix overall?',
+      highlight: { location: 'description', text: 'the first integer of each row is greater than the last integer of the previous row.' },
       options: [
         { label: 'Each row is independent — they don\'t connect', isCorrect: false, feedback: 'The second property explicitly connects rows: the first element of row i+1 is greater than the last element of row i. This is what makes cross-row comparison meaningful.' },
         { label: 'The matrix elements are globally sorted row by row', isCorrect: true },
@@ -51,7 +55,7 @@ export default {
     },
     {
       id: 'index-conversion',
-      question: 'During binary search, you compute a flat midpoint index mid. How do you convert it back to (row, col) in the matrix?',
+      question: 'Translating an abstract search position back into a concrete data location is often where implementations go wrong. During binary search, you compute a flat midpoint index mid. How do you convert it back to (row, col) in the matrix?',
       options: [
         { label: 'row = mid % n, col = mid // n', isCorrect: false, feedback: 'This swaps the formulas. The row index is how many full rows fit into mid, which is mid // n (integer division). The column is the remainder, mid % n.' },
         { label: 'row = mid // n, col = mid % n', isCorrect: true },
@@ -65,4 +69,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def search_matrix(self, matrix, target):
+        m, n = len(matrix), len(matrix[0])
+        lo, hi = 0, m * n - 1
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            val = matrix[mid // n][mid % n]
+            if val == target:
+                return True
+            elif val < target:
+                lo = mid + 1
+            else:
+                hi = mid - 1
+        return False`,
+  solutionComplexity: { time: 'O(log(m · n))', space: 'O(1)' },
+  solutionCaveat: 'Because every row starts higher than the previous row ends, the matrix reads as one continuous ascending sequence when flattened — <code>mid // n</code> and <code>mid % n</code> convert a flat index back to its row and column without ever actually building that flattened array.',
+  solutionExplanation: 'The two stated properties together mean the matrix is really just a single sorted array of <code>m × n</code> elements, arranged in rows of length <code>n</code> — so an ordinary binary search over the range <code>[0, m*n - 1]</code> works directly, treating each virtual index as if it were a position in that flat array and converting it to real (row, column) coordinates only when a value actually needs to be read.',
 }

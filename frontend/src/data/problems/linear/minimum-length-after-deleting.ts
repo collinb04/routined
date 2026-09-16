@@ -8,8 +8,10 @@ export default {
     { input: 's = "cabaabac"', output: '0', explanation: 'Remove all via: c..c → a..a → b..b.' },
   ],
   constraints: ['1 ≤ s.length ≤ 10⁵', 's consists of \'a\', \'b\', \'c\''],
-  starterCode: `def minimum_length(s):
-  pass`,
+  starterCode: `class Solution:
+    def minimum_length(self, s):
+        pass`,
+  runnerSetup: 'minimum_length = Solution().minimum_length',
   functionName: 'minimum_length',
   conceptId: 'two-pointers',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'All same', args: ['aaa'], expected: 0 },
     { label: 'Single', args: ['a'], expected: 1 },
   ],
-  bruteHint: 'Describe repeatedly rescanning the string to remove adjacent matching pairs and why that\'s wasteful',
-  optimizeHint: 'Name the structure that removes the top element whenever the current character matches it',
+  bruteHint: 'The brute-force approach repeats a full scan of the string: check whether the current leftmost and rightmost characters match, remove them if so, and start the check over from the new ends — repeating until no more removals are possible. Each scan costs O(n), and in the worst case you may need up to O(n) rounds of removal, giving O(n²) total work. At n up to 100,000, how many operations would that be, and could you resolve the whole process with pointers that never revisit the same character twice?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length ≤ 10⁵. What does this tell you about acceptable complexity?',
+      question: 'We can gauge how efficient our solution needs to be from the size limit on the input. s.length ≤ 10⁵. What does this tell you about acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 10⁵' },
       options: [
         { label: 'O(n) is needed; O(n²) is too slow', isCorrect: true },
         { label: 'O(n²) is fine for this size', isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations — too slow. Each removal step should advance both pointers by a constant amount, keeping the total work linear.' },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'two-pointer-structure',
-      question: 'The operation checks the leftmost and rightmost characters. What data structure naturally models this?',
+      question: 'We can figure out which structure fits by looking at exactly what part of the string each step examines. The operation checks the leftmost and rightmost characters. What data structure naturally models this?',
+      highlight: { location: 'description', text: 'if the leftmost and rightmost characters are equal, remove them.' },
       options: [
         { label: 'A stack that processes one end at a time', isCorrect: false, feedback: 'A stack gives you one end efficiently but not both ends simultaneously. You need to check and advance both the left and right boundaries at once.' },
         { label: 'Two pointers at the left and right ends moving inward', isCorrect: true },
@@ -53,12 +57,12 @@ export default {
     },
     {
       id: 'multi-char-deletion',
-      question: 'When s[left] == s[right], you remove all matching characters from both ends — not just one. What does "all matching" require?',
+      question: 'We can figure out how much work each step actually does by looking at what happens when more than one character matches at once. When s[left] == s[right], you remove all matching characters from both ends — not just one. What does "all matching" require?',
       options: [
         { label: 'Advance left and right by exactly one each time', isCorrect: false, feedback: 'Advancing by one per step would require another outer loop pass to handle "aaa...a" at both ends. One inner loop per matching pair removes all identical characters from each side in one go.' },
         { label: 'Keep advancing each pointer while the character matches the original end char', isCorrect: true },
         { label: 'Remove only the outermost character from each end', isCorrect: false, feedback: 'The operation removes the entire run of equal characters from each end. For "aaabaa", matching on \'a\': you advance left past all leading \'a\'s and right past all trailing \'a\'s before checking again.' },
-        { label: 'Use a frequency count to remove all instances of the character', isCorrect: false, feedback: 'Frequency counts would remove non-contiguous occurrences in the middle, which is not allowed. Only contiguous matching characters at the current ends are removed.' },
+        { label: 'Count every occurrence of the character anywhere in the string and remove them all', isCorrect: false, feedback: 'Counting every occurrence would remove non-contiguous occurrences in the middle, which is not allowed. Only contiguous matching characters at the current ends are removed.' },
       ],
       correctFeedback: 'When s[left] == s[right], advance left forward while s[left] equals that character, and advance right backward while s[right] equals it. This collapses an entire matching run in one pass.',
       wrongFeedback: [
@@ -68,7 +72,7 @@ export default {
     },
     {
       id: 'termination-condition',
-      question: 'The result can be 0 (entire string deleted) or a positive length. What condition ends the loop?',
+      question: 'We can tell what\'s ruled out as a stopping point by considering every way the two pointers might end up positioned. The result can be 0 (entire string deleted) or a positive length. What condition ends the loop?',
       options: [
         { label: 'Stop when left > right or s[left] != s[right]', isCorrect: true },
         { label: 'Stop only when left == right', isCorrect: false, feedback: 'left == right means one character remains — but the pointers can also cross (left > right) when the entire string is consumed. You need to handle both cases.' },
@@ -82,4 +86,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def minimum_length(self, s):
+        left, right = 0, len(s) - 1
+        while left < right and s[left] == s[right]:
+            ch = s[left]
+            while left <= right and s[left] == ch:
+                left += 1
+            while right >= left and s[right] == ch:
+                right -= 1
+        return right - left + 1`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Each inner while loop must consume *every* matching character at its end, not just one — removing "the leftmost and rightmost characters" one pair at a time is equivalent to stripping the whole matching run from each side at once, since a run of the same character can only ever be removed against itself.',
+  solutionExplanation: 'Since removal only ever happens when the two ends match, the process is really just repeatedly stripping matching runs off both ends — which two pointers can do directly without simulating each individual removal. When the ends stop matching (or the pointers meet), nothing left in <code>[left, right]</code> can ever be removed, since any further removal would require the current ends to be equal, which they are not, so the remaining window\'s length is exactly the answer.',
 }

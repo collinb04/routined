@@ -10,14 +10,14 @@
 
     <!-- Sidebar / mobile dropdown -->
     <aside
-      class="z-40 fixed lg:sticky top-16 left-0 right-0 lg:right-auto lg:self-start lg:h-[calc(100vh-4rem)] flex flex-col transition-all duration-300 shrink-0 border-b lg:border-b-0 lg:border-r"
+      class="z-40 fixed lg:sticky top-16 left-0 right-0 lg:right-auto lg:self-start flex flex-col transition-all duration-300 shrink-0 border-b lg:border-b-0 lg:border-r"
       style="border-color: rgba(255,255,255,0.07); background: #0d0f11"
       :class="sidebarOpen
         ? 'max-h-[70vh] overflow-y-auto shadow-xl lg:shadow-none lg:overflow-hidden lg:max-h-none lg:w-56'
         : 'max-h-0 overflow-hidden lg:max-h-none lg:w-0'"
     >
       <div class="w-full lg:w-56 flex items-center justify-between px-4 pt-6 pb-3">
-        <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(255,255,255,0.3)">Topics</span>
+        <span class="text-[10px] font-medium font-mono uppercase tracking-widest " style="color:rgba(255,255,255,0.3)">Topics</span>
         <button class="p-1 rounded-md transition-colors" style="color:rgba(255,255,255,0.3)" @click="sidebarOpen = false">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
@@ -25,26 +25,79 @@
         </button>
       </div>
 
-      <nav class="topics-nav w-full lg:w-56 flex-1 overflow-y-auto pb-6 px-2">
-        <button
-          v-for="(topic, i) in topics"
-          :key="topic.id"
-          class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-0.5 flex items-center gap-2"
-          :style="selectedTopic?.id === topic.id
-            ? 'border-color:#a0a0a0; color:#c8c8c8; background:linear-gradient(110deg, rgba(140,140,140,0.1) 0%, rgba(220,220,220,0.14) 40%, rgba(255,255,255,0.09) 55%, rgba(160,160,160,0.10) 100%)'
-            : isTopicComplete(topic)
-              ? 'border-color:#c8a832; color:#d4af37; background:transparent; box-shadow: 0 0 0 1px #7a6200, 0 0 0 1.5px rgba(212,175,55,0.55), inset 0 1px 0 rgba(255,223,0,0.1)'
-              : 'border-color:transparent; color:rgba(255,255,255,0.4)'"
-          @click="selectedTopic = topic"
-        >
-          <span class="text-[10px] tabular-nums shrink-0" style="color:rgba(255,255,255,0.2)">{{ String(i + 1).padStart(2, '0') }}</span>
-          <span class="flex-1 truncate">{{ topic.label }}</span>
-          <span
-            v-if="isTopicComplete(topic)"
-            class="text-[8px] font-bold uppercase tracking-widest shrink-0"
-            style="color:#d4af37; opacity:0.85"
-          >Mastered</span>
-        </button>
+      <!-- Problem search -->
+      <div class="w-full lg:w-56 px-4 pb-3">
+        <div class="relative">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search problems"
+            class="w-full text-[12px] font-medium rounded-lg pl-7 py-1.5 transition-colors"
+            :class="searchQuery ? 'pr-6' : 'pr-2.5'"
+            style="background:rgba(255,255,255,0.06); color:#f5f5f2; border:1px solid rgba(255,255,255,0.1)"
+          />
+          <button
+            v-if="searchQuery"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded transition-colors"
+            style="color:rgba(255,255,255,0.35)"
+            @click="searchQuery = ''"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <nav class="topics-nav w-full lg:w-56 flex-1 overflow-y-auto lg:flex-none lg:overflow-visible pb-6 px-2">
+        <template v-if="searchQuery.trim()">
+          <p v-if="searchResults.length === 0" class="px-3 py-4 text-[12px]" style="color:rgba(255,255,255,0.3)">
+            No problems found
+          </p>
+          <button
+            v-for="result in searchResults"
+            :key="result.problem.id"
+            class="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 mb-0.5"
+            style="color:rgba(255,255,255,0.4)"
+            @click="selectSearchResult(result)"
+          >
+            <svg v-if="result.problem.done" width="12" height="12" viewBox="0 0 24 24" fill="#d4af37" stroke="#d4af37" stroke-width="1" stroke-linejoin="round" class="shrink-0">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span v-else class="w-3 shrink-0" />
+            <span class="flex-1 min-w-0">
+              <span class="block text-[13px] font-medium truncate" style="color:#f5f5f2">{{ result.problem.name }}</span>
+              <span class="block text-[10px] truncate" style="color:rgba(255,255,255,0.35)">{{ result.topic.label }}</span>
+            </span>
+            <span class="text-[11px] font-medium shrink-0" :style="{ color: difficultyColor(result.problem.difficulty) }">
+              {{ result.problem.difficulty }}
+            </span>
+          </button>
+        </template>
+        <template v-else>
+          <button
+            v-for="(topic, i) in topics"
+            :key="topic.id"
+            class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors border-l-2 mb-0.5 flex items-center gap-2"
+            :style="selectedTopic?.id === topic.id
+              ? 'border-color:#a0a0a0; color:#c8c8c8; background:linear-gradient(110deg, rgba(140,140,140,0.1) 0%, rgba(220,220,220,0.14) 40%, rgba(255,255,255,0.09) 55%, rgba(160,160,160,0.10) 100%)'
+              : isTopicComplete(topic)
+                ? 'border-color:#c8a832; color:#d4af37; background:transparent; box-shadow: 0 0 0 1px #7a6200, 0 0 0 1.5px rgba(212,175,55,0.55), inset 0 1px 0 rgba(255,223,0,0.1)'
+                : 'border-color:transparent; color:rgba(255,255,255,0.4)'"
+            @click="selectedTopic = topic"
+          >
+            <span class="text-[10px] tabular-nums shrink-0" style="color:rgba(255,255,255,0.2)">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="flex-1 truncate">{{ topic.label }}</span>
+            <span
+              v-if="isTopicComplete(topic)"
+              class="text-[8px] font-bold uppercase tracking-widest shrink-0"
+              style="color:#d4af37; opacity:0.85"
+            >Mastered</span>
+          </button>
+        </template>
       </nav>
     </aside>
 
@@ -83,7 +136,7 @@
 
         <!-- Header -->
         <div class="pt-2 pb-7 flex flex-col gap-3">
-          <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(255,255,255,0.3)">
+          <span class="text-[10px] font-medium font-mono uppercase tracking-widest " style="color:rgba(255,255,255,0.3)">
             {{ String(topics.indexOf(selectedTopic) + 1).padStart(2, '0') }} — {{ selectedTopic.label }}
           </span>
           <h1 class="text-3xl font-semibold tracking-tight" style="color:#f5f5f2; line-height:1.2">
@@ -135,9 +188,9 @@
 
           <!-- Progress -->
           <div class="flex items-center gap-3 mt-0.5">
-            <div class="flex-1 h-0.75 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07)">
+            <div class="flex-1 h-0.75 rounded-lg overflow-hidden" style="background:rgba(255,255,255,0.07)">
               <div
-                class="h-full rounded-full transition-all duration-500" style="background:#d4af37"
+                class="h-full rounded-lg transition-all duration-500" style="background:#d4af37"
                 :style="{ width: progressPct + '%' }"
               />
             </div>
@@ -153,8 +206,8 @@
           <!-- Column headers -->
           <div class="flex items-center px-4 py-3 border-b" style="border-color:rgba(255,255,255,0.07)">
             <div class="w-9 shrink-0" />
-            <div class="flex-1 text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(255,255,255,0.28)">Problem</div>
-            <div class="text-[10px] font-semibold uppercase tracking-widest w-24 text-right" style="color:rgba(255,255,255,0.28)">Difficulty</div>
+            <div class="flex-1 text-[10px] font-medium font-mono uppercase tracking-widest " style="color:rgba(255,255,255,0.28)">Problem</div>
+            <div class="text-[10px] font-medium font-mono uppercase tracking-widest  w-24 text-right" style="color:rgba(255,255,255,0.28)">Difficulty</div>
           </div>
 
           <!-- Rows -->
@@ -198,11 +251,7 @@
             <div class="w-24 text-right">
               <span
                 class="text-[13px] font-medium"
-                :style="{
-                  color: problem.difficulty === 'Easy' ? '#22c55e'
-                       : problem.difficulty === 'Medium' ? '#f97316'
-                       : '#ef4444'
-                }"
+                :style="{ color: difficultyColor(problem.difficulty) }"
               >
                 {{ problem.difficulty }}
               </span>
@@ -315,6 +364,32 @@ const progressPct = computed(() => {
 
 function isTopicComplete(topic) {
   return topic.problems.length > 0 && topic.problems.every(p => p.done)
+}
+
+function difficultyColor(difficulty) {
+  return difficulty === 'Easy' ? '#22c55e'
+    : difficulty === 'Medium' ? '#f97316'
+    : '#ef4444'
+}
+
+const searchQuery = ref('')
+
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  const results = []
+  for (const topic of topics) {
+    for (const problem of topic.problems) {
+      if (problem.name.toLowerCase().includes(q)) results.push({ problem, topic })
+    }
+  }
+  return results
+})
+
+function selectSearchResult(result) {
+  selectedTopic.value = result.topic
+  searchQuery.value = ''
+  handleProblemClick(result.problem)
 }
 
 function fireGoldConfetti() {
@@ -778,6 +853,25 @@ const topics = reactive([
     ],
   },
   {
+    id: 'strings',
+    label: 'String Manipulation',
+    subtitle: 'Parse, transform, and match text',
+    problems: [
+      { id: 171, name: 'Valid Palindrome II',                                 difficulty: 'Easy',   url: '', done: false },
+      { id: 172, name: 'Longest Palindromic Subsequence',                     difficulty: 'Medium', url: '', done: false },
+      { id: 173, name: 'Reverse Words in a String',                           difficulty: 'Medium', url: '', done: false },
+      { id: 174, name: 'String to Integer (atoi)',                            difficulty: 'Medium', url: '', done: false },
+      { id: 175, name: 'Count and Say',                                       difficulty: 'Medium', url: '', done: false },
+      { id: 176, name: 'Encode and Decode Strings',                           difficulty: 'Medium', url: '', done: false },
+      { id: 177, name: 'ZigZag Conversion',                                   difficulty: 'Medium', url: '', done: false },
+      { id: 178, name: 'Text Justification',                                  difficulty: 'Hard',   url: '', done: false },
+      { id: 179, name: 'Is Subsequence',                                      difficulty: 'Easy',   url: '', done: false },
+      { id: 180, name: 'Find the Index of the First Occurrence in a String',  difficulty: 'Easy',   url: '', done: false },
+      { id: 181, name: 'Minimum Add to Make Parentheses Valid',               difficulty: 'Medium', url: '', done: false },
+      { id: 182, name: 'Longest Common Prefix',                               difficulty: 'Easy',   url: '', done: false },
+    ],
+  },
+  {
     id: 'stack',
     label: 'Stack',
     subtitle: 'Last in, first out',
@@ -798,6 +892,21 @@ const topics = reactive([
     ],
   },
   {
+    id: 'monotonic-stack',
+    label: 'Monotonic Stack',
+    subtitle: 'Maintain a sorted invariant as you scan',
+    problems: [
+      { id: 163, name: 'Next Greater Element II',                             difficulty: 'Medium', url: '', done: false },
+      { id: 164, name: 'Online Stock Span',                                   difficulty: 'Medium', url: '', done: false },
+      { id: 165, name: 'Sum of Subarray Minimums',                            difficulty: 'Medium', url: '', done: false },
+      { id: 166, name: '132 Pattern',                                         difficulty: 'Medium', url: '', done: false },
+      { id: 167, name: 'Remove Duplicate Letters',                            difficulty: 'Medium', url: '', done: false },
+      { id: 168, name: 'Remove K Digits',                                     difficulty: 'Medium', url: '', done: false },
+      { id: 169, name: 'Minimum Cost Tree From Leaf Values',                  difficulty: 'Medium', url: '', done: false },
+      { id: 170, name: 'Maximum Width Ramp',                                  difficulty: 'Medium', url: '', done: false },
+    ],
+  },
+  {
     id: 'binary-search',
     label: 'Binary Search',
     subtitle: 'Eliminate half with every guess',
@@ -815,6 +924,19 @@ const topics = reactive([
       { id: 228, name: 'Split Array Largest Sum',                           difficulty: 'Hard',   url: 'https://leetcode.com/problems/split-array-largest-sum/', done: false },
       { id: 229, name: 'Search in Rotated Sorted Array II',                 difficulty: 'Medium', url: 'https://leetcode.com/problems/search-in-rotated-sorted-array-ii/', done: false },
       { id: 230, name: 'Minimum Speed to Arrive on Time',                   difficulty: 'Medium', url: 'https://leetcode.com/problems/minimum-speed-to-arrive-on-time/', done: false },
+    ],
+  },
+  {
+    id: 'prefix-sum',
+    label: 'Prefix Sum',
+    subtitle: 'Precompute range queries in O(1)',
+    problems: [
+      { id: 189, name: 'Running Sum of 1d Array',                             difficulty: 'Easy',   url: '', done: false },
+      { id: 190, name: 'Range Sum Query - Immutable',                         difficulty: 'Easy',   url: '', done: false },
+      { id: 191, name: 'Contiguous Array',                                    difficulty: 'Medium', url: '', done: false },
+      { id: 192, name: 'Find Pivot Index',                                    difficulty: 'Easy',   url: '', done: false },
+      { id: 193, name: 'Maximum Subarray Sum with One Deletion',              difficulty: 'Medium', url: '', done: false },
+      { id: 194, name: 'Count of Range Sum',                                  difficulty: 'Hard',   url: '', done: false },
     ],
   },
   {
@@ -880,23 +1002,16 @@ const topics = reactive([
     ],
   },
   {
-    id: 'heap',
-    label: 'Heap / Priority Queue',
-    subtitle: 'Always find the extreme',
+    id: 'sorting',
+    label: 'Sorting',
+    subtitle: 'Classic and specialized ordering algorithms',
     problems: [
-      { id: 60, name: 'Kth Largest Element in a Stream',     difficulty: 'Easy',   url: 'https://leetcode.com/problems/kth-largest-element-in-a-stream/',     done: false },
-      { id: 61, name: 'Last Stone Weight',                   difficulty: 'Easy',   url: 'https://leetcode.com/problems/last-stone-weight/',                   done: false },
-      { id: 62, name: 'K Closest Points to Origin',          difficulty: 'Medium', url: 'https://leetcode.com/problems/k-closest-points-to-origin/',          done: false },
-      { id: 63, name: 'Kth Largest Element in an Array',     difficulty: 'Medium', url: 'https://leetcode.com/problems/kth-largest-element-in-an-array/',     done: false },
-      { id: 64, name: 'Task Scheduler',                      difficulty: 'Medium', url: 'https://leetcode.com/problems/task-scheduler/',                      done: false },
-      { id: 65, name: 'Design Twitter',                      difficulty: 'Medium', url: 'https://leetcode.com/problems/design-twitter/',                      done: false },
-      { id: 66,  name: 'Find Median from Data Stream',                     difficulty: 'Hard',   url: 'https://leetcode.com/problems/find-median-from-data-stream/', done: false },
-      { id: 248, name: 'Smallest Range Covering Elements from K Lists',    difficulty: 'Hard',   url: 'https://leetcode.com/problems/smallest-range-covering-elements-from-k-lists/', done: false },
-      { id: 249, name: 'IPO',                                              difficulty: 'Hard',   url: 'https://leetcode.com/problems/ipo/', done: false },
-      { id: 250, name: 'Reorganize String',                                difficulty: 'Medium', url: 'https://leetcode.com/problems/reorganize-string/', done: false },
-      { id: 251, name: 'Maximum Frequency Stack',                          difficulty: 'Hard',   url: 'https://leetcode.com/problems/maximum-frequency-stack/', done: false },
-      { id: 252, name: 'K Pairs with Smallest Sums',                       difficulty: 'Medium', url: 'https://leetcode.com/problems/find-k-pairs-with-smallest-sums/', done: false },
-      { id: 253, name: 'Minimum Cost to Connect Sticks',                   difficulty: 'Medium', url: 'https://leetcode.com/problems/minimum-cost-to-connect-sticks/', done: false },
+      { id: 183, name: 'Sort an Array',                                       difficulty: 'Medium', url: '', done: false },
+      { id: 184, name: 'Merge Sorted Array',                                  difficulty: 'Easy',   url: '', done: false },
+      { id: 185, name: 'H-Index',                                             difficulty: 'Medium', url: '', done: false },
+      { id: 186, name: 'Largest Number',                                      difficulty: 'Medium', url: '', done: false },
+      { id: 187, name: 'Wiggle Sort II',                                      difficulty: 'Medium', url: '', done: false },
+      { id: 188, name: 'Maximum Gap',                                         difficulty: 'Hard',   url: '', done: false },
     ],
   },
   {
@@ -919,6 +1034,26 @@ const topics = reactive([
       { id: 257, name: 'Word Break II',                                    difficulty: 'Hard',   url: 'https://leetcode.com/problems/word-break-ii/', done: false },
       { id: 258, name: 'Restore IP Addresses',                             difficulty: 'Medium', url: 'https://leetcode.com/problems/restore-ip-addresses/', done: false },
       { id: 259, name: 'Combinations',                                     difficulty: 'Medium', url: 'https://leetcode.com/problems/combinations/', done: false },
+    ],
+  },
+  {
+    id: 'heap',
+    label: 'Heap / Priority Queue',
+    subtitle: 'Always find the extreme',
+    problems: [
+      { id: 60, name: 'Kth Largest Element in a Stream',     difficulty: 'Easy',   url: 'https://leetcode.com/problems/kth-largest-element-in-a-stream/',     done: false },
+      { id: 61, name: 'Last Stone Weight',                   difficulty: 'Easy',   url: 'https://leetcode.com/problems/last-stone-weight/',                   done: false },
+      { id: 62, name: 'K Closest Points to Origin',          difficulty: 'Medium', url: 'https://leetcode.com/problems/k-closest-points-to-origin/',          done: false },
+      { id: 63, name: 'Kth Largest Element in an Array',     difficulty: 'Medium', url: 'https://leetcode.com/problems/kth-largest-element-in-an-array/',     done: false },
+      { id: 64, name: 'Task Scheduler',                      difficulty: 'Medium', url: 'https://leetcode.com/problems/task-scheduler/',                      done: false },
+      { id: 65, name: 'Design Twitter',                      difficulty: 'Medium', url: 'https://leetcode.com/problems/design-twitter/',                      done: false },
+      { id: 66,  name: 'Find Median from Data Stream',                     difficulty: 'Hard',   url: 'https://leetcode.com/problems/find-median-from-data-stream/', done: false },
+      { id: 248, name: 'Smallest Range Covering Elements from K Lists',    difficulty: 'Hard',   url: 'https://leetcode.com/problems/smallest-range-covering-elements-from-k-lists/', done: false },
+      { id: 249, name: 'IPO',                                              difficulty: 'Hard',   url: 'https://leetcode.com/problems/ipo/', done: false },
+      { id: 250, name: 'Reorganize String',                                difficulty: 'Medium', url: 'https://leetcode.com/problems/reorganize-string/', done: false },
+      { id: 251, name: 'Maximum Frequency Stack',                          difficulty: 'Hard',   url: 'https://leetcode.com/problems/maximum-frequency-stack/', done: false },
+      { id: 252, name: 'K Pairs with Smallest Sums',                       difficulty: 'Medium', url: 'https://leetcode.com/problems/find-k-pairs-with-smallest-sums/', done: false },
+      { id: 253, name: 'Minimum Cost to Connect Sticks',                   difficulty: 'Medium', url: 'https://leetcode.com/problems/minimum-cost-to-connect-sticks/', done: false },
     ],
   },
   {
@@ -959,6 +1094,21 @@ const topics = reactive([
     ],
   },
   {
+    id: 'advanced-graphs',
+    label: 'Advanced Graphs',
+    subtitle: 'Shortest paths and minimum spanning trees',
+    problems: [
+      { id: 124, name: 'Reconstruct Itinerary',                               difficulty: 'Hard',   url: '', done: false },
+      { id: 125, name: 'Min Cost to Connect All Points',                      difficulty: 'Medium', url: '', done: false },
+      { id: 126, name: 'Network Delay Time',                                  difficulty: 'Medium', url: '', done: false },
+      { id: 127, name: 'Swim in Rising Water',                                difficulty: 'Hard',   url: '', done: false },
+      { id: 128, name: 'Cheapest Flights Within K Stops',                     difficulty: 'Medium', url: '', done: false },
+      { id: 129, name: 'Find the City With the Smallest Number of Neighbors', difficulty: 'Medium', url: '', done: false },
+      { id: 130, name: 'Path with Maximum Probability',                       difficulty: 'Medium', url: '', done: false },
+      { id: 131, name: 'Critical Connections in a Network',                   difficulty: 'Hard',   url: '', done: false },
+    ],
+  },
+  {
     id: 'dp-1d',
     label: '1D Dynamic Programming',
     subtitle: 'Build from smaller answers',
@@ -992,15 +1142,22 @@ const topics = reactive([
     ],
   },
   {
-    id: 'tries',
-    label: 'Tries',
-    subtitle: 'Prefix trees for string search',
+    id: 'dp-2d',
+    label: '2D Dynamic Programming',
+    subtitle: 'Two-dimensional subproblems',
     problems: [
-      { id: 101, name: 'Implement Trie (Prefix Tree)',                        difficulty: 'Medium', url: '', done: false },
-      { id: 102, name: 'Design Add and Search Words Data Structure',          difficulty: 'Medium', url: '', done: false },
-      { id: 103, name: 'Word Search II',                                      difficulty: 'Hard',   url: '', done: false },
-      { id: 104, name: 'Replace Words',                                       difficulty: 'Medium', url: '', done: false },
-      { id: 105, name: 'Longest Word in Dictionary',                          difficulty: 'Easy',   url: '', done: false },
+      { id: 132, name: 'Unique Paths II',                                     difficulty: 'Medium', url: '', done: false },
+      { id: 133, name: 'Longest Common Subsequence',                          difficulty: 'Medium', url: '', done: false },
+      { id: 134, name: 'Best Time to Buy and Sell Stock with Cooldown',       difficulty: 'Medium', url: '', done: false },
+      { id: 135, name: 'Coin Change II',                                      difficulty: 'Medium', url: '', done: false },
+      { id: 136, name: 'Target Sum',                                          difficulty: 'Medium', url: '', done: false },
+      { id: 137, name: 'Interleaving String',                                 difficulty: 'Hard',   url: '', done: false },
+      { id: 138, name: 'Longest Increasing Path in a Matrix',                 difficulty: 'Hard',   url: '', done: false },
+      { id: 139, name: 'Distinct Subsequences',                               difficulty: 'Hard',   url: '', done: false },
+      { id: 140, name: 'Edit Distance',                                       difficulty: 'Hard',   url: '', done: false },
+      { id: 141, name: 'Burst Balloons',                                      difficulty: 'Hard',   url: '', done: false },
+      { id: 142, name: 'Regular Expression Matching',                         difficulty: 'Hard',   url: '', done: false },
+      { id: 143, name: 'Stone Game',                                          difficulty: 'Medium', url: '', done: false },
     ],
   },
   {
@@ -1036,37 +1193,15 @@ const topics = reactive([
     ],
   },
   {
-    id: 'advanced-graphs',
-    label: 'Advanced Graphs',
-    subtitle: 'Shortest paths and minimum spanning trees',
+    id: 'tries',
+    label: 'Tries',
+    subtitle: 'Prefix trees for string search',
     problems: [
-      { id: 124, name: 'Reconstruct Itinerary',                               difficulty: 'Hard',   url: '', done: false },
-      { id: 125, name: 'Min Cost to Connect All Points',                      difficulty: 'Medium', url: '', done: false },
-      { id: 126, name: 'Network Delay Time',                                  difficulty: 'Medium', url: '', done: false },
-      { id: 127, name: 'Swim in Rising Water',                                difficulty: 'Hard',   url: '', done: false },
-      { id: 128, name: 'Cheapest Flights Within K Stops',                     difficulty: 'Medium', url: '', done: false },
-      { id: 129, name: 'Find the City With the Smallest Number of Neighbors', difficulty: 'Medium', url: '', done: false },
-      { id: 130, name: 'Path with Maximum Probability',                       difficulty: 'Medium', url: '', done: false },
-      { id: 131, name: 'Critical Connections in a Network',                   difficulty: 'Hard',   url: '', done: false },
-    ],
-  },
-  {
-    id: 'dp-2d',
-    label: '2D Dynamic Programming',
-    subtitle: 'Two-dimensional subproblems',
-    problems: [
-      { id: 132, name: 'Unique Paths II',                                     difficulty: 'Medium', url: '', done: false },
-      { id: 133, name: 'Longest Common Subsequence',                          difficulty: 'Medium', url: '', done: false },
-      { id: 134, name: 'Best Time to Buy and Sell Stock with Cooldown',       difficulty: 'Medium', url: '', done: false },
-      { id: 135, name: 'Coin Change II',                                      difficulty: 'Medium', url: '', done: false },
-      { id: 136, name: 'Target Sum',                                          difficulty: 'Medium', url: '', done: false },
-      { id: 137, name: 'Interleaving String',                                 difficulty: 'Hard',   url: '', done: false },
-      { id: 138, name: 'Longest Increasing Path in a Matrix',                 difficulty: 'Hard',   url: '', done: false },
-      { id: 139, name: 'Distinct Subsequences',                               difficulty: 'Hard',   url: '', done: false },
-      { id: 140, name: 'Edit Distance',                                       difficulty: 'Hard',   url: '', done: false },
-      { id: 141, name: 'Burst Balloons',                                      difficulty: 'Hard',   url: '', done: false },
-      { id: 142, name: 'Regular Expression Matching',                         difficulty: 'Hard',   url: '', done: false },
-      { id: 143, name: 'Stone Game',                                          difficulty: 'Medium', url: '', done: false },
+      { id: 101, name: 'Implement Trie (Prefix Tree)',                        difficulty: 'Medium', url: '', done: false },
+      { id: 102, name: 'Design Add and Search Words Data Structure',          difficulty: 'Medium', url: '', done: false },
+      { id: 103, name: 'Word Search II',                                      difficulty: 'Hard',   url: '', done: false },
+      { id: 104, name: 'Replace Words',                                       difficulty: 'Medium', url: '', done: false },
+      { id: 105, name: 'Longest Word in Dictionary',                          difficulty: 'Easy',   url: '', done: false },
     ],
   },
   {
@@ -1100,66 +1235,6 @@ const topics = reactive([
       { id: 160, name: 'Integer to Roman',                                    difficulty: 'Medium', url: '', done: false },
       { id: 161, name: 'Roman to Integer',                                    difficulty: 'Easy',   url: '', done: false },
       { id: 162, name: 'Count Primes',                                        difficulty: 'Medium', url: '', done: false },
-    ],
-  },
-  {
-    id: 'monotonic-stack',
-    label: 'Monotonic Stack',
-    subtitle: 'Maintain a sorted invariant as you scan',
-    problems: [
-      { id: 163, name: 'Next Greater Element II',                             difficulty: 'Medium', url: '', done: false },
-      { id: 164, name: 'Online Stock Span',                                   difficulty: 'Medium', url: '', done: false },
-      { id: 165, name: 'Sum of Subarray Minimums',                            difficulty: 'Medium', url: '', done: false },
-      { id: 166, name: '132 Pattern',                                         difficulty: 'Medium', url: '', done: false },
-      { id: 167, name: 'Remove Duplicate Letters',                            difficulty: 'Medium', url: '', done: false },
-      { id: 168, name: 'Remove K Digits',                                     difficulty: 'Medium', url: '', done: false },
-      { id: 169, name: 'Minimum Cost Tree From Leaf Values',                  difficulty: 'Medium', url: '', done: false },
-      { id: 170, name: 'Maximum Width Ramp',                                  difficulty: 'Medium', url: '', done: false },
-    ],
-  },
-  {
-    id: 'strings',
-    label: 'String Manipulation',
-    subtitle: 'Parse, transform, and match text',
-    problems: [
-      { id: 171, name: 'Valid Palindrome II',                                 difficulty: 'Easy',   url: '', done: false },
-      { id: 172, name: 'Longest Palindromic Subsequence',                     difficulty: 'Medium', url: '', done: false },
-      { id: 173, name: 'Reverse Words in a String',                           difficulty: 'Medium', url: '', done: false },
-      { id: 174, name: 'String to Integer (atoi)',                            difficulty: 'Medium', url: '', done: false },
-      { id: 175, name: 'Count and Say',                                       difficulty: 'Medium', url: '', done: false },
-      { id: 176, name: 'Encode and Decode Strings',                           difficulty: 'Medium', url: '', done: false },
-      { id: 177, name: 'ZigZag Conversion',                                   difficulty: 'Medium', url: '', done: false },
-      { id: 178, name: 'Text Justification',                                  difficulty: 'Hard',   url: '', done: false },
-      { id: 179, name: 'Is Subsequence',                                      difficulty: 'Easy',   url: '', done: false },
-      { id: 180, name: 'Find the Index of the First Occurrence in a String',  difficulty: 'Easy',   url: '', done: false },
-      { id: 181, name: 'Minimum Add to Make Parentheses Valid',               difficulty: 'Medium', url: '', done: false },
-      { id: 182, name: 'Longest Common Prefix',                               difficulty: 'Easy',   url: '', done: false },
-    ],
-  },
-  {
-    id: 'sorting',
-    label: 'Sorting',
-    subtitle: 'Classic and specialized ordering algorithms',
-    problems: [
-      { id: 183, name: 'Sort an Array',                                       difficulty: 'Medium', url: '', done: false },
-      { id: 184, name: 'Merge Sorted Array',                                  difficulty: 'Easy',   url: '', done: false },
-      { id: 185, name: 'H-Index',                                             difficulty: 'Medium', url: '', done: false },
-      { id: 186, name: 'Largest Number',                                      difficulty: 'Medium', url: '', done: false },
-      { id: 187, name: 'Wiggle Sort II',                                      difficulty: 'Medium', url: '', done: false },
-      { id: 188, name: 'Maximum Gap',                                         difficulty: 'Hard',   url: '', done: false },
-    ],
-  },
-  {
-    id: 'prefix-sum',
-    label: 'Prefix Sum',
-    subtitle: 'Precompute range queries in O(1)',
-    problems: [
-      { id: 189, name: 'Running Sum of 1d Array',                             difficulty: 'Easy',   url: '', done: false },
-      { id: 190, name: 'Range Sum Query - Immutable',                         difficulty: 'Easy',   url: '', done: false },
-      { id: 191, name: 'Contiguous Array',                                    difficulty: 'Medium', url: '', done: false },
-      { id: 192, name: 'Find Pivot Index',                                    difficulty: 'Easy',   url: '', done: false },
-      { id: 193, name: 'Maximum Subarray Sum with One Deletion',              difficulty: 'Medium', url: '', done: false },
-      { id: 194, name: 'Count of Range Sum',                                  difficulty: 'Hard',   url: '', done: false },
     ],
   },
 ])

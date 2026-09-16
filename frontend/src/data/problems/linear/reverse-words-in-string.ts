@@ -8,8 +8,10 @@ export default {
     { input: 's = "  hello world  "', output: '"world hello"', explanation: 'Leading/trailing spaces removed.' },
   ],
   constraints: ['1 ≤ s.length ≤ 10⁴', 's contains English letters, digits, or spaces', 'At least one word exists'],
-  starterCode: `def reverse_words(s):
-  pass`,
+  starterCode: `class Solution:
+    def reverse_words(self, s):
+        pass`,
+  runnerSetup: 'reverse_words = Solution().reverse_words',
   functionName: 'reverse_words',
   conceptId: 'strings',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Extra spaces', args: ['  hello world  '], expected: 'world hello' },
     { label: 'Single word', args: ['a'], expected: 'a' },
   ],
-  bruteHint: 'Describe splitting on spaces and manually re-joining the words, and note the extra passes or extra space it costs',
-  optimizeHint: 'Name the in-place technique that reverses the whole string first, then reverses each word, using O(1) extra space',
+  bruteHint: 'One brute-force approach walks the string character by character, manually collecting each word by hand instead of using split/join helpers, then builds the reversed result by repeatedly concatenating words onto a new string. Each concatenation onto an immutable string creates a fresh copy, so rebuilding across all words can cost O(n²) time in the worst case. Why does repeatedly prepending onto a string get more expensive as the input grows, and how might you avoid paying that cost over and over?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'output-word-order',
-      question: 'The output reverses word order, not character order. What must you preserve?',
+      question: 'Knowing exactly what a transformation must preserve tells you which parts of the structure you can safely rearrange. The output reverses word order, not character order. What must you preserve?',
+      highlight: { location: 'description', text: 'reverse the order of the words' },
       options: [
         { label: 'The original character positions', isCorrect: false, feedback: 'Character positions change entirely when words are reversed. What must stay intact is each word\'s internal letter order — "sky" must remain "sky", not "yks".' },
         { label: 'Each word\'s internal character order', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'whitespace-normalization',
-      question: '"No leading/trailing spaces and only single spaces between words." What does this require you to handle?',
+      question: 'Reading the exact output format tells you what cleanup logic is actually required. "No leading/trailing spaces and only single spaces between words." What does this require you to handle?',
+      highlight: { location: 'description', text: 'no leading/trailing spaces and only single spaces between words.' },
       options: [
         { label: 'Only trim the final output string', isCorrect: false, feedback: 'Trimming handles leading/trailing spaces, but does not collapse multiple spaces between words into one. Both problems must be handled.' },
         { label: 'Strip and split on any whitespace, then rejoin with single spaces', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'at-least-one-word',
-      question: '"At least one word exists." What edge case does this guarantee eliminate?',
+      question: 'Guarantees in the constraints often rule out entire edge-case branches you would otherwise have to handle. "At least one word exists." What edge case does this guarantee eliminate?',
+      highlight: { location: 'constraint', text: 'At least one word exists' },
       options: [
         { label: 'You do not need to handle empty words', isCorrect: false, feedback: 'Empty words are an artifact of splitting on spaces, not an independent input case. The guarantee is about whether the input can yield zero words after splitting.' },
         { label: 'You do not need to handle an all-spaces input', isCorrect: true },
@@ -66,4 +71,11 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def reverse_words(self, s):
+        words = s.split()
+        return ' '.join(reversed(words))`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Python\'s no-argument <code>.split()</code> already collapses runs of whitespace and drops leading/trailing spaces — a plain <code>.split(\' \')</code> would instead leave empty-string "words" wherever spaces run together, which then have to be filtered out separately.',
+  solutionExplanation: 'Splitting on whitespace isolates the words themselves regardless of how much space separates them, sidestepping the leading/trailing/multiple-space cleanup entirely rather than handling it as a special case. Reversing that list of words and joining with single spaces produces the required output directly, since the problem only asks for the order of *words* to flip, not anything about individual characters within them.',
 }

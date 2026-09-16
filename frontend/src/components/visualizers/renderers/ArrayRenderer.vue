@@ -25,7 +25,7 @@ function cellClass(i: number): string {
 
 function pointerCircleClass(i: number): string {
   const kind = props.frame.highlights[i] ?? 'default'
-  const base = 'w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center text-[9px] font-bold leading-none transition-colors duration-200'
+  const base = 'w-[18px] h-[18px] rounded-lg border-[1.5px] flex items-center justify-center text-[9px] font-bold leading-none transition-colors duration-200'
   if (kind === 'match')  return `${base} border-green text-green bg-green-bg`
   if (kind === 'active' || kind === 'window') return `${base} border-accent text-accent bg-[rgba(74,124,247,0.07)]`
   return `${base} border-text/30 text-text/50`

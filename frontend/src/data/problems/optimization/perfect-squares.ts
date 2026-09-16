@@ -8,8 +8,10 @@ export default {
     { input: 'n = 13', output: '2', explanation: '13 = 4 + 9.' },
   ],
   constraints: ['1 ≤ n ≤ 10⁴'],
-  starterCode: `def num_squares(n):
-  pass`,
+  starterCode: `class Solution:
+    def num_squares(self, n):
+        pass`,
+  runnerSetup: 'num_squares = Solution().num_squares',
   functionName: 'num_squares',
   conceptId: 'dp-1d',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Perfect square', args: [4], expected: 1 },
     { label: 'n=1', args: [1], expected: 1 },
   ],
-  bruteHint: 'Describe the naive recursion that tries every perfect square ≤ n as the first term and recurses on the remainder, and why it recomputes the same remaining values repeatedly',
-  optimizeHint: 'Name the technique that caches the minimum count for each value from 0 up to n so each value is computed only once',
+  bruteHint: 'The brute-force approach recursively tries every perfect square k² ≤ n as the first term of the sum, then recurses on the remainder n - k², taking the best result over all valid choices of k. Because different orderings of the same squares lead back to the same remaining value, the recursion revisits the same remainder from many different call paths, giving exponential time in the worst case. If the same remaining value n - k² keeps getting solved again and again independently, what technique would let you compute its answer once and look it up thereafter?',
+  optimizeComplexity: { time: 'O(n·√n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 10⁴ tells you…',
+      question: 'Constraint bounds are often the strongest hint toward the required time complexity, since they tell you exactly how much computation is actually affordable. n ≤ 10⁴ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 10⁴' },
       options: [
         { label: 'O(n × √n) is acceptable', isCorrect: true },
         { label: 'O(n²) is too slow', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations — borderline but typically acceptable. The natural DP is O(n × √n) ≈ 10,000 × 100 = 1 million operations, which is clearly fast.' },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'optimal-substructure',
-      question: 'dp[n] = minimum squares summing to n. What is the recurrence?',
+      question: 'Once you know what quantity you\'re minimizing, the recurrence usually falls out of asking how the last piece of the optimal solution was chosen. dp[n] = minimum squares summing to n. What is the recurrence?',
+      highlight: { location: 'description', text: 'minimum number of perfect squares' },
       options: [
         { label: 'dp[n] = dp[n-1] + 1 always', isCorrect: false, feedback: 'dp[n] = dp[n-1] + 1 would always use 1 as the square, giving n for any input. But 12 = 4+4+4 uses only 3 squares. You need to try all perfect squares ≤ n.' },
         { label: 'dp[n] = 1 + min(dp[n - k²]) for all k where k² ≤ n', isCorrect: true },
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'base-case',
-      question: 'dp[0] = 0 is the base case. Why?',
+      question: 'Every DP recurrence needs an anchor value that requires no further reduction, and getting that anchor wrong breaks every computation built on top of it. dp[0] = 0 is the base case. Why?',
       options: [
         { label: 'Because 0 is a perfect square', isCorrect: false, feedback: '0 is sometimes considered a perfect square (0²=0), but that\'s not why dp[0]=0. The base case means: to form a sum of 0, you need 0 perfect squares — you don\'t select anything.' },
         { label: 'Because forming sum 0 requires zero squares', isCorrect: true },
@@ -67,4 +71,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def num_squares(self, n):
+        dp = [0] * (n + 1)
+        for i in range(1, n + 1):
+            best = float('inf')
+            k = 1
+            while k * k <= i:
+                best = min(best, dp[i - k * k] + 1)
+                k += 1
+            dp[i] = best
+        return dp[n]`,
+  solutionComplexity: { time: 'O(n · √n)', space: 'O(n)' },
+  solutionCaveat: '<code>dp[0] = 0</code> is what makes <code>dp[k²] = 1 + dp[0] = 1</code> correct for every perfect square — without a zero anchor, the recurrence would have nothing valid to add the first square onto.',
+  solutionExplanation: 'Trying every perfect square <code>k²</code> that fits within <code>i</code> and taking <code>1 + dp[i - k²]</code> considers "what if this was the last square used," and the minimum over all such choices of <code>k</code> is provably optimal, since any valid decomposition of <code>i</code> must end with some perfect square. Building the table bottom-up from 0 guarantees <code>dp[i - k²]</code> is always already computed by the time <code>dp[i]</code> needs it.',
 }

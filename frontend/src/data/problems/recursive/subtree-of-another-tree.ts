@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def is_subtree(root, sub_root):
-  pass`,
+class Solution:
+    def is_subtree(self, root, sub_root):
+        pass`,
   functionName: 'is_subtree_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def is_subtree_run(root, sub):
-  return is_subtree(_build(root), _build(sub))`,
+  return Solution().is_subtree(_build(root), _build(sub))`,
   testCases: [
     { label: 'is subtree', args: [[3,4,5,1,2],[4,1,2]], expected: true },
     { label: 'not subtree', args: [[3,4,5,1,2,null,null,null,null,0],[4,1,2]], expected: false },
   ],
-  bruteHint: 'Describe comparing subRoot against the tree rooted at every node of root using a same-tree check, and name the resulting time complexity in terms of both tree sizes',
-  optimizeHint: 'Name the technique that serializes both trees (with null markers) into strings or hashes so the subtree check becomes a single substring or hash lookup',
+  bruteHint: 'A brute-force approach visits every node in root and, at each one, runs a full same-tree comparison to check whether the structure and values match subRoot exactly from that point down. Since you may attempt this comparison at each of root\'s m nodes, and each comparison can walk up to n nodes of subRoot, this runs in O(m · n) time. That already fits comfortably within the given size bounds — what would make an individual same-tree comparison stop early once it finds a mismatch?',
+  optimizeComplexity: { time: 'O(m · n)', space: 'O(h)' },
   clues: [
     {
       id: 'constraint-two-sizes',
-      question: 'root has up to 2000 nodes; subRoot has up to 1000. What does this suggest about worst-case complexity?',
+      highlight: { location: 'constraint', text: 'The number of nodes in root is in [1, 2000]' },
+      question: 'Size constraints reveal what time complexity the problem expects you to tolerate, and where a naive approach might start to strain. root has up to 2000 nodes; subRoot has up to 1000. What does this suggest about worst-case complexity?',
       options: [
         { label: 'O(root + subRoot) — one pass each', isCorrect: false, feedback: 'A single pass through each tree only visits each node once, giving you the values but not the structural comparison. At every node in root you need to check if the entire subRoot matches from there.' },
         { label: 'O(root × subRoot) — compare at each node', isCorrect: true },
@@ -57,7 +59,8 @@ def is_subtree_run(root, sub):
     },
     {
       id: 'output-boolean-subtree',
-      question: 'The output is a single boolean. What does the word "there is a subtree" tell you about when to stop?',
+      highlight: { location: 'description', text: 'there is a subtree' },
+      question: 'The description\'s exact wording about what must be found tells you when it is safe to stop searching instead of exhaustively checking everything. The output is a single boolean. What does the word "there is a subtree" tell you about when to stop?',
       options: [
         { label: 'Check every node in root before returning', isCorrect: false, feedback: 'Checking every node wastes work after you find a match. Since only one matching subtree is needed, you can return true the moment you find it.' },
         { label: 'Return true as soon as one match is found', isCorrect: true },
@@ -72,7 +75,7 @@ def is_subtree_run(root, sub):
     },
     {
       id: 'two-recursive-functions',
-      question: 'You need to check whether subRoot appears anywhere in root. What does this suggest about the structure of your solution?',
+      question: 'Recognizing when a problem quietly bundles two different questions together helps you avoid conflating separate concerns into a single overloaded function. You need to check whether subRoot appears anywhere in root. What does this suggest about the structure of your solution?',
       options: [
         { label: 'One recursive function handles both tasks', isCorrect: false, feedback: 'Combining both tasks in one function conflates two different questions: "does the whole match start here?" and "should I search deeper?" Mixing them leads to incorrect early returns.' },
         { label: 'Two functions: one to search, one to compare', isCorrect: true },
@@ -86,4 +89,24 @@ def is_subtree_run(root, sub):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_subtree(self, root, sub_root):
+        def same(a, b):
+            if not a and not b:
+                return True
+            if not a or not b:
+                return False
+            return a.val == b.val and same(a.left, b.left) and same(a.right, b.right)
+
+        def dfs(node):
+            if not node:
+                return False
+            if same(node, sub_root):
+                return True
+            return dfs(node.left) or dfs(node.right)
+
+        return dfs(root)`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(h)' },
+  solutionCaveat: 'Two separate recursive functions handle two distinct questions — <code>same</code> asks "does <code>subRoot</code> match exactly starting here?" while <code>dfs</code> asks "where in <code>root</code> should that check even be tried?" — merging them into one function would conflate "no match at this candidate" with "stop searching entirely," breaking the search before it explores other candidate positions.',
+  solutionExplanation: '<code>dfs</code> visits every node of <code>root</code> as a candidate attachment point and, at each one, calls <code>same</code> to run a full structural-and-value comparison against <code>sub_root</code> — since "there is a subtree" only requires existence, not enumeration, the search returns true the instant any candidate succeeds, short-circuiting through the <code>or</code> in both <code>dfs</code>\'s recursive calls and <code>same</code>\'s conjunctive checks. Running this comparison at each of <code>root</code>\'s up to 2000 nodes, each costing up to O(<code>sub_root</code>\'s size) in the worst case, gives the O(m · n) bound — well within what the given constraints allow.',
 }

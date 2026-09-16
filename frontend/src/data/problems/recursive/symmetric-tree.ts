@@ -8,21 +8,44 @@ export default {
     { input: 'root = [1,2,2,null,3,null,3]', output: 'false' },
   ],
   constraints: ['1 ≤ number of nodes ≤ 1000', '-100 ≤ Node.val ≤ 100'],
-  starterCode: `def is_symmetric(root):
-  pass`,
-  functionName: 'is_symmetric',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def is_symmetric(self, root):
+        pass`,
+  functionName: 'is_symmetric_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def is_symmetric_run(arr):
+  return Solution().is_symmetric(_build(arr))`,
   testCases: [
     { label: 'Symmetric', args: [[1,2,2,3,4,4,3]], expected: true },
     { label: 'Not symmetric', args: [[1,2,2,null,3,null,3]], expected: false },
     { label: 'Single node', args: [[1]], expected: true },
   ],
-  bruteHint: 'Describe collecting the left subtree and the right subtree into separate traversal lists (one mirrored) and comparing the two lists afterward',
-  optimizeHint: 'Name the technique that recursively compares two mirrored subtrees node by node, pairing outer and inner children, and short-circuits on the first mismatch',
+  bruteHint: 'The brute-force approach collects the left subtree into one traversal list and the right subtree into another, traversing the right side in mirrored order, then compares the two flattened lists for equality afterward. Building and comparing both lists takes O(n) time and O(n) space, but flattening discards structural information — you would need to encode nulls explicitly in each list to keep the comparison safe. Why compare flattened lists at all when you could compare the tree structure directly as you traverse it?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'mirror-definition',
-      question: '"Mirror of itself" means left and right subtrees reflect each other. What comparison does this require?',
+      highlight: { location: 'description', text: 'mirror of itself' },
+      question: 'The problem\'s core definition often directly names the comparison your algorithm must perform. "Mirror of itself" means left and right subtrees reflect each other. What comparison does this require?',
       options: [
         { label: 'Compare left subtree to itself', isCorrect: false, feedback: 'Comparing a subtree to itself always returns true — that tests nothing about symmetry. The mirror check requires pairing the left subtree against the right.' },
         { label: 'Compare left subtree against right subtree', isCorrect: true },
@@ -37,7 +60,7 @@ export default {
     },
     {
       id: 'output-boolean',
-      question: 'The output is a boolean. What does this let you do the moment you find a mismatch?',
+      question: 'A function\'s return type constrains how eagerly you can stop computing once the answer is already determined. The output is a boolean. What does this let you do the moment you find a mismatch?',
       options: [
         { label: 'Collect all mismatches, then return false', isCorrect: false, feedback: 'Collecting mismatches returns more than needed. A single mismatch is enough to prove asymmetry — there is no value in finding additional ones.' },
         { label: 'Return false immediately and stop recursing', isCorrect: true },
@@ -52,7 +75,7 @@ export default {
     },
     {
       id: 'recursive-mirror-children',
-      question: 'When comparing two mirror nodes, you check their values. Then what must you check about their children?',
+      question: 'Once you know what comparison to perform, you still need to know exactly which parts of the structure that comparison must recurse into. When comparing two mirror nodes, you check their values. Then what must you check about their children?',
       options: [
         { label: 'Left child of left vs left child of right', isCorrect: false, feedback: 'Comparing same-side children checks whether both subtrees look identical, not whether they mirror each other. Mirroring means the inner children pair together and the outer children pair together.' },
         { label: 'Outer children pair and inner children pair', isCorrect: true },
@@ -67,7 +90,7 @@ export default {
     },
     {
       id: 'base-case-nulls',
-      question: 'When comparing a mirror pair, what are the two null-based base cases you must handle first?',
+      question: 'Recursive solutions live or die on their base cases — get those wrong and no amount of correct recursive logic will save you. When comparing a mirror pair, what are the two null-based base cases you must handle first?',
       options: [
         { label: 'Both null → true; both non-null → recurse', isCorrect: false, feedback: 'This misses the critical failure case: one node is null and the other is not. That structural mismatch must return false before you attempt to read node values.' },
         { label: 'Both null → true; exactly one null → false', isCorrect: true },
@@ -81,4 +104,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_symmetric(self, root):
+        def mirror(a, b):
+            if not a and not b:
+                return True
+            if not a or not b:
+                return False
+            return a.val == b.val and mirror(a.left, b.right) and mirror(a.right, b.left)
+
+        return mirror(root, root)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: '<code>mirror</code> pairs <code>a.left</code> against <code>b.right</code> (the outer pair) and <code>a.right</code> against <code>b.left</code> (the inner pair) — pairing same-side children instead would check whether the two subtrees are identical copies of each other, not whether they\'re mirror images.',
+  solutionExplanation: 'Calling <code>mirror(root, root)</code> naturally sets up the very first comparison as <code>root.left</code> against <code>root.right</code>, which is exactly the top-level symmetry check, and every deeper recursive call continues pairing nodes in that same crossed (outer/inner) pattern all the way down. The two null-handling base cases — both null is a symmetric match, exactly one null is a definitive mismatch — are what let the <code>and</code> chain short-circuit and return false the instant any single mirror pair fails, without needing to inspect the rest of either subtree.',
 }

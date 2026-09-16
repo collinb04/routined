@@ -2,7 +2,7 @@ import type { UnionFindFrame, CellKind } from '@/composables/types'
 
 export function generateUnionFindOps(): UnionFindFrame[] {
   function frame(
-    step: number, phase: string, message: string,
+    step: number, phase: 'init' | 'compare' | 'update' | 'done', message: string,
     parent: number[], active: number[],
   ): UnionFindFrame {
     const highlights: Record<number, CellKind> = {}

@@ -7,20 +7,23 @@ export default {
     { input: 'n=4, connections=[[0,1],[1,2],[2,0],[1,3]]', output: '[[1,3]]', explanation: 'Removing [1,3] disconnects server 3.' },
   ],
   constraints: ['2 ≤ n ≤ 10⁵', 'n−1 ≤ connections.length ≤ 10⁵', 'No repeated connections'],
-  starterCode: `def critical_connections(n, connections):
-  pass`,
+  starterCode: `class Solution:
+    def critical_connections(self, n, connections):
+        pass`,
+  runnerSetup: 'critical_connections = Solution().critical_connections',
   functionName: 'critical_connections',
-  conceptId: 'advanced-graphs',
+  conceptId: 'bfs-dfs',
   testCases: [
     { label: 'One bridge', args: [4,[[0,1],[1,2],[2,0],[1,3]]], expected: [[1,3]] },
     { label: 'All bridges', args: [3,[[0,1],[1,2]]], expected: [[0,1],[1,2]] },
   ],
-  bruteHint: 'Describe removing each connection one at a time and re-running a full connectivity check, and why that is too slow here',
-  optimizeHint: 'Name the single-pass DFS algorithm that finds every bridge using discovery times and low-link values',
+  bruteHint: 'A brute-force approach removes each connection one at a time, then re-runs a full connectivity check (a traversal or Union-Find scan) to see whether the network split apart. With up to 10^5 connections and each check costing O(n + E), the total comes to roughly O(E * (n + E)) operations — on the order of 10^10, far too slow. Is there a way to discover every bridge in a single traversal instead of testing each edge in isolation?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V + E)' },
   clues: [
     {
       id: 'bridge-definition',
-      question: 'A critical connection is one whose removal disconnects the network. What property makes an edge a bridge?',
+      question: 'Precisely defining the property you are searching for is the first step before choosing how to detect it efficiently. A critical connection is one whose removal disconnects the network. What property makes an edge a bridge?',
+      highlight: { location: 'description', text: 'a critical connection (bridge) is one whose removal disconnects the network.' },
       options: [
         { label: 'It is the longest edge in the graph', isCorrect: false, feedback: 'Edge length is not defined here — connections are unweighted. A bridge is defined by connectivity: it is the only path between the two subgraphs it joins.' },
         { label: 'It is not part of any cycle', isCorrect: true },
@@ -35,11 +38,12 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 10⁵ nodes and up to 10⁵ edges. What does this rule out?',
+      question: 'Input bounds tell you immediately whether a naive re-check-everything approach can survive, or whether you need an algorithm that solves the problem in a single pass. n ≤ 10⁵ nodes and up to 10⁵ edges. What does this rule out?',
+      highlight: { location: 'constraint', text: '2 ≤ n ≤ 10⁵' },
       options: [
-        { label: 'O(n + E) DFS — too slow for 10⁵ nodes', isCorrect: false, feedback: 'O(n + E) is the ideal complexity here. With n = E = 10⁵, that\'s 200,000 operations — exactly what Tarjan\'s algorithm achieves in a single DFS pass.' },
+        { label: 'O(n + E) traversal — too slow for 10⁵ nodes', isCorrect: false, feedback: 'O(n + E) is the ideal complexity here. With n = E = 10⁵, that\'s 200,000 operations — exactly what Tarjan\'s algorithm achieves in a single DFS pass.' },
         { label: 'Removing each edge and re-running connectivity checks', isCorrect: true },
-        { label: 'Using a visited array during DFS', isCorrect: false, feedback: 'A visited array is O(n) space and O(1) per lookup — no problem at 10⁵ nodes. It\'s a standard component of Tarjan\'s algorithm.' },
+        { label: 'Using a visited array during traversal', isCorrect: false, feedback: 'A visited array is O(n) space and O(1) per lookup — no problem at 10⁵ nodes. It\'s a standard component of Tarjan\'s algorithm.' },
         { label: 'An adjacency list representation', isCorrect: false, feedback: 'An adjacency list is O(n + E) space — fine at 10⁵ nodes and edges. An adjacency matrix would be O(n²) = 10¹⁰ bits, which is the problematic choice.' },
       ],
       correctFeedback: 'Brute force — remove each of E edges and re-run an O(n + E) connectivity check — costs O(E · (n + E)) ≈ 10¹⁰ operations. You need an algorithm that finds all bridges in a single O(n + E) pass.',
@@ -50,7 +54,7 @@ export default {
     },
     {
       id: 'low-link-signal',
-      question: 'Tarjan\'s algorithm assigns each node a discovery time and a "low" value — the earliest discovery time reachable via back edges. What does it mean when low[v] > disc[u] for edge (u, v)?',
+      question: 'Understanding what a derived per-node value actually represents is what lets a single DFS pass double as a bridge-detection test. Tarjan\'s algorithm assigns each node a discovery time and a "low" value — the earliest discovery time reachable via back edges. What does it mean when low[v] > disc[u] for edge (u, v)?',
       options: [
         { label: 'v was discovered before u', isCorrect: false, feedback: 'If v were discovered before u, disc[v] < disc[u], and the edge would be a back edge pointing to an ancestor — not a tree edge. Tarjan\'s checks tree edges, not back edges, for the bridge condition.' },
         { label: 'There is no back edge from v\'s subtree reaching u or higher', isCorrect: true },
@@ -65,7 +69,7 @@ export default {
     },
     {
       id: 'parent-edge-skip',
-      question: 'During DFS on an undirected graph, when computing low[v] you skip the edge back to v\'s parent. Why?',
+      question: 'Special-casing the edge you just arrived on is often necessary to keep a traversal from misreading its own bookkeeping. During DFS on an undirected graph, when computing low[v] you skip the edge back to v\'s parent. Why?',
       options: [
         { label: 'The parent edge has already been marked as a bridge', isCorrect: false, feedback: 'Whether the parent edge is a bridge is determined after processing v, not before. The skip is about preventing a false "back edge" signal, not about prior bridge marking.' },
         { label: 'The undirected edge to parent looks like a back edge but isn\'t one', isCorrect: true },
@@ -79,4 +83,35 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def critical_connections(self, n, connections):
+        adj = [[] for _ in range(n)]
+        for u, v in connections:
+            adj[u].append(v)
+            adj[v].append(u)
+
+        disc = [-1] * n
+        low = [-1] * n
+        bridges = []
+        timer = [0]
+
+        def dfs(node, parent):
+            disc[node] = low[node] = timer[0]
+            timer[0] += 1
+            for nbr in adj[node]:
+                if nbr == parent:
+                    continue
+                if disc[nbr] == -1:
+                    dfs(nbr, node)
+                    low[node] = min(low[node], low[nbr])
+                    if low[nbr] > disc[node]:
+                        bridges.append(sorted([node, nbr]))
+                else:
+                    low[node] = min(low[node], disc[nbr])
+
+        dfs(0, -1)
+        return sorted(bridges)`,
+  solutionComplexity: { time: 'O(V + E)', space: 'O(V + E)' },
+  solutionCaveat: 'Sorting the final bridge list (and each pair within it) has nothing to do with correctness — Tarjan\'s algorithm finds every bridge regardless of order — it just normalizes the output into one canonical order, since "any valid order" answers still need a single fixed representation to compare against.',
+  solutionExplanation: 'A tree edge <code>(u, v)</code> is a bridge exactly when <code>v</code>\'s subtree has no back edge reaching <code>u</code> or anything discovered before <code>u</code> — tracked by comparing <code>low[v]</code>, the earliest discovery time reachable from <code>v</code>\'s subtree via any back edge, against <code>disc[u]</code>. Skipping the immediate parent when scanning neighbors is essential in an undirected graph, since without it the single tree edge back to the parent would be mistaken for a back edge to an ancestor, making every edge in the graph look non-bridging.',
 }

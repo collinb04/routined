@@ -8,8 +8,10 @@ export default {
     { input: 'n = 5', output: '[0,1,1,2,1,2]', explanation: '0→0, 1→1, 2→1, 3→2, 4→1, 5→2.' },
   ],
   constraints: ['0 ≤ n ≤ 10⁵', 'Must solve in O(n) time and O(1) extra space (excluding output)'],
-  starterCode: `def count_bits(n):
-  pass`,
+  starterCode: `class Solution:
+    def count_bits(self, n):
+        pass`,
+  runnerSetup: 'count_bits = Solution().count_bits',
   functionName: 'count_bits',
   conceptId: 'bit-manipulation',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'n=0', args: [0], expected: [0] },
     { label: 'n=4', args: [4], expected: [0,1,1,2,1] },
   ],
-  bruteHint: 'Describe computing each number\'s bit count from scratch, and its time complexity',
-  optimizeHint: 'Name the recurrence that lets each entry reuse an already-computed smaller result',
+  bruteHint: 'The brute-force approach recomputes the bit count of each number from 0 to n independently, inspecting its bits one at a time until none remain. Since numbers up to n can have up to log n bits, checking all n + 1 values this way costs O(n log n) time overall. That\'s correct but redundant — every number\'s bits overlap heavily with a smaller number\'s bits. What earlier, already-computed result might a given number\'s bit count be built from?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'The constraint says O(n) time and O(1) extra space. What does this rule out?',
+      question: 'Problem constraints often tell you which approaches are fast enough before you write a line of code. The constraint says O(n) time and O(1) extra space. What does this rule out?',
+      highlight: { location: 'constraint', text: 'Must solve in O(n) time and O(1) extra space (excluding output)' },
       options: [
         { label: 'Counting bits fresh for each number', isCorrect: false, feedback: 'Counting bits for every number from scratch takes O(n log n) — each number up to n has up to log n bits. The O(n) requirement rules that out.' },
         { label: 'Reusing previously computed bit counts', isCorrect: true },
@@ -38,12 +41,13 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'The output is an array of length n + 1, with ans[i] = bit count of i. What does this structure suggest?',
+      question: 'The shape of the expected output often hints at how you should build up your answer. The output is an array of length n + 1, with ans[i] = bit count of i. What does this structure suggest?',
+      highlight: { location: 'description', text: 'an array <code>ans</code> of length <code>n + 1</code>' },
       options: [
         { label: 'Sort numbers by their bit count', isCorrect: false, feedback: 'Sorting would destroy the index relationship — ans[i] must correspond to i. The array structure is precisely preserving that index.' },
         { label: 'Compute each value independently', isCorrect: false, feedback: 'Independence would require O(n log n) total work, violating the O(n) constraint. The array is there so each entry can reference earlier entries.' },
         { label: 'Build results iteratively, referencing earlier entries', isCorrect: true },
-        { label: 'Use a hash map from number to bit count', isCorrect: false, feedback: 'A hash map would use O(n) extra space, violating the O(1) constraint. The output array itself is the storage — you can index into it directly.' },
+        { label: 'Keep counts in a separate lookup keyed by each number', isCorrect: false, feedback: 'A hash map would use O(n) extra space, violating the O(1) constraint. The output array itself is the storage — you can index into it directly.' },
       ],
       correctFeedback: 'ans[i] is already computed before you need ans[i+1]. The array is both output and lookup table — each new entry can reuse an earlier one in O(1).',
       wrongFeedback: [
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'bit-relationship',
-      question: 'Consider how i and i >> 1 (i right-shifted by one) relate in binary. What does this reveal?',
+      question: 'Spotting a mathematical relationship between related values can reveal a reusable recurrence. Consider how i and i >> 1 (i right-shifted by one) relate in binary. What does this reveal?',
       options: [
         { label: 'i >> 1 always has one more 1-bit', isCorrect: false, feedback: 'Right-shifting removes the least-significant bit, so i >> 1 has at most the same number of 1-bits as i, never more.' },
         { label: 'i >> 1 has exactly the same 1-bits as i', isCorrect: false, feedback: 'Right-shifting drops the least-significant bit, which may or may not be a 1. The counts can differ by 0 or 1.' },
@@ -68,7 +72,8 @@ export default {
     },
     {
       id: 'base-case',
-      question: 'The range starts at 0. What is ans[0], and why does it matter?',
+      question: 'Boundary values matter because a recurrence needs a solid starting point to build from. The range starts at 0. What is ans[0], and why does it matter?',
+      highlight: { location: 'constraint', text: '0 ≤ n ≤ 10⁵' },
       options: [
         { label: 'ans[0] = 1, since 0 is a valid number', isCorrect: false, feedback: '0 in binary is all zeros — it has no 1-bits. ans[0] = 0, not 1.' },
         { label: 'ans[0] = 0; the recurrence builds from here', isCorrect: true },
@@ -82,4 +87,13 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def count_bits(self, n):
+        ans = [0] * (n + 1)
+        for i in range(1, n + 1):
+            ans[i] = ans[i >> 1] + (i & 1)
+        return ans`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: '<code>i &gt;&gt; 1</code> is always strictly less than <code>i</code>, so <code>ans[i >> 1]</code> is guaranteed to already be filled in by the time index <code>i</code> is reached — the recurrence only ever looks backward.',
+  solutionExplanation: 'Shifting <code>i</code> right by one bit drops its lowest bit and halves the rest, so <code>i</code>\'s bit count is exactly the bit count of <code>i >> 1</code> plus whatever that dropped lowest bit contributed (0 or 1, given by <code>i & 1</code>). Since <code>i >> 1</code> is always a smaller number already computed earlier in the same pass, each entry is built in O(1) from a previous entry instead of being counted from scratch.',
 }

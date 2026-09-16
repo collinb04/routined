@@ -7,19 +7,51 @@ export default {
     { input: 'root=[5,3,6,2,4,null,7], key=3', output: '[5,4,6,2,null,null,7]', explanation: 'Replace 3 with its inorder successor 4.' },
   ],
   constraints: ['0 ≤ BST nodes ≤ 10⁴', '-10⁵ ≤ Node.val ≤ 10⁵', 'Each node is unique; key is guaranteed to exist'],
-  starterCode: `def delete_node(root, key):
-  pass`,
-  functionName: 'delete_node',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def delete_node(self, root, key):
+        pass`,
+  functionName: 'delete_node_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def _level(root):
+  if not root: return []
+  q = deque([root]); res = []
+  while q:
+      node = q.popleft()
+      if node: res.append(node.val); q.append(node.left); q.append(node.right)
+      else: res.append(None)
+  while res and res[-1] is None: res.pop()
+  return res
+def delete_node_run(arr, key):
+  return _level(Solution().delete_node(_build(arr), key))`,
   testCases: [
     { label: 'Delete leaf', args: [[5,3,6,2,4,null,7],2], expected: [5,3,6,null,4,null,7] },
   ],
-  bruteHint: 'Describe searching for the key by checking every node in the tree instead of using the BST\'s ordering to decide which way to go at each step',
-  optimizeHint: 'Name the property of a BST that lets you discard half the remaining tree at each node while searching for the key',
+  bruteHint: 'A brute-force search would scan every node in the tree, via BFS or DFS, checking each one\'s value against the key and ignoring the fact that this is a BST at all. That costs O(n) time just to locate the node, even though the tree\'s ordering property could tell you which subtree to descend into at every step. With up to 10⁴ nodes, why pay for a full scan when each comparison could eliminate half of what remains?',
+  optimizeComplexity: { time: 'O(h)', space: 'O(h)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'The BST has up to 10⁴ nodes. What does this tell you about acceptable complexity?',
+      highlight: { location: 'constraint', text: '0 ≤ BST nodes ≤ 10⁴' },
+      question: 'Constraints on input size are a direct signal for how efficient your traversal needs to be. The BST has up to 10⁴ nodes. What does this tell you about acceptable complexity?',
       options: [
         { label: 'O(n) traversal of all nodes required', isCorrect: false, feedback: 'A BST lets you discard half the remaining tree at each step — you never need to visit all 10⁴ nodes to find the key.' },
         { label: 'O(n²) is fine at this size', isCorrect: false, feedback: 'O(n²) at n = 10,000 is 100 million operations. Even if that squeaks by, a BST search path is O(h) — you can do far better.' },
@@ -34,7 +66,8 @@ export default {
     },
     {
       id: 'bst-search-direction',
-      question: '"Each node is unique; key is guaranteed to exist." What does the BST ordering property let you do?',
+      highlight: { location: 'constraint', text: 'Each node is unique; key is guaranteed to exist' },
+      question: 'Guarantees stated in the constraints, like uniqueness or existence, let you skip defensive checks and lean fully on the data structure\'s ordering property. "Each node is unique; key is guaranteed to exist." What does the BST ordering property let you do?',
       options: [
         { label: 'Navigate directly to the key node', isCorrect: true },
         { label: 'Scan left subtree only', isCorrect: false, feedback: 'The key could be anywhere. The BST property tells you which direction to go at each node — left or right — not that it is always on one side.' },
@@ -49,7 +82,7 @@ export default {
     },
     {
       id: 'deletion-cases',
-      question: 'When you find the node to delete, the output example shows replacing 3 with its inorder successor 4. What signals that you need to handle multiple deletion cases?',
+      question: 'A worked example that shows a specific transformation is often hinting at a structural case your algorithm must handle explicitly. When you find the node to delete, the output example shows replacing 3 with its inorder successor 4. What signals that you need to handle multiple deletion cases?',
       options: [
         { label: 'The node may have 0, 1, or 2 children', isCorrect: true },
         { label: 'The tree may be unbalanced', isCorrect: false, feedback: 'Balance affects performance but not the logic of deletion. The three cases — leaf, one child, two children — exist regardless of whether the tree is balanced.' },
@@ -64,7 +97,8 @@ export default {
     },
     {
       id: 'return-root',
-      question: 'The function signature is delete_node(root, key) and returns the root. Why return the root rather than modifying in place?',
+      highlight: { location: 'description', text: 'return the root of the updated tree' },
+      question: 'A function\'s return type is a contract, and when a problem insists you return something that seems redundant, it is usually because a specific edge case demands it. The function signature is delete_node(root, key) and returns the root. Why return the root rather than modifying in place?',
       options: [
         { label: 'In case the deleted node is the root itself', isCorrect: true },
         { label: 'To make the function pure for testing', isCorrect: false, feedback: 'Testing convenience is not the reason. The concrete structural issue is that if the root is deleted, the caller needs to receive the new root — a reference it cannot get any other way.' },
@@ -78,4 +112,32 @@ export default {
       ],
     },
   ],
+  solutionCode: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def delete_node(self, root, key):
+        if not root:
+            return None
+        if key < root.val:
+            root.left = self.delete_node(root.left, key)
+        elif key > root.val:
+            root.right = self.delete_node(root.right, key)
+        else:
+            if not root.left:
+                return root.right
+            if not root.right:
+                return root.left
+            successor = root.right
+            while successor.left:
+                successor = successor.left
+            root.val = successor.val
+            root.right = self.delete_node(root.right, successor.val)
+        return root`,
+  solutionComplexity: { time: 'O(h)', space: 'O(h)' },
+  solutionCaveat: 'When the target node has two children, its value is overwritten with its <code>inorder successor</code> (the leftmost node of its right subtree) rather than physically relinking pointers around the deleted node — that successor is guaranteed to be the smallest value still greater than everything in the left subtree, so copying it up and then deleting the now-duplicate successor node preserves the BST ordering everywhere.',
+  solutionExplanation: 'The BST property lets every step navigate directly toward the key — go left if it\'s smaller, right if it\'s larger — the same O(h) descent used for search, reaching the target without ever touching most of the tree. Once found, a leaf or single-child node is removed simply by returning whatever remains in its place, while a two-child node borrows its successor\'s value and then recursively deletes that successor from the right subtree, which is now a strictly simpler one-or-zero-child deletion. Returning <code>root</code> (or its replacement) from every call is what lets a deleted node — even the root itself — correctly detach from its parent\'s pointer one level up.',
 }

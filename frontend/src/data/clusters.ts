@@ -16,6 +16,7 @@ export interface Cluster {
   concepts: ClusterConcept[]
   transferHooks: { text: string; targetId: string }[]
   position: { cx: number; cy: number }
+  order: number  // learning-order badge shown on the map node, left-to-right by dependency depth
 }
 
 export interface ClusterEdge {
@@ -25,8 +26,32 @@ export interface ClusterEdge {
   type: 'prerequisite' | 'transfer'
 }
 
-// SVG canvas: viewBox="0 0 720 480"
+// SVG canvas: viewBox="0 0 720 500"
+// Layout is a left-to-right dependency DAG, laid out in columns by
+// prerequisite depth (see CLUSTER_EDGES) so edges read as forward progress
+// and nodes in the same column never collide. Bitwise and Grid & Matrix
+// have no edges in CLUSTER_EDGES — they're placed by conceptual proximity
+// (foundational / traversal-heavy) rather than dependency depth.
 export const CLUSTERS: Cluster[] = [
+  {
+    id: 'sorted-search',
+    label: 'Sorted Search',
+    color: '#0891b2',
+    primitive: 'Monotonicity',
+    primitiveExplainer: 'If you can determine which half contains the answer, discard the other half forever.',
+    why: `Binary search on sorted arrays and binary search on the answer space share one law: if you can determine whether the answer is in the left half or right half, you can discard the other half forever. Classic binary search applies this to a sorted array — compare the midpoint, eliminate half. The pattern generalizes: "binary search on the answer" applies whenever you can pose any candidate answer as a yes/no question with monotonic structure. "Is this window size valid?" "Can k workers finish in d days?" Binary search isn't about sorted arrays — it's about monotonicity. Once you see that, a whole class of optimization problems becomes a search problem in disguise.`,
+    concepts: [
+      { id: 'sorted-search-intro', label: 'Intro to Sorted Search' },
+      { id: 'sorting', label: 'Sorting' },
+      { id: 'binary-search', label: 'Binary Search' },
+      { id: 'binary-search-answer', label: 'Search on Answer Space' },
+    ],
+    transferHooks: [
+      { text: 'Divide & conquer recurrences in DP use the same "split in half" structure. Sorted search and optimization share a common ancestor.', targetId: 'optimization' },
+    ],
+    position: { cx: 215, cy: 250 },
+    order: 1,
+  },
   {
     id: 'linear',
     label: 'Linear',
@@ -49,7 +74,8 @@ export const CLUSTERS: Cluster[] = [
       { text: 'The call stack is itself a linear structure. When you draw a recursion tree, each frame is one node in that tree.', targetId: 'recursive' },
       { text: 'Stack/queue logic drives BFS — the queue IS the frontier, a linear sequence of the next nodes to visit.', targetId: 'graph' },
     ],
-    position: { cx: 140, cy: 80 },
+    position: { cx: 70, cy: 150 },
+    order: 2,
   },
   {
     id: 'linked',
@@ -67,7 +93,8 @@ export const CLUSTERS: Cluster[] = [
     transferHooks: [
       { text: 'Tree nodes are linked list nodes with two next pointers instead of one. Pointer chasing is the same skill.', targetId: 'recursive' },
     ],
-    position: { cx: 470, cy: 80 },
+    position: { cx: 215, cy: 90 },
+    order: 3,
   },
   {
     id: 'lookup',
@@ -84,41 +111,8 @@ export const CLUSTERS: Cluster[] = [
     transferHooks: [
       { text: 'Every DP cache is a hash map from subproblem arguments to their result. Memoization IS lookup, applied to function calls.', targetId: 'optimization' },
     ],
-    position: { cx: 245, cy: 315 },
-  },
-  {
-    id: 'bitwise',
-    label: 'Bitwise',
-    color: '#0d9488',
-    primitive: 'The bit',
-    primitiveExplainer: 'Operate directly on binary representations — no arithmetic, just masks and shifts.',
-    why: `Bit manipulation, XOR patterns, and bitmask enumeration all pivot on the same ground truth: an integer is already a row of binary digits, and you can operate on that row directly instead of treating the number as an opaque value. Bit manipulation gives you O(1) tricks — check a power of two, count set bits, isolate the lowest bit — for things that would otherwise cost a loop. XOR patterns lean on one identity, a ^ a = 0, to make paired values cancel out, solving "find the one that doesn't match" in O(1) space where a hash set would need O(n). Bitmask enumeration goes further: an entire subset of up to twenty-ish items becomes a single integer, and "try every subset" becomes a loop from 0 to 2ⁿ − 1. None of these are separate tricks to memorize — they're all consequences of treating a number as bits instead of a value.`,
-    concepts: [
-      { id: 'bitwise-intro', label: 'Intro to Bitwise' },
-      { id: 'bit-manipulation', label: 'Bit Manipulation' },
-      { id: 'xor-patterns', label: 'XOR Patterns' },
-      { id: 'bitmask-subset', label: 'Bitmask & Subset Enumeration' },
-    ],
-    transferHooks: [],
-    position: { cx: 160, cy: 315 },
-  },
-  {
-    id: 'sorted-search',
-    label: 'Sorted Search',
-    color: '#0891b2',
-    primitive: 'Monotonicity',
-    primitiveExplainer: 'If you can determine which half contains the answer, discard the other half forever.',
-    why: `Binary search on sorted arrays and binary search on the answer space share one law: if you can determine whether the answer is in the left half or right half, you can discard the other half forever. Classic binary search applies this to a sorted array — compare the midpoint, eliminate half. The pattern generalizes: "binary search on the answer" applies whenever you can pose any candidate answer as a yes/no question with monotonic structure. "Is this window size valid?" "Can k workers finish in d days?" Binary search isn't about sorted arrays — it's about monotonicity. Once you see that, a whole class of optimization problems becomes a search problem in disguise.`,
-    concepts: [
-      { id: 'sorted-search-intro', label: 'Intro to Sorted Search' },
-      { id: 'sorting', label: 'Sorting' },
-      { id: 'binary-search', label: 'Binary Search' },
-      { id: 'binary-search-answer', label: 'Search on Answer Space' },
-    ],
-    transferHooks: [
-      { text: 'Divide & conquer recurrences in DP use the same "split in half" structure. Sorted search and optimization share a common ancestor.', targetId: 'optimization' },
-    ],
-    position: { cx: 80, cy: 225 },
+    position: { cx: 215, cy: 410 },
+    order: 4,
   },
   {
     id: 'recursive',
@@ -140,7 +134,8 @@ export const CLUSTERS: Cluster[] = [
       { text: 'DFS on a graph is the same DFS from trees — same call stack, now with a visited set to handle cycles.', targetId: 'graph' },
       { text: 'Recursion + memoization = DP. The cache is a hash map of subproblem results. Recursive Structures and Optimization are the same structure, viewed differently.', targetId: 'optimization' },
     ],
-    position: { cx: 590, cy: 185 },
+    position: { cx: 360, cy: 150 },
+    order: 5,
   },
   {
     id: 'grid-matrix',
@@ -157,7 +152,8 @@ export const CLUSTERS: Cluster[] = [
       { id: 'multi-pass-patterns', label: 'Multi-pass Patterns' },
     ],
     transferHooks: [],
-    position: { cx: 510, cy: 270 },
+    position: { cx: 360, cy: 380 },
+    order: 6,
   },
   {
     id: 'graph',
@@ -175,7 +171,8 @@ export const CLUSTERS: Cluster[] = [
     transferHooks: [
       { text: "Dijkstra's algorithm is BFS where the queue becomes a priority queue. If you know BFS and heaps, you already know Dijkstra.", targetId: 'ordered' },
     ],
-    position: { cx: 420, cy: 325 },
+    position: { cx: 505, cy: 150 },
+    order: 7,
   },
   {
     id: 'ordered',
@@ -192,7 +189,8 @@ export const CLUSTERS: Cluster[] = [
     transferHooks: [
       { text: "A heap is a tree with one invariant: parent ≤ children. You've already seen trees — this is a constrained version of the same structure.", targetId: 'recursive' },
     ],
-    position: { cx: 615, cy: 390 },
+    position: { cx: 650, cy: 250 },
+    order: 9,
   },
   {
     id: 'optimization',
@@ -212,7 +210,25 @@ export const CLUSTERS: Cluster[] = [
       { text: 'Memoized recursion IS DP — the recursive structure from Recursive is identical, the cache makes it efficient.', targetId: 'recursive' },
       { text: 'The DP cache is a hash map. Lookup and Optimization are the same idea from different angles.', targetId: 'lookup' },
     ],
-    position: { cx: 375, cy: 430 },
+    position: { cx: 505, cy: 380 },
+    order: 8,
+  },
+  {
+    id: 'bitwise',
+    label: 'Bitwise',
+    color: '#0d9488',
+    primitive: 'The bit',
+    primitiveExplainer: 'Operate directly on binary representations — no arithmetic, just masks and shifts.',
+    why: `Bit manipulation, XOR patterns, and bitmask enumeration all pivot on the same ground truth: an integer is already a row of binary digits, and you can operate on that row directly instead of treating the number as an opaque value. Bit manipulation gives you O(1) tricks — check a power of two, count set bits, isolate the lowest bit — for things that would otherwise cost a loop. XOR patterns lean on one identity, a ^ a = 0, to make paired values cancel out, solving "find the one that doesn't match" in O(1) space where a hash set would need O(n). Bitmask enumeration goes further: an entire subset of up to twenty-ish items becomes a single integer, and "try every subset" becomes a loop from 0 to 2ⁿ − 1. None of these are separate tricks to memorize — they're all consequences of treating a number as bits instead of a value.`,
+    concepts: [
+      { id: 'bitwise-intro', label: 'Intro to Bitwise' },
+      { id: 'bit-manipulation', label: 'Bit Manipulation' },
+      { id: 'xor-patterns', label: 'XOR Patterns' },
+      { id: 'bitmask-subset', label: 'Bitmask & Subset Enumeration' },
+    ],
+    transferHooks: [],
+    position: { cx: 70, cy: 380 },
+    order: 10,
   },
 ]
 

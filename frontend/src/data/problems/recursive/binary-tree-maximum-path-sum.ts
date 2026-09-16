@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def max_path_sum(root):
-  pass`,
+class Solution:
+    def max_path_sum(self, root):
+        pass`,
   functionName: 'max_path_sum_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def max_path_sum_run(arr):
-  return max_path_sum(_build(arr))`,
+  return Solution().max_path_sum(_build(arr))`,
   testCases: [
     { label: '[1,2,3]', args: [[1,2,3]], expected: 6 },
     { label: '[-10,9,20,null,null,15,7]', args: [[-10,9,20,null,null,15,7]], expected: 42 },
   ],
-  bruteHint: 'Describe checking every pair of nodes as path endpoints and summing the path between them, and why that\'s expensive',
-  optimizeHint: 'Name the technique of a single post-order DFS that returns the best upward branch while tracking the best bent path in a running max',
+  bruteHint: 'The brute-force approach checks every pair of nodes as potential path endpoints, then walks the path connecting them (through their lowest common ancestor) to sum its values. With up to 3 × 10⁴ nodes, that\'s roughly n² pairs, and summing each path adds even more work on top, so the whole approach blows past any reasonable time budget. What if each node computed its own best contribution exactly once, in a single pass?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'path-definition',
-      question: '"A node can only appear in the sequence at most once." A path can go left-child → node → right-child (a bend). What does that mean for how a path can be used within the recursion?',
+      highlight: { location: 'description', text: 'A node can only appear in the sequence at most once.' },
+      question: 'Strict usage rules in a problem statement, like an element being usable only once, often dictate exactly how you\'re allowed to combine subproblems in a recursive solution. "A node can only appear in the sequence at most once." A path can go left-child → node → right-child (a bend). What does that mean for how a path can be used within the recursion?',
       options: [
         { label: 'A path must start at the root', isCorrect: false, feedback: 'The problem says "any non-empty path" — it can start and end anywhere in the tree. Paths through non-root nodes are valid.' },
         { label: 'A path that bends at a node cannot extend upward', isCorrect: true },
@@ -57,7 +59,8 @@ def max_path_sum_run(arr):
     },
     {
       id: 'negative-values',
-      question: 'Node values can be as low as -1000. What does that mean for how you handle subtree contributions?',
+      highlight: { location: 'constraint', text: '-1000 <= Node.val <= 1000' },
+      question: 'Value ranges listed in the constraints tell you whether extreme values like negatives are possible, and that possibility often forces special-case handling in your algorithm. Node values can be as low as -1000. What does that mean for how you handle subtree contributions?',
       options: [
         { label: 'Always include both children in the path', isCorrect: false, feedback: 'A subtree with a negative sum would decrease the path total. Including it unconditionally could make a worse answer than taking the node alone.' },
         { label: 'Clamp negative subtree contributions to zero', isCorrect: true },
@@ -72,7 +75,8 @@ def max_path_sum_run(arr):
     },
     {
       id: 'global-vs-local',
-      question: 'The answer could be any path in the tree — not necessarily one that passes through the root. What does that imply about how you track the maximum?',
+      highlight: { location: 'description', text: 'return the maximum path sum of any non-empty path' },
+      question: 'Phrasing like "any" path rather than "a" path through a fixed point (such as the root) signals that the answer needs tracking independent of what any single recursive call returns. The answer could be any path in the tree — not necessarily one that passes through the root. What does that imply about how you track the maximum?',
       options: [
         { label: 'Return the maximum from the root call only', isCorrect: false, feedback: 'The globally optimal path may be deep in the tree and never pass through the root. Returning only the root\'s result misses all those candidates.' },
         { label: 'Maintain a global maximum updated at every node', isCorrect: true },
@@ -87,7 +91,8 @@ def max_path_sum_run(arr):
     },
     {
       id: 'constraint-values',
-      question: 'Values range from -1000 to 1000 and there are up to 3 × 10⁴ nodes. What edge case does the value range introduce?',
+      highlight: { location: 'constraint', text: '-1000 <= Node.val <= 1000' },
+      question: 'Boundary values in the constraints, especially negative lower bounds, are a signal to think through edge cases like an all-negative input before assuming your accumulator\'s starting value is safe. Values range from -1000 to 1000 and there are up to 3 × 10⁴ nodes. What edge case does the value range introduce?',
       options: [
         { label: 'The answer is always positive', isCorrect: false, feedback: 'If all nodes are negative, the best path is the single least-negative node. The answer can be negative — initialize your global max to negative infinity, not zero.' },
         { label: 'The answer may be negative (single most negative node)', isCorrect: false, feedback: 'Close — the answer is the maximum path sum, so when all values are negative it is the least-negative (highest) single node value. That value is still negative.' },
@@ -101,4 +106,22 @@ def max_path_sum_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_path_sum(self, root):
+        best = float('-inf')
+
+        def dfs(node):
+            nonlocal best
+            if not node:
+                return 0
+            left = max(dfs(node.left), 0)
+            right = max(dfs(node.right), 0)
+            best = max(best, node.val + left + right)
+            return node.val + max(left, right)
+
+        dfs(root)
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The value <code>dfs</code> <code>returns</code> to its caller (<code>node.val + max(left, right)</code>) is deliberately narrower than the value it uses to update <code>best</code> (<code>node.val + left + right</code>) — a path returned upward can only extend through <code>one</code> child, since a path that already bent through both children has no free end left to attach to the parent.',
+  solutionExplanation: 'Clamping each child\'s contribution to <code>max(dfs(child), 0)</code> means a subtree whose best path sums negative is simply excluded rather than dragging the total down — the path just ends at the current node instead. Every node gets a chance to be the "peak" of a bent path (both children included) via the running <code>best</code> update, even though only a single-branch extension can ever be handed up to that node\'s own parent, which is exactly why a global variable outside the recursion — not the function\'s return value — is what accumulates the true answer.',
 }

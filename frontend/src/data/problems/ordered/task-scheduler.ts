@@ -8,20 +8,23 @@ export default {
     { input: 'tasks = ["A","A","A","B","B","B"], n = 0', output: '6' },
   ],
   constraints: ['1 <= tasks.length <= 10^4', 'tasks[i] is an uppercase English letter', '0 <= n <= 100'],
-  starterCode: `def least_interval(tasks, n):
-  pass`,
+  starterCode: `class Solution:
+    def least_interval(self, tasks, n):
+        pass`,
+  runnerSetup: 'least_interval = Solution().least_interval',
   functionName: 'least_interval',
   conceptId: 'heap',
   testCases: [
     { label: 'n=2', args: [['A','A','A','B','B','B'], 2], expected: 8 },
     { label: 'n=0', args: [['A','A','A','B','B','B'], 0], expected: 6 },
   ],
-  bruteHint: 'Describe a naive simulation that rescans all task counts to find the most frequent remaining task at every single interval.',
-  optimizeHint: 'Name the data structure that gives log-time access to the most frequent eligible task at each interval.',
+  bruteHint: 'A brute-force simulation steps through the schedule one interval at a time, and at each interval rescans every task type\'s remaining count from scratch to find the current most frequent one that is eligible. With up to tasks.length intervals and only 26 possible task types to rescan at each step, this naive rescan approach costs roughly O(tasks.length × 26) time. What would let you find the most frequent remaining task without rescanning all counts at every single interval?',
+  optimizeComplexity: { time: 'O(n log 26)', space: 'O(1)' },
   clues: [
     {
       id: 'cooldown-constraint',
-      question: 'The same task must have at least n intervals between executions. With n = 2 and tasks [A,A,A,B,B,B], what does this force?',
+      highlight: { location: 'description', text: 'a non-negative integer <code>n</code> representing the cooldown period between the same task' },
+      question: 'Constraints that describe timing or spacing rules often signal a structural requirement your solution must satisfy, not just a numeric bound to check. The same task must have at least n intervals between executions. With n = 2 and tasks [A,A,A,B,B,B], what does this force?',
       options: [
         { label: 'Tasks must be executed in alphabetical order', isCorrect: false, feedback: 'Alphabetical order is not required. The constraint is about time between same-type tasks, not about ordering across different task types.' },
         { label: 'Idle slots may be needed when no valid task is available', isCorrect: true },
@@ -36,7 +39,7 @@ export default {
     },
     {
       id: 'most-frequent-bottleneck',
-      question: 'Which task type determines the structure of the schedule?',
+      question: 'In problems built around a shared cooldown resource, the element that recurs most often usually dictates the shape of the entire solution. Which task type determines the structure of the schedule?',
       options: [
         { label: 'The least frequent task', isCorrect: false, feedback: 'The least frequent task is the easiest to fit in. The bottleneck is the task that appears most often — it forces the most cooldown gaps and potentially idle slots.' },
         { label: 'The most frequent task', isCorrect: true },
@@ -51,7 +54,8 @@ export default {
     },
     {
       id: 'greedy-scheduling',
-      question: 'At each interval, which task should the CPU execute to minimize total time?',
+      highlight: { location: 'constraint', text: 'tasks[i] is an uppercase English letter' },
+      question: 'When a problem asks you to repeatedly make a local choice, recognizing the right greedy rule at each step often determines whether the overall schedule ends up optimal. At each interval, which task should the CPU execute to minimize total time?',
       options: [
         { label: 'The task with the earliest original position in the input', isCorrect: false, feedback: 'Input order is irrelevant to minimizing total intervals. The CPU can execute any eligible task — the only constraint is the cooldown between same-type tasks.' },
         { label: 'The most frequent eligible task', isCorrect: true },
@@ -66,7 +70,8 @@ export default {
     },
     {
       id: 'n-zero-edge-case',
-      question: 'When n = 0, there is no cooldown. What is the answer in that case?',
+      highlight: { location: 'constraint', text: '0 <= n <= 100' },
+      question: 'Checking a constraint at its boundary value is a reliable way to sanity-check whether your general formula still holds in the simplest case. When n = 0, there is no cooldown. What is the answer in that case?',
       options: [
         { label: 'Always 1 — all tasks execute in one interval', isCorrect: false, feedback: 'n = 0 removes the cooldown constraint but each task still takes one interval. With 10,000 tasks and n = 0, the answer is 10,000, not 1.' },
         { label: 'Exactly tasks.length — no idle slots are needed', isCorrect: true },
@@ -80,4 +85,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+from collections import Counter, deque
+
+class Solution:
+    def least_interval(self, tasks, n):
+        counts = Counter(tasks)
+        heap = [-c for c in counts.values()]
+        heapq.heapify(heap)
+        time = 0
+        cooldown = deque()
+        while heap or cooldown:
+            time += 1
+            if heap:
+                count = heapq.heappop(heap) + 1
+                if count < 0:
+                    cooldown.append((time + n, count))
+            if cooldown and cooldown[0][0] == time:
+                heapq.heappush(heap, cooldown.popleft()[1])
+        return time`,
+  solutionComplexity: { time: 'O(n log 26)', space: 'O(1)' },
+  solutionCaveat: 'When the heap is empty but the cooldown queue is not, the loop still advances time without popping anything — that represents a forced idle interval, since every remaining task type is currently serving its cooldown and none are eligible to run yet.',
+  solutionExplanation: 'Always running whichever remaining task type currently has the highest count keeps every type\'s remaining work as balanced as possible, which is what minimizes forced idle time overall — greedily picking the most frequent task first is provably optimal here. The cooldown queue tracks exactly when each just-run task type becomes eligible again (<code>current time + n</code>), and the heap only ever needs to compare eligible task types, so the CPU never idles unless literally nothing is currently allowed to run.',
 }

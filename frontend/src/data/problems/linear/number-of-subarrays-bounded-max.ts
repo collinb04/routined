@@ -7,20 +7,23 @@ export default {
     { input: 'nums=[2,1,4,3], left=2, right=3', output: '3', explanation: 'Subarrays: [2],[2,1],[3].' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁵', '0 ≤ nums[i] ≤ 10⁹', '0 ≤ left ≤ right ≤ 10⁹'],
-  starterCode: `def num_subarray_bounded_max(nums, left, right):
-  pass`,
+  starterCode: `class Solution:
+    def num_subarray_bounded_max(self, nums, left, right):
+        pass`,
+  runnerSetup: 'num_subarray_bounded_max = Solution().num_subarray_bounded_max',
   functionName: 'num_subarray_bounded_max',
   conceptId: 'arrays',
   testCases: [
     { label: 'Three subarrays', args: [[2,1,4,3],2,3], expected: 3 },
     { label: 'All in range', args: [[1,2,3],1,3], expected: 6 },
   ],
-  bruteHint: 'Describe checking every subarray and its time complexity',
-  optimizeHint: 'Name the two single-pass counts (each with a threshold) whose difference gives you subarrays with max in [left, right]',
+  bruteHint: 'The brute-force approach checks every possible subarray, computes its maximum, and tests whether that maximum falls within [left, right]. There are roughly n²/2 subarrays, and finding each one\'s maximum adds even more work on top of that. At n up to 100,000, how many total operations does that add up to, and would it finish in a reasonable time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'input-size-complexity',
-      question: 'nums.length ≤ 10⁵ tells you…',
+      question: 'We can gauge how efficient the solution needs to be from the size of the input. nums.length ≤ 10⁵ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁵' },
       options: [
         { label: 'O(n²) subarray enumeration is fine', isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations — completely infeasible. The constraint rules out any approach that explicitly visits every subarray.' },
         { label: 'O(n) or O(n log n) is needed', isCorrect: true },
@@ -35,12 +38,13 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a count of subarrays, not the subarrays themselves. What does this enable?',
+      question: 'Knowing exactly what shape the output takes tells you how much information you actually need to keep around while scanning. The output is a count of subarrays, not the subarrays themselves. What does this enable?',
+      highlight: { location: 'description', text: 'the number of contiguous subarrays where the maximum element is in [left, right]' },
       options: [
         { label: 'You must collect all qualifying subarrays', isCorrect: false, feedback: 'Collecting subarrays themselves would cost O(n²) space in the worst case. A count only requires you to track a running total — no storage of subarrays needed.' },
         { label: 'You can accumulate a running total without storing subarrays', isCorrect: true },
         { label: 'You need to sort the subarrays by maximum', isCorrect: false, feedback: 'Sorting is not implied by counting. You need how many qualify, not a ranked list of them.' },
-        { label: 'You can use binary search on the count', isCorrect: false, feedback: 'Binary search applies when you can test a threshold — it does not directly count subarrays satisfying a max-bounded condition.' },
+        { label: 'You can narrow the answer down by repeatedly halving a range of candidate counts', isCorrect: false, feedback: 'This applies when you can test a threshold directly — it does not naturally count subarrays satisfying a max-bounded condition.' },
       ],
       correctFeedback: 'A count lets you use a running accumulator. As you scan, you can add the number of new valid subarrays ending at the current index without recording any subarray explicitly.',
       wrongFeedback: [
@@ -50,7 +54,8 @@ export default {
     },
     {
       id: 'bounded-max-condition',
-      question: 'The condition is "maximum ∈ [left, right]". How is counting subarrays with max ≤ right related to counting those with max ∈ [left, right]?',
+      question: 'Recognizing that a range condition can be decomposed often reveals a simpler pair of subproblems underneath. The condition is "maximum ∈ [left, right]". How is counting subarrays with max ≤ right related to counting those with max ∈ [left, right]?',
+      highlight: { location: 'description', text: 'the maximum element is in [left, right]' },
       options: [
         { label: 'They are unrelated — track [left, right] directly', isCorrect: false, feedback: 'Tracking the exact range directly is harder. Subarrays with max ≤ right minus those with max ≤ (left−1) equals subarrays with max in [left, right] — set subtraction makes this clean.' },
         { label: 'count(max ≤ right) − count(max ≤ left−1) gives the answer', isCorrect: true },
@@ -65,7 +70,7 @@ export default {
     },
     {
       id: 'large-element-split',
-      question: 'An element greater than right (e.g., 4 when right = 3) appears in the array. How does it affect subarrays that cross it?',
+      question: 'Noticing which single elements break a running computation tells you where to reset your tracking as you scan. An element greater than right (e.g., 4 when right = 3) appears in the array. How does it affect subarrays that cross it?',
       options: [
         { label: 'It raises the max but the subarray may still qualify', isCorrect: false, feedback: 'If any element in the subarray exceeds right, the maximum of that subarray is greater than right — the subarray cannot qualify.' },
         { label: 'It disqualifies all subarrays that contain it', isCorrect: false, feedback: 'This is true, but the stronger implication is that it acts as a barrier: no valid subarray can span across it.' },
@@ -79,4 +84,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def num_subarray_bounded_max(self, nums, left, right):
+        def count_at_most(bound):
+            count = 0
+            result = 0
+            for n in nums:
+                if n <= bound:
+                    count += 1
+                else:
+                    count = 0
+                result += count
+            return result
+        return count_at_most(right) - count_at_most(left - 1)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '"Maximum in <code>[left, right]</code>" is computed as "maximum at most <code>right</code>" minus "maximum at most <code>left - 1</code>" — subtracting two easier counts rather than checking the range condition directly, which sidesteps having to separately track both a minimum and a maximum bound while scanning.',
+  solutionExplanation: 'Counting subarrays whose maximum is *at most* some bound is easy with a single running streak: every value exceeding the bound resets the streak to 0, and each valid element extends every subarray ending there that stays within the current unbroken streak, so the streak length itself is exactly how many new valid subarrays end at that position. Subtracting "at most left-1" from "at most right" removes exactly the subarrays whose maximum falls below the range, leaving only those whose maximum lands inside <code>[left, right]</code>.',
 }

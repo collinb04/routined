@@ -7,8 +7,10 @@ export default {
     { input: 'dictionary=["cat","bat","rat"], sentence="the cattle was rattled by the battery"', output: '"the cat was rat by the bat"' },
   ],
   constraints: ['1 ≤ dictionary.length ≤ 1000', '1 ≤ dictionary[i].length ≤ 100', '1 ≤ sentence.length ≤ 10⁶', 'sentence consists of lowercase letters and spaces'],
-  starterCode: `def replace_words(dictionary, sentence):
-  pass`,
+  starterCode: `class Solution:
+    def replace_words(self, dictionary, sentence):
+        pass`,
+  runnerSetup: 'replace_words = Solution().replace_words',
   functionName: 'replace_words',
   conceptId: 'tries',
   testCases: [
@@ -16,12 +18,13 @@ export default {
     { label: 'No replacement', args: [['a'],'b c d'], expected: 'b c d' },
     { label: 'Multiple roots', args: [['a','b','ab'],'ab ac bc'], expected: 'a a b' },
   ],
-  bruteHint: 'Describe checking every prefix length of each sentence word against the dictionary roots, and the cost across all words',
-  optimizeHint: 'Name the structure that lets you find a word\'s shortest matching root in a single O(length) walk',
+  bruteHint: 'The brute-force approach checks each word in the sentence against every root in the dictionary, testing whether the root is a prefix and keeping the shortest match found. With up to 1,000 roots and a sentence of up to 10^6 characters, this means comparing every word against every root individually — O(words × dictionary size × root length) in the worst case. Can you avoid re-scanning the entire dictionary for every single word?',
+  optimizeComplexity: { time: 'O(total characters)', space: 'O(total root characters)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'sentence.length ≤ 10⁶. What does this large bound tell you about per-word lookup cost?',
+      question: 'When a constraint pushes into the millions, only near-linear per-item work will run in time. sentence.length ≤ 10⁶. What does this large bound tell you about per-word lookup cost?',
+      highlight: { location: 'constraint', text: '1 ≤ sentence.length ≤ 10⁶' },
       options: [
         { label: 'O(n × d) per word, where d is dictionary size, is fine', isCorrect: false, feedback: 'A sentence of 10⁶ characters could contain many words. Checking each word against all 1,000 dictionary roots linearly would be expensive. You need per-word lookup to be proportional to the word\'s length, not the dictionary size.' },
         { label: 'Per-word lookup must be O(L) — proportional to word length', isCorrect: true },
@@ -80,4 +83,34 @@ export default {
       ],
     },
   ],
+  solutionCode: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Solution:
+    def replace_words(self, dictionary, sentence):
+        root = TrieNode()
+        for word in dictionary:
+            node = root
+            for ch in word:
+                if ch not in node.children:
+                    node.children[ch] = TrieNode()
+                node = node.children[ch]
+            node.is_end = True
+
+        def find_root(word):
+            node = root
+            for i, ch in enumerate(word):
+                if ch not in node.children:
+                    return word
+                node = node.children[ch]
+                if node.is_end:
+                    return word[:i + 1]
+            return word
+
+        return ' '.join(find_root(w) for w in sentence.split())`,
+  solutionComplexity: { time: 'O(total characters)', space: 'O(total root characters)' },
+  solutionCaveat: '<code>find_root</code> returns the <code>instant</code> it reaches a node marked <code>is_end</code> — not after walking the full word — since a trie visits roots in increasing depth order, the very first complete root encountered along the path is guaranteed to be the shortest one, with no need to compare candidate lengths afterward.',
+  solutionExplanation: 'Building one trie from all dictionary roots lets every word in the sentence be checked against all 1,000 roots simultaneously in a single O(word length) walk, rather than comparing the word against each root individually — that is what collapses O(words × dictionary size) work down to O(total characters). If the walk falls off the trie (hits a character with no matching child) or reaches the end of the word without ever passing through an <code>is_end</code> node, no root matches, and the original word passes through unchanged.',
 }

@@ -12,9 +12,11 @@ export default {
     '0 ≤ s.length ≤ 3 × 10⁴',
     '1 ≤ g[i], s[j] ≤ 2³¹ - 1',
   ],
-  starterCode: `def find_content_children(g, s):
-  # Hint: sort both, use two pointers — give smallest sufficient cookie first
-  pass`,
+  starterCode: `class Solution:
+    def find_content_children(self, g, s):
+        # Hint: sort both, use two pointers — give smallest sufficient cookie first
+        pass`,
+  runnerSetup: 'find_content_children = Solution().find_content_children',
   functionName: 'find_content_children',
   conceptId: 'greedy',
   testCases: [
@@ -24,12 +26,13 @@ export default {
     { label: 'None fit', args: [[10],[1,2,3]], expected: 0 },
     { label: 'Exact match', args: [[1,2,3],[1,2,3]], expected: 3 },
   ],
-  bruteHint: 'Describe the brute-force approach of trying every child-cookie pairing and its time complexity',
-  optimizeHint: 'Name the technique of sorting both arrays and matching greedily with two pointers',
+  bruteHint: 'The brute-force approach tries every possible pairing between children and cookies: for each child, scan through the remaining cookies looking for one that satisfies their greed factor, then move to the next child. Checking every child against every cookie like this costs O(n × m) time, where n and m are the lengths of the greed and cookie arrays. With both arrays reaching 3 × 10⁴ elements, that nested scan is far too slow. What property of sorted arrays could let you match each child to a cookie in a single linear pass?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'g.length and s.length are both up to 3 × 10⁴. What does that tell you about acceptable complexity?',
+      question: 'Large numeric bounds in the constraints are a strong signal for which algorithmic complexity classes remain feasible. g.length and s.length are both up to 3 × 10⁴. What does that tell you about acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 ≤ g.length ≤ 3 × 10⁴' },
       options: [
         { label: 'O(n²) is fine at this size', isCorrect: false, feedback: 'At 3 × 10⁴, an O(n²) approach runs roughly 900 million operations — far too slow. The constraint is signaling that you need something closer to linear.' },
         { label: 'O(n log n) or better is needed', isCorrect: true },
@@ -44,10 +47,11 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is "the maximum number of content children," not which children or cookies to assign. What does that imply?',
+      question: 'How a problem phrases its expected return value often reveals what bookkeeping is necessary versus superfluous. The output is "the maximum number of content children," not which children or cookies to assign. What does that imply?',
+      highlight: { location: 'description', text: 'Return the maximum number of content children.' },
       options: [
         { label: 'Track which cookie each child receives', isCorrect: false, feedback: 'The output is a count, not an assignment. Recording which cookie went to which child is extra work the problem does not ask for.' },
-        { label: 'Count satisfied children greedily', isCorrect: true },
+        { label: 'Increment a counter each time a child is satisfied', isCorrect: true },
         { label: 'Return the list of satisfied children', isCorrect: false, feedback: 'The output is an integer, not a list. You only need to maximize the total count, not enumerate the children.' },
         { label: 'Minimize leftover cookies', isCorrect: false, feedback: 'The goal is to maximize satisfied children, not to minimize waste. Leftover cookies are irrelevant to the output.' },
       ],
@@ -59,7 +63,8 @@ export default {
     },
     {
       id: 'greedy-pairing',
-      question: '"Each child gets at most one cookie" and cookies have fixed sizes. What pairing strategy maximizes the number of satisfied children?',
+      question: 'When a problem enforces a strict one-to-one pairing like this, the phrasing is often hinting at a specific matching strategy rather than a general search. "Each child gets at most one cookie" and cookies have fixed sizes. What pairing strategy maximizes the number of satisfied children?',
+      highlight: { location: 'description', text: 'Each child gets at most one cookie.' },
       options: [
         { label: 'Give each child the largest cookie available', isCorrect: false, feedback: 'Wasting a large cookie on a low-greed child leaves fewer cookies for high-greed children. Giving the smallest sufficient cookie preserves larger cookies for pickier children.' },
         { label: 'Give the smallest sufficient cookie to the least greedy child', isCorrect: true },
@@ -73,4 +78,16 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_content_children(self, g, s):
+        g = sorted(g)
+        s = sorted(s)
+        i = j = 0
+        while i < len(g) and j < len(s):
+            if s[j] >= g[i]:
+                i += 1
+            j += 1
+        return i`,
+  solutionComplexity: { time: 'O(n log n + m log m)', space: 'O(1) extra (sort aside)' },
+  solutionExplanation: 'Sorting both arrays turns this into a single sweep: with the smallest cookies and the least-greedy children first, the smallest cookie that still satisfies the current child is always the right one to spend on them — using a bigger cookie here would only take away a cookie that some other child might have actually needed. Every cookie gets tried against the current most-modest unsatisfied child exactly once, so <code>j</code> always advances, and <code>i</code> advances only on a match.',
 }

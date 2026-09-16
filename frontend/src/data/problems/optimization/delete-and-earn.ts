@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [2,2,3,3,3,4]', output: '9', explanation: 'Earn all 3s (9 points), deleting 2 and 4.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 2 × 10⁴', '1 ≤ nums[i] ≤ 10⁴'],
-  starterCode: `def delete_and_earn(nums):
-  pass`,
+  starterCode: `class Solution:
+    def delete_and_earn(self, nums):
+        pass`,
+  runnerSetup: 'delete_and_earn = Solution().delete_and_earn',
   functionName: 'delete_and_earn',
   conceptId: 'dp-1d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Three 3s', args: [[2,2,3,3,3,4]], expected: 9 },
     { label: 'Single', args: [[1]], expected: 1 },
   ],
-  bruteHint: 'Describe the recursive approach that, for each distinct value, branches into taking it (which forbids its neighbors) or skipping it, re-exploring the same remaining values repeatedly.',
-  optimizeHint: 'Name the classic pattern this reduces to, whose per-value DP state lets you avoid recomputing those overlapping subproblems.',
+  bruteHint: 'The brute-force approach recursively walks the distinct values, and at each one branches into two choices: take it (earning its total points but forbidding both neighbors) or skip it and move on. Because both branches can arrive at the same remaining subset of values through different paths, this naive recursion re-explores identical subproblems many times, giving it exponential time in the number of distinct values. With nums=[2,2,3,3,3,4], can you see how the decision at value 3 gets revisited whether you arrived there by taking 2 first or skipping it?',
+  optimizeComplexity: { time: 'O(n + max)', space: 'O(max)' },
   clues: [
     {
       id: 'deletion-rule',
-      question: 'Taking value x deletes all x-1 and x+1 from nums. What pattern does this rule resemble?',
+      highlight: { location: 'description', text: 'gain <code>x</code> points, but then must delete all occurrences of <code>x-1</code> and <code>x+1</code>' },
+      question: 'Recognizing that a rule creates conflict only between direct neighbors — never further away — is the signal that a whole family of take-it-or-skip-it DP problems applies here. Taking value x deletes all x-1 and x+1 from nums. What pattern does this rule resemble?',
       options: [
         { label: 'A sliding window across sorted values',          isCorrect: false, feedback: 'Sliding windows aggregate contiguous ranges — they don\'t model a take-or-skip decision at each value. The deletion rule creates a choice structure, not a sum-over-window structure.' },
         { label: 'House Robber — you can\'t take adjacent values', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'value-aggregation',
-      question: 'Picking value x earns x points per occurrence. How should you preprocess nums before applying DP?',
+      highlight: { location: 'description', text: 'pick any value <code>x</code> and gain <code>x</code> points' },
+      question: 'Before a DP recurrence can run cleanly, you often need to collapse raw input into a form where each state contributes exactly once — spotting that need early avoids messy special-casing later. Picking value x earns x points per occurrence. How should you preprocess nums before applying DP?',
       options: [
         { label: 'Sort nums and scan left to right',               isCorrect: false, feedback: 'Sorting helps order the values, but the key step is aggregating all earnings for each distinct value. Without aggregation, you\'d have to handle duplicates on every step.' },
         { label: 'Build a points array: points[x] = x × count(x)', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'nums[i] ≤ 10⁴ bounds the value range. What does this tell you about the DP array size?',
+      highlight: { location: 'constraint', text: '1 ≤ nums[i] ≤ 10⁴' },
+      question: 'Constraints tell you the complexity budget you must fit within, and when a value range is bounded separately from array length, it often signals that your DP should be indexed by value rather than by position. nums[i] ≤ 10⁴ bounds the value range. What does this tell you about the DP array size?',
       options: [
         { label: 'DP array size = nums.length (up to 2 × 10⁴)',  isCorrect: false, feedback: 'The DP runs over value indices, not array positions. Two arrays of different lengths but the same value range need the same DP size.' },
         { label: 'DP array size = max value (up to 10⁴)',         isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'output-maximum',
-      question: 'The output is the maximum points earnable. What does this tell you about the DP transition?',
+      highlight: { location: 'description', text: 'Return maximum points you can earn.' },
+      question: 'When the output is a maximum rather than a count or a boolean, it tells you the DP transition needs to compare competing choices and keep only the best. The output is the maximum points earnable. What does this tell you about the DP transition?',
       options: [
         { label: 'Sum all positive values in the points array',   isCorrect: false, feedback: 'You can\'t take adjacent values simultaneously. Summing everything ignores the constraint that taking x deletes x-1 and x+1.' },
         { label: 'At each value, take the best of skip or take',  isCorrect: true },
@@ -81,4 +87,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def delete_and_earn(self, nums):
+        if not nums:
+            return 0
+        max_val = max(nums)
+        points = [0] * (max_val + 1)
+        for x in nums:
+            points[x] += x
+
+        take, skip = 0, 0
+        for p in points:
+            take, skip = skip + p, max(take, skip)
+        return max(take, skip)`,
+  solutionComplexity: { time: 'O(n + max)', space: 'O(max)' },
+  solutionCaveat: 'Every occurrence of a value is folded into <code>points[x] = x × count(x)</code> before the DP even starts — taking value <code>x</code> once versus three times is the difference between earning <code>x</code> and <code>3x</code>, so duplicates must be summed, never deduplicated away.',
+  solutionExplanation: 'Since taking value <code>x</code> forces deleting every <code>x-1</code> and <code>x+1</code>, the conflict is purely between adjacent numeric values — exactly House Robber\'s "can\'t take two neighbors" structure, just reindexed from house position to value. Running that same take-or-skip recurrence over the <code>points</code> array (indexed 0 to the maximum value present) finds the best subset of non-adjacent values to fully claim.',
 }

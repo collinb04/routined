@@ -8,25 +8,28 @@ export default {
     { input: 'n=1, k=1', output: '[[1]]' },
   ],
   constraints: ['1 ≤ n ≤ 20', '1 ≤ k ≤ n'],
-  starterCode: `def combine(n, k):
-  pass`,
+  starterCode: `class Solution:
+    def combine(self, n, k):
+        pass`,
+  runnerSetup: 'combine = Solution().combine',
   functionName: 'combine',
   conceptId: 'backtracking',
   testCases: [
     { label: 'n=4,k=2', args: [4,2], expected: [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]] },
     { label: 'n=1,k=1', args: [1,1], expected: [[1]] },
   ],
-  bruteHint: 'Describe generating all subsets of [1, n] and filtering for those of size k',
-  optimizeHint: 'Name the technique of backtracking in strictly increasing order to avoid generating the same combination twice',
+  bruteHint: 'The brute-force approach generates every subset of [1, n] — there are 2^n of them — using recursion or bitmasking, then filters out any subset whose size is not k. That costs roughly O(2^n · n) time, since most of the generated subsets get discarded after being built. What if you skipped building subsets that could never reach length k in the first place?',
+  optimizeComplexity: { time: 'O(C(n, k))', space: 'O(k)' },
   clues: [
     {
       id: 'output-all-combinations',
-      question: 'The output is all possible combinations — not a count. What does that require from your approach?',
+      highlight: { location: 'description', text: 'return all possible combinations of <code>k</code> numbers chosen from the range [1, n]' },
+      question: 'Reading exactly what the output format asks for — a full enumeration versus a single count — tells you whether the approach must be exhaustive. The output is all possible combinations — not a count. What does that require from your approach?',
       options: [
         { label: 'Compute C(n, k) and return that number', isCorrect: false, feedback: 'C(n, k) counts combinations — it does not enumerate them. The problem asks you to return the actual combinations, not how many there are.' },
-        { label: 'Backtrack to enumerate every valid k-length subset', isCorrect: true },
+        { label: 'Explore choices step by step, building each k-length selection and recording it when complete', isCorrect: true },
         { label: 'Sort the range [1, n] and return the first k elements', isCorrect: false, feedback: 'That returns only one combination: [1,2,...,k]. You need all C(n,k) combinations, not just the lexicographically smallest.' },
-        { label: 'Use BFS to generate combinations level by level', isCorrect: false, feedback: 'BFS can work but is less natural here. DFS backtracking builds combinations element by element and records each complete k-length path — that is the standard pattern.' },
+        { label: 'Expand every partial selection of the same length before moving to longer ones', isCorrect: false, feedback: 'BFS can work but is less natural here. DFS backtracking builds combinations element by element and records each complete k-length path — that is the standard pattern.' },
       ],
       correctFeedback: 'Backtracking explores every choice at each position: pick a number, recurse, then undo. Every path of length k is a valid combination to collect.',
       wrongFeedback: [
@@ -36,7 +39,7 @@ export default {
     },
     {
       id: 'no-reuse-no-duplicates',
-      question: 'Combinations (not permutations) — [1,2] and [2,1] are the same. How do you avoid generating both?',
+      question: 'The precise terminology a problem uses often distinguishes between similar-looking search spaces with very different sizes. Combinations (not permutations) — [1,2] and [2,1] are the same. How do you avoid generating both?',
       options: [
         { label: 'Use a visited array to mark used numbers', isCorrect: false, feedback: 'A visited array prevents reuse but does not prevent permutations — you could still generate [1,2] and [2,1] as separate paths if you start from 1 each time. The fix is advancing the start index.' },
         { label: 'Always pick the next number strictly greater than the last picked', isCorrect: true },
@@ -51,7 +54,8 @@ export default {
     },
     {
       id: 'pruning-not-enough-remaining',
-      question: 'n ≤ 20, k ≤ n. If you need m more numbers and only r numbers remain in [start, n], when can you prune?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 20' },
+      question: 'Small numeric bounds in the constraints are often a signal that pruning matters, not just correctness. n ≤ 20, k ≤ n. If you need m more numbers and only r numbers remain in [start, n], when can you prune?',
       options: [
         { label: 'When start > n', isCorrect: false, feedback: 'start > n means no numbers remain at all — that is the natural loop termination, not a pruning optimization. Pruning happens earlier: when remaining numbers < numbers still needed.' },
         { label: 'When r < m — not enough numbers remain to complete the combination', isCorrect: true },
@@ -65,4 +69,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def combine(self, n, k):
+        result = []
+        path = []
+
+        def backtrack(start):
+            if len(path) == k:
+                result.append(path[:])
+                return
+            for i in range(start, n + 1):
+                if n - i + 1 < k - len(path):
+                    break
+                path.append(i)
+                backtrack(i + 1)
+                path.pop()
+
+        backtrack(1)
+        return result`,
+  solutionComplexity: { time: 'O(C(n, k))', space: 'O(k)' },
+  solutionCaveat: 'The prune check <code>n - i + 1 &lt; k - len(path)</code> breaks the loop the moment too few numbers remain in <code>[i, n]</code> to finish the combination — without it the search would still find every valid combination, just after wasting time descending into branches that can never succeed.',
+  solutionExplanation: 'Passing <code>i + 1</code> — never <code>i</code> or a smaller value — as the next call\'s <code>start</code> is what enforces strictly increasing selections, guaranteeing every combination is built in exactly one order and never regenerated as a permutation of an already-found combination. Recording <code>path[:]</code> the instant it reaches length <code>k</code> and then backtracking (popping the last choice) explores every valid increasing sequence exhaustively, which is both necessary and sufficient since the problem asks for every combination, not just one.',
 }

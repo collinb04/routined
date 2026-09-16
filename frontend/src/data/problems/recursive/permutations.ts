@@ -8,22 +8,23 @@ export default {
     { input: 'nums = [0,1]', output: '[[0,1],[1,0]]' },
   ],
   constraints: ['1 <= nums.length <= 6', 'All integers are unique'],
-  starterCode: `def permute(nums):
-  pass`,
+  starterCode: `class Solution:
+    def permute(self, nums):
+        pass`,
   functionName: 'permute_run',
   conceptId: 'backtracking',
   runnerSetup: `def permute_run(nums):
-  return sorted(permute(nums))`,
+  return sorted(Solution().permute(nums))`,
   testCases: [
     { label: '[1,2,3]', args: [[1,2,3]], expected: [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]] },
     { label: '[0,1]', args: [[0,1]], expected: [[0,1],[1,0]] },
   ],
-  bruteHint: 'Describe generating every length-n sequence of the elements (allowing repeats) and filtering for the ones that use each element exactly once',
-  optimizeHint: 'Name the technique of tracking which elements are already placed so every partial sequence you build stays a valid permutation',
+  bruteHint: 'The brute-force approach generates every length-n sequence built from the elements of the array, including sequences that repeat one element and omit another, then filters that full set down to the ones using each element exactly once. Since each of the n positions could independently hold any of the n values, that is n^n candidate sequences to generate and check before filtering. With n up to 6, that is 6^6 = 46,656 candidates versus only 720 actual permutations, so most of the generated work is wasted. What if you only ever placed elements that had not yet been used, so every partial sequence you built was already guaranteed valid?',
+  optimizeComplexity: { time: 'O(n!)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 6. What does this tell you about the number of results and the intended approach?',
+      question: 'Numeric bounds on the input size tell you whether an exponential-time enumeration is actually within budget. nums.length ≤ 6. What does this tell you about the number of results and the intended approach?',
       options: [
         { label: 'O(n²) iteration is sufficient', isCorrect: false, feedback: 'O(n²) cannot enumerate all permutations — there are n! of them. At n = 6, that is 720 permutations, each of length 6. The output size alone is 6 × 720 = 4,320 elements.' },
         { label: 'Backtracking over all n! permutations is feasible', isCorrect: true },
@@ -35,10 +36,11 @@ export default {
         'How many permutations does [1,2,3] have? How about [1,2,3,4,5,6]?',
         'n! permutations: 6 for n=3, 720 for n=6. At n ≤ 6, backtracking that generates all n! results is fast enough.',
       ],
+      highlight: { location: 'constraint', text: '1 <= nums.length <= 6' },
     },
     {
       id: 'distinct-elements-signal',
-      question: 'All integers are unique. What does this guarantee about duplicate results?',
+      question: 'Guarantees about uniqueness in the input determine whether you need extra bookkeeping to avoid duplicate output. All integers are unique. What does this guarantee about duplicate results?',
       options: [
         { label: 'You must deduplicate results with a set', isCorrect: false, feedback: 'With all distinct elements, no two different orderings can produce the same permutation. No deduplication is needed — the uniqueness guarantee means your backtracking naturally produces distinct results.' },
         { label: 'Every permutation is distinct; no deduplication needed', isCorrect: true },
@@ -50,10 +52,11 @@ export default {
         'If nums had duplicate values, two permutations might look identical. Does that apply here?',
         'All elements are distinct, so every ordering is unique. Your result list will never contain duplicates — no set or sorting needed to clean it up.',
       ],
+      highlight: { location: 'constraint', text: 'All integers are unique' },
     },
     {
       id: 'output-structure',
-      question: 'The output is all permutations — a list of n! lists. What does this require of your backtracking?',
+      question: 'The exact shape of the requested output — a single value versus a full collection — dictates when and what your backtracking must record. The output is all permutations — a list of n! lists. What does this require of your backtracking?',
       options: [
         { label: 'Return the lexicographically first permutation only', isCorrect: false, feedback: 'The problem asks for all permutations in any order. Stopping at the first result — or any single result — misses the rest of the required output.' },
         { label: 'Append a copy of the current path at each complete permutation', isCorrect: true },
@@ -65,10 +68,11 @@ export default {
         'When your current path contains all n elements in some order, what do you do with it?',
         'Append a copy of the current path to results. Then backtrack — remove the last element and try the next unused one — to generate the remaining permutations.',
       ],
+      highlight: { location: 'description', text: 'return all the possible permutations' },
     },
     {
       id: 'used-tracking-signal',
-      question: 'Each element can appear only once per permutation. How do you track which elements are available at each recursive step?',
+      question: 'Constraints on how many times an element may be reused directly determine what state your recursion must carry between calls. Each element can appear only once per permutation. How do you track which elements are available at each recursive step?',
       options: [
         { label: 'Re-sort the remaining elements before each recursive call', isCorrect: false, feedback: 'Sorting on each call is O(n log n) per level and unnecessary. A boolean used array or a set of remaining elements checks membership in O(1) and costs O(n) to initialize once.' },
         { label: 'A boolean used array or the remaining-elements list', isCorrect: true },
@@ -82,4 +86,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def permute(self, nums):
+        result = []
+        path = []
+        used = [False] * len(nums)
+
+        def backtrack():
+            if len(path) == len(nums):
+                result.append(path[:])
+                return
+            for i in range(len(nums)):
+                if used[i]:
+                    continue
+                used[i] = True
+                path.append(nums[i])
+                backtrack()
+                path.pop()
+                used[i] = False
+
+        backtrack()
+        return result`,
+  solutionComplexity: { time: 'O(n!)', space: 'O(n)' },
+  solutionCaveat: 'The <code>used</code> array is unmarked (<code>used[i] = False</code>) in the same step that pops the element off <code>path</code> — both undo operations happen together on backtrack, since leaving either one out would either make an element permanently unavailable or let it silently reappear in the current path without actually being in it.',
+  solutionExplanation: 'At every recursive level, trying every not-yet-used index and marking it used before recursing (then unmarking after) is what guarantees each of the n! orderings is generated exactly once — the <code>used</code> array is the complete state needed to know which elements remain available at any point in the search. Because all input values are guaranteed distinct, no two different index sequences can ever produce the same output permutation, so the result needs no deduplication beyond what backtracking already produces.',
 }

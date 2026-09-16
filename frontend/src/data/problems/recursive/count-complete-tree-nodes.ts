@@ -8,21 +8,44 @@ export default {
     { input: 'root = []', output: '0' },
   ],
   constraints: ['0 ≤ number of nodes ≤ 5 × 10⁴', '0 ≤ Node.val ≤ 5 × 10⁴'],
-  starterCode: `def count_nodes(root):
-  pass`,
-  functionName: 'count_nodes',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def count_nodes(self, root):
+        pass`,
+  functionName: 'count_nodes_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def count_nodes_run(arr):
+  return Solution().count_nodes(_build(arr))`,
   testCases: [
     { label: 'Six nodes', args: [[1,2,3,4,5,6]], expected: 6 },
     { label: 'Empty', args: [null], expected: 0 },
     { label: 'One node', args: [[1]], expected: 1 },
   ],
-  bruteHint: 'Describe visiting every node to count them, and its time complexity relative to the required O(log²n)',
-  optimizeHint: 'Name the structural property of complete trees that lets you count an entire perfect subtree with a formula instead of visiting each node',
+  bruteHint: 'The simplest approach visits every node once via a full traversal (DFS or BFS) and increments a counter, which is correct for any binary tree but costs O(n) time and O(h) space for the call stack. The problem explicitly asks for O(log²n) time, and n can reach 5 × 10⁴ nodes, so a full visit is too slow. What does a complete tree\'s structure let you skip that a general binary tree would not?',
+  optimizeComplexity: { time: 'O((log n)²)', space: 'O(log n)' },
   clues: [
     {
       id: 'complete-tree-definition',
-      question: '"All levels fully filled except possibly the last, filled left to right." What structural guarantee does this give you?',
+      highlight: { location: 'description', text: 'all levels fully filled except possibly the last, which is filled from left to right' },
+      question: 'Problem descriptions often smuggle in structural guarantees that unlock a faster algorithm than the naive approach. "All levels fully filled except possibly the last, filled left to right." What structural guarantee does this give you?',
       options: [
         { label: 'Every leaf is at the same depth', isCorrect: false, feedback: 'That describes a perfect binary tree — a stricter condition. A complete tree allows the last level to be partially filled, so leaves can differ in depth by one.' },
         { label: 'Every subtree is either a perfect binary tree or nearly so', isCorrect: true },
@@ -37,7 +60,8 @@ export default {
     },
     {
       id: 'target-complexity',
-      question: 'The problem explicitly asks for O(log²n) time. A naive traversal of all nodes is O(n). What property of the complete tree enables the faster approach?',
+      highlight: { location: 'description', text: 'Achieve O(log²n) time' },
+      question: 'When a problem states an explicit target complexity, that number tells you which category of technique to reach for before you write a single line of code. The problem explicitly asks for O(log²n) time. A naive traversal of all nodes is O(n). What property of the complete tree enables the faster approach?',
       options: [
         { label: 'A perfect binary tree can be counted with a formula instead of traversal', isCorrect: true },
         { label: 'The tree is sorted, so binary search applies', isCorrect: false, feedback: 'The tree is not a BST — node values carry no ordering guarantee. The O(log²n) speedup comes from detecting perfect subtrees and using 2^h - 1 directly, not from binary search on values.' },
@@ -52,7 +76,7 @@ export default {
     },
     {
       id: 'height-comparison-trick',
-      question: 'To detect a perfect subtree, you compare the height of the leftmost path with the height of the rightmost path. Why does this work for complete trees specifically?',
+      question: 'Understanding why a technique works, not just that it works, is what lets you apply it correctly and recognize when it breaks down. To detect a perfect subtree, you compare the height of the leftmost path with the height of the rightmost path. Why does this work for complete trees specifically?',
       options: [
         { label: 'In any binary tree, equal left and right heights mean the tree is perfect', isCorrect: false, feedback: 'In a general tree, equal leftmost and rightmost path heights do not guarantee perfection — a tree could have equal path lengths but missing interior nodes. This trick works only because the complete tree property guarantees left-to-right filling.' },
         { label: 'Left-to-right filling means equal path heights imply all levels are full', isCorrect: true },
@@ -67,7 +91,8 @@ export default {
     },
     {
       id: 'complexity-analysis',
-      question: 'The algorithm recurses with one O(log n) height check per call, and at each level makes at most one recursive call that is not immediately resolved by the formula. Why is overall complexity O(log²n)?',
+      highlight: { location: 'constraint', text: '0 ≤ number of nodes ≤ 5 × 10⁴' },
+      question: 'Being able to derive a complexity bound from first principles, by counting recursive calls and the work done at each, lets you verify a claimed complexity instead of taking it on faith. The algorithm recurses with one O(log n) height check per call, and at each level makes at most one recursive call that is not immediately resolved by the formula. Why is overall complexity O(log²n)?',
       options: [
         { label: 'There are O(log n) recursive levels, each doing O(log n) height work', isCorrect: true },
         { label: 'Binary search over leaf positions takes O(log²n) steps', isCorrect: false, feedback: 'The algorithm is not a binary search over leaf positions — it recurses into subtrees and applies the perfect-tree shortcut. The O(log²n) bound comes from O(log n) depth × O(log n) height checks.' },
@@ -81,4 +106,31 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def count_nodes(self, root):
+        if not root:
+            return 0
+
+        def left_height(node):
+            h = 0
+            while node:
+                h += 1
+                node = node.left
+            return h
+
+        def right_height(node):
+            h = 0
+            while node:
+                h += 1
+                node = node.right
+            return h
+
+        lh = left_height(root)
+        rh = right_height(root)
+        if lh == rh:
+            return (1 << lh) - 1
+        return 1 + self.count_nodes(root.left) + self.count_nodes(root.right)`,
+  solutionComplexity: { time: 'O((log n)²)', space: 'O(log n)' },
+  solutionCaveat: 'The leftmost-path and rightmost-path height comparison only proves perfection <code>because</code> the tree is guaranteed complete — in an arbitrary binary tree, equal left/right path lengths say nothing about whether interior nodes are missing, so this shortcut would silently give wrong answers on a non-complete tree.',
+  solutionExplanation: 'Complete-tree filling guarantees that at every node, one of its two subtrees is a perfect binary tree — comparing the leftmost-path height against the rightmost-path height detects which one in O(log n), since any missing node in a complete tree can only shorten the rightmost path relative to the leftmost. A confirmed-perfect subtree is counted instantly with the closed-form <code>2^h - 1</code>, skipping its entire contents, while the other, possibly-incomplete subtree is the only one recursed into — so at most one subtree per level needs further exploration, bounding recursion depth to O(log n) and, with an O(log n) height check at each level, total work to O(log²n).',
 }

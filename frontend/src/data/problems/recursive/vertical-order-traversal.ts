@@ -7,22 +7,45 @@ export default {
     { input: 'root = [3,9,20,null,null,15,7]', output: '[[9],[3,15],[20],[7]]' },
   ],
   constraints: ['1 ≤ number of nodes ≤ 1000', '0 ≤ Node.val ≤ 1000'],
-  starterCode: `def vertical_traversal(root):
-  pass`,
-  functionName: 'vertical_traversal',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def vertical_traversal(self, root):
+        pass`,
+  functionName: 'vertical_traversal_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def vertical_traversal_run(arr):
+  return Solution().vertical_traversal(_build(arr))`,
   testCases: [
     { label: 'Standard tree', args: [[3,9,20,null,null,15,7]], expected: [[9],[3,15],[20],[7]] },
     { label: 'Single', args: [[1]], expected: [[1]] },
   ],
-  bruteHint: 'Describe running a separate traversal of the whole tree for each possible column instead of gathering column, row, and value information in a single pass',
-  optimizeHint: 'Name the technique that collects (column, row, value) for every node in one traversal into a dictionary keyed by column, then sorts each group afterward',
+  bruteHint: 'The brute-force approach first finds the range of column indices, then re-traverses the entire tree once per column, collecting only the nodes that belong to that column each time. With up to O(n) distinct columns and an O(n) traversal for each one, this costs O(n²) time overall, plus O(n) space for the output and recursion stack. What information could you gather in a single pass instead of repeating the traversal for every column?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'column-coordinate',
-      question: 'To group nodes into columns, you need to assign each node a column index. How does traversal direction map to column change?',
+      highlight: { location: 'description', text: 'columns from left to right' },
+      question: 'Deriving a coordinate directly from the path taken through the tree, rather than from traversal order, is often what separates a correct grouping key from a coincidental one. To group nodes into columns, you need to assign each node a column index. How does traversal direction map to column change?',
       options: [
-        { label: 'BFS level order gives column indices automatically', isCorrect: false, feedback: 'BFS level order tracks depth (row), not horizontal position (column). Two nodes at the same BFS level can be in different columns — you need to explicitly track the column offset as you recurse.' },
+        { label: 'Processing nodes level by level automatically gives column indices', isCorrect: false, feedback: 'BFS level order tracks depth (row), not horizontal position (column). Two nodes at the same BFS level can be in different columns — you need to explicitly track the column offset as you recurse.' },
         { label: 'Going left decrements the column; going right increments it', isCorrect: true },
         { label: 'Going right decrements the column; going left increments it', isCorrect: false, feedback: 'By convention, left is the negative direction and right is positive. Going left decrements the column index; going right increments it.' },
         { label: 'Column index equals node depth', isCorrect: false, feedback: 'Depth tracks vertical position (row), not horizontal position (column). A node at depth 3 could be in column -3, 0, or +3 depending on the path taken to reach it.' },
@@ -35,7 +58,8 @@ export default {
     },
     {
       id: 'same-column-same-row-sort',
-      question: '"Within the same column, nodes at the same row are sorted by value." What data structure naturally supports grouping by (column, row) and then sorting?',
+      highlight: { location: 'description', text: 'Within the same column, nodes at the same row are sorted by value.' },
+      question: 'When a problem statement specifies both a grouping key and a tie-breaking order, it is usually telling you exactly what data structure and sort step you will need. "Within the same column, nodes at the same row are sorted by value." What data structure naturally supports grouping by (column, row) and then sorting?',
       options: [
         { label: 'A list of lists, indexed by depth', isCorrect: false, feedback: 'A list indexed by depth groups by row, not by column. You need the column as the primary grouping key, with (row, value) available for sorting within each column.' },
         { label: 'A dictionary mapping column → list of (row, value) pairs', isCorrect: true },
@@ -50,12 +74,13 @@ export default {
     },
     {
       id: 'output-column-order',
-      question: 'The output is columns from left to right. How do you determine the final column ordering?',
+      highlight: { location: 'description', text: 'columns from left to right' },
+      question: 'Output ordering requirements that do not match traversal order are a signal that a post-processing sort step is required, not just a clever traversal choice. The output is columns from left to right. How do you determine the final column ordering?',
       options: [
         { label: 'Output columns in the order they were first visited', isCorrect: false, feedback: 'Traversal order depends on your strategy (DFS preorder visits left subtrees first, but rightmost columns could be encountered before leftmost in some paths). Sort column keys numerically to guarantee left-to-right order.' },
         { label: 'Sort the column keys numerically', isCorrect: true },
-        { label: 'Use BFS level order to naturally produce left-to-right columns', isCorrect: false, feedback: 'BFS level order produces nodes row by row, not column by column. Columns still need to be assembled from column-keyed data and then sorted by column index.' },
-        { label: 'Column order matches insertion order in the dictionary', isCorrect: false, feedback: 'Python dicts preserve insertion order, but insertion order depends on traversal — not on column position. Sort the keys to guarantee the correct left-to-right output.' },
+        { label: 'Process nodes level by level to naturally produce left-to-right columns', isCorrect: false, feedback: 'BFS level order produces nodes row by row, not column by column. Columns still need to be assembled from column-keyed data and then sorted by column index.' },
+        { label: 'Column order matches the order columns were first inserted', isCorrect: false, feedback: 'Python dicts preserve insertion order, but insertion order depends on traversal — not on column position. Sort the keys to guarantee the correct left-to-right output.' },
       ],
       correctFeedback: 'After collecting all (row, val) pairs per column, sort the column dictionary by key. The minimum column key is the leftmost column; maximum is rightmost. Sorting keys gives the required left-to-right order.',
       wrongFeedback: [
@@ -65,12 +90,13 @@ export default {
     },
     {
       id: 'row-tracking',
-      question: 'Nodes in the same column and same row must be sorted by value. How do you track a node\'s row during traversal?',
+      highlight: { location: 'description', text: 'nodes at the same row' },
+      question: 'A second coordinate mentioned alongside the primary grouping key usually needs its own explicit tracking through the recursion, separate from the key itself. Nodes in the same column and same row must be sorted by value. How do you track a node\'s row during traversal?',
       options: [
         { label: 'Row equals the node\'s value', isCorrect: false, feedback: 'Row is the depth (distance from root), not the node\'s value. Two nodes with the same value at different depths are in different rows.' },
         { label: 'Row increments by 1 at each level of recursion', isCorrect: true },
         { label: 'Row equals the column index', isCorrect: false, feedback: 'Row and column are independent coordinates. A node at row 2 could be in column -2, -1, 0, 1, or 2 depending on the path taken.' },
-        { label: 'BFS queue position gives the row automatically', isCorrect: false, feedback: 'BFS queue position gives traversal order within a level, not the row number directly. You need to explicitly track depth — either by passing it as a parameter or by counting BFS levels.' },
+        { label: 'The order nodes are processed in gives the row automatically', isCorrect: false, feedback: 'BFS queue position gives traversal order within a level, not the row number directly. You need to explicitly track depth — either by passing it as a parameter or by counting BFS levels.' },
       ],
       correctFeedback: 'Start with row=0 at the root. Each recursive call increments row by 1. This gives each node a (col, row) coordinate that uniquely identifies its position for the same-position sort.',
       wrongFeedback: [
@@ -79,4 +105,24 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def vertical_traversal(self, root):
+        columns = {}
+
+        def dfs(node, row, col):
+            if not node:
+                return
+            columns.setdefault(col, []).append((row, node.val))
+            dfs(node.left, row + 1, col - 1)
+            dfs(node.right, row + 1, col + 1)
+
+        dfs(root, 0, 0)
+        result = []
+        for col in sorted(columns):
+            entries = sorted(columns[col])
+            result.append([val for row, val in entries])
+        return result`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'Each dictionary entry stores a <code>(row, val)</code> tuple, not just the value — sorting by that tuple orders first by row and only uses value as a tiebreaker for nodes that land in the exact same row <code>and</code> column, which is precisely the ordering rule the problem specifies.',
+  solutionExplanation: 'Tracking <code>(row, col)</code> coordinates through the recursion — incrementing row on every step down and shifting col by -1 going left or +1 going right — assigns every node a position derived directly from its actual path through the tree, rather than from traversal order, which is what makes the grouping correct regardless of whether the walk is DFS or BFS. Grouping nodes into a dictionary keyed by column defers the "left to right" ordering requirement to a single sort over the dictionary\'s keys at the end, rather than needing the traversal itself to visit columns in that order.',
 }

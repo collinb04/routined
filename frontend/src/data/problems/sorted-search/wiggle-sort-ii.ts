@@ -7,20 +7,23 @@ export default {
     { input: 'nums = [1,5,1,1,6,4]', output: '[1,6,1,5,1,4]', explanation: 'One valid wiggle arrangement.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 5 × 10⁴', '0 ≤ nums[i] ≤ 5000', 'A valid answer is guaranteed'],
-  starterCode: `def wiggle_sort(nums):
-  pass`,
+  starterCode: `class Solution:
+    def wiggle_sort(self, nums):
+        pass`,
+  runnerSetup: 'wiggle_sort = Solution().wiggle_sort',
   functionName: 'wiggle_sort',
   conceptId: 'sorting',
   testCases: [
-    { label: 'Verify wiggle property', args: [[1,5,1,1,6,4]], expected: null },
-    { label: '[1,3,2,2,3,1]', args: [[1,3,2,2,3,1]], expected: null },
+    { label: 'Verify wiggle property', args: [[1,5,1,1,6,4]], expected: [1,6,1,5,1,4] },
+    { label: '[1,3,2,2,3,1]', args: [[1,3,2,2,3,1]], expected: [2,3,1,3,1,2] },
   ],
-  bruteHint: 'Describe sorting the array and interleaving the smaller and larger halves directly at the midpoint, and the edge case where duplicate median values end up adjacent',
-  optimizeHint: 'Name the technique of reversing each half before interleaving to keep equal values (especially the median) from landing next to each other',
+  bruteHint: 'A direct approach sorts the array in O(n log n) time, then splits it into a smaller half and a larger half at the midpoint, placing the smaller half into the even indices and the larger half into the odd indices. This works for most inputs, but when the median value repeats an odd number of times, its copies get split across both halves and can end up right next to each other after interleaving. What happens to the strict inequality between two adjacent equal values in that case?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'strict-inequalities',
-      question: 'The condition requires strict inequalities: nums[0] < nums[1] > nums[2] < … What does "strict" imply about how you handle duplicates?',
+      question: 'Strict versus non-strict relational conditions in a problem statement often determine how carefully you must handle duplicate values. The condition requires strict inequalities: nums[0] < nums[1] > nums[2] < … What does "strict" imply about how you handle duplicates?',
+      highlight: { location: 'description', text: 'nums[0] < nums[1] > nums[2] < nums[3]...' },
       options: [
         { label: 'Equal adjacent elements are allowed at valley positions', isCorrect: false, feedback: 'Strict inequality means no adjacent element can be equal — not even at valleys. nums[0] < nums[1] means nums[0] must be strictly less than nums[1], not less-than-or-equal.' },
         { label: 'Equal elements must not be placed adjacent to each other', isCorrect: true },
@@ -35,7 +38,7 @@ export default {
     },
     {
       id: 'sort-and-interleave-strategy',
-      question: 'A natural approach: sort the array, split into a smaller half and larger half, then interleave. Why does the split point matter?',
+      question: 'A natural-looking first approach can still hide an edge case that only shows up with certain inputs. A natural approach: sort the array, split into a smaller half and larger half, then interleave. Why does the split point matter?',
       options: [
         { label: 'Both halves must be the same size', isCorrect: false, feedback: 'For an odd-length array, the two halves differ by one element. The smaller half goes to even indices (valleys) and the larger to odd indices (peaks). Equal sizes are not required.' },
         { label: 'The median element must not be placed adjacent to itself', isCorrect: true },
@@ -50,7 +53,7 @@ export default {
     },
     {
       id: 'reverse-halves-trick',
-      question: 'Sorting, splitting into two halves, then reversing each half before interleaving prevents adjacency of equal elements. Why does reversing help?',
+      question: 'A small, targeted tweak to an almost-correct approach is often what closes the last correctness gap. Sorting, splitting into two halves, then reversing each half before interleaving prevents adjacency of equal elements. Why does reversing help?',
       options: [
         { label: 'Reversing sorts both halves in descending order', isCorrect: false, feedback: 'Reversing a sorted half gives descending order within that half — but the reason it helps is not about sort direction. It\'s about where the median-value copies land after interleaving.' },
         { label: 'It spreads median copies away from the interleave boundary', isCorrect: true },
@@ -64,4 +67,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def wiggle_sort(self, nums):
+        n = len(nums)
+        sorted_nums = sorted(nums)
+        mid = (n + 1) // 2
+        small = sorted_nums[:mid][::-1]
+        large = sorted_nums[mid:][::-1]
+        for i in range(n):
+            if i % 2 == 0:
+                nums[i] = small[i // 2]
+            else:
+                nums[i] = large[i // 2]
+        return nums`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'Both halves are reversed before interleaving — filling from the *back* of each half rather than the front — which is specifically what keeps repeated copies of the median from ending up adjacent to each other, since a repeated median\'s copies get pushed to opposite outer edges of the two halves instead of sitting next to each other at the inner boundary.',
+  solutionExplanation: 'Splitting the sorted array into a smaller half and a larger half and placing the smaller half at even indices, the larger at odd indices, guarantees every even-indexed value is <code>&lt;=</code> every odd-indexed value it neighbors — the general shape the wiggle pattern needs. Reversing each half before interleaving is the detail that makes the inequalities strict even when the median value repeats several times, since equal values end up separated across the two halves rather than clustered next to each other.',
 }

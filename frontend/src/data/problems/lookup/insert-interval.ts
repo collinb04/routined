@@ -8,8 +8,10 @@ export default {
     { input: 'intervals=[[1,2],[3,5],[6,7],[8,10],[12,16]], newInterval=[4,8]', output: '[[1,2],[3,10],[12,16]]' },
   ],
   constraints: ['0 ≤ intervals.length ≤ 10⁴', 'intervals is sorted and non-overlapping', '0 ≤ newInterval[i] ≤ 10⁵'],
-  starterCode: `def insert(intervals, new_interval):
-  pass`,
+  starterCode: `class Solution:
+    def insert(self, intervals, new_interval):
+        pass`,
+  runnerSetup: 'insert = Solution().insert',
   functionName: 'insert',
   conceptId: 'intervals',
   testCases: [
@@ -18,16 +20,17 @@ export default {
     { label: 'Empty list', args: [[],[5,7]], expected: [[5,7]] },
     { label: 'No overlap before', args: [[[3,5],[6,9]],[1,2]], expected: [[1,2],[3,5],[6,9]] },
   ],
-  bruteHint: 'Describe appending the new interval and re-sorting the whole list to merge overlaps, and its time complexity',
-  optimizeHint: 'Identify what already being sorted lets you do in a single linear pass',
+  bruteHint: 'A brute-force approach appends the new interval to the list, ignoring that it is already sorted, then re-sorts the entire collection by start time and does a linear pass to merge any overlaps. Sorting from scratch costs O(n log n) time and O(n) space for the output, discarding the ordering guarantee you were already given. If the list was already sorted before you added the new interval, how much of that re-sorting work was actually necessary?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'sorted-input-guarantee',
-      question: '"intervals is sorted and non-overlapping" — what does this guarantee let you skip?',
+      question: 'Guarantees about the input\'s existing structure often let you skip preprocessing you would otherwise need. "intervals is sorted and non-overlapping" — what does this guarantee let you skip?',
+      highlight: { location: 'constraint', text: 'intervals is sorted and non-overlapping' },
       options: [
-        { label: 'Sort the input before processing', isCorrect: false, feedback: 'The input is already sorted by start time. Re-sorting is wasted work — the guarantee is telling you the array is ready to scan linearly.' },
-        { label: 'Skip re-sorting; scan left to right', isCorrect: true },
-        { label: 'Use binary search on every interval', isCorrect: false, feedback: 'Binary search could help locate insertion point, but the broader guarantee is that you never need to sort. A single left-to-right pass handles all three regions: before, overlapping, and after the new interval.' },
+        { label: 'Reorder the intervals before processing', isCorrect: false, feedback: 'The input is already sorted by start time. Re-sorting is wasted work — the guarantee is telling you the array is ready to scan linearly.' },
+        { label: 'Trust the existing order and scan through once', isCorrect: true },
+        { label: 'Search for the correct position individually for each interval', isCorrect: false, feedback: 'Binary search could help locate insertion point, but the broader guarantee is that you never need to sort. A single left-to-right pass handles all three regions: before, overlapping, and after the new interval.' },
         { label: 'Merge pairs before inserting', isCorrect: false, feedback: 'The existing intervals are already non-overlapping — there is nothing to pre-merge. The guarantee means the only new merging you need is caused by the new interval itself.' },
       ],
       correctFeedback: 'Because the list is pre-sorted, you can walk it once: copy intervals that end before the new one starts, merge all that overlap, then copy the rest. No sorting step needed.',
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'output-type-intervals',
-      question: 'The output is a list of intervals, not a count or boolean. What does your algorithm need to build?',
+      question: 'The return type tells you what shape of result your algorithm must assemble. The output is a list of intervals, not a count or boolean. What does your algorithm need to build?',
+      highlight: { location: 'description', text: 'Return the resulting array of intervals.' },
       options: [
         { label: 'A running count of overlaps', isCorrect: false, feedback: 'A count tells you how many merges happened but not what the merged intervals are. You need to reconstruct the full interval list.' },
         { label: 'A new list accumulating result intervals', isCorrect: false },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'overlap-condition',
-      question: 'Two intervals overlap when one starts before the other ends. What is the merge rule for the new interval?',
+      question: 'Getting the merge step right depends on knowing exactly how to combine two overlapping ranges. Two intervals overlap when one starts before the other ends. What is the merge rule for the new interval?',
+      highlight: { location: 'description', text: 'merge if necessary' },
       options: [
         { label: 'Take the union: [min(start), max(end)]', isCorrect: true },
         { label: 'Take the intersection: [max(start), min(end)]', isCorrect: false, feedback: 'Intersection narrows the range — it finds the shared portion. Merging overlapping intervals means expanding to cover both, so you want the union.' },
@@ -68,7 +73,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'intervals.length ≤ 10⁴ — what does this say about acceptable complexity?',
+      question: 'Constraints define the complexity budget your solution must fit within. intervals.length ≤ 10⁴ — what does this say about acceptable complexity?',
+      highlight: { location: 'constraint', text: '0 ≤ intervals.length ≤ 10⁴' },
       options: [
         { label: 'O(n²) is fine at this size', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations. Even at this moderate size a nested loop approach is marginal at best — and unnecessary, since the sorted input enables a single pass.' },
         { label: 'O(n log n) or better is needed', isCorrect: false, feedback: 'O(n log n) would work, but the sorted-input guarantee means you do not even need a sort step. A single O(n) pass is achievable and expected here.' },
@@ -82,4 +88,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def insert(self, intervals, new_interval):
+        result = []
+        i = 0
+        n = len(intervals)
+        while i < n and intervals[i][1] < new_interval[0]:
+            result.append(intervals[i])
+            i += 1
+        start, end = new_interval
+        while i < n and intervals[i][0] <= end:
+            start = min(start, intervals[i][0])
+            end = max(end, intervals[i][1])
+            i += 1
+        result.append([start, end])
+        while i < n:
+            result.append(intervals[i])
+            i += 1
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The middle loop\'s condition is <code>intervals[i][0] &lt;= end</code>, not <code>&lt; end</code> — a touching interval (starting exactly where the merged range currently ends) still needs to be absorbed, matching the "Touching" convention used elsewhere in this concept (e.g. Merge Intervals\'s <code>[1,4],[4,5]</code> case).',
+  solutionExplanation: 'Because the input is already sorted, the new interval\'s correct position can be found in one pass with no re-sorting: everything ending before the new interval starts is untouched and copied straight through, everything that overlaps the new interval gets folded into it by expanding its start and end to cover them all, and everything left over (starting after the merged range ends) is copied through unchanged. Each existing interval is only ever visited once, across whichever of the three phases it belongs to.',
 }

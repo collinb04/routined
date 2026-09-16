@@ -8,8 +8,10 @@ export default {
     { input: 'prices = [1,2,3,4,5]', output: '4', explanation: 'Buy day 1, sell day 5: profit 4.' },
   ],
   constraints: ['1 ≤ prices.length ≤ 10⁵', '0 ≤ prices[i] ≤ 10⁵'],
-  starterCode: `def max_profit(prices):
-  pass`,
+  starterCode: `class Solution:
+    def max_profit(self, prices):
+        pass`,
+  runnerSetup: 'max_profit = Solution().max_profit',
   functionName: 'max_profit',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'One transaction', args: [[1,2,3,4,5]], expected: 4 },
     { label: 'Descending', args: [[7,6,4,3,1]], expected: 0 },
   ],
-  bruteHint: 'Describe the recursive approach that tries every possible pair of non-overlapping buy/sell intervals and explain why exploring them all is too slow.',
-  optimizeHint: 'Name the two things the DP state needs to track at each day — how many transactions you\'ve used, and whether you\'re currently holding — so overlapping subproblems are solved once.',
+  bruteHint: 'The brute-force approach recursively tries every possible pair of non-overlapping buy/sell intervals, evaluating each combination independently. Choosing the first interval is O(n²) and choosing the second afterward is another O(n²), so exploring every combination costs O(n⁴) overall. With prices.length up to 10⁵, is that remotely feasible, and what small set of running values could replace all that re-exploration?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'prices.length ≤ 10⁵ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ prices.length ≤ 10⁵' },
+      question: 'Constraints define the complexity budget you must fit within before designing your algorithm. prices.length ≤ 10⁵ tells you…',
       options: [
         { label: 'O(n²) is fine',           isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations — far too slow. The constraint rules out quadratic approaches.' },
         { label: 'O(n) or O(n log n) needed', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'transaction-cap',
-      question: '"At most 2 transactions" means…',
+      highlight: { location: 'description', text: 'using at most 2 transactions' },
+      question: 'A hard cap on how many actions you may take is a strong signal that your state must track usage against that budget. "At most 2 transactions" means…',
       options: [
         { label: 'You must make exactly 2 transactions',          isCorrect: false, feedback: '"At most 2" includes using 0 or 1 transaction. If prices only fall, the best answer is 0 profit — you don\'t have to transact.' },
         { label: 'You track state for 0, 1, and 2 transactions used', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'sell-before-buy',
-      question: '"You must sell before you buy again" means…',
+      highlight: { location: 'description', text: 'You must sell before you buy again' },
+      question: 'Ordering constraints between actions often determine whether your state needs to track sequence, not just totals. "You must sell before you buy again" means…',
       options: [
         { label: 'You can hold multiple positions simultaneously',   isCorrect: false, feedback: 'The constraint explicitly forbids overlapping positions. You must fully exit a position (sell) before opening a new one (buy).' },
         { label: 'Your two transactions cannot overlap in time',      isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'state-tracking',
-      question: 'To maximize profit with at most 2 transactions, what states do you need to track at each price?',
+      highlight: { location: 'description', text: 'using at most 2 transactions' },
+      question: 'Once you know the limited number of actions allowed, the next step is enumerating exactly which combinations of progress define a distinct state. To maximize profit with at most 2 transactions, what states do you need to track at each price?',
       options: [
         { label: 'Just the current running profit',                   isCorrect: false, feedback: 'A single profit value loses the information about whether you\'re holding stock and how many transactions you\'ve used. You need to distinguish states to make optimal decisions.' },
         { label: 'Best profit for each (transactions used, holding) combo', isCorrect: true },
@@ -81,4 +87,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_profit(self, prices):
+        buy1 = buy2 = float('-inf')
+        sell1 = sell2 = 0
+        for price in prices:
+            buy1 = max(buy1, -price)
+            sell1 = max(sell1, buy1 + price)
+            buy2 = max(buy2, sell1 - price)
+            sell2 = max(sell2, buy2 + price)
+        return sell2`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>buy2</code> is updated from <code>sell1</code>, not from a fresh <code>-price</code> — that dependency is what enforces "sell before you buy again," since the second purchase can only ever draw on profit already locked in by completing the first sale.',
+  solutionExplanation: 'Five running values — implicitly baseline (0), <code>buy1</code>, <code>sell1</code>, <code>buy2</code>, <code>sell2</code> — track the best profit achievable in each of the five states after at most two transactions, updated in a single left-to-right pass. Because all four updates happen using the previous day\'s values before any of them change, each day\'s numbers reflect a real, ordered sequence of trades rather than an impossible mix of "before and after" states, and <code>sell2</code> at the end already accounts for using 0, 1, or 2 transactions, since each running maximum never decreases.',
 }

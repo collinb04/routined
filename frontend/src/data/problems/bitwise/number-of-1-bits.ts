@@ -8,8 +8,10 @@ export default {
     { input: 'n = 128', output: '1', explanation: '128 is 10000000, which has one 1-bit.' },
   ],
   constraints: ['1 ≤ n ≤ 2³¹ − 1'],
-  starterCode: `def hammingWeight(n):
-  pass`,
+  starterCode: `class Solution:
+    def hammingWeight(self, n):
+        pass`,
+  runnerSetup: 'hammingWeight = Solution().hammingWeight',
   functionName: 'hammingWeight',
   conceptId: 'bit-manipulation',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Max 32-bit', args: [2147483647], expected: 31 },
     { label: 'Zero bits... n=1', args: [1], expected: 1 },
   ],
-  bruteHint: 'Describe checking all 32 bit positions one by one, and why it\'s already fairly efficient',
-  optimizeHint: 'Name the bit trick that lets each iteration jump straight to the next set bit',
+  bruteHint: 'The straightforward approach checks all 32 bit positions of n one at a time, using n & 1 to read the current lowest bit and n >>= 1 to advance to the next. Since the input is a fixed 32-bit integer, this is already O(1) time — 32 is a constant, not a variable-length input. It\'s efficient, but it always does the same amount of work no matter how many bits are actually set. Could you instead do less work when most of n\'s bits are 0?',
+  optimizeComplexity: { time: 'O(k)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-range',
-      question: 'n ≤ 2³¹ − 1 tells you the input fits in a 32-bit unsigned integer. What does this bound the output to?',
+      question: 'A numeric bound on the input often tells you the maximum size of the answer itself. n ≤ 2³¹ − 1 tells you the input fits in a 32-bit unsigned integer. What does this bound the output to?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 2³¹ − 1' },
       options: [
         { label: 'At most 31 set bits', isCorrect: true },
         { label: 'At most 32 set bits', isCorrect: false, feedback: 'The constraint is 2³¹ − 1, which is 31 ones in binary (0111…1). A full 32-bit unsigned integer (2³² − 1) would have 32 set bits, but the input is bounded below that.' },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'bit-inspection-method',
-      question: 'You need to inspect each bit of n. What operation isolates the lowest set bit?',
+      question: 'Picking the right low-level operation is often what separates a clean bit-manipulation solution from an awkward one. You need to inspect each bit of n. What operation isolates the lowest set bit?',
       options: [
         { label: 'n % 2 checks the lowest bit; shift right to advance', isCorrect: false, feedback: 'n % 2 works but is a division-based approach. The bitwise equivalent is n & 1, which is faster and more idiomatic for bit-counting. Both iterate through bits — the bitwise form is standard.' },
         { label: 'n & 1 checks the lowest bit; n >>= 1 advances', isCorrect: true },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'kernighan-trick',
-      question: 'n & (n − 1) clears the lowest set bit of n. How does this lead to a faster bit-counting loop?',
+      question: 'Sometimes one bitwise trick unlocks a loop that does meaningfully less work than the naive version. n & (n − 1) clears the lowest set bit of n. How does this lead to a faster bit-counting loop?',
       options: [
         { label: 'Loop 32 times regardless; count 1s found', isCorrect: false, feedback: 'Looping exactly 32 times checks every bit position — that\'s the straightforward approach. n & (n − 1) is faster because it only iterates once per set bit, skipping zero bits entirely.' },
         { label: 'Loop only as many times as there are set bits', isCorrect: true },
@@ -67,4 +70,13 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def hammingWeight(self, n):
+        count = 0
+        while n:
+            n &= n - 1
+            count += 1
+        return count`,
+  solutionComplexity: { time: 'O(k) — k = number of set bits', space: 'O(1)' },
+  solutionExplanation: '<code>n - 1</code> flips every bit from the lowest set bit downward: that bit becomes 0, and every 0 below it becomes 1. ANDing with the original <code>n</code> keeps only the bits that were untouched above that point — net effect, the lowest set bit vanishes and nothing else changes. Looping that until <code>n</code> is 0 counts exactly the set bits, in as many iterations as there are 1s — not one iteration per bit position, which is why this beats checking all 32 bits one by one.',
 }

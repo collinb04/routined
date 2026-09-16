@@ -9,8 +9,10 @@ export default {
     { input: 'x = 120', output: '21', explanation: 'Leading zero is dropped.' },
   ],
   constraints: ['-2³¹ ≤ x ≤ 2³¹ − 1'],
-  starterCode: `def reverse(x):
-  pass`,
+  starterCode: `class Solution:
+    def reverse(self, x):
+        pass`,
+  runnerSetup: 'reverse = Solution().reverse',
   functionName: 'reverse',
   conceptId: 'bit-manipulation',
   testCases: [
@@ -19,12 +21,13 @@ export default {
     { label: 'Trailing zero', args: [120], expected: 21 },
     { label: 'Overflow', args: [1534236469], expected: 0 },
   ],
-  bruteHint: 'Describe reversing the digits via string conversion, and what edge cases that complicates',
-  optimizeHint: 'Name the arithmetic operations that extract and rebuild digits while making overflow and sign handling explicit',
+  bruteHint: 'One brute-force approach converts the integer to a string, reverses the characters, and parses the result back into a number — O(log n) time and O(log n) space, since digit count scales with the size of x. But string reversal knows nothing about numeric bounds, so you would need to separately handle the negative sign and re-check for 32-bit overflow after converting back. What edge cases would trip up this approach if you did not handle them explicitly?',
+  optimizeComplexity: { time: 'O(log n)', space: 'O(1)' },
   clues: [
     {
       id: 'overflow-condition',
-      question: 'The range is [-2³¹, 2³¹ − 1]. The problem asks you to return 0 on overflow. What does this mean for your implementation?',
+      question: 'Constraints that spell out exact numeric bounds are often a hint that your solution needs explicit boundary checks. The range is [-2³¹, 2³¹ − 1]. The problem asks you to return 0 on overflow. What does this mean for your implementation?',
+      highlight: { location: 'constraint', text: '-2³¹ ≤ x ≤ 2³¹ − 1' },
       options: [
         { label: 'Check for overflow after fully reversing', isCorrect: false, feedback: 'Checking after reversing is fine in Python, which has arbitrary-precision integers. But in fixed-width languages, the reversal itself could overflow before you compare. Check before committing each new digit.' },
         { label: 'Check bounds incrementally or at the end before returning', isCorrect: true },
@@ -39,7 +42,8 @@ export default {
     },
     {
       id: 'digit-reversal-approach',
-      question: 'To reverse digits of an integer, you need to extract them one at a time. What operations accomplish this?',
+      question: 'The core verb in a problem description usually points to the operation you actually need to implement. To reverse digits of an integer, you need to extract them one at a time. What operations accomplish this?',
+      highlight: { location: 'description', text: 'reverse its digits' },
       options: [
         { label: 'Convert to string, reverse the string, convert back', isCorrect: false, feedback: 'String reversal works, but misses handling the sign and leading zeros. If x = -120, reversing the string gives "021-", which requires cleanup. The arithmetic approach handles these cases more cleanly.' },
         { label: 'Use modulo to extract digits, build result by multiplying by 10', isCorrect: true },
@@ -54,12 +58,13 @@ export default {
     },
     {
       id: 'sign-handling',
-      question: 'x = -123 should produce -321. How does the arithmetic digit-extraction approach handle negative inputs?',
+      question: 'Type descriptors like "signed" often flag an edge case the naive approach glosses over. x = -123 should produce -321. How does the arithmetic digit-extraction approach handle negative inputs?',
+      highlight: { location: 'description', text: 'signed 32-bit integer' },
       options: [
         { label: 'Process the absolute value, then restore the sign at the end', isCorrect: true },
         { label: 'Python\'s modulo handles negative values correctly without adjustment', isCorrect: false, feedback: 'Python\'s modulo for negative numbers follows floor division: -123 % 10 = 7, not 3. This produces wrong digits without explicit sign handling.' },
         { label: 'Negative inputs always overflow; return 0', isCorrect: false, feedback: 'The example shows -123 → -321, which is valid. Only reversal results outside [-2³¹, 2³¹ − 1] return 0 — the sign alone doesn\'t cause overflow.' },
-        { label: 'XOR the sign bit in at the end', isCorrect: false, feedback: 'Sign in two\'s complement isn\'t a separable bit you can XOR in after the fact. Work with abs(x), reverse digits, then apply the original sign.' },
+        { label: 'Combine the sign into the result using a bitwise operation at the end', isCorrect: false, feedback: 'Sign in two\'s complement isn\'t a separable bit you can XOR in after the fact. Work with abs(x), reverse digits, then apply the original sign.' },
       ],
       correctFeedback: 'Take sign = -1 if x < 0 else 1, work with abs(x) to extract digits, then return sign * result after overflow checking.',
       wrongFeedback: [
@@ -69,12 +74,12 @@ export default {
     },
     {
       id: 'trailing-zeros',
-      question: 'x = 120 produces 21, not 021. Why does the modulo approach handle this automatically?',
+      question: 'Worked examples often expose edge-case behavior that the general rule alone doesn\'t make obvious. x = 120 produces 21, not 021. Why does the modulo approach handle this automatically?',
       options: [
         { label: 'The algorithm skips zero digits', isCorrect: false, feedback: 'The algorithm doesn\'t skip zeros — it processes every digit including the trailing zero of 120. But when that zero is placed first in the result (result = 0 * 10 + 0 = 0), subsequent digits build on it without a stored leading zero.' },
         { label: 'Leading zeros have no numeric value, so result = 0 * 10 + 0 = 0 naturally', isCorrect: true },
         { label: 'You must strip trailing zeros from x before reversing', isCorrect: false, feedback: 'No pre-processing is needed. The arithmetic naturally handles it: if the first digit you extract is 0, the result starts at 0 and grows from there as remaining digits are appended.' },
-        { label: 'Convert to string and use lstrip("0")', isCorrect: false, feedback: 'String manipulation isn\'t needed and would add complexity. The arithmetic approach drops leading zeros automatically because integers don\'t store leading zeros.' },
+        { label: 'Manually strip the leading zero from the output before returning it', isCorrect: false, feedback: 'String manipulation isn\'t needed and would add complexity. The arithmetic approach drops leading zeros automatically because integers don\'t store leading zeros.' },
       ],
       correctFeedback: 'Processing 120: extract 0 → result = 0, extract 2 → result = 2, extract 1 → result = 21. The zero starts result at 0, which is indistinguishable from no leading zero in an integer.',
       wrongFeedback: [
@@ -83,4 +88,22 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def reverse(self, x):
+        sign = -1 if x < 0 else 1
+        x = abs(x)
+        result = 0
+        while x != 0:
+            digit = x % 10
+            x //= 10
+            result = result * 10 + digit
+        result *= sign
+        INT_MAX = 2**31 - 1
+        INT_MIN = -2**31
+        if result > INT_MAX or result < INT_MIN:
+            return 0
+        return result`,
+  solutionComplexity: { time: 'O(log n)', space: 'O(1)' },
+  solutionCaveat: 'Working with <code>abs(x)</code> and re-applying the sign at the end sidesteps a subtlety of Python\'s <code>%</code> operator, which returns a non-negative result for a negative left operand rather than mirroring the sign of <code>x</code> the way many other languages\' <code>%</code> would.',
+  solutionExplanation: 'Peeling off digits from the least-significant end with <code>% 10</code> and rebuilding the number by multiplying the running result by 10 before adding each digit reverses the digit order directly, without ever leaving numeric form for a string. A leading zero in the original (like the one in 120) simply becomes a trailing digit that contributes 0 to the final result and vanishes naturally, exactly the way integers already drop insignificant leading zeros.',
 }

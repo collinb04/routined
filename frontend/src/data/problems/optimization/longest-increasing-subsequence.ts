@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [0,1,0,3,2,3]', output: '4' },
   ],
   constraints: ['1 <= nums.length <= 2500', '-10^4 <= nums[i] <= 10^4'],
-  starterCode: `def length_of_lis(nums):
-  pass`,
+  starterCode: `class Solution:
+    def length_of_lis(self, nums):
+        pass`,
+  runnerSetup: 'length_of_lis = Solution().length_of_lis',
   functionName: 'length_of_lis',
   conceptId: 'dp-1d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '[0,1,0,3,2,3]', args: [[0,1,0,3,2,3]], expected: 4 },
     { label: '[7,7,7,7]', args: [[7,7,7,7]], expected: 1 },
   ],
-  bruteHint: 'Describe the O(n²) DP approach: for each position, look back at every earlier position to see which shorter subsequences it can extend',
-  optimizeHint: 'Name the O(n log n) technique (patience-sorting / binary search on tails) that improves past the O(n²) DP',
+  bruteHint: 'The brute-force approach recursively explores every possible subsequence: at each index, branch into "include this element if it continues the increasing run" or "skip it entirely," which produces up to O(2^n) combinations to check. At n = 2,500, that branching factor is completely infeasible. What would let you avoid re-deciding the same subproblem — the longest increasing subsequence ending at a given index — over and over?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 2500 tells you…',
+      question: 'Constraint bounds tell you upfront which time complexities are realistic before you design an approach. nums.length ≤ 2500 tells you…',
+      highlight: { location: 'constraint', text: '1 <= nums.length <= 2500' },
       options: [
         { label: 'O(n²) is acceptable', isCorrect: true },
         { label: 'O(n log n) is required', isCorrect: false, feedback: 'O(n log n) is achievable with a patience-sort approach, but n = 2,500 makes O(n²) = 6.25 million operations perfectly fine. The constraint permits the simpler O(n²) DP.' },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'subsequence-not-subarray',
-      question: '"Subsequence" means elements need not be contiguous. What does this change about the approach?',
+      question: 'Precisely how a term like "subsequence" is defined determines which earlier states your recurrence actually needs to consider. "Subsequence" means elements need not be contiguous. What does this change about the approach?',
+      highlight: { location: 'description', text: 'longest strictly increasing subsequence' },
       options: [
         { label: 'You can use a sliding window', isCorrect: false, feedback: 'Sliding windows work on contiguous subarrays. A subsequence can skip elements — the structure is fundamentally non-contiguous, so a window approach loses valid non-adjacent combinations.' },
         { label: 'dp[i] depends on all j < i, not just j = i-1', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'strictly-increasing',
-      question: '"Strictly increasing" means equal values cannot extend a subsequence. What does [7,7,7,7] reveal?',
+      question: 'The exact wording of an ordering constraint determines whether equal or repeated values are treated as valid extensions. "Strictly increasing" means equal values cannot extend a subsequence. What does [7,7,7,7] reveal?',
+      highlight: { location: 'description', text: 'strictly increasing' },
       options: [
         { label: 'The answer is 4 — all elements form one subsequence', isCorrect: false, feedback: '7 is not strictly greater than 7, so no element extends another. Each 7 is its own LIS of length 1. The answer is 1, not 4.' },
         { label: 'The LIS length is 1 — no element extends any other', isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'output-length-not-sequence',
-      question: 'The output is the length of the LIS, not the actual subsequence. This means…',
+      question: 'What a problem asks you to return determines how much information your solution actually needs to track. The output is the length of the LIS, not the actual subsequence. This means…',
+      highlight: { location: 'description', text: 'return the length of the longest strictly increasing subsequence' },
       options: [
         { label: 'You must reconstruct the subsequence to find its length', isCorrect: false, feedback: 'Reconstruction requires backtracking through the DP table, which is extra work the problem never requests. The length is just the maximum value in your dp array.' },
         { label: 'dp[i] stores an integer; the answer is max(dp)', isCorrect: true },
@@ -81,4 +87,16 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def length_of_lis(self, nums):
+        n = len(nums)
+        dp = [1] * n
+        for i in range(n):
+            for j in range(i):
+                if nums[j] < nums[i]:
+                    dp[i] = max(dp[i], dp[j] + 1)
+        return max(dp) if dp else 0`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(n)' },
+  solutionCaveat: 'Every <code>j &lt; i</code> is checked, not just <code>j = i - 1</code> — since a subsequence can skip over elements, the best predecessor for <code>nums[i]</code> could be any earlier index whose value is smaller, not necessarily the one immediately before it.',
+  solutionExplanation: '<code>dp[i]</code> represents the length of the longest increasing subsequence that ends exactly at index <code>i</code>, and it\'s built by checking every earlier index <code>j</code> that could legally precede it (<code>nums[j] &lt; nums[i]</code>, satisfying the strict-increase requirement) and extending whichever such <code>dp[j]</code> is largest. Since the overall longest increasing subsequence must end somewhere, the answer is simply the maximum value across the whole <code>dp</code> array, not necessarily <code>dp[n-1]</code>.',
 }

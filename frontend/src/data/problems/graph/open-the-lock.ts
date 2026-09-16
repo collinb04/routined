@@ -8,8 +8,10 @@ export default {
     { input: 'deadends=["8888"], target="0009"', output: '1' },
   ],
   constraints: ['1 ≤ deadends.length ≤ 500', 'target.length == deadends[i].length == 4', 'target is not in deadends'],
-  starterCode: `def open_lock(deadends, target):
-  pass`,
+  starterCode: `class Solution:
+    def open_lock(self, deadends, target):
+        pass`,
+  runnerSetup: 'open_lock = Solution().open_lock',
   functionName: 'open_lock',
   conceptId: 'graphs',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '1 turn', args: [['8888'],'0009'], expected: 1 },
     { label: 'Already there', args: [[],  '0000'], expected: 0 },
   ],
-  bruteHint: 'Describe a brute-force DFS that tries turning wheels in every order, and why it can\'t guarantee the fewest turns',
-  optimizeHint: 'Name the graph-search technique that explores the lock\'s combinations level by level to guarantee the minimum number of turns',
+  bruteHint: 'A brute-force approach would use DFS or plain recursion to try every sequence of wheel turns, branching into up to 8 possible moves at each step and exploring paths of arbitrary depth in search of the target. Since it has no notion of turn count when choosing which path to explore first, it can wander down long sequences before stumbling onto the target, and the number of explored sequences grows exponentially — O(8^d) for a path of depth d. How could you restructure the search so the shortest sequence of turns is always found before any longer one?',
+  optimizeComplexity: { time: 'O(10⁴)', space: 'O(10⁴)' },
   clues: [
     {
       id: 'output-minimum',
-      question: 'The problem asks for the minimum number of turns. What does "minimum" signal about the algorithm?',
+      question: 'Paying close attention to the exact wording of what a problem asks you to return often reveals whether any path will do or specifically the shortest one is required. The problem asks for the minimum number of turns. What does "minimum" signal about the algorithm?',
+      highlight: { location: 'description', text: 'find the minimum turns to reach the target from "0000", or -1 if impossible.' },
       options: [
         { label: 'Use BFS, not DFS', isCorrect: true },
         { label: 'Sort states by turn count', isCorrect: false, feedback: 'Sorting states doesn\'t yield the minimum path — you\'d still visit states in the wrong order. "Minimum" means you want the first time you reach a state, which BFS guarantees by exploring level by level.' },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'state-space',
-      question: 'Each lock state is a 4-digit string (digits 0–9). How many distinct states exist?',
+      question: 'Before choosing a search strategy, it helps to know how large the space of possible states actually is. Each lock state is a 4-digit string (digits 0–9). How many distinct states exist?',
+      highlight: { location: 'constraint', text: 'target.length == deadends[i].length == 4' },
       options: [
         { label: '4 × 10 = 40', isCorrect: false, feedback: 'That counts digits per wheel, not combinations. Each wheel is independent — 10 choices per wheel across 4 wheels gives 10⁴ total states.' },
         { label: '10⁴ = 10,000', isCorrect: true },
@@ -52,10 +56,11 @@ export default {
     },
     {
       id: 'deadends-constraint',
-      question: 'Deadend states must never be visited. How should you handle them?',
+      question: 'Constraints that forbid certain states outright often need to be folded into your traversal\'s bookkeeping, not just checked ad hoc. Deadend states must never be visited. How should you handle them?',
+      highlight: { location: 'constraint', text: '1 ≤ deadends.length ≤ 500' },
       options: [
         { label: 'Skip them during neighbor generation', isCorrect: false, feedback: 'Skipping during generation is the right idea, but not sufficient on its own — you also need to avoid starting BFS from them. If "0000" is a deadend, the answer is -1 immediately.' },
-        { label: 'Add to visited set before BFS begins', isCorrect: true },
+        { label: 'Add to visited set before traversal begins', isCorrect: true },
         { label: 'Remove from graph after building adjacency list', isCorrect: false, feedback: 'There\'s no explicit adjacency list here — you generate neighbors on the fly. Pre-loading deadends into the visited set is cleaner and handles the "0000 is a deadend" edge case automatically.' },
         { label: 'Check only when dequeuing', isCorrect: false, feedback: 'Checking at dequeue works, but allows deadend states to enter the queue. Pre-loading them into the visited set prevents enqueuing them at all and handles the initial "0000" deadend case correctly.' },
       ],
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'circular-wheels',
-      question: 'Each wheel is circular: turning 0 backward gives 9, and turning 9 forward gives 0. What does this imply?',
+      question: 'The way individual moves are defined determines the branching factor of the underlying graph, which shapes how expensive each BFS level will be. Each wheel is circular: turning 0 backward gives 9, and turning 9 forward gives 0. What does this imply?',
+      highlight: { location: 'description', text: 'A lock has 4 circular wheels each with digits 0-9. You can turn any wheel one step forward or backward.' },
       options: [
         { label: 'Each digit has exactly 2 neighbors', isCorrect: true },
         { label: 'Some digits are dead ends by default', isCorrect: false, feedback: 'Circularity doesn\'t create dead ends — it ensures every digit always has exactly 2 neighbors. Dead ends come from the explicit deadends list, not wheel mechanics.' },
@@ -81,4 +87,34 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def open_lock(self, deadends, target):
+        dead = set(deadends)
+        start = '0000'
+        if start in dead:
+            return -1
+        if start == target:
+            return 0
+
+        visited = {start}
+        queue = deque([(start, 0)])
+        while queue:
+            state, steps = queue.popleft()
+            for i in range(4):
+                digit = int(state[i])
+                for delta in (1, -1):
+                    new_digit = (digit + delta) % 10
+                    new_state = state[:i] + str(new_digit) + state[i+1:]
+                    if new_state in dead or new_state in visited:
+                        continue
+                    if new_state == target:
+                        return steps + 1
+                    visited.add(new_state)
+                    queue.append((new_state, steps + 1))
+        return -1`,
+  solutionComplexity: { time: 'O(10⁴)', space: 'O(10⁴)' },
+  solutionCaveat: 'Deadends are just another form of "already visited" — a state in <code>dead</code> is skipped exactly like a state already in <code>visited</code>, since either way the search must never move onto it or enqueue it.',
+  solutionExplanation: 'Each 4-digit combination is a node, and turning any single wheel by one click is an edge to exactly one of 8 neighboring states, so finding the fewest turns from "0000" to <code>target</code> is an unweighted shortest-path problem BFS solves optimally. Treating deadend states as simply forbidden to enter — never added to the queue and never marked as the answer — keeps the search confined to the reachable, non-dead portion of the state space.',
 }

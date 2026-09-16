@@ -8,20 +8,22 @@ export default {
     { input: 'heights = [2,4]', output: '4' },
   ],
   constraints: ['1 <= heights.length <= 10^5', '0 <= heights[i] <= 10^4'],
-  starterCode: `def largest_rectangle_area(heights):
-  pass`,
+  starterCode: `class Solution:
+    def largest_rectangle_area(self, heights):
+        pass`,
+  runnerSetup: 'largest_rectangle_area = Solution().largest_rectangle_area',
   functionName: 'largest_rectangle_area',
   conceptId: 'stack',
   testCases: [
     { label: '[2,1,5,6,2,3]', args: [[2,1,5,6,2,3]], expected: 10 },
     { label: '[2,4]', args: [[2,4]], expected: 4 },
   ],
-  bruteHint: 'Describe expanding outward from every bar to find its maximum width, and the resulting time complexity',
-  optimizeHint: 'Name the data structure that tracks bars in increasing height order to find boundaries in O(n)',
+  bruteHint: 'The brute-force approach picks each bar and expands outward — left and right — until it hits a shorter bar, giving the widest rectangle that bar\'s height can reach. Repeating that expansion for every bar costs O(n) in the worst case per bar, so the whole approach runs in roughly n² time. At n up to 100,000, how many operations is that, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'heights.length ≤ 10^5. A brute-force approach checks every (left, right) pair and finds the minimum height in between. What is that complexity, and is it acceptable?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. A brute-force approach checks every (left, right) pair and then scans between them for the minimum height — with 1 <= heights.length <= 10^5, what complexity does that reach, and is it acceptable?',
       options: [
         { label: 'O(n²) — acceptable at 10^5', isCorrect: false, feedback: 'O(n²) at n = 100,000 is 10 billion operations — far too slow. Even O(n²) without the inner minimum scan is 10 billion; the brute force with minimums is O(n³).' },
         { label: 'O(n³) — not acceptable, need O(n)', isCorrect: true },
@@ -33,10 +35,11 @@ export default {
         'How many (left, right) pairs exist for an array of length n? For each pair, how long does finding the minimum height take?',
         'n² pairs × n minimum scan = n³. At n = 100,000, is 10^15 operations feasible? What target does the constraint suggest?',
       ],
+      highlight: { location: 'constraint', text: '1 <= heights.length <= 10^5' },
     },
     {
       id: 'rectangle-height-bound',
-      question: 'A rectangle spanning bars i through j has height equal to the minimum bar in that range. What does this tell you about which bars can "limit" a rectangle?',
+      question: 'Working out what actually determines a shape\'s dimensions tells you which parts of the input constrain your answer. A rectangle spanning bars i through j has height equal to the minimum bar in that range — what does this tell you about which bars can "limit" a rectangle?',
       options: [
         { label: 'Every bar limits all rectangles it is part of', isCorrect: false, feedback: 'A bar only limits rectangles when it is the shortest bar in their span. Taller bars within a span are irrelevant — only the minimum height constrains the rectangle.' },
         { label: 'Each bar defines the tallest rectangle where it is the minimum', isCorrect: true },
@@ -51,10 +54,10 @@ export default {
     },
     {
       id: 'monotonic-stack-signal',
-      question: 'You need the nearest shorter bar to the left and right of each bar. What data structure processes "nearest smaller element" queries in O(n) total?',
+      question: 'Recognizing a query pattern you\'ve seen before points you toward a structure that already answers it efficiently. You need the nearest shorter bar to the left and right of each bar — what processes "nearest smaller element" queries in O(n) total?',
       options: [
         { label: 'A sorted array of heights', isCorrect: false, feedback: 'Sorting loses positional information — you need nearest smaller by position, not by value. A sorted array tells you what the smaller values are, not where they sit relative to each bar.' },
-        { label: 'A monotonic stack', isCorrect: false },
+        { label: 'A stack maintaining decreasing heights', isCorrect: false, feedback: 'A stack kept in decreasing order pops when it meets a taller bar — that finds the nearest greater element, the opposite of what you need. Nearest smaller element requires popping when a shorter bar appears.' },
         { label: 'A stack maintaining increasing heights', isCorrect: true },
         { label: 'A hash map from height to index', isCorrect: false, feedback: 'A hash map retrieves a stored index for a given height, but duplicate heights and non-adjacent bars make this fragile. The nearest-smaller query is inherently positional, not value-lookup.' },
       ],
@@ -66,7 +69,7 @@ export default {
     },
     {
       id: 'zero-height-bars',
-      question: '"0 ≤ heights[i] ≤ 10^4" — heights can be zero. What is the area of any rectangle that includes a bar of height 0?',
+      question: 'Boundary values in the constraints often signal an edge case you must handle explicitly. With 0 <= heights[i] <= 10^4, heights can be zero — what is the area of any rectangle that includes a bar of height 0?',
       options: [
         { label: 'It depends on the surrounding bars', isCorrect: false, feedback: 'A height-0 bar contributes 0 to any rectangle spanning it. Regardless of neighboring heights, the minimum height for any span that crosses a zero-height bar is 0, so the area is 0.' },
         { label: 'Zero — a height-0 bar blocks all rectangles across it', isCorrect: true },
@@ -78,6 +81,21 @@ export default {
         'If the minimum height in a span is 0, what is 0 × width?',
         'A bar of height 0 is the minimum for any span that includes it. What does that make the rectangle area for every span crossing a zero-height bar?',
       ],
+      highlight: { location: 'constraint', text: '0 <= heights[i] <= 10^4' },
     },
   ],
+  solutionCode: `class Solution:
+    def largest_rectangle_area(self, heights):
+        stack = []
+        best = 0
+        for i, h in enumerate(heights + [0]):
+            while stack and heights[stack[-1]] >= h:
+                height = heights[stack.pop()]
+                width = i if not stack else i - stack[-1] - 1
+                best = max(best, height * width)
+            stack.append(i)
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Appending a sentinel <code>0</code> after the real heights guarantees every bar still on the stack gets popped and resolved by the end of the scan — without it, any bars taller than everything to their right would never get their rectangle computed.',
+  solutionExplanation: 'The stack holds indices of bars in increasing height order, each one still a candidate for "the shortest bar in some yet-to-be-determined rectangle." When a shorter bar arrives, every taller bar on the stack has just found its right boundary — its rectangle can extend left only as far as the next-shorter bar still on the stack (or the start of the array), so popping it and computing <code>height × width</code> at that moment captures the largest rectangle that specific bar could ever anchor. Every bar is pushed once and popped once, keeping the whole scan O(n) despite the nested-looking loop.',
 }

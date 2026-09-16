@@ -7,20 +7,23 @@ export default {
     { input: 'piles = [5,3,4,5]', output: 'true', explanation: 'Alice can always guarantee a win.' },
   ],
   constraints: ['2 ≤ piles.length ≤ 500', 'piles.length is even', '1 ≤ piles[i] ≤ 500'],
-  starterCode: `def stone_game(piles):
-  pass`,
+  starterCode: `class Solution:
+    def stone_game(self, piles):
+        pass`,
+  runnerSetup: 'stone_game = Solution().stone_game',
   functionName: 'stone_game',
   conceptId: 'dp-2d',
   testCases: [
     { label: 'Alice wins', args: [[5,3,4,5]], expected: true },
     { label: 'Alice wins always', args: [[1,2,3,4]], expected: true },
   ],
-  bruteHint: 'Describe the naive recursion where each player tries taking from either end of the remaining piles, and why the same subintervals get re-evaluated by different move sequences',
-  optimizeHint: 'Name the interval DP state — the score advantage over piles[i..j] — that caches results for each subinterval',
+  bruteHint: 'The brute-force approach is a recursive minimax: at each turn, the current player takes either the leftmost or rightmost pile, recursively evaluates both resulting subgames, and picks whichever leaves them with the bigger advantage. This explores every possible sequence of left/right choices, so the recursion tree is O(2ⁿ), and the same subinterval [i, j] gets re-evaluated by many different move orders. What could you cache to avoid recomputing the same subinterval twice?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(n)' },
   clues: [
     {
       id: 'even-length-guarantee',
-      question: 'piles.length is always even. What strategic insight does this unlock for Alice?',
+      question: 'Constraints can hide structural guarantees that let you bypass simulating every possible game outcome. piles.length is always even. What strategic insight does this unlock for Alice?',
+      highlight: { location: 'constraint', text: 'piles.length is even' },
       options: [
         { label: 'Alice can always pick the largest available pile', isCorrect: false, feedback: 'Greedily picking the largest end isn\'t always optimal. Alice\'s advantage comes from the parity structure, not from immediate value maximization.' },
         { label: 'Alice can always guarantee a win by choosing parity', isCorrect: true },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'minimax-state',
-      question: 'Both players play optimally. What does the DP state need to capture?',
+      question: 'Because the problem frames this as two players alternating optimal moves, the DP state must capture how one player\'s choice affects the other\'s best response. Both players play optimally. What does the DP state need to capture?',
+      highlight: { location: 'description', text: 'take turns picking stones from either end of a row (Alice goes first)' },
       options: [
         { label: 'Only Alice\'s total stones accumulated', isCorrect: false, feedback: 'Alice maximizes and Bob minimizes Alice\'s gain. You need to track the net advantage, not just one player\'s total — Bob\'s optimal counter-play must be accounted for.' },
         { label: 'The interval [i, j] of remaining piles and whose turn it is', isCorrect: false, feedback: 'Turn can be inferred from the interval length — Alice goes when (j-i+1) has the same parity as the original array length. Many implementations track dp[i][j] as the score difference (current player minus other), which embeds turn implicitly.' },
@@ -50,7 +54,7 @@ export default {
     },
     {
       id: 'interval-dp-order',
-      question: 'dp[i][j] depends on dp[i+1][j] and dp[i][j-1]. In what order must you fill the table?',
+      question: 'When a DP state depends on other states, the order you fill the table in determines whether those dependencies are already resolved. dp[i][j] depends on dp[i+1][j] and dp[i][j-1]. In what order must you fill the table?',
       options: [
         { label: 'Row by row, left to right', isCorrect: false, feedback: 'Row by row (increasing i) fills dp[0][j] before dp[1][j], but dp[0][j] depends on dp[1][j] — which hasn\'t been filled yet. Row order doesn\'t work.' },
         { label: 'By increasing interval length', isCorrect: true },
@@ -64,4 +68,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def stone_game(self, piles):
+        n = len(piles)
+        dp = [[0] * n for _ in range(n)]
+        for i in range(n):
+            dp[i][i] = piles[i]
+        for length in range(2, n + 1):
+            for i in range(0, n - length + 1):
+                j = i + length - 1
+                dp[i][j] = max(piles[i] - dp[i + 1][j], piles[j] - dp[i][j - 1])
+        return dp[0][n - 1] > 0`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(n²)' },
+  solutionCaveat: '<code>dp[i][j]</code> stores the current player\'s <code>net advantage</code> over the opponent on <code>piles[i..j]</code> — not their raw total — since <code>piles[i] - dp[i+1][j]</code> subtracts the opponent\'s best-guaranteed advantage on the rest, which is exactly what taking a pile costs the current player in terms of the following turn.',
+  solutionExplanation: 'Whoever moves first on the range <code>[i, j]</code> can take either end, and whichever pile they take, the opponent then plays optimally on the remaining range — so the current player\'s best net advantage is the pile they took minus whatever advantage the opponent can guarantee themselves afterward, taking the better of the two choices. Filling the table by increasing interval length guarantees <code>dp[i+1][j]</code> and <code>dp[i][j-1]</code> — both strictly shorter ranges — are already computed before the longer range that depends on them, and Alice wins exactly when her advantage over the full array, <code>dp[0][n-1]</code>, is positive.',
 }

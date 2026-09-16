@@ -10,7 +10,7 @@ const NODES: TreeNode[] = [
   { id: 6, val: 7, left: null, right: null },
 ]
 
-function f(step: number, phase: string, message: string, highlights: Record<number, CellKind>): TreeFrame {
+function f(step: number, phase: 'init' | 'compare' | 'update' | 'done', message: string, highlights: Record<number, CellKind>): TreeFrame {
   return { step, phase, message, nodes: NODES, highlights }
 }
 

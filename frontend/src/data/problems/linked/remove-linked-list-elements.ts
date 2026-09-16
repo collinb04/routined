@@ -18,8 +18,9 @@ export default {
       self.val = val
       self.next = next
 
-def remove_elements(head, val):
-  pass`,
+class Solution:
+    def remove_elements(self, head, val):
+        pass`,
   functionName: 'remove_elements',
   conceptId: 'linked-lists',
   runnerSetup: `
@@ -39,7 +40,7 @@ def _to_list(head):
       head = head.next
   return result
 
-_orig_remove_elements = remove_elements
+_orig_remove_elements = Solution().remove_elements
 def remove_elements(values, val):
   return _to_list(_orig_remove_elements(_to_linked(values), val))
 `,
@@ -50,12 +51,13 @@ def remove_elements(values, val):
     { label: 'Remove head', args: [[1, 1, 2, 3], 1], expected: [2, 3] },
     { label: 'Not found', args: [[1, 2, 3], 4], expected: [1, 2, 3] },
   ],
-  bruteHint: 'Describe collecting the non-matching values into a new array and rebuilding a fresh list from it',
-  optimizeHint: 'Name the technique of walking the list with a trailing previous pointer (aided by a dummy head) to remove matching nodes in place',
+  bruteHint: "The brute-force approach walks the original list, collects every value that doesn't equal val into a new array, and then builds a fresh linked list from that filtered array. This costs O(n) time to scan plus O(n) time to rebuild, and O(n) extra space for the intermediate array and new nodes. Since the original nodes are already sitting there in a connected chain, could you remove the unwanted ones without allocating any new structure?",
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'head-removal-challenge',
-      question: 'The test case [7,7,7,7] with val = 7 produces []. This means the head itself may need to be removed. How does this affect what you return?',
+      question: 'Watch for cases where the element that needs modifying is the very first one — head cases often break logic that only handles the middle. The test case [7,7,7,7] with val = 7 produces []. This means the head itself may need to be removed. How does this affect what you return?',
+      highlight: { location: 'description', text: 'return the new head' },
       options: [
         { label: 'Always return the original head', isCorrect: false, feedback: 'If the original head matches val, returning it gives back the node that should be deleted. For [7,7,7,7] the correct return is None, not the original head.' },
         { label: 'The returned head may differ from the input head', isCorrect: true },
@@ -70,7 +72,7 @@ def remove_elements(values, val):
     },
     {
       id: 'removal-mechanism',
-      question: 'To remove a node from a linked list, you need access to the node before it. This is because…',
+      question: 'How a data structure is physically connected determines which operations are even possible. To remove a node from a linked list, you need access to the node before it. This is because…',
       options: [
         { label: 'You must null out the removed node\'s next pointer', isCorrect: false, feedback: 'Nulling the removed node\'s next is optional cleanup. The essential step is redirecting the predecessor\'s next to skip the removed node — otherwise the list still traverses through it.' },
         { label: 'You redirect predecessor.next to skip the removed node', isCorrect: true },
@@ -85,7 +87,7 @@ def remove_elements(values, val):
     },
     {
       id: 'all-nodes-match',
-      question: 'The test case [7,7,7,7] with val = 7 expects an empty list. This edge case means…',
+      question: 'Edge cases that push a data structure to its limit are a good stress test for whether your general logic actually holds. The test case [7,7,7,7] with val = 7 expects an empty list. This edge case means…',
       options: [
         { label: 'Return null only if the input list is empty', isCorrect: false, feedback: 'Null is the correct return when all nodes are removed, not just when the input was already empty. [7,7,7,7] is a non-empty input that becomes empty after removal.' },
         { label: 'Your removal logic must handle an entirely removed list without crashing', isCorrect: true },
@@ -100,11 +102,12 @@ def remove_elements(values, val):
     },
     {
       id: 'constraint-node-count',
-      question: 'Up to 10⁴ nodes, values in [1, 50]. This tells you…',
+      question: 'Constraints define the complexity budget your solution needs to respect. Up to 10⁴ nodes, values in [1, 50]. This tells you…',
+      highlight: { location: 'constraint', text: '0 ≤ number of nodes ≤ 10⁴' },
       options: [
-        { label: 'Use a hash set to record which values to remove', isCorrect: false, feedback: 'You only have one target value — val — not a set of values. A single integer comparison per node is all you need. A hash set would be over-engineering for a single target.' },
+        { label: 'Record every value you need to remove in extra storage before scanning the list', isCorrect: false, feedback: 'You only have one target value — val — not a set of values. A single integer comparison per node is all you need. A hash set would be over-engineering for a single target.' },
         { label: 'A single O(n) pass checking each node once is sufficient', isCorrect: true },
-        { label: 'Sort nodes by value to group matches together', isCorrect: false, feedback: 'Sorting by value would require O(n log n) time and destroys the original order. You need to preserve list order — just skip the matching nodes as you traverse.' },
+        { label: 'Reorder the nodes by value to group matches together', isCorrect: false, feedback: 'Sorting by value would require O(n log n) time and destroys the original order. You need to preserve list order — just skip the matching nodes as you traverse.' },
         { label: 'O(n²) is fine at n = 10⁴ — search from head for each match', isCorrect: false, feedback: 'O(n²) at n = 10,000 is 100 million operations — workable but pointless. A single linear pass visits each node exactly once, removing matches as it goes, with no re-scanning.' },
       ],
       correctFeedback: 'One pass, O(n): visit each node, compare its value to val, and either keep it (advance prev) or skip it (redirect prev.next). Up to 10,000 comparisons total.',
@@ -114,4 +117,23 @@ def remove_elements(values, val):
       ],
     },
   ],
+  solutionCode: `class ListNode:
+  def __init__(self, val=0, next=None):
+      self.val = val
+      self.next = next
+
+class Solution:
+    def remove_elements(self, head, val):
+        dummy = ListNode(0, head)
+        prev, cur = dummy, head
+        while cur:
+            if cur.val == val:
+                prev.next = cur.next
+            else:
+                prev = cur
+            cur = cur.next
+        return dummy.next`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The dummy node exists purely so removing the *original* head needs no special-case code — <code>prev</code> always has a real <code>.next</code> to rewrite, even when the very first node is the one being removed.',
+  solutionExplanation: 'Walking the list with a trailing <code>prev</code> pointer is what makes deletion possible — a singly linked list can\'t look backward, so without <code>prev</code> there\'d be no way to reattach the list around a removed node. Matching nodes get skipped by rewiring <code>prev.next</code> forward past them; <code>prev</code> itself only advances when the current node survives, since it must always point at the last node that\'s staying in the list.',
 }

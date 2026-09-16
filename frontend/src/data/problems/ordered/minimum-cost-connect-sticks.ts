@@ -8,8 +8,10 @@ export default {
     { input: 'sticks = [1,8,3,5]', output: '30' },
   ],
   constraints: ['1 ≤ sticks.length ≤ 10⁴', '1 ≤ sticks[i] ≤ 10⁴'],
-  starterCode: `def connect_sticks(sticks):
-  pass`,
+  starterCode: `class Solution:
+    def connect_sticks(self, sticks):
+        pass`,
+  runnerSetup: 'connect_sticks = Solution().connect_sticks',
   functionName: 'connect_sticks',
   conceptId: 'heap',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Single', args: [[5]], expected: 0 },
     { label: 'Two sticks', args: [[1,2]], expected: 3 },
   ],
-  bruteHint: 'Describe the approach of scanning the whole list to find the two smallest sticks each round, and its repeated cost.',
-  optimizeHint: 'Name the data structure that gives log-time access to the current two smallest sticks as the collection shrinks.',
+  bruteHint: 'A brute-force approach rescans the entire list of sticks on every round to find the current two smallest, combines them, and repeats until only one stick remains — that\'s O(n) work per round across roughly n rounds, giving O(n²) total time. With up to 10,000 sticks, redoing a full scan every round adds up fast. What repeated lookup is being recomputed from scratch each round that could instead be maintained incrementally?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'cost-counting',
-      question: 'Each combination costs the sum of the two sticks combined. A stick created in one step becomes an input to a later step. What does this mean for longer sticks?',
+      highlight: { location: 'description', text: 'Combine two sticks into one: the cost equals their combined length.' },
+      question: 'Noticing how a value gets re-counted across repeated operations is often the key to spotting the right greedy strategy. Each combination costs the sum of the two sticks combined. A stick created in one step becomes an input to a later step. What does this mean for longer sticks?',
       options: [
         { label: 'Longer sticks should be combined first to get them out of the way', isCorrect: false, feedback: 'Combining long sticks first creates an even longer stick that gets charged in every subsequent combination. You want large sticks to appear in as few combinations as possible.' },
         { label: 'A stick\'s length is counted once per combination it participates in', isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'greedy-smallest-first',
-      question: 'To minimize total cost, which two sticks should you combine at each step?',
+      highlight: { location: 'description', text: 'Return the minimum cost to combine all sticks into one.' },
+      question: 'Pinpointing the exact greedy choice that minimizes an accumulating cost is what turns a correct-but-slow idea into an optimal algorithm. To minimize total cost, which two sticks should you combine at each step?',
       options: [
         { label: 'The two longest sticks', isCorrect: false, feedback: 'Combining the two longest creates the largest possible stick, which then participates in further combinations at that large size. This maximizes future costs rather than minimizing them.' },
         { label: 'The two shortest sticks', isCorrect: true },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'structure-for-repeated-min',
-      question: 'At each step you need the two smallest sticks, and the collection shrinks by one. What structure supports this efficiently?',
+      highlight: { location: 'constraint', text: '1 ≤ sticks.length ≤ 10⁴' },
+      question: 'Spotting a repeated need for the current minimum over a shrinking collection is the signal that a heap belongs in your solution. At each step you need the two smallest sticks, and the collection shrinks by one. What structure supports this efficiently?',
       options: [
         { label: 'Sort the array once and scan left to right', isCorrect: false, feedback: 'After combining two sticks, the new stick must be inserted in sorted position. A static sort cannot accommodate new insertions without re-sorting or a O(n) insertion.' },
         { label: 'A min-heap: pop twice, push once per round', isCorrect: true },
@@ -68,7 +73,8 @@ export default {
     },
     {
       id: 'single-stick-edge-case',
-      question: 'The input may have a single stick. What is the correct output in that case?',
+      highlight: { location: 'constraint', text: '1 ≤ sticks.length ≤ 10⁴' },
+      question: 'Checking behavior at the edges of the input constraints catches bugs that only surface for trivial or minimal inputs. The input may have a single stick. What is the correct output in that case?',
       options: [
         { label: 'The length of the single stick', isCorrect: false, feedback: 'Cost is only incurred when two sticks are combined. A single stick never participates in any combination, so no cost is accumulated.' },
         { label: '0 — no combinations are performed', isCorrect: true },
@@ -82,4 +88,22 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def connect_sticks(self, sticks):
+        if len(sticks) <= 1:
+            return 0
+        heap = sticks[:]
+        heapq.heapify(heap)
+        total = 0
+        while len(heap) > 1:
+            a = heapq.heappop(heap)
+            b = heapq.heappop(heap)
+            total += a + b
+            heapq.heappush(heap, a + b)
+        return total`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'Always combining the two *currently smallest* sticks — not just any two — is the greedy choice that minimizes total cost: a longer stick combined early gets "re-paid" as part of every later combination it participates in, so cheap combinations should happen as early as possible.',
+  solutionExplanation: 'This is Huffman-style greedy merging: repeatedly combining the two smallest available lengths minimizes the total cost because every stick\'s length gets counted once for every combination step it\'s involved in — keeping the biggest sticks out of combinations for as long as possible means they get counted the fewest times. A min-heap always exposes the two smallest sticks in O(log n) each, replacing the O(n) rescan the brute-force approach would need every round.',
 }

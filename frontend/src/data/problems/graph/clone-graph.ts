@@ -12,8 +12,9 @@ export default {
       self.val = val
       self.neighbors = neighbors if neighbors is not None else []
 
-def clone_graph(node):
-  pass`,
+class Solution:
+    def clone_graph(self, node):
+        pass`,
   functionName: 'clone_graph_run',
   conceptId: 'graphs',
   runnerSetup: `def clone_graph_run(adj):
@@ -21,7 +22,7 @@ def clone_graph(node):
   nodes = [Node(i+1) for i in range(len(adj))]
   for i, nbrs in enumerate(adj):
       nodes[i].neighbors = [nodes[v-1] for v in nbrs]
-  cloned = clone_graph(nodes[0])
+  cloned = Solution().clone_graph(nodes[0])
   if not cloned: return []
   visited = {}
   def bfs(n):
@@ -36,12 +37,13 @@ def clone_graph(node):
     { label: '4-cycle', args: [[[2,4],[1,3],[2,4],[1,3]]], expected: [[2,4],[1,3],[2,4],[1,3]] },
     { label: 'single', args: [[[]]], expected: [[]] },
   ],
-  bruteHint: 'Describe what goes wrong if you allocate a new node every time you encounter one while traversing a cyclic graph',
-  optimizeHint: 'Name the structure that lets you recognize a node you have already cloned and reuse that clone',
+  bruteHint: 'A naive approach is to traverse the graph and allocate a brand-new Node every time you visit one, without checking whether you\'ve already cloned it. Because the graph is cyclic, that traversal never terminates — you keep re-visiting the same nodes and creating new clones forever, so there\'s no finite time or space bound at all. What do you need to track to guarantee each node is cloned exactly once?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V)' },
   clues: [
     {
       id: 'deep-copy-requirement',
-      question: 'The output is a deep copy — not a reference to the original nodes. What problem does a shallow copy create?',
+      question: 'The exact wording of what you must return — a copy versus a reference — tells you whether object identity matters for correctness. The output is a deep copy — not a reference to the original nodes. What problem does a shallow copy create?',
+      highlight: { location: 'description', text: 'a deep copy (clone) of the graph.' },
       options: [
         { label: 'The clone shares Node objects with the original', isCorrect: true },
         { label: 'You can\'t traverse the graph without modifying it', isCorrect: false, feedback: 'Traversal doesn\'t modify nodes. The deep vs. shallow distinction is about what you create: shared references to original nodes versus new, independent node objects.' },
@@ -56,7 +58,8 @@ def clone_graph(node):
     },
     {
       id: 'cycle-handling',
-      question: 'The graph is undirected — every edge (A, B) means A lists B as a neighbor and B lists A as a neighbor. What does this imply about traversal?',
+      question: 'Knowing whether a graph\'s edges are directed or undirected tells you whether you need explicit cycle protection during traversal. The graph is undirected — every edge (A, B) means A lists B as a neighbor and B lists A as a neighbor. What does this imply about traversal?',
+      highlight: { location: 'description', text: 'connected undirected graph' },
       options: [
         { label: 'You process edges in both directions — doubled work', isCorrect: false, feedback: 'You don\'t need to explicitly double your work — but you do need to handle the fact that traversal from A will see B, and traversal from B will see A again. The key is detecting when you\'ve already cloned a node.' },
         { label: 'You must track which nodes you\'ve already cloned', isCorrect: true },
@@ -71,7 +74,7 @@ def clone_graph(node):
     },
     {
       id: 'visited-map-role',
-      question: 'You maintain a map from original node to its cloned copy. This map serves two purposes. Which pair is correct?',
+      question: 'When a single structure serves more than one purpose in an algorithm, recognizing both roles is key to using it correctly. You maintain a map from original node to its cloned copy. This map serves two purposes. Which pair is correct?',
       options: [
         { label: 'Counts edges and records node values', isCorrect: false, feedback: 'The map stores node objects, not counts or values. Its two jobs are detecting already-cloned nodes (cycle prevention) and providing the clone reference when wiring neighbor lists.' },
         { label: 'Detects revisits and provides the clone when wiring neighbors', isCorrect: true },
@@ -85,4 +88,26 @@ def clone_graph(node):
       ],
     },
   ],
+  solutionCode: `class Node:
+    def __init__(self, val=0, neighbors=None):
+        self.val = val
+        self.neighbors = neighbors if neighbors is not None else []
+
+class Solution:
+    def clone_graph(self, node):
+        if not node:
+            return None
+        visited = {node: Node(node.val)}
+        queue = [node]
+        while queue:
+            curr = queue.pop()
+            for nbr in curr.neighbors:
+                if nbr not in visited:
+                    visited[nbr] = Node(nbr.val)
+                    queue.append(nbr)
+                visited[curr].neighbors.append(visited[nbr])
+        return visited[node]`,
+  solutionComplexity: { time: 'O(V + E)', space: 'O(V)' },
+  solutionCaveat: 'The <code>visited</code> map is keyed by the <code>original</code> node object and doubles as both the cycle guard and the lookup used to wire up each clone\'s neighbor list — a node already in the map is never re-cloned, it\'s just referenced again.',
+  solutionExplanation: 'The graph may contain cycles, so cloning requires tracking which original nodes already have a clone before recursing or iterating into their neighbors — otherwise a cycle would trigger infinite re-cloning. Traversing the original graph once (BFS or DFS, order doesn\'t matter) and, for every original-to-neighbor edge, appending the neighbor\'s clone (creating it on first sight) to the current node\'s clone reproduces the exact same edge structure in the cloned graph.',
 }

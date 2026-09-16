@@ -17,8 +17,9 @@ export default {
       self.val = val
       self.next = next
 
-def reverse_list(head):
-  pass`,
+class Solution:
+    def reverse_list(self, head):
+        pass`,
   functionName: 'reverse_list',
   conceptId: 'list-reversal',
   runnerSetup: `
@@ -38,7 +39,7 @@ def _to_list(head):
       head = head.next
   return result
 
-_orig_reverse_list = reverse_list
+_orig_reverse_list = Solution().reverse_list
 def reverse_list(values):
   return _to_list(_orig_reverse_list(_to_linked(values)))
 `,
@@ -48,12 +49,12 @@ def reverse_list(values):
     { label: 'Empty list', args: [[]], expected: [] },
     { label: 'Single node', args: [[1]], expected: [1] },
   ],
-  bruteHint: 'Describe collecting values into an array in reverse order and building a brand-new list from it',
-  optimizeHint: 'Name the in-place technique of reversing next pointers one node at a time',
+  bruteHint: 'One brute-force approach is to walk the original list once, collecting every node\'s value into an array, then reverse that array and build a brand-new linked list from the reversed values. This takes O(n) time to traverse plus O(n) extra space for the array and the new nodes. It works, but the original nodes are still sitting right there unused — could you reuse them instead of copying?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'pointer-direction',
-      question: 'Reversing a singly linked list means each node\'s next pointer must point to its predecessor instead of its successor. Why can\'t you simply reverse the pointer on the current node without preparation?',
+      question: 'Linked lists only expose one-directional links, so any pointer rewrite risks severing access to the rest of the structure. Reversing a singly linked list means each node\'s next pointer must point to its predecessor instead of its successor. Why can\'t you simply reverse the pointer on the current node without preparation?',
       options: [
         { label: 'Reversing a pointer loses access to the rest of the list', isCorrect: true },
         { label: 'Pointers in Python are immutable', isCorrect: false, feedback: 'Python object references (next pointers) are mutable — you can reassign node.next freely. The issue is that after reassignment you\'ve lost the link to the rest of the list.' },
@@ -68,7 +69,8 @@ def reverse_list(values):
     },
     {
       id: 'output-new-head',
-      question: 'The output is the "new head" of the reversed list. In [1,2,3,4,5] reversed to [5,4,3,2,1], the new head is 5 — the original tail. This means…',
+      question: 'Return-value requirements tell you exactly what shape of answer your function must hand back, separate from how you got there. The output is the "new head" of the reversed list. In [1,2,3,4,5] reversed to [5,4,3,2,1], the new head is 5 — the original tail. This means…',
+      highlight: { location: 'description', text: 'return the new head' },
       options: [
         { label: 'Return the original head after reversing pointers', isCorrect: false, feedback: 'After reversal, the original head (1) becomes the tail — its next is null. Returning it gives the end of the reversed list. You need to return the original tail, which is now the front.' },
         { label: 'Track and return the last node processed', isCorrect: true },
@@ -83,7 +85,8 @@ def reverse_list(values):
     },
     {
       id: 'empty-and-single-node',
-      question: 'The constraints allow 0 nodes (empty list) and the test includes a single-node list. Your algorithm must handle these without crashing. What do both cases return?',
+      question: 'Constraint boundaries like zero-length and single-element inputs often expose edge cases an algorithm must handle without special-casing. The constraints allow 0 nodes (empty list) and the test includes a single-node list. Your algorithm must handle these without crashing. What do both cases return?',
+      highlight: { location: 'constraint', text: '0 ≤ number of nodes ≤ 5000' },
       options: [
         { label: 'Empty returns null; single node causes an error', isCorrect: false, feedback: 'A single-node list reverses to itself — its next is already null and it is both the head and tail. The reversal loop simply never runs; prev stays at the single node.' },
         { label: 'Both return the input head unchanged', isCorrect: true },
@@ -98,7 +101,8 @@ def reverse_list(values):
     },
     {
       id: 'constraint-node-count',
-      question: 'Up to 5000 nodes. This tells you…',
+      question: 'Input-size limits are a direct signal for which time complexity — and which recursion depth — will actually pass. Up to 5000 nodes. This tells you…',
+      highlight: { location: 'constraint', text: '0 ≤ number of nodes ≤ 5000' },
       options: [
         { label: 'Recursion is safe — 5000 stack frames is fine in Python', isCorrect: false, feedback: 'Python\'s default recursion limit is 1,000. A recursive reversal on a 5,000-node list hits a RecursionError. An iterative approach with a loop is required.' },
         { label: 'An iterative O(n) reversal is the safe choice', isCorrect: true },
@@ -112,4 +116,22 @@ def reverse_list(values):
       ],
     },
   ],
+  solutionCode: `class ListNode:
+  def __init__(self, val=0, next=None):
+      self.val = val
+      self.next = next
+
+class Solution:
+    def reverse_list(self, head):
+        prev = None
+        cur = head
+        while cur:
+            nxt = cur.next
+            cur.next = prev
+            prev = cur
+            cur = nxt
+        return prev`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>nxt</code> is saved *before* <code>cur.next</code> gets overwritten — reverse that order and the rest of the list becomes unreachable the instant the first pointer flips.',
+  solutionExplanation: 'Three pointers do the whole job: <code>nxt</code> preserves the way forward before it\'s destroyed, <code>cur.next = prev</code> flips the current node\'s arrow to point backward instead of forward, and then both <code>prev</code> and <code>cur</code> slide one step down the original list. By the time <code>cur</code> runs off the end, every node\'s arrow has been flipped exactly once and <code>prev</code> is sitting on the new head.',
 }

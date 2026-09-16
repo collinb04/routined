@@ -9,8 +9,10 @@ export default {
     { input: 's = "(*))"', output: 'true' },
   ],
   constraints: ['1 ≤ s.length ≤ 100', 's[i] is \'(\', \')\', or \'*\''],
-  starterCode: `def check_valid_string(s):
-  pass`,
+  starterCode: `class Solution:
+    def check_valid_string(self, s):
+        pass`,
+  runnerSetup: 'check_valid_string = Solution().check_valid_string',
   functionName: 'check_valid_string',
   conceptId: 'greedy',
   testCases: [
@@ -19,14 +21,15 @@ export default {
     { label: 'Star as close', args: ['(*))'], expected: true },
     { label: 'Invalid', args: ['((('], expected: false },
   ],
-  bruteHint: 'Describe recursively trying all three interpretations of each star character and checking validity, and name the exponential time complexity this produces',
-  optimizeHint: 'Name the greedy technique that tracks a range of possible open-parenthesis counts as you scan, rather than branching on every star',
+  bruteHint: 'The brute-force approach recursively tries all three interpretations of each star — open paren, close paren, or empty — and checks whether the resulting string balances. Since each star branches into three recursive calls, a string with k stars explores up to 3^k interpretations, giving O(3^n) time in the worst case. With n up to 100, that exponential blowup is far too slow for anything but tiny inputs. Can you avoid enumerating every interpretation and instead track which outcomes remain possible as you scan?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'star-ambiguity',
-      question: '"*" can be treated as "(", ")", or empty string. What does this ambiguity signal about a naive recursive approach?',
+      highlight: { location: 'description', text: '<code>*</code> (which can be treated as <code>(</code>, <code>)</code>, or empty string)' },
+      question: 'Ambiguity baked into a problem\'s description often signals that a brute-force solution would need to branch over every possible interpretation. "*" can be treated as "(", ")", or empty string. What does this ambiguity signal about a naive recursive approach?',
       options: [
-        { label: 'Try all three interpretations of each * via backtracking', isCorrect: false, feedback: 'With up to 100 characters, a string of all *s has 3^100 interpretations — backtracking without memoization would time out. The ambiguity is a signal to track a range of possible states, not enumerate them.' },
+        { label: 'Try all three interpretations of each * one at a time', isCorrect: false, feedback: 'With up to 100 characters, a string of all *s has 3^100 interpretations — backtracking without memoization would time out. The ambiguity is a signal to track a range of possible states, not enumerate them.' },
         { label: 'Track the range of possible open-paren counts', isCorrect: true },
         { label: 'Replace all * with "(" and validate', isCorrect: false, feedback: 'Replacing all * with "(" checks only one of 3^n interpretations. The string could be valid with a different assignment — you need to consider all possibilities efficiently.' },
         { label: 'Count * characters and compare to unmatched parens', isCorrect: false, feedback: 'A raw count of * ignores their position. A * after all closing parens is useless for balancing opens that came before it — position and order matter.' },
@@ -39,10 +42,11 @@ export default {
     },
     {
       id: 'constraint-length',
-      question: 's.length ≤ 100. What does this size allow in terms of approach?',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 100' },
+      question: 'Constraint bounds tell you directly which time complexities are fast enough to pass, and which are overkill or infeasible. s.length ≤ 100. What does this size allow in terms of approach?',
       options: [
         { label: 'O(n³) is acceptable — 100³ = 1,000,000', isCorrect: false, feedback: 'A 2D DP over (index, open_count) is O(n²) = 10,000 states — already fast enough. O(n³) would also fit, but the problem\'s structure does not require it.' },
-        { label: 'O(n²) DP over position and open count is feasible', isCorrect: true },
+        { label: 'O(n²) tracking (position, open-count) as a state pair is feasible', isCorrect: true },
         { label: 'Only O(n) solutions are viable', isCorrect: false, feedback: 'O(n) greedy is ideal here, but O(n²) DP also works within n = 100. The constraint does not rule out quadratic approaches.' },
         { label: 'Input size is irrelevant for this problem', isCorrect: false, feedback: 'Input size always informs approach. n ≤ 100 is small enough to allow O(n²) DP — tracking open-count as a state variable alongside position.' },
       ],
@@ -54,7 +58,7 @@ export default {
     },
     {
       id: 'greedy-range-tracking',
-      question: 'Processing left to right, you maintain a range [lo, hi] for possible open-paren counts. When does the string become definitely invalid?',
+      question: 'Pinning down the exact moment a running range becomes impossible is what makes a greedy scan provably correct rather than just plausible. Processing left to right, you maintain a range [lo, hi] for possible open-paren counts. When does the string become definitely invalid?',
       options: [
         { label: 'When lo > 0 at the end', isCorrect: false, feedback: 'lo > 0 at the end means the minimum possible open count is positive — there are unmatched opens even in the best case. That is actually the invalidity check, but the string also becomes invalid mid-scan when hi drops below 0.' },
         { label: 'When hi < 0 at any point during the scan', isCorrect: true },
@@ -69,7 +73,7 @@ export default {
     },
     {
       id: 'end-condition',
-      question: 'After scanning all characters, what condition confirms the string is valid?',
+      question: 'The condition you check after the scan ends is what actually turns your running range into a final yes/no answer. After scanning all characters, what condition confirms the string is valid?',
       options: [
         { label: 'lo == 0', isCorrect: true },
         { label: 'hi == 0', isCorrect: false, feedback: 'hi == 0 means the maximum possible open count is zero, but the minimum (lo) could still be positive — meaning some interpretations leave unmatched opens. You need to confirm 0 is reachable, not that it is the maximum.' },
@@ -83,4 +87,24 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def check_valid_string(self, s):
+        lo = hi = 0
+        for ch in s:
+            if ch == '(':
+                lo += 1
+                hi += 1
+            elif ch == ')':
+                lo -= 1
+                hi -= 1
+            else:
+                lo -= 1
+                hi += 1
+            if hi < 0:
+                return False
+            lo = max(lo, 0)
+        return lo == 0`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>lo</code> is clamped to <code>max(lo, 0)</code> after every character — a negative <code>lo</code> would mean even the least-open interpretation has "too few" opens, but since a <code>*</code> can always be treated as empty instead of a close paren, an interpretation with zero unmatched opens is always at least as achievable as one with a negative count, so <code>lo</code> should never be allowed to signal an impossible negative deficit.',
+  solutionExplanation: 'Instead of branching into all three interpretations of every <code>*</code> — which would explode combinatorially — tracking the full range <code>[lo, hi]</code> of possible unmatched-open-paren counts collapses every interpretation into two running bounds: <code>hi</code> assumes every <code>*</code> is <code>\'(\'</code> (the most optimistic case) and <code>lo</code> assumes every <code>*</code> is <code>\')\'</code> (the most pessimistic, floored at zero). The string is provably invalid the instant <code>hi</code> drops below zero, since that means even the best-case interpretation has an unmatched close paren; at the end, <code>lo == 0</code> confirms that zero unmatched opens is still within the achievable range, meaning some valid interpretation exists.',
 }

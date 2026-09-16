@@ -7,24 +7,26 @@ export default {
     { input: 'board = [["X","X","X","X"],["X","O","O","X"],["X","X","O","X"],["X","O","X","X"]]', output: '[["X","X","X","X"],["X","X","X","X"],["X","X","X","X"],["X","O","X","X"]]' },
   ],
   constraints: ['m == board.length', 'n == board[i].length', '1 <= m, n <= 200', 'board[i][j] is "X" or "O"'],
-  starterCode: `def solve(board):
-  pass`,
+  starterCode: `class Solution:
+    def solve(self, board):
+        pass`,
   functionName: 'solve_run',
   conceptId: 'graphs',
   runnerSetup: `def solve_run(board):
   import copy
   b = copy.deepcopy(board)
-  solve(b)
+  Solution().solve(b)
   return b`,
   testCases: [
     { label: 'classic', args: [[['X','X','X','X'],['X','O','O','X'],['X','X','O','X'],['X','O','X','X']]], expected: [['X','X','X','X'],['X','X','X','X'],['X','X','X','X'],['X','O','X','X']] },
   ],
-  bruteHint: 'Describe a brute-force approach that, for every open cell, runs a traversal to check whether it can reach the border, and its time complexity',
-  optimizeHint: 'Name the traversal strategy that starts from the border cells and works inward instead of checking each region individually',
+  bruteHint: 'A brute-force approach could, for every open cell marked O on the board, run its own BFS or DFS outward to check whether that cell can reach the border. With up to m·n cells and each traversal potentially touching that many cells again, this repeats work across overlapping regions and costs roughly O((m·n)²) in the worst case. That quadratic blowup comes from re-exploring the same connected region once for every cell inside it. What if you flipped the search direction and started from the border cells instead, marking everything reachable in a single pass?',
+  optimizeComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
   clues: [
     {
       id: 'border-rule',
-      question: 'Regions touching the border are never captured. What does this tell you about which O\'s to flip?',
+      question: 'A stated exemption in the problem tells you exactly which cells are exempt from the rule you\'re implementing. Regions touching the border are never captured. What does this tell you about which O\'s to flip?',
+      highlight: { location: 'description', text: 'Regions on the border are never captured.' },
       options: [
         { label: 'Flip all O\'s except those on the border', isCorrect: false, feedback: 'An O one cell inside the border can still be safe if it\'s connected to a border O. The rule isn\'t about position — it\'s about connectivity to the border.' },
         { label: 'Flip only O\'s with no path to any border O', isCorrect: true },
@@ -39,7 +41,7 @@ export default {
     },
     {
       id: 'reverse-search-strategy',
-      question: 'Instead of checking from each O whether it can reach the border, what is the more efficient approach?',
+      question: 'Flipping which side of a search you start from can turn an approach that repeats work into one that never revisits a cell. Instead of checking from each O whether it can reach the border, what is the more efficient approach?',
       options: [
         { label: 'BFS/DFS from every O inward', isCorrect: false, feedback: 'Starting BFS from every O and checking whether it reaches the border is O(m²n²) in the worst case — far too slow for a 200×200 board. The reverse: start from the border and mark everything reachable.' },
         { label: 'BFS/DFS from border O\'s outward, then flip the rest', isCorrect: true },
@@ -54,7 +56,8 @@ export default {
     },
     {
       id: 'grid-size-complexity',
-      question: 'm, n ≤ 200 means the board has up to 40,000 cells. What does this say about acceptable complexity?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. m, n ≤ 200 means the board has up to 40,000 cells. What does this say about acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 <= m, n <= 200' },
       options: [
         { label: 'O(m²n²) — nested loops over all O pairs', isCorrect: false, feedback: 'At m = n = 200, O(m²n²) is 1.6 billion operations — far too slow. You need an approach that visits each cell a constant number of times.' },
         { label: 'O(mn) — visit each cell a constant number of times', isCorrect: true },
@@ -68,4 +71,35 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def solve(self, board):
+        if not board:
+            return
+        m, n = len(board), len(board[0])
+
+        def dfs(r, c):
+            if r < 0 or r >= m or c < 0 or c >= n or board[r][c] != 'O':
+                return
+            board[r][c] = 'S'
+            dfs(r + 1, c)
+            dfs(r - 1, c)
+            dfs(r, c + 1)
+            dfs(r, c - 1)
+
+        for r in range(m):
+            dfs(r, 0)
+            dfs(r, n - 1)
+        for c in range(n):
+            dfs(0, c)
+            dfs(m - 1, c)
+
+        for r in range(m):
+            for c in range(n):
+                if board[r][c] == 'O':
+                    board[r][c] = 'X'
+                elif board[r][c] == 'S':
+                    board[r][c] = 'O'`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: 'A cell can only be captured if it is <code>never</code> connected to the border by a chain of \'O\'s — so the algorithm has to find every border-connected \'O\' <code>first</code> (marking them safe) before it can safely flip anything, rather than trying to decide cell-by-cell as it scans.',
+  solutionExplanation: 'Any \'O\' connected to the border can never be surrounded, so flood-filling from every border cell and marking what it reaches as safe (\'S\') identifies exactly the region that must survive; every \'O\' that DFS never reaches this way is, by definition, fully enclosed. A final single pass then flips the untouched \'O\'s to \'X\' (captured) and restores the safe \'S\' markers back to \'O\', needing only two O(m·n) passes over the whole board.',
 }

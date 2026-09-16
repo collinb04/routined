@@ -37,9 +37,9 @@ function display(val: any): string {
         <span v-else class="text-[11px]" style="color:rgba(255,255,255,0.3)">{{ total - passed }} failing</span>
       </div>
       <!-- Progress bar -->
-      <div class="rounded-full overflow-hidden h-1" style="background:rgba(255,255,255,0.07)">
+      <div class="rounded-lg overflow-hidden h-1" style="background:rgba(255,255,255,0.07)">
         <div
-          class="h-full rounded-full transition-all duration-500"
+          class="h-full rounded-lg transition-all duration-500"
           :style="`width:${progress}%;background:${allPassed ? '#4ade80' : '#f87171'}`"
         />
       </div>
@@ -60,7 +60,7 @@ function display(val: any): string {
         <div class="flex items-center gap-2.5">
           <!-- Status dot -->
           <div
-            class="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+            class="w-4 h-4 rounded-lg flex items-center justify-center shrink-0"
             :style="result.passed
               ? 'background:rgba(74,222,128,0.15)'
               : 'background:rgba(248,113,113,0.15)'"

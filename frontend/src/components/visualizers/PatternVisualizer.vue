@@ -17,7 +17,7 @@ import { generateHeapExtract } from './generators/heapExtract'
 import { generateArrayAccess } from './generators/arrayAccess'
 import { generatePythonListOps } from './generators/pythonListOps'
 import { generateLinkedListInsert } from './generators/linkedListInsert'
-import { generateStackQueueOps } from './generators/stackQueueOps'
+import { generateStackOps, generateQueueOps } from './generators/stackQueueOps'
 import { generateHashMapLookup } from './generators/hashMapLookup'
 import { generateGraphBfs } from './generators/graphBfs'
 import { generateRecursionTree } from './generators/recursionTree'
@@ -36,6 +36,12 @@ import { generateGridFloodFill } from './generators/gridFloodFill'
 import { generateMatrixRotate } from './generators/matrixRotate'
 import { generateGridMultiPass } from './generators/gridMultiPass'
 import { generateRecursionMemoBridge } from './generators/recursionMemoBridge'
+import { generatePrefixSums } from './generators/prefixSums'
+import { generateListReversal } from './generators/listReversal'
+import { generateTopK } from './generators/topK'
+import { generateDp2D } from './generators/dp2D'
+import { generateDpIntervals } from './generators/dpIntervals'
+import { generateDpKnapsack } from './generators/dpKnapsack'
 import ArrayRenderer from './renderers/ArrayRenderer.vue'
 import TreeRenderer from './renderers/TreeRenderer.vue'
 import StackRenderer from './renderers/StackRenderer.vue'
@@ -73,7 +79,8 @@ const PATTERNS: Record<string, { frames: Frame[]; renderer: RendererKind }> = {
   'array-access':       { frames: generateArrayAccess(),        renderer: 'array' },
   'python-list':        { frames: generatePythonListOps(),      renderer: 'array' },
   'linked-list-insert': { frames: generateLinkedListInsert(),   renderer: 'list'  },
-  'stack-queue':        { frames: generateStackQueueOps(),      renderer: 'array' },
+  'stack-ops':          { frames: generateStackOps(),           renderer: 'array' },
+  'queue-ops':          { frames: generateQueueOps(),           renderer: 'array' },
   'hash-map':           { frames: generateHashMapLookup(),      renderer: 'array' },
   'graph-bfs':          { frames: generateGraphBfs(),           renderer: 'graph' },
   'recursion-tree':     { frames: generateRecursionTree(),      renderer: 'tree'  },
@@ -92,6 +99,12 @@ const PATTERNS: Record<string, { frames: Frame[]; renderer: RendererKind }> = {
   'matrix-rotate':      { frames: generateMatrixRotate(),       renderer: 'grid'  },
   'grid-multi-pass':    { frames: generateGridMultiPass(),      renderer: 'grid'  },
   'recursion-memo-bridge': { frames: generateRecursionMemoBridge(), renderer: 'tree' },
+  'prefix-sums':        { frames: generatePrefixSums(),        renderer: 'array' },
+  'list-reversal':      { frames: generateListReversal(),      renderer: 'list'  },
+  'top-k':              { frames: generateTopK(),               renderer: 'tree'  },
+  'dp-2d':              { frames: generateDp2D(),                renderer: 'grid'  },
+  'dp-intervals':       { frames: generateDpIntervals(),         renderer: 'grid'  },
+  'dp-knapsack':        { frames: generateDpKnapsack(),          renderer: 'grid'  },
 }
 
 const config = PATTERNS[props.pattern]

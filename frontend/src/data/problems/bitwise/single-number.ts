@@ -8,25 +8,28 @@ export default {
     { input: 'nums = [4,1,2,1,2]', output: '4', explanation: '4 is the only non-duplicate.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 3 × 10⁴', 'Each element appears exactly twice except one', '-3 × 10⁴ ≤ nums[i] ≤ 3 × 10⁴'],
-  starterCode: `def single_number(nums):
-  pass`,
+  starterCode: `class Solution:
+    def single_number(self, nums):
+        pass`,
+  runnerSetup: 'single_number = Solution().single_number',
   functionName: 'single_number',
-  conceptId: 'bit-manipulation',
+  conceptId: 'xor-patterns',
   testCases: [
     { label: 'Three elements', args: [[2,2,1]], expected: 1 },
     { label: 'Five elements', args: [[4,1,2,1,2]], expected: 4 },
     { label: 'Single element', args: [[1]], expected: 1 },
     { label: 'Larger array', args: [[1,3,1,2,3]], expected: 2 },
   ],
-  bruteHint: 'Describe using a hash set to spot the non-duplicate element, and its space complexity',
-  optimizeHint: 'Name the bitwise operation that cancels duplicate pairs in a single pass',
+  bruteHint: 'One brute-force approach records each value seen so far in an auxiliary structure, removing it if it\'s encountered again, so whatever remains at the end is the answer — O(n) time but O(n) space, since that structure can grow to hold up to half the array. That extra space is exactly what this problem forbids. What would you need to change to get the space down to O(1)?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'space-constraint',
-      question: 'O(1) extra space is required. What does this rule out?',
+      question: 'Explicit space constraints in a problem statement usually rule out the most obvious approach and point toward a leaner one. O(1) extra space is required. What does this rule out?',
+      highlight: { location: 'description', text: 'Your algorithm must run in O(n) time and O(1) extra space.' },
       options: [
         { label: 'Storing a running result in one variable', isCorrect: false, feedback: 'A single variable is O(1) space — exactly what the constraint allows. The constraint rules out structures that grow proportionally to n, not a fixed scalar.' },
-        { label: 'A hash map counting frequencies', isCorrect: true },
+        { label: 'Tracking every seen value in a structure that grows with the number of unique elements', isCorrect: true },
         { label: 'Reading the array more than once', isCorrect: false, feedback: 'Multiple passes are an O(n) time concern, not space. O(1) space permits any number of array traversals as long as you don\'t allocate extra memory proportional to n.' },
         { label: 'Any comparison operations', isCorrect: false, feedback: 'Comparisons use no extra memory. The constraint is about data structures — a set or hash map of seen values would be O(n) space.' },
       ],
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'pair-cancellation-property',
-      question: '"Each element appears exactly twice except one." XOR has the property a ^ a = 0 and a ^ 0 = a. What does XOR-ing the entire array produce?',
+      question: 'A property called out explicitly in a problem statement is often the exact operation that solves it. "Each element appears exactly twice except one." XOR has the property a ^ a = 0 and a ^ 0 = a. What does XOR-ing the entire array produce?',
+      highlight: { location: 'constraint', text: 'Each element appears exactly twice except one' },
       options: [
         { label: 'The sum of all unique elements', isCorrect: false, feedback: 'XOR is not addition — it operates bit by bit with no carry. 3 ^ 3 = 0, not 6. XOR doesn\'t sum; it cancels pairs.' },
         { label: 'The single non-duplicate element', isCorrect: true },
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'order-independence',
-      question: 'XOR is commutative (a ^ b = b ^ a) and associative. What does this mean for your implementation?',
+      question: 'Knowing which algebraic properties an operation has tells you what implementation shortcuts are safe to take. XOR is commutative (a ^ b = b ^ a) and associative. What does this mean for your implementation?',
       options: [
         { label: 'You must sort the array before XOR-ing', isCorrect: false, feedback: 'Sorting is unnecessary — commutativity and associativity mean the result is the same regardless of order. Sorting would waste O(n log n) time on a problem solvable in O(n).' },
         { label: 'XOR all elements in any order; the result is the same', isCorrect: true },
@@ -67,4 +71,13 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def single_number(self, nums):
+        result = 0
+        for n in nums:
+            result ^= n
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'This depends specifically on every duplicate appearing *exactly* twice. A value appearing three times would only partially cancel (see Single Number II, which needs a different trick — counting bits mod 3 — for exactly that case).',
+  solutionExplanation: 'XOR-ing a value with itself always produces 0, and XOR-ing with 0 leaves a value unchanged. Run every number in the array through a single running XOR and every duplicate pair cancels itself out along the way, in whatever order they happen to appear — commutative and associative means grouping and ordering never matter. Whatever survives at the end is, by elimination, the one value that never had a partner to cancel with.',
 }

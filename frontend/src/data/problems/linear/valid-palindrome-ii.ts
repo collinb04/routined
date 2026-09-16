@@ -9,8 +9,10 @@ export default {
     { input: 's = "abc"', output: 'false' },
   ],
   constraints: ['1 ≤ s.length ≤ 10⁵', 's consists of lowercase English letters'],
-  starterCode: `def valid_palindrome(s):
-  pass`,
+  starterCode: `class Solution:
+    def valid_palindrome(self, s):
+        pass`,
+  runnerSetup: 'valid_palindrome = Solution().valid_palindrome',
   functionName: 'valid_palindrome',
   conceptId: 'strings',
   testCases: [
@@ -19,12 +21,12 @@ export default {
     { label: 'Not possible', args: ['abc'], expected: false },
     { label: 'Empty-like', args: ['a'], expected: true },
   ],
-  bruteHint: 'Describe trying to remove each character one at a time and re-checking, and its time complexity',
-  optimizeHint: 'Explain how allowing one mismatch by skipping either the left or right character extends a two-pointer check',
+  bruteHint: 'A brute-force approach tries removing each character one at a time, then checks whether the resulting string is a palindrome. Checking one candidate takes O(n), and there are n candidates to try, so the total cost is O(n²). With s as long as 10⁵ characters, do you really need to try every single removal, or does the first mismatch already tell you exactly which two characters could possibly need to go?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'two-pointer-palindrome-check',
-      question: 'A palindrome reads the same forward and backward. What is the most direct way to check this on a string?',
+      question: 'The property being checked often points to the approach that fits best. A palindrome reads the same forward and backward. What is the most direct way to check this on a string?',
       options: [
         { label: 'Reverse the string and compare', isCorrect: false, feedback: 'Reversing and comparing works, but creates a copy of size n. Two pointers converging from both ends check the same property in O(1) space.' },
         { label: 'Two pointers converging from both ends', isCorrect: true },
@@ -39,7 +41,8 @@ export default {
     },
     {
       id: 'at-most-one-removal',
-      question: '"At most one character" can be removed. When two-pointer finds a mismatch at positions i and j, what must you try?',
+      question: 'Efficient handling of a special case often means checking just a couple of extra possibilities instead of redoing everything. "At most one character" can be removed. When two-pointer finds a mismatch at positions i and j, what must you try?',
+      highlight: { location: 'description', text: 'at most one character' },
       options: [
         { label: 'Return false immediately', isCorrect: false, feedback: 'A single mismatch does not mean failure — you still have one deletion to use. The mismatch tells you exactly where to try: skip s[i] or skip s[j].' },
         { label: 'Check if either s[i+1..j] or s[i..j-1] is a palindrome', isCorrect: true },
@@ -54,7 +57,8 @@ export default {
     },
     {
       id: 'constraint-size',
-      question: '1 ≤ s.length ≤ 10⁵. What does this say about an O(n²) approach that tries every possible deletion?',
+      question: 'Input size limits often rule out certain time complexities before you even design the algorithm. 1 ≤ s.length ≤ 10⁵. What does this say about an O(n²) approach that tries every possible deletion?',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 10⁵' },
       options: [
         { label: 'O(n²) is fine at n = 10⁵', isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations. The two-pointer approach checks at most two inner substrings after a mismatch, keeping total work at O(n).' },
         { label: 'O(n) is required', isCorrect: true },
@@ -68,4 +72,24 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def valid_palindrome(self, s):
+        def is_pal(i, j):
+            while i < j:
+                if s[i] != s[j]:
+                    return False
+                i += 1
+                j -= 1
+            return True
+
+        left, right = 0, len(s) - 1
+        while left < right:
+            if s[left] != s[right]:
+                return is_pal(left + 1, right) or is_pal(left, right - 1)
+            left += 1
+            right -= 1
+        return True`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The very first mismatch already narrows the problem to exactly two candidates — skip <code>s[left]</code> or skip <code>s[right]</code> — because whichever one is wrong (if a valid deletion exists at all) must be one of those two; there is no need to consider deleting any other character in the string.',
+  solutionExplanation: 'Closing two pointers inward finds the first place the string fails to mirror itself, and at that exact point only one of the two mismatched characters can possibly be the "extra" one allowed to be removed. Checking both possibilities — is the rest a palindrome without the left character, or without the right one — with a plain two-pointer palindrome check covers every case in O(n) total, since at most one mismatch can ever trigger this branch (a second mismatch found inside either candidate check means no single deletion can fix it).',
 }

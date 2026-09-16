@@ -8,24 +8,27 @@ export default {
     { input: 'graph = [[4,3,1],[3,2,4],[3],[4],[]]', output: '[[0,4],[0,3,4],[0,1,3,4],[0,1,2,3,4],[0,1,4]]' },
   ],
   constraints: ['n == graph.length', '2 ≤ n ≤ 15', 'No self-loops, no repeated edges'],
-  starterCode: `def all_paths_source_target(graph):
-  pass`,
+  starterCode: `class Solution:
+    def all_paths_source_target(self, graph):
+        pass`,
+  runnerSetup: 'all_paths_source_target = Solution().all_paths_source_target',
   functionName: 'all_paths_source_target',
   conceptId: 'graphs',
   testCases: [
     { label: 'Two paths', args: [[[1,2],[3],[3],[]]], expected: [[0,1,3],[0,2,3]] },
   ],
-  bruteHint: 'Describe generating candidate node sequences and checking each one against the edge list, and why that wastes work',
-  optimizeHint: 'Name the traversal technique that builds a path by following real edges and undoes a step when a branch dead-ends',
+  bruteHint: 'The brute-force approach would generate candidate node sequences, essentially guessing possible orderings of the n nodes, and check each one against the edge list to see whether it forms a valid path from 0 to n-1. With n up to 15, the number of sequences to generate and validate grows combinatorially, and most of them are not even valid paths since they ignore the actual edges. Since the edge list already tells you which steps are legal, why generate sequences blindly instead of only following edges that actually exist?',
+  optimizeComplexity: { time: 'O(2ⁿ · n)', space: 'O(n)' },
   clues: [
     {
       id: 'dag-guarantee',
-      question: '"Given a DAG" — a directed acyclic graph. What does acyclic let you skip?',
+      highlight: { location: 'description', text: 'Given a DAG' },
+      question: 'Structural guarantees about a graph, like whether cycles are possible, determine what safety checks your traversal actually needs. "Given a DAG" — a directed acyclic graph. What does acyclic let you skip?',
       options: [
         { label: 'You need a visited set to avoid revisiting', isCorrect: false, feedback: 'A DAG has no cycles by definition, so DFS cannot loop back to a node already on the current path. A visited set is the right tool for cyclic graphs — here it is unnecessary.' },
         { label: 'You can skip cycle detection entirely', isCorrect: true },
         { label: 'You must process nodes in sorted order', isCorrect: false, feedback: 'Processing order is determined by the graph structure, not sorted node indices. The acyclic guarantee is about termination, not traversal order.' },
-        { label: 'BFS is required because DFS would loop', isCorrect: false, feedback: 'DFS cannot loop in a DAG — there are no back edges. Both DFS and BFS work; DFS is actually more natural here because you want to build complete paths.' },
+        { label: 'A level-by-level traversal is required, since a depth-first walk would loop', isCorrect: false, feedback: 'DFS cannot loop in a DAG — there are no back edges. Both DFS and BFS work; DFS is actually more natural here because you want to build complete paths.' },
       ],
       correctFeedback: 'No cycles means DFS always terminates at the target or a dead end. You can recurse freely without tracking visited nodes globally.',
       wrongFeedback: [
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'output-all-paths',
-      question: 'The output is all paths, not the shortest or any one path. What does this tell you about how to traverse?',
+      highlight: { location: 'description', text: 'find all paths from node 0 to node n-1' },
+      question: 'Whether the problem asks for one answer or every answer determines whether you can stop early or must exhaustively explore. The output is all paths, not the shortest or any one path. What does this tell you about how to traverse?',
       options: [
         { label: 'BFS finds all paths layer by layer', isCorrect: false, feedback: 'BFS finds shortest paths efficiently, but building and tracking all partial paths in a BFS queue becomes awkward. DFS with backtracking naturally explores every branch to completion.' },
         { label: 'Stop as soon as you reach the target', isCorrect: false, feedback: 'If you stop at the first path found, you miss all others. The output requires every path — you need to continue exploring after each hit.' },
@@ -50,11 +54,12 @@ export default {
     },
     {
       id: 'constraint-n-small',
-      question: 'n ≤ 15 nodes. What does this small bound tell you about the number of paths you might need to enumerate?',
+      highlight: { location: 'constraint', text: '2 ≤ n ≤ 15' },
+      question: 'A small input bound can be a signal that the intended solution is exponential, not that it needs to be optimized away. n ≤ 15 nodes. What does this small bound tell you about the number of paths you might need to enumerate?',
       options: [
         { label: 'At most 15 paths — one per node', isCorrect: false, feedback: 'In a dense DAG with 15 nodes, the number of paths from source to target can be exponential — up to 2^13 in the worst case. The small n is what makes that feasible to enumerate.' },
         { label: 'Paths can number up to 2^n — exponential is acceptable here', isCorrect: true },
-        { label: 'You need dynamic programming to count paths', isCorrect: false, feedback: 'DP counts paths in polynomial time, but the problem asks you to return all paths as lists, not just a count. With n ≤ 15, explicit enumeration via DFS is the right approach.' },
+        { label: 'You need a technique that counts paths without listing them individually', isCorrect: false, feedback: 'DP counts paths in polynomial time, but the problem asks you to return all paths as lists, not just a count. With n ≤ 15, explicit enumeration via DFS is the right approach.' },
         { label: 'The graph is sparse — at most n edges', isCorrect: false, feedback: 'The constraint doesn\'t bound edges to n — a 15-node DAG can have up to n*(n-1)/2 directed edges. The small n bounds the exponential cost of enumeration, not the number of edges.' },
       ],
       correctFeedback: 'With n ≤ 15, there can be up to 2^13 paths — exponential but manageable. The problem is designed for explicit DFS enumeration, not a polynomial algorithm.',
@@ -65,7 +70,7 @@ export default {
     },
     {
       id: 'path-tracking',
-      question: 'You must return each path as an ordered list of nodes. What does this require during DFS?',
+      question: 'The exact shape of the required output determines what state you need to carry through your traversal. You must return each path as an ordered list of nodes. What does this require during DFS?',
       options: [
         { label: 'Track which nodes have been visited globally', isCorrect: false, feedback: 'A global visited set prevents you from revisiting a node on any path — but valid paths can share nodes. You need to track the current path, not a permanent visited set.' },
         { label: 'Build the current path as you recurse and backtrack', isCorrect: true },
@@ -79,4 +84,23 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def all_paths_source_target(self, graph):
+        n = len(graph)
+        result = []
+
+        def dfs(node, path):
+            if node == n - 1:
+                result.append(path[:])
+                return
+            for nxt in graph[node]:
+                path.append(nxt)
+                dfs(nxt, path)
+                path.pop()
+
+        dfs(0, [0])
+        return result`,
+  solutionComplexity: { time: 'O(2ⁿ · n)', space: 'O(n)' },
+  solutionCaveat: 'A DAG has no cycles, so this DFS never needs a <code>visited</code> set — every path it explores is guaranteed to terminate, either at node <code>n - 1</code> or at a dead end with no outgoing edges.',
+  solutionExplanation: 'This is plain backtracking: extend <code>path</code> by one node, recurse, then pop that node off before trying the next neighbor, so every branch of the search tree sees a clean path built up only from nodes actually on the current route. A copy of <code>path</code> (<code>path[:]</code>) is snapshotted into the result whenever node <code>n - 1</code> is reached, since the same list object keeps getting mutated as the search continues into other branches.',
 }

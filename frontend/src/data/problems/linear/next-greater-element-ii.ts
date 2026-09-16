@@ -7,8 +7,10 @@ export default {
     { input: 'nums = [1,2,1]', output: '[2,-1,2]', explanation: 'For nums[2]=1, traverse right: wraps to 2, which is greater.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁴', '-10⁹ ≤ nums[i] ≤ 10⁹'],
-  starterCode: `def next_greater_elements(nums):
-  pass`,
+  starterCode: `class Solution:
+    def next_greater_elements(self, nums):
+        pass`,
+  runnerSetup: 'next_greater_elements = Solution().next_greater_elements',
   functionName: 'next_greater_elements',
   conceptId: 'monotonic-stack',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'All same', args: [[1,1,1]], expected: [-1,-1,-1] },
     { label: 'Ascending', args: [[1,2,3]], expected: [2,3,-1] },
   ],
-  bruteHint: 'Describe scanning forward (and wrapping around) from each element and its time complexity',
-  optimizeHint: 'Name the kind of stack that lets you find every next-greater relationship in two passes over the array',
+  bruteHint: 'The brute-force approach scans forward from each element (wrapping around the circle if needed) until it finds a larger value or has checked every other element. That means for each of the n elements you might examine up to n more, giving roughly n² comparisons overall. At n up to 10,000, that is on the order of 100 million operations — would that comfortably finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁴. What does this tell you about acceptable complexity?',
+      question: 'We can gauge how efficient a solution needs to be from the size of the input. nums.length ≤ 10⁴. What does this tell you about acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁴' },
       options: [
         { label: 'O(n²) is borderline acceptable', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations — slow in Python. The monotonic stack approach runs in O(n), which is the clean target here.' },
         { label: 'O(n) is the target', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'circular-array',
-      question: 'The array is circular — traversal wraps around. How do you simulate this without physically duplicating the array?',
+      question: 'This kind of detail points to which structure or trick fits the shape of the problem. The array is circular — traversal wraps around. How do you simulate this without physically duplicating the array?',
+      highlight: { location: 'description', text: 'a circular array <code>nums</code>' },
       options: [
         { label: 'Create a new array of length 2n by repeating nums', isCorrect: false, feedback: 'Duplicating the array works but uses O(n) extra space. You can simulate two passes by iterating indices from 0 to 2n−1 and using i % n to access the actual element.' },
         { label: 'Iterate indices 0 to 2n−1 using i % n to index into nums', isCorrect: true },
@@ -52,7 +56,7 @@ export default {
     },
     {
       id: 'monotonic-stack-signal',
-      question: '"First greater element to the right" — what data structure finds this efficiently for every element?',
+      question: 'The exact phrasing of what you\'re looking for often points to exactly one structure built for that job. "First greater element to the right" — what data structure finds this efficiently for every element?',
       options: [
         { label: 'A max-heap sorted by element value', isCorrect: false, feedback: 'A max-heap finds the global maximum — not the first greater element to the right of each position. Order relative to the current index is what matters, and a heap does not preserve that.' },
         { label: 'A monotonic stack storing indices of unresolved elements', isCorrect: true },
@@ -67,10 +71,11 @@ export default {
     },
     {
       id: 'no-greater-element',
-      question: 'Return -1 if no greater element exists after wrapping the full circle. Which elements receive -1?',
+      question: 'Edge-case wording like this tells you exactly which elements get ruled out from having a real answer. Return -1 if no greater element exists after wrapping the full circle. Which elements receive -1?',
+      highlight: { location: 'description', text: 'Return -1 if none.' },
       options: [
         { label: 'Only elements at the last index', isCorrect: false, feedback: 'The last element can still find a greater element by wrapping. For [1,2,3], the last element 3 has no greater element — but for [3,2,1], element 3 at index 0 also gets -1.' },
-        { label: 'Elements still on the stack after both passes', isCorrect: true },
+        { label: 'Elements still unresolved after both passes finish', isCorrect: true },
         { label: 'Elements with value equal to the array maximum', isCorrect: false, feedback: 'The global maximum always gets -1, but so does any element that wraps the full circle without finding a larger value. Stack remainder is the precise characterization.' },
         { label: 'Elements that appear more than once in the array', isCorrect: false, feedback: 'Duplicates have no special relationship to the -1 outcome. [1,1,1] gives [-1,-1,-1] not because of duplicates, but because no element is ever strictly greater than 1.' },
       ],
@@ -81,4 +86,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def next_greater_elements(self, nums):
+        n = len(nums)
+        result = [-1] * n
+        stack = []
+        for i in range(2 * n):
+            idx = i % n
+            while stack and nums[stack[-1]] < nums[idx]:
+                result[stack.pop()] = nums[idx]
+            if i < n:
+                stack.append(idx)
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Only indices are pushed during the *first* pass (<code>i &lt; n</code>) — the second lap around the array (<code>i</code> from <code>n</code> to <code>2n-1</code>) exists purely to let stale entries still on the stack check against the wrapped-around suffix, never to add new candidates, since every real index was already considered once.',
+  solutionExplanation: 'Simulating one extra lap around the circular array — walking indices <code>0..2n-1</code> but taking them mod <code>n</code> — lets the ordinary next-greater-element stack technique see "what comes after the end, wrapping to the start" without actually duplicating the array. The stack holds indices still waiting for a bigger value to their right; any index still sitting on the stack after the full 2n-step walk genuinely has no greater element anywhere in the circle, which is exactly why the result array is pre-filled with -1 rather than requiring a separate check.',
 }

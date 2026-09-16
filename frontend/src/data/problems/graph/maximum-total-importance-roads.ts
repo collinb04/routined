@@ -8,20 +8,23 @@ export default {
     { input: 'n=5, roads=[[0,3],[2,4],[1,3]]', output: '20' },
   ],
   constraints: ['2 ≤ n ≤ 5 × 10⁴', '1 ≤ roads.length ≤ 5 × 10⁴'],
-  starterCode: `def maximum_importance(n, roads):
-  pass`,
+  starterCode: `class Solution:
+    def maximum_importance(self, n, roads):
+        pass`,
+  runnerSetup: 'maximum_importance = Solution().maximum_importance',
   functionName: 'maximum_importance',
   conceptId: 'graphs',
   testCases: [
     { label: 'Six roads', args: [5,[[0,1],[1,2],[2,3],[0,2],[1,3],[2,4]]], expected: 43 },
     { label: 'Three roads', args: [5,[[0,3],[2,4],[1,3]]], expected: 20 },
   ],
-  bruteHint: 'Describe trying every possible assignment of values to cities and evaluating each, and why that\'s computationally infeasible',
-  optimizeHint: 'Name the greedy strategy that ranks cities by degree and assigns the largest values to the highest-degree cities',
+  bruteHint: 'The brute-force approach tries every possible permutation of values 1 through n assigned to the n cities, computing the total road importance for each full assignment and keeping the best result. With n cities, there are n! possible permutations, a number that explodes past feasibility even for small n and is completely out of reach when n can be up to 5 × 10⁴. Since evaluating every permutation individually is impossible at this scale, the assignment must be determined by some property of each city rather than brute enumeration. What property of a city could let you decide its value without trying every arrangement?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 5 × 10⁴ cities and roads.length ≤ 5 × 10⁴. What complexity is acceptable?',
+      highlight: { location: 'constraint', text: '2 ≤ n ≤ 5 × 10⁴' },
+      question: 'Constraints define the performance budget your algorithm must fit within before you write a single line of code. n ≤ 5 × 10⁴ cities and roads.length ≤ 5 × 10⁴. What complexity is acceptable?',
       options: [
         { label: 'O(n²) comparison of all city pairs', isCorrect: false, feedback: 'At n = 50,000, O(n²) is 2.5 billion operations — far too slow. You cannot afford to compare every pair of cities directly.' },
         { label: 'O(n log n) with a sort', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'value-assignment-insight',
-      question: 'Each city is assigned a unique value from 1 to n. A road\'s importance is the sum of its two city values. What determines which city should get the highest value?',
+      highlight: { location: 'description', text: 'A road\'s importance is the sum of its two city values.' },
+      question: 'The description\'s precise wording about how a value contributes to the total often reveals the core structural insight you need to exploit. Each city is assigned a unique value from 1 to n. A road\'s importance is the sum of its two city values. What determines which city should get the highest value?',
       options: [
         { label: 'The city with the lowest label number', isCorrect: false, feedback: 'City labels (0, 1, 2…) are just identifiers — they have nothing to do with optimal value assignment. What matters is how many roads each city appears in.' },
         { label: 'The city with the most roads (highest degree)', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'greedy-ordering',
-      question: 'Values 1 through n are each used exactly once. What is the optimal assignment strategy?',
+      highlight: { location: 'description', text: 'assign values 1-n to cities (each value used once)' },
+      question: 'Once you know what property drives the outcome, the description also tells you how to convert that property into an actual assignment strategy. Values 1 through n are each used exactly once. What is the optimal assignment strategy?',
       options: [
         { label: 'Assign values in random order', isCorrect: false, feedback: 'Random assignment produces an expected-average total, not the maximum. The optimal strategy is deterministic: sort cities by degree and assign values in ascending order.' },
         { label: 'Sort cities by degree; assign value 1 to lowest, n to highest', isCorrect: true },
@@ -65,4 +70,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def maximum_importance(self, n, roads):
+        degree = [0] * n
+        for u, v in roads:
+            degree[u] += 1
+            degree[v] += 1
+
+        order = sorted(range(n), key=lambda city: degree[city])
+        value = [0] * n
+        for rank, city in enumerate(order):
+            value[city] = rank + 1
+
+        return sum(value[u] + value[v] for u, v in roads)`,
+  solutionComplexity: { time: 'O(n log n + roads)', space: 'O(n)' },
+  solutionCaveat: 'Every road contributes <code>value[u] + value[v]</code> to the total, so a city\'s value is counted once for every road touching it — meaning a city\'s <code>degree</code> is exactly the multiplier on its assigned value, which is why sorting by degree before assigning values is the whole strategy.',
+  solutionExplanation: 'The total sum is <code>Σ (value[u] + value[v])</code> over all roads, which regroups into <code>Σ degree[city] × value[city]</code> over all cities — a sum of products that the rearrangement inequality says is maximized by pairing the largest weight with the largest value, the second-largest with the second-largest, and so on. Sorting cities by degree ascending and assigning values <code>1..n</code> in that same order pairs the highest-degree city with the highest value, which is provably the optimal assignment.',
 }

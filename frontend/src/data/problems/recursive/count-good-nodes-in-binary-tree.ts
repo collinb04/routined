@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def good_nodes(root):
-  pass`,
+class Solution:
+    def good_nodes(self, root):
+        pass`,
   functionName: 'good_nodes_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def good_nodes_run(arr):
-  return good_nodes(_build(arr))`,
+  return Solution().good_nodes(_build(arr))`,
   testCases: [
     { label: '[3,1,4,3,null,1,5]', args: [[3,1,4,3,null,1,5]], expected: 4 },
     { label: '[3,3,null,4,2]', args: [[3,3,null,4,2]], expected: 3 },
   ],
-  bruteHint: 'Describe checking each node by walking back up to re-examine every ancestor, and the complexity that repeated work adds up to',
-  optimizeHint: 'Name the single value you could carry downward through one DFS pass so each node is checked in O(1) without revisiting ancestors',
+  bruteHint: 'A brute-force approach would, for each node, walk back up through all of its ancestors to check whether any of them has a larger value - but binary tree nodes typically don\'t store parent pointers, so you\'d instead re-traverse from the root down to each node, re-checking every ancestor along the way. With up to 10⁵ nodes, and a root-to-node path that can itself be O(n) long, this repeated re-checking costs O(n²) in the worst case. What single piece of information could you carry down once, during a single pass, so you never have to re-examine an ancestor twice?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'good-node-definition',
-      question: '"No nodes with a value greater than X on the path from root to X." What information must you carry down during traversal?',
+      highlight: { location: 'description', text: 'there are no nodes with a value greater than X' },
+      question: 'A precise definition buried in the problem statement often tells you exactly which running value you need to track during traversal. "No nodes with a value greater than X on the path from root to X." What information must you carry down during traversal?',
       options: [
         { label: 'The sum of all values seen so far', isCorrect: false, feedback: 'The sum of path values tells you nothing about whether any individual value exceeded X. The definition requires knowing the single largest value seen — not the total.' },
         { label: 'The maximum value seen on the path so far', isCorrect: true },
@@ -57,7 +59,8 @@ def good_nodes_run(arr):
     },
     {
       id: 'constraint-complexity',
-      question: 'The tree has up to 10⁵ nodes. What complexity does this require?',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [1, 10^5]' },
+      question: 'Constraints on input size are a direct signal for the complexity class your solution needs to hit. The tree has up to 10⁵ nodes. What complexity does this require?',
       options: [
         { label: 'O(n²) — check all ancestors for each node', isCorrect: false, feedback: 'Re-checking all ancestors for each of the 10⁵ nodes is O(n²) — up to 10 billion comparisons. You can propagate the running maximum in O(1) per node instead.' },
         { label: 'O(n) — visit each node exactly once', isCorrect: true },
@@ -72,7 +75,7 @@ def good_nodes_run(arr):
     },
     {
       id: 'root-is-always-good',
-      question: 'The root is always a good node. Why, and what does that imply for your base case?',
+      question: 'Thinking through the edge case implied by a definition, like what happens at the very first step, often reveals the right initial state for your algorithm. The root is always a good node. Why, and what does that imply for your base case?',
       options: [
         { label: 'The root has the largest value in the tree', isCorrect: false, feedback: 'The root is not necessarily the largest node — the example root is 3 while node 5 is larger. The root is good because there are no ancestors at all, so the "no greater ancestor" condition is trivially satisfied.' },
         { label: 'There are no ancestors, so the condition is trivially met', isCorrect: true },
@@ -87,7 +90,8 @@ def good_nodes_run(arr):
     },
     {
       id: 'output-type',
-      question: 'The output is a count, not a list of good nodes. What does this simplify?',
+      highlight: { location: 'description', text: 'Return the number of good nodes in the binary tree' },
+      question: 'The shape of the requested output, whether it\'s a count, a list, or a boolean, constrains what data structure you actually need to maintain while solving the problem. The output is a count, not a list of good nodes. What does this simplify?',
       options: [
         { label: 'You can return early once any good node is found', isCorrect: false, feedback: 'A count requires tallying every good node in the tree — you cannot stop at the first one. Early exit is only possible when the output is a boolean or a single value like a maximum.' },
         { label: 'You only need an integer accumulator, not a collection', isCorrect: true },
@@ -101,4 +105,17 @@ def good_nodes_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def good_nodes(self, root):
+        def dfs(node, max_so_far):
+            if not node:
+                return 0
+            count = 1 if node.val >= max_so_far else 0
+            new_max = max(max_so_far, node.val)
+            return count + dfs(node.left, new_max) + dfs(node.right, new_max)
+
+        return dfs(root, float('-inf'))`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The traversal starts with <code>max_so_far = -infinity</code>, not <code>0</code> or the root\'s own value — since node values can be negative, seeding with anything other than negative infinity could wrongly disqualify the root or an early negative-valued node from being counted as good.',
+  solutionExplanation: 'Threading the running maximum of the root-to-current path as a parameter, rather than re-walking ancestors for every node, is what collapses what could be O(n) work per node into O(1) work per node: each call already knows the largest value seen on the path so far, so comparing the current node\'s value against it answers "is this node good" instantly, and passing <code>max(max_so_far, node.val)</code> down to both children keeps that running maximum correct for every deeper path.',
 }

@@ -40,7 +40,7 @@
           :class="i === 1 ? 'border-black' : 'border-gray-200'"
         >
           <!-- Popular badge -->
-          <span v-if="i === 1" class="absolute top-4 right-4 text-[9px] font-semibold uppercase tracking-widest text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-full">
+          <span v-if="i === 1" class="absolute top-4 right-4 text-[9px] font-medium font-mono uppercase tracking-widest  text-text-muted bg-[#f5f5f2] px-2 py-0.5 rounded-lg">
             Popular
           </span>
 
@@ -53,7 +53,7 @@
           <!-- Feature lines (blurred) -->
           <div class="flex flex-col gap-2">
             <div v-for="j in tier.lines" :key="j"
-              class="h-3 rounded-full bg-gray-100 blur-[2px]"
+              class="h-3 rounded-lg bg-gray-100 blur-[2px]"
               :style="`width: ${tier.widths[j - 1]}%`"
             />
           </div>

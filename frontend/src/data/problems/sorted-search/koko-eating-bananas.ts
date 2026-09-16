@@ -11,12 +11,11 @@ export default {
     '1 ≤ piles.length ≤ h ≤ 10⁴',
     '1 ≤ piles[i] ≤ 10⁹',
   ],
-  starterCode: `import math
-
-def min_eating_speed(piles, h):
-  # Hint: binary search on k in range [1, max(piles)]
-  pass`,
+  starterCode: `class Solution:
+    def min_eating_speed(self, piles, h):
+        pass`,
   functionName: 'min_eating_speed',
+  runnerSetup: 'min_eating_speed = Solution().min_eating_speed',
   conceptId: 'binary-search-answer',
   testCases: [
     { label: 'Basic', args: [[3,6,7,11], 8], expected: 4 },
@@ -24,12 +23,12 @@ def min_eating_speed(piles, h):
     { label: 'Extra time', args: [[30,11,23,4,20], 6], expected: 23 },
     { label: 'Single pile', args: [[10], 3], expected: 4 },
   ],
-  bruteHint: 'Describe testing every possible eating speed one by one and why that\'s too slow',
-  optimizeHint: 'Name the technique that binary searches over the range of possible eating speeds',
+  bruteHint: 'The brute-force approach tries every possible eating speed k starting from 1 upward, checking each one until you find the smallest k that lets Koko finish within h hours. Since piles[i] can be as large as 10⁹, this scan could take up to a billion iterations, and each check costs O(n) to sum hours across piles — far too slow for the given constraints. Is there a way to narrow down k faster than checking every single value in order?',
+  optimizeComplexity: { time: 'O(n log m)', space: 'O(1)' },
   clues: [
     {
       id: 'search-space',
-      question: 'You\'re searching for the minimum k. k is at least 1 and at most max(piles). What does this bounded monotone range suggest?',
+      question: 'Recognizing a bounded range with a monotone yes/no property is often the key to picking the right search strategy. You\'re searching for the minimum k. k is at least 1 and at most max(piles). What does this bounded monotone range suggest?',
       options: [
         { label: 'Try every integer k from 1 to max(piles)', isCorrect: false, feedback: 'piles[i] can be up to 10⁹, so scanning every k from 1 to max(piles) would take up to 10⁹ iterations — far too slow. You need to exploit the monotone structure of the range.' },
         { label: 'Binary search over k in [1, max(piles)]', isCorrect: true },
@@ -44,10 +43,11 @@ def min_eating_speed(piles, h):
     },
     {
       id: 'hours-constraint',
-      question: 'piles.length ≤ h. This means there are at least as many hours as piles. What does this tell you about the maximum useful k?',
+      highlight: { location: 'constraint', text: '1 ≤ piles.length ≤ h ≤ 10⁴' },
+      question: 'A relationship between two constraint variables can reveal an implicit bound you can exploit. piles.length ≤ h. This means there are at least as many hours as piles. What does this tell you about the maximum useful k?',
       options: [
         { label: 'k can be arbitrarily large — no upper bound needed', isCorrect: false, feedback: 'k = max(piles) is always sufficient — at that speed, every pile takes exactly 1 hour and piles.length ≤ h guarantees enough time. You don\'t need k above max(piles).' },
-        { label: 'k = max(piles) is always sufficient — it\'s the upper bound for binary search', isCorrect: true },
+        { label: 'k = max(piles) is always sufficient — it\'s the upper end of the valid range for k', isCorrect: true },
         { label: 'k must equal h / piles.length exactly', isCorrect: false, feedback: 'h / piles.length is an average, not a threshold. The minimum k depends on pile sizes and their interaction with h, not just the average hours per pile.' },
         { label: 'k = 1 is always sufficient given enough hours', isCorrect: false, feedback: 'At k = 1, the total hours needed equals sum(piles), which could be up to piles.length × 10⁹. That far exceeds h. k = 1 is the lower bound for binary search, not always sufficient.' },
       ],
@@ -59,7 +59,7 @@ def min_eating_speed(piles, h):
     },
     {
       id: 'feasibility-check',
-      question: 'To binary search, you need to check whether a given k is feasible. What does that check look like?',
+      question: 'The checker function is what makes binary search on the answer actually work, so it\'s worth nailing down precisely. To binary search, you need to check whether a given k is feasible. What does that check look like?',
       options: [
         { label: 'Sum all piles and compare sum to k × h', isCorrect: false, feedback: 'sum / k gives the average hours needed, but piles are eaten one at a time and you can\'t split hours across piles. You must use ceil for each pile independently: ceil(pile / k).' },
         { label: 'Sum ceil(pile / k) for each pile; check if total ≤ h', isCorrect: true },
@@ -73,4 +73,21 @@ def min_eating_speed(piles, h):
       ],
     },
   ],
+  solutionCode: `import math
+
+class Solution:
+    def min_eating_speed(self, piles, h):
+        lo, hi = 1, max(piles)
+        def hours_needed(k):
+            return sum(math.ceil(p / k) for p in piles)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if hours_needed(mid) <= h:
+                hi = mid
+            else:
+                lo = mid + 1
+        return lo`,
+  solutionComplexity: { time: 'O(n × log(max(piles)))', space: 'O(1)' },
+  solutionCaveat: '<code>math.ceil</code> matters here: eating a pile of 7 bananas at speed 4 takes 2 hours, not 1.75 — Koko can\'t start a new pile partway through the same hour, so every pile that doesn\'t divide evenly still costs a full extra hour.',
+  solutionExplanation: 'The actual pile values never get searched — the *eating speed* does. "Is speed k fast enough to finish in h hours?" is a yes/no question that\'s monotone: every speed faster than a working one also works, every speed slower than a failing one also fails. That monotonicity is what turns "find the minimum speed" into an ordinary binary search over the range [1, max(piles)], collapsing toward the smallest speed for which <code>hours_needed(k) &lt;= h</code>.',
 }

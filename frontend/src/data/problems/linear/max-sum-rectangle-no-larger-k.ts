@@ -7,20 +7,23 @@ export default {
     { input: 'matrix=[[1,0,1],[0,-2,3]], k=2', output: '2', explanation: 'The rectangle [[0,1],[-2,3]] has sum 2.' },
   ],
   constraints: ['m == matrix.length', 'n == matrix[0].length', '1 ≤ m, n ≤ 100', '-100 ≤ matrix[i][j] ≤ 100', '-10⁵ ≤ k ≤ 10⁵'],
-  starterCode: `def max_sum_submatrix(matrix, k):
-  pass`,
+  starterCode: `class Solution:
+    def max_sum_submatrix(self, matrix, k):
+        pass`,
+  runnerSetup: 'max_sum_submatrix = Solution().max_sum_submatrix',
   functionName: 'max_sum_submatrix',
   conceptId: 'prefix-sum',
   testCases: [
     { label: 'Standard', args: [[[1,0,1],[0,-2,3]],2], expected: 2 },
-    { label: 'k=3', args: [[[2,2],[-1,-1]],3], expected: 3 },
+    { label: 'k=3', args: [[[2,2],[-1,-1]],3], expected: 2 },
   ],
-  bruteHint: 'Describe checking every possible rectangle directly, and the resulting time complexity',
-  optimizeHint: 'Explain how fixing a pair of rows to collapse the matrix into a 1D array lets you reuse a prefix-sum technique per column pair',
+  bruteHint: 'The brute-force approach tries every possible rectangle: pick a top row, bottom row, left column, and right column, then sum everything inside. With four nested loops over the row and column boundaries, that is O(m²n²) rectangles, and summing each one directly adds even more work on top. At m, n up to 100, would checking every one of these rectangles finish in time?',
+  optimizeComplexity: { time: 'O(m² · n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'm, n ≤ 100. How does this 2D size bound shape your complexity budget?',
+      question: 'We can figure out how efficient our approach needs to be based on the size bounds given. m, n ≤ 100. How does this 2D size bound shape your complexity budget?',
+      highlight: { location: 'constraint', text: '1 ≤ m, n ≤ 100' },
       options: [
         { label: 'O(m² · n²) brute force is fine', isCorrect: false, feedback: 'O(m² · n²) is 100⁴ = 100 million operations — marginal at best. But the "no larger than k" check inside that loop would add another factor, pushing it over the limit.' },
         { label: 'O(m² · n · log n) is the target', isCorrect: true },
@@ -35,12 +38,13 @@ export default {
     },
     {
       id: 'no-larger-than-k',
-      question: '"No larger than k" — not "equal to k" or "as large as possible." What technique does this constraint point to?',
+      question: 'We can narrow down which technique applies by paying close attention to the exact wording of the target condition. "No larger than k" — not "equal to k" or "as large as possible." What technique does this constraint point to?',
+      highlight: { location: 'description', text: 'no larger than <code>k</code>' },
       options: [
         { label: 'Track the maximum subarray sum seen so far', isCorrect: false, feedback: 'Kadane\'s algorithm finds the maximum subarray sum without any upper bound. Here you need the maximum sum that does not exceed k — a different problem requiring a different approach.' },
-        { label: 'Binary search on prefix sums to find the closest value ≤ k', isCorrect: true },
+        { label: 'Among the running totals seen so far, quickly find the one that keeps the difference within k', isCorrect: true },
         { label: 'Discard any rectangle whose sum equals k exactly', isCorrect: false, feedback: 'A sum equal to k is valid — the constraint is "no larger than k," meaning ≤ k. Equal is exactly the best case.' },
-        { label: 'Use a sliding window that stops when the sum hits k', isCorrect: false, feedback: 'A sliding window that stops at k finds a sum equal to k or misses cases. You need the maximum sum ≤ k, which may be less than k; stopping early would miss larger valid sums.' },
+        { label: 'Grow and shrink a contiguous range of elements, stopping once its sum reaches k', isCorrect: false, feedback: 'A sliding window that stops at k finds a sum equal to k or misses cases. You need the maximum sum ≤ k, which may be less than k; stopping early would miss larger valid sums.' },
       ],
       correctFeedback: 'For a 1D array of prefix sums, you want the largest prefix[j] − prefix[i] ≤ k, i.e., the smallest prefix[i] ≥ prefix[j] − k. A sorted set supports that lookup in O(log n).',
       wrongFeedback: [
@@ -50,7 +54,8 @@ export default {
     },
     {
       id: 'negative-values',
-      question: '-100 ≤ matrix[i][j] ≤ 100 and k can be negative (-10⁵ ≤ k). What does allowing negative values and negative k imply?',
+      question: 'We can figure out which rectangles are safe to skip — or not — by considering the full range of values allowed. -100 ≤ matrix[i][j] ≤ 100 and k can be negative (-10⁵ ≤ k). What does allowing negative values and negative k imply?',
+      highlight: { location: 'constraint', text: '-10⁵ ≤ k ≤ 10⁵' },
       options: [
         { label: 'The answer is always non-negative', isCorrect: false, feedback: 'If k is negative, you must find a rectangle with sum ≤ k — which may itself be a large negative number. The answer can be negative.' },
         { label: 'You cannot skip rectangles with negative sums', isCorrect: true },
@@ -65,7 +70,7 @@ export default {
     },
     {
       id: 'row-compression',
-      question: 'The problem is 2D. What is the standard reduction that turns a 2D rectangle problem into repeated 1D subarray problems?',
+      question: 'We can figure out which overall strategy fits by thinking about how to reduce this problem to one we already know how to solve. The problem is 2D. What is the standard reduction that turns a 2D rectangle problem into repeated 1D subarray problems?',
       options: [
         { label: 'Fix the left and right column bounds, sum each row', isCorrect: false, feedback: 'Close — but the standard reduction fixes the top and bottom row bounds, then computes column sums. That compresses the 2D rectangle into a 1D array of column-wise sums.' },
         { label: 'Fix the top and bottom row bounds, then solve 1D on column sums', isCorrect: true },
@@ -79,4 +84,27 @@ export default {
       ],
     },
   ],
+  solutionCode: `import bisect
+
+class Solution:
+    def max_sum_submatrix(self, matrix, k):
+        m, n = len(matrix), len(matrix[0])
+        best = float('-inf')
+        for top in range(m):
+            row_sum = [0] * n
+            for bottom in range(top, m):
+                for c in range(n):
+                    row_sum[c] += matrix[bottom][c]
+                prefix = 0
+                sorted_prefixes = [0]
+                for val in row_sum:
+                    prefix += val
+                    idx = bisect.bisect_left(sorted_prefixes, prefix - k)
+                    if idx < len(sorted_prefixes):
+                        best = max(best, prefix - sorted_prefixes[idx])
+                    bisect.insort(sorted_prefixes, prefix)
+        return best`,
+  solutionComplexity: { time: 'O(m² · n log n)', space: 'O(n)' },
+  solutionCaveat: 'The sorted-prefix trick only finds the sum closest to (but not exceeding) <code>k</code> for the *current* row range — the outer two loops over <code>top</code> and <code>bottom</code> still have to try every row range, since collapsing rows any other way would lose information about which rectangle produced which sum.',
+  solutionExplanation: 'Fixing a top and bottom row collapses the 2D problem into a 1D one: summing each column across just those rows produces an array where a contiguous slice is exactly a rectangle sum for that row range, reducing the question to "max subarray sum no larger than k" — solvable with prefix sums and a sorted list, binary-searching for the smallest earlier prefix that keeps the difference at or under <code>k</code>. Trying every row-range pair costs O(m²), and each one\'s column-collapsed array is solved in O(n log n), giving the combined complexity.',
 }

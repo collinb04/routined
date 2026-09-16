@@ -8,23 +8,25 @@ export default {
     { input: 'candidates = [2,3,4], target = 6', output: '[[2,2,2],[2,4],[3,3]]' },
   ],
   constraints: ['1 <= candidates.length <= 30', '2 <= candidates[i] <= 40', '1 <= target <= 40'],
-  starterCode: `def combination_sum(candidates, target):
-  pass`,
+  starterCode: `class Solution:
+    def combination_sum(self, candidates, target):
+        pass`,
   functionName: 'combination_sum_run',
   conceptId: 'backtracking',
   runnerSetup: `def combination_sum_run(candidates, target):
-  result = combination_sum(candidates, target)
+  result = Solution().combination_sum(candidates, target)
   return sorted([sorted(c) for c in result])`,
   testCases: [
     { label: 'target=7', args: [[2,3,6,7], 7], expected: [[2,2,3],[7]] },
     { label: 'target=6', args: [[2,3,4], 6], expected: [[2,2,2],[2,4],[3,3]] },
   ],
-  bruteHint: 'Describe generating every possible multiset of candidates and filtering for those summing to target, and why that\'s wasteful',
-  optimizeHint: 'Name the technique of backtracking one number at a time, stopping a branch once the running sum can\'t reach target',
+  bruteHint: 'One brute-force approach generates every possible multiset of the candidates, trying every combination of repeated picks, and filters for the ones that sum exactly to target. Because numbers can repeat and target can be up to 40, this branches into roughly O(2ⁿ) paths in the worst case, most of which are wasted once a partial sum already exceeds target. What could let you stop extending a path the moment it can no longer reach target?',
+  optimizeComplexity: { time: 'O(2ⁿ)', space: 'O(target / min(candidates))' },
   clues: [
     {
       id: 'unlimited-reuse',
-      question: '"The same number may be chosen an unlimited number of times." How does this change the recursive call?',
+      question: 'Noticing when a description lifts a restriction you would normally expect is what tells you the standard recursive pattern needs to change. "The same number may be chosen an unlimited number of times." How does this change the recursive call?',
+      highlight: { location: 'description', text: 'The same number may be chosen from <code>candidates</code> an unlimited number of times.' },
       options: [
         { label: 'Advance the start index by 1 after picking a number', isCorrect: false, feedback: 'Advancing by 1 prevents reuse — that is the behavior of Combination Sum II. Here, you must pass the same index to the recursive call so the current candidate can be picked again.' },
         { label: 'Pass the same start index so the current candidate stays available', isCorrect: true },
@@ -39,7 +41,8 @@ export default {
     },
     {
       id: 'distinct-candidates-guarantee',
-      question: '"An array of distinct integers." How does this simplify the problem compared to a version with duplicates?',
+      question: 'A guarantee buried in the input description can eliminate an entire category of edge-case handling you would otherwise need to write. "An array of distinct integers." How does this simplify the problem compared to a version with duplicates?',
+      highlight: { location: 'description', text: 'an array of distinct integers' },
       options: [
         { label: 'No duplicate combinations can be generated from distinct candidates', isCorrect: false, feedback: 'Distinct candidates do not prevent duplicate combinations on their own. Starting from index 0 each time would still produce [2,3] and [3,2] as separate paths. You still need a start index to avoid those.' },
         { label: 'No need to skip duplicate values at the same recursion level', isCorrect: true },
@@ -54,7 +57,8 @@ export default {
     },
     {
       id: 'output-all-combinations',
-      question: 'The output is all unique combinations — not a count, not an existence check. What does that require from your approach?',
+      question: 'What the return type asks for — a single value, a count, or every valid result — determines whether you can stop early or must explore exhaustively. The output is all unique combinations — not a count, not an existence check. What does that require from your approach?',
+      highlight: { location: 'description', text: 'return a list of all unique combinations of <code>candidates</code> where the chosen numbers sum to <code>target</code>' },
       options: [
         { label: 'Return true as soon as you find one valid combination', isCorrect: false, feedback: 'Returning on the first find is appropriate for existence problems. Here you must collect every valid combination — early exit would miss results.' },
         { label: 'Enumerate all valid paths via backtracking, collecting each valid leaf', isCorrect: true },
@@ -69,7 +73,8 @@ export default {
     },
     {
       id: 'pruning-on-sum',
-      question: 'candidates[i] ≥ 2 and target ≤ 40. Once the running sum exceeds the target, what should you do?',
+      question: 'Knowing the sign and range of the values you are summing tells you whether a running total can ever recover once it overshoots. candidates[i] ≥ 2 and target ≤ 40. Once the running sum exceeds the target, what should you do?',
+      highlight: { location: 'constraint', text: '2 <= candidates[i] <= 40' },
       options: [
         { label: 'Continue — a later subtraction might bring the sum back down', isCorrect: false, feedback: 'All candidates are positive (≥ 2). Adding more can only increase the sum. Once you exceed target, no further picks can bring the sum back to target.' },
         { label: 'Prune the branch — all candidates are positive so the sum only grows', isCorrect: true },
@@ -83,4 +88,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def combination_sum(self, candidates, target):
+        candidates.sort()
+        result = []
+        path = []
+
+        def backtrack(start, remaining):
+            if remaining == 0:
+                result.append(path[:])
+                return
+            for i in range(start, len(candidates)):
+                if candidates[i] > remaining:
+                    break
+                path.append(candidates[i])
+                backtrack(i, remaining - candidates[i])
+                path.pop()
+
+        backtrack(0, target)
+        return result`,
+  solutionComplexity: { time: 'O(2ⁿ)', space: 'O(target / min(candidates))' },
+  solutionCaveat: 'The recursive call passes <code>i</code>, not <code>i + 1</code> — staying at the same index deliberately keeps the just-picked candidate eligible for reuse, which is exactly what "unlimited number of times" requires; only once the loop moves past index <code>i</code> does that candidate become permanently unavailable to the current path.',
+  solutionExplanation: 'Sorting up front enables an early <code>break</code> the moment a candidate exceeds the remaining target, since every later (larger) candidate would only make the running sum overshoot further — this prunes away large parts of the search tree that could never produce a valid combination. Since candidates are distinct, no explicit same-level duplicate-skipping is needed the way Combination Sum II requires; every path that reaches <code>remaining == 0</code> is recorded, giving every valid combination without exhaustively regenerating permutations of the same multiset.',
 }

@@ -10,8 +10,10 @@ export default {
     { input: 's = "(()(()))"', output: '6' },
   ],
   constraints: ['2 ≤ s.length ≤ 50', 's consists of \'(\' and \')\' only', 's is a balanced parentheses string'],
-  starterCode: `def score_of_parentheses(s):
-  pass`,
+  starterCode: `class Solution:
+    def score_of_parentheses(self, s):
+        pass`,
+  runnerSetup: 'score_of_parentheses = Solution().score_of_parentheses',
   functionName: 'score_of_parentheses',
   conceptId: 'stack',
   testCases: [
@@ -20,12 +22,13 @@ export default {
     { label: '()()', args: ['()()'], expected: 2 },
     { label: 'Nested', args: ['(()(()))'], expected: 6 },
   ],
-  bruteHint: 'Describe recursively re-parsing matched substrings to compute their scores, and explain why that repeats work',
-  optimizeHint: 'Name the structure that tracks accumulated scores at each nesting depth in a single pass',
+  bruteHint: "A brute-force approach recursively finds each top-level matched pair, computes the score of what is inside it, and combines the results — re-scanning nested substrings from scratch at every level of recursion. This repeated re-parsing of already-visited characters costs O(n²) time in the worst case as nesting depth grows. What work are you redoing every time you recurse into a substring you have already partially scanned?",
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'nesting-structure',
-      question: 'The rule "(A) = 2 * A" means a closing bracket doubles whatever is inside it. What does this imply about tracking depth?',
+      question: 'Rules that build results from the inside out often signal you need to track work at each level rather than a single running total. The rule "(A) = 2 * A" means a closing bracket doubles whatever is inside it. What does this imply about tracking depth?',
+      highlight: { location: 'description', text: '"(A)" = 2 * A.' },
       options: [
         { label: 'Count characters linearly', isCorrect: false, feedback: 'A simple character count ignores the doubling structure. "(())" has 4 characters but a score of 2, not 4.' },
         { label: 'Scores are computed inside-out', isCorrect: true },
@@ -40,7 +43,7 @@ export default {
     },
     {
       id: 'data-structure-choice',
-      question: 'You need to combine scores at the current nesting level and retrieve the enclosing level when a ")" is seen. What structure supports this?',
+      question: 'Matching a problem\'s access pattern (most-recent-first vs. first-in-first-out) to a structure is often the key design decision. You need to combine scores at the current nesting level and retrieve the enclosing level when a ")" is seen. What structure supports this?',
       options: [
         { label: 'A queue (FIFO)', isCorrect: false, feedback: 'A queue retrieves the oldest item first. You need the most recently opened level — that is last-in, first-out behavior.' },
         { label: 'A stack (LIFO)', isCorrect: true },
@@ -55,7 +58,8 @@ export default {
     },
     {
       id: 'base-case-rule',
-      question: '"()" scores 1 — a pair with nothing inside. How does this interact with the doubling rule "(A) = 2 * A"?',
+      question: 'Base cases must be consistent with the general rule, or your formula silently breaks on the simplest input. "()" scores 1 — a pair with nothing inside. How does this interact with the doubling rule "(A) = 2 * A"?',
+      highlight: { location: 'description', text: '"()" = 1' },
       options: [
         { label: 'Handle "()" as a separate special case', isCorrect: false },
         { label: 'Push 1 when ")" sees an empty top', isCorrect: false, feedback: 'This mixes two separate mechanisms. The stack approach pushes 0 on "(" and lets the ")" rule unify both cases naturally.' },
@@ -70,7 +74,8 @@ export default {
     },
     {
       id: 'balanced-guarantee',
-      question: 'The constraint says s is a balanced parentheses string. What does this let you skip?',
+      question: 'Guarantees about input validity let you skip entire classes of error-handling you would otherwise need to write. The constraint says s is a balanced parentheses string. What does this let you skip?',
+      highlight: { location: 'constraint', text: 's is a balanced parentheses string' },
       options: [
         { label: 'Checking for mismatched brackets', isCorrect: true },
         { label: 'Handling the empty string case', isCorrect: false, feedback: 'The minimum length is 2, so the empty string is already excluded. But the balanced guarantee specifically removes a different class of validation.' },
@@ -84,4 +89,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def score_of_parentheses(self, s):
+        stack = [0]
+        for ch in s:
+            if ch == '(':
+                stack.append(0)
+            else:
+                v = stack.pop()
+                stack[-1] += max(2 * v, 1)
+        return stack[0]`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: '<code>max(2 * v, 1)</code> handles both scoring rules in one expression: an empty pair ("()", where <code>v</code> is still 0) scores 1, while a pair wrapping something scores twice whatever that something was worth — the <code>max</code> just selects whichever rule actually applies.',
+  solutionExplanation: 'Each stack frame accumulates the score of everything at its own nesting depth, starting at 0 when a new <code>(</code> opens a level. Closing that level with <code>)</code> finalizes its score and folds it into the level below multiplied by 2 (since "(A)" doubles A) — unless nothing was inside, in which case it contributes exactly 1 for the bare "()" pair. Because scores only ever get added to the level directly below, sibling groups like in "()()" naturally sum together in the bottom frame without any special-casing.',
 }

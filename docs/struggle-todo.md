@@ -8,7 +8,7 @@ Tracks which problems have authored Struggle & Optimize content. Work **one prob
 
 ## Linear
 
-- [ ] contains-duplicate  <!-- calibration run #1 -->
+- [x] contains-duplicate  <!-- calibration run #1 -->
 - [ ] 132-pattern
 - [ ] 3sum-closest
 - [ ] 3sum
@@ -120,7 +120,7 @@ Tracks which problems have authored Struggle & Optimize content. Work **one prob
 
 ## Lookup
 
-- [ ] two-sum  <!-- gold example — already authored -->
+- [x] two-sum  <!-- gold example — already authored -->
 - [ ] insert-interval
 - [ ] interval-list-intersections
 - [ ] meeting-rooms-ii

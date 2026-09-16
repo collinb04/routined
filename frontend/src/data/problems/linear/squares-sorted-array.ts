@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [-7,-3,2,3,11]', output: '[4,9,9,49,121]' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁴', '-10⁴ ≤ nums[i] ≤ 10⁴', 'nums is sorted'],
-  starterCode: `def sorted_squares(nums):
-  pass`,
+  starterCode: `class Solution:
+    def sorted_squares(self, nums):
+        pass`,
+  runnerSetup: 'sorted_squares = Solution().sorted_squares',
   functionName: 'sorted_squares',
   conceptId: 'two-pointers',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Mixed', args: [[-7,-3,2,3,11]], expected: [4,9,9,49,121] },
     { label: 'All negative', args: [[-3,-2,-1]], expected: [1,4,9] },
   ],
-  bruteHint: 'Describe squaring every element then sorting the result, and its time complexity',
-  optimizeHint: 'Name the technique that uses two pointers from both ends to fill the result from the back',
+  bruteHint: 'A brute-force approach squares every element in place, then sorts the resulting array — that sort costs O(n log n) even though nums started out sorted before squaring. With nums.length up to 10⁴ that overhead is manageable, but it throws away information the sorted input already hands you for free. If you already know the largest-magnitude values sit at the two ends of the array, do you still need a general-purpose sort to put everything back in order?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'sorted-input-signal',
-      question: '"nums is sorted in non-decreasing order" — the input is already sorted. What does this tell you about where the largest squares are?',
+      question: 'Which technique fits often depends on structural guarantees the input already gives you. "nums is sorted" — the input is already sorted in non-decreasing order. What does this tell you about where the largest squares are?',
+      highlight: { location: 'constraint', text: 'nums is sorted' },
       options: [
         { label: 'Largest squares are in the middle', isCorrect: false, feedback: 'Squaring makes negatives positive. The largest values are at the extremes — the most-negative left end and the most-positive right end — not the middle.' },
         { label: 'Largest squares are at both ends', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'negative-values-effect',
-      question: '"-10⁴ ≤ nums[i] ≤ 10⁴" allows negative values. Why does that matter for squaring?',
+      question: 'Noticing what values are permitted often reveals structure a technique needs to account for. "-10⁴ ≤ nums[i] ≤ 10⁴" allows negative values. Why does that matter for squaring?',
+      highlight: { location: 'constraint', text: '-10⁴ ≤ nums[i] ≤ 10⁴' },
       options: [
         { label: 'Negatives can be ignored after squaring', isCorrect: false, feedback: 'Squaring makes negatives positive, but they still contribute to the result. A value of -10,000 squares to 100,000,000 — the largest possible square.' },
         { label: 'Negatives produce large squares on the left', isCorrect: true },
@@ -52,11 +56,12 @@ export default {
     },
     {
       id: 'output-sorted-order',
-      question: 'The output must be sorted in non-decreasing order. Given that the two largest squares are at opposite ends, how do you build the result efficiently?',
+      question: 'Matching the required output format determines how much extra work you will do to produce it. "return an array of the squares of each number sorted in non-decreasing order" — given that the two largest squares are at opposite ends, how do you build the result efficiently?',
+      highlight: { location: 'description', text: 'return an array of the squares of each number sorted in non-decreasing order' },
       options: [
         { label: 'Square all values then sort', isCorrect: false, feedback: 'Squaring then sorting costs O(n log n). The sorted input lets you avoid the sort entirely by filling the output from right to left with two pointers in O(n).' },
         { label: 'Fill the result array from largest to smallest', isCorrect: true },
-        { label: 'Use a min-heap to merge both ends', isCorrect: false, feedback: 'A heap works but adds O(n log n) overhead. Since there are only two candidates at any moment (the two ends), a simple comparison and two-pointer advance is O(n).' },
+        { label: 'Repeatedly pull the largest remaining value from a growing candidate pool', isCorrect: false, feedback: 'This works, but repeatedly finding the current maximum from a growing pool of candidates adds overhead. Since there are only two candidates at any moment — the two ends — a simple comparison and pointer advance is enough.' },
         { label: 'Insert each square into a sorted position', isCorrect: false, feedback: 'Insertion into a sorted array costs O(n) per element — O(n²) total. The two-pointer approach fills the result in O(n) by exploiting the sorted input.' },
       ],
       correctFeedback: 'Compare the squares at the left and right pointers, place the larger one at the current back of the result, and advance the corresponding pointer. This fills the output in O(n).',
@@ -66,4 +71,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def sorted_squares(self, nums):
+        n = len(nums)
+        result = [0] * n
+        left, right = 0, n - 1
+        for i in range(n - 1, -1, -1):
+            if abs(nums[left]) > abs(nums[right]):
+                result[i] = nums[left] ** 2
+                left += 1
+            else:
+                result[i] = nums[right] ** 2
+                right -= 1
+        return result`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionExplanation: 'Because the input is sorted, the largest-magnitude value is always sitting at one of the two ends — never buried in the middle — so a squared value can only ever be the biggest square remaining if it comes from the left or right edge. Filling the result array from the back forward and always taking whichever end currently has the bigger absolute value builds the output in sorted order directly, with no separate sort needed.',
 }

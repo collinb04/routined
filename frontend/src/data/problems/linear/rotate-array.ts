@@ -7,9 +7,11 @@ export default {
     { input: 'nums=[1,2,3,4,5,6,7], k=3', output: '[5,6,7,1,2,3,4]', explanation: 'Rotate right 3 times.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁵', '-2³¹ ≤ nums[i] ≤ 2³¹ − 1', '0 ≤ k ≤ 10⁵'],
-  starterCode: `def rotate(nums, k):
-  pass
-  return nums`,
+  starterCode: `class Solution:
+    def rotate(self, nums, k):
+        pass
+        return nums`,
+  runnerSetup: 'rotate = Solution().rotate',
   functionName: 'rotate',
   conceptId: 'arrays',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Rotate by length', args: [[1,2],2], expected: [1,2] },
     { label: 'Rotate 1', args: [[1,2,3],1], expected: [3,1,2] },
   ],
-  bruteHint: 'Describe rotating one step at a time k times, or building a new array, and name their time and space costs',
-  optimizeHint: 'Name the in-place technique that reverses the array three times to achieve O(1) extra space',
+  bruteHint: "One brute-force approach rotates the array one step at a time, repeated k times, shifting every element over by one position on each pass. Since each single-step rotation is itself O(n) and you repeat it k times, the total cost is O(n·k) in the worst case. Alternatively you could build a brand-new array with elements copied into their rotated positions, which costs O(n) extra space. What happens to the one-step-at-a-time approach's running time when both n and k are close to 100,000?",
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'k-mod-n',
-      question: '0 ≤ k ≤ 10⁵ and nums.length ≤ 10⁵. What happens when k ≥ nums.length?',
+      question: 'Constraints that let one parameter exceed another often signal a normalization step you must apply before anything else. 0 ≤ k ≤ 10⁵ and nums.length ≤ 10⁵. What happens when k ≥ nums.length?',
+      highlight: { location: 'constraint', text: '0 ≤ k ≤ 10⁵' },
       options: [
         { label: 'The rotation wraps around; k % n is the effective shift', isCorrect: true },
         { label: 'k must be clamped to nums.length − 1', isCorrect: false, feedback: 'Clamping k to n−1 gives the wrong result. Rotating by n steps returns the array to its original state, so k % n is the correct reduction — not k clamped at n−1.' },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'in-place-constraint',
-      question: '"Rotate the array in-place." What does this rule out?',
+      question: 'In-place requirements tell you which extra memory you are allowed to use, ruling out approaches that need proportional extra space. "Rotate the array in-place." What does this rule out?',
+      highlight: { location: 'description', text: 'rotate the array to the right by <code>k</code> steps in-place.' },
       options: [
         { label: 'Using index arithmetic to compute new positions', isCorrect: false, feedback: 'Index arithmetic is allowed regardless of in-place. It does not allocate a separate array of size n, so it satisfies the in-place constraint.' },
         { label: 'Allocating a second array of length n to hold the rotated result', isCorrect: true },
@@ -52,7 +56,7 @@ export default {
     },
     {
       id: 'reverse-trick',
-      question: 'Rotating right by k steps can be achieved with three reversals. What is the order?',
+      question: 'Once you know you need an O(1)-space, in-place rearrangement, the specific technique that achieves it becomes the real question. Rotating right by k steps can be achieved with three reversals. What is the order?',
       options: [
         { label: 'Reverse middle, then reverse left, then reverse right', isCorrect: false, feedback: 'There is no "middle" in the three-reversal approach. The splits are the last k elements and the first n−k elements.' },
         { label: 'Reverse the whole array, reverse first k, reverse last n−k', isCorrect: true },
@@ -67,7 +71,8 @@ export default {
     },
     {
       id: 'input-size-complexity',
-      question: 'nums.length ≤ 10⁵ and the problem asks for in-place rotation. What complexity does the three-reversal approach achieve?',
+      question: "With input sizes up to 100,000, confirming the actual time and space complexity of your approach tells you whether it will run fast enough. nums.length ≤ 10⁵ and the problem asks for in-place rotation. What complexity does the three-reversal approach achieve?",
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁵' },
       options: [
         { label: 'O(n log n) time, O(1) space', isCorrect: false, feedback: 'Each reversal is a linear scan — O(n) not O(n log n). Three linear passes give O(n) total time.' },
         { label: 'O(n) time, O(1) space', isCorrect: true },
@@ -81,4 +86,15 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def rotate(self, nums, k):
+        n = len(nums)
+        k %= n
+        nums.reverse()
+        nums[:k] = reversed(nums[:k])
+        nums[k:] = reversed(nums[k:])
+        return nums`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: '<code>k %= n</code> is essential, not just an optimization — without it, a <code>k</code> equal to or larger than the array length (allowed by the constraints) would slice out of bounds or perform redundant full rotations.',
+  solutionExplanation: 'Reversing the whole array puts every element in reverse order, which is "almost" the rotation except the two halves themselves are backwards — reversing each half back undoes exactly that local reversal while leaving the overall rotation intact. This three-reversal trick rearranges everything using only swaps within the same array, so no second array is ever allocated.',
 }

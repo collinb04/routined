@@ -44,20 +44,29 @@
 
             <!-- Impact callout -->
             <div v-if="activeNode.impact" class="flex gap-2.5 rounded-xl p-3.5" style="background:rgba(58,154,232,0.06)">
-              <div class="w-0.75 rounded-full bg-[#3a9ae8] shrink-0 self-stretch" />
+              <div class="w-0.75 rounded-lg bg-[#3a9ae8] shrink-0 self-stretch" />
               <div class="flex flex-col gap-0.5">
-                <span class="text-[9px] font-semibold uppercase tracking-widest text-[#3a9ae8]">Impact</span>
+                <span class="text-[9px] font-medium font-mono uppercase tracking-widest  text-[#3a9ae8]">Impact</span>
                 <p class="text-[11px] text-text-dim leading-relaxed font-medium">{{ activeNode.impact }}</p>
               </div>
             </div>
 
-            <button
-              @click="nextNode"
-              :disabled="currentIndex >= storyData.length - 1"
-              class="flex items-center justify-between w-full bg-black text-white text-sm font-semibold px-5 py-3 rounded-xl hover:opacity-85 transition-opacity disabled:opacity-40">
-              Next Node
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
+            <div class="flex gap-2">
+              <button
+                @click="prevNode"
+                :disabled="currentIndex <= 0"
+                class="flex items-center justify-center gap-1 flex-1 bg-gray-100 text-text text-sm font-semibold px-4 py-3 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:hover:bg-gray-100">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+                Previous
+              </button>
+              <button
+                @click="nextNode"
+                :disabled="currentIndex >= storyData.length - 1"
+                class="flex items-center justify-center gap-1 flex-1 bg-black text-white text-sm font-semibold px-4 py-3 rounded-xl hover:opacity-85 transition-opacity disabled:opacity-40">
+                Next
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
           </template>
 
           <!-- No selection -->
@@ -102,8 +111,7 @@
               v-for="node in storyData"
               :key="node.id"
               style="cursor:pointer"
-              @click.stop="selectNode(node.id)"
-              @mousedown.stop>
+              @mousedown.stop="onNodeMouseDown($event, node.id)">
               <circle
                 :cx="pos(node.id).x"
                 :cy="pos(node.id).y"
@@ -138,11 +146,11 @@
         <!-- Legend -->
         <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 bg-white/90 backdrop-blur-sm rounded-xl px-3.5 py-2.5 border border-black/5 shadow-sm">
           <div class="flex items-center gap-2">
-            <div class="w-2.5 h-2.5 rounded-full bg-text" />
+            <div class="w-2.5 h-2.5 rounded-lg bg-text" />
             <span class="text-[9px] font-medium text-text-muted">Current Node</span>
           </div>
           <div class="flex items-center gap-2">
-            <div class="w-2.5 h-2.5 rounded-full border border-[#9ca3af] bg-white" />
+            <div class="w-2.5 h-2.5 rounded-lg border border-[#9ca3af] bg-white" />
             <span class="text-[9px] font-medium text-text-muted">Other Nodes</span>
           </div>
         </div>
@@ -175,49 +183,42 @@ const storyData: StoryNode[] = [
     id: 'curiosity',
     label: 'Curiosity',
     labelLines: ['Curiosity'],
-    description: 'It started with pure curiosity. I wanted to understand why certain solutions are elegant and others are not. I knew there was a better way to learn, but not yet how.',
+    description: 'It started with pure curiosity. How are people passing these insanely difficult interviews... am I dumb?! So I began investigating, and I found the trick that allows you to go from getting by to really good.',
     impact: 'Curiosity is the prerequisite to learning anything deeply.',
-  },
-  {
-    id: 'first-programming',
-    label: 'First Programming Experiences',
-    labelLines: ['First Programming', 'Experiences'],
-    description: 'My first programs were simple but exciting. The feedback loop of writing code and seeing it run was addictive. But complexity was coming — and I had no framework for handling it.',
-    impact: 'Early wins build confidence, but also a false sense of readiness.',
   },
   {
     id: 'interviews',
     label: 'Interviews',
     labelLines: ['Interviews'],
-    description: 'The first technical interview was a wake-up call. I knew how to code, but I didn\'t know how to think through novel problems under pressure. Knowing syntax wasn\'t enough.',
+    description: 'The first technical interview was a wake-up call. I knew how to code, but I didn\'t know how to think through novel problems under pressure. Knowing syntax wasn\'t enough. Failing an interview can feel detrimental, but failure is important for growth. Routined is built to isolate failure from high stakes.',
     impact: 'Interviews expose the gap between knowing and understanding.',
   },
   {
     id: 'leetcode',
     label: 'LeetCode Grind',
     labelLines: ['LeetCode', 'Grind'],
-    description: 'I did what everyone does: started grinding. 100 problems, 200 problems. I could solve problems I\'d seen before — but new variants still stumped me completely.',
+    description: 'I did what everyone does: started grinding. 100 problems, 200 problems. I could solve problems I\'d seen before — but new variants still stumped me completely. As more people game DSA questions, more companies add variation. Memorization won\'t get you by anymore.',
     impact: 'Grinding builds exposure, not pattern recognition.',
   },
   {
     id: 'frustration',
     label: 'Frustration',
     labelLines: ['Frustration'],
-    description: 'After hundreds of problems I still felt lost on unseen variants. The grind wasn\'t building intuition — it was building a database of solutions I could forget.',
-    impact: 'Frustration is the signal that the learning method is broken.',
+    description: 'After hundreds of problems I still felt lost on unseen variants. The grind wasn\'t building intuition — it was building a database of solutions I could forget. I thought there had to be a better way to learn and internalize.',
+    impact: 'Frustration is apart of learning. Indefinite frustration is not.',
   },
   {
     id: 'memorization',
     label: 'Memorization (Not Learning)',
     labelLines: ['Memorization', '(Not Learning)'],
-    description: 'I realized I was memorizing, not learning. Solution patterns without understanding the "why" vanish the moment the problem looks slightly different.',
+    description: 'I realized I was memorizing, not learning. Solution patterns without understanding the "why" vanish the moment the problem looks slightly different. This inflection point made me realize there is true methodology to solving problems.',
     impact: 'Memorization is fragile. Understanding is robust.',
   },
   {
     id: 'understanding',
     label: 'Understanding',
     labelLines: ['Understanding'],
-    description: 'This was the turning point.\nI stopped asking "Which pattern is this?" and started asking "Why does this algorithm work?"\n\nUnderstanding fundamentals changed everything. It made me faster at problem solving and confident on unfamiliar problems.',
+    description: 'This was the turning point.\nI stopped asking "Which problem is this?" and started asking "What is the context of this problem actually telling me?" The constraints, the input shape, the phrasing of the question — they point to a pattern, and that pattern is what narrows the entire problem space.\n\nFrom there, understanding how and why an approach works shows you exactly how it affects the input. Solving the problem becomes a matter of matching that affected input to the output you were asked for.\n\nThat shift changed everything. It made me faster at problem solving and confident on unfamiliar problems.',
     impact: 'Deep understanding leads to long-term intuition.',
   },
   {
@@ -250,48 +251,45 @@ const storyData: StoryNode[] = [
   },
 ]
 
+// Edges follow storyData in order, forming a single linear chain — the
+// graph is a path, not a branching structure, so it always reads left-to-right.
 const edgeData = [
-  { source: 'curiosity', target: 'first-programming' },
-  { source: 'first-programming', target: 'frustration' },
-  { source: 'first-programming', target: 'interviews' },
+  { source: 'curiosity', target: 'interviews' },
   { source: 'interviews', target: 'leetcode' },
-  { source: 'interviews', target: 'understanding' },
-  { source: 'leetcode', target: 'memorization' },
-  { source: 'frustration', target: 'understanding' },
+  { source: 'leetcode', target: 'frustration' },
+  { source: 'frustration', target: 'memorization' },
   { source: 'memorization', target: 'understanding' },
   { source: 'understanding', target: 'ds-discovery' },
-  { source: 'understanding', target: 'teaching' },
-  { source: 'understanding', target: 'building' },
-  { source: 'ds-discovery', target: 'building' },
+  { source: 'ds-discovery', target: 'teaching' },
   { source: 'teaching', target: 'building' },
   { source: 'building', target: 'mission' },
 ]
 
-// Semantic target positions — hand-placed to tell the narrative story:
-// curiosity/early experiences at top-left, interview grind at top-right,
-// understanding at center, outcomes branching below
-const targetPositions: Record<string, [number, number]> = {
-  'curiosity':         [-255, -175],
-  'first-programming': [ -90, -205],
-  'interviews':        [  80, -195],
-  'leetcode':          [ 260, -150],
-  'frustration':       [-265,   20],
-  'memorization':      [ 270,   45],
-  'understanding':     [  10,   -5],
-  'ds-discovery':      [ 205,  155],
-  'teaching':          [-130,  165],
-  'building':          [  40,  230],
-  'mission':           [ 265,  225],
+// Rough starting layout — a physics simulation (repulsion + edge springs +
+// centering) takes over from here, so this only seeds the initial arrangement
+// and orientation of the settle-in animation, Obsidian-graph style.
+const seedPositions: Record<string, [number, number]> = {
+  'curiosity':     [-280, -170],
+  'interviews':    [ -93, -170],
+  'leetcode':      [  93, -170],
+  'frustration':   [ 280, -170],
+  'memorization':  [ 280,    0],
+  'understanding': [   0,    0],
+  'ds-discovery':  [-280,    0],
+  'teaching':      [-280,  170],
+  'building':      [   0,  170],
+  'mission':       [ 280,  170],
 }
 
-interface FloatNode {
+interface SimNode {
   id: string
-  startX: number; startY: number
-  targetX: number; targetY: number
-  freq: number; phase: number   // for gentle post-settle oscillation
+  x: number; y: number
+  vx: number; vy: number
+  fx: number | null; fy: number | null   // fixed while being dragged
 }
 
-const floatNodes: FloatNode[] = []
+const simNodes: SimNode[] = []
+const simNodeMap = new Map<string, SimNode>()
 
 // Reactive display positions (updated each frame)
 const displayPos = ref<Record<string, { x: number; y: number }>>({})
@@ -310,8 +308,8 @@ const pan = reactive({ x: 0, y: 0 })
 let isPanning = false
 let panAnchor = { mx: 0, my: 0, px: 0, py: 0 }
 
-// Selection
-const selectedId = ref<string | null>('understanding')
+// Selection — always starts on the first node in the story
+const selectedId = ref<string | null>(storyData[0].id)
 const activeNode = computed(() => storyData.find(n => n.id === selectedId.value) ?? null)
 const currentIndex = computed(() => storyData.findIndex(n => n.id === selectedId.value))
 
@@ -330,66 +328,152 @@ function nextNode() {
   if (i >= 0 && i < storyData.length - 1) selectedId.value = storyData[i + 1].id
 }
 
+function prevNode() {
+  const i = currentIndex.value
+  if (i > 0) selectedId.value = storyData[i - 1].id
+}
+
 function selectNode(id: string) {
   selectedId.value = id
 }
 
 let animFrame = 0
-let mountTime = 0
-const SETTLE_MS = 1400  // time to ease from start to target positions
 
-function initNodes() {
-  floatNodes.length = 0
+// Force-directed simulation tuning — same shape as Obsidian's graph view:
+// nodes repel each other, edges act as springs pulling connected nodes
+// together, and a weak centering force keeps the whole graph from drifting.
+const REPULSION = 14000
+const SPRING_LENGTH = 130
+const SPRING_STRENGTH = 0.02
+const CENTER_STRENGTH = 0.012
+const DAMPING = 0.82
+const JITTER = 0.015   // tiny random drift so the graph never looks fully frozen
+
+function initSim() {
+  simNodes.length = 0
+  simNodeMap.clear()
   storyData.forEach(node => {
-    const [tx, ty] = targetPositions[node.id] ?? [0, 0]
-    const spread = 130
-    floatNodes.push({
+    const [sx, sy] = seedPositions[node.id] ?? [0, 0]
+    const spread = 60
+    const n: SimNode = {
       id: node.id,
-      startX: tx + (Math.random() - 0.5) * spread,
-      startY: ty + (Math.random() - 0.5) * spread,
-      targetX: tx,
-      targetY: ty,
-      freq: 0.25 + Math.random() * 0.2,   // gentle oscillation speed
-      phase: Math.random() * Math.PI * 2,
-    })
+      x: sx + (Math.random() - 0.5) * spread,
+      y: sy + (Math.random() - 0.5) * spread,
+      vx: 0, vy: 0,
+      fx: null, fy: null,
+    }
+    simNodes.push(n)
+    simNodeMap.set(node.id, n)
   })
 }
 
-function animate() {
-  const now = performance.now()
-  const elapsed = now - mountTime
-  // Cubic ease-out from start → target over SETTLE_MS, then gentle float
-  const rawT = Math.min(elapsed / SETTLE_MS, 1)
-  const ease = 1 - Math.pow(1 - rawT, 3)
-  const t = now / 1000
-
-  const p: Record<string, { x: number; y: number }> = {}
-  for (const n of floatNodes) {
-    const settled = n.startX + (n.targetX - n.startX) * ease
-    const settledY = n.startY + (n.targetY - n.startY) * ease
-    const floatAmp = 2.5 * ease  // float only begins after settling
-    p[n.id] = {
-      x: settled  + Math.sin(t * n.freq + n.phase) * floatAmp,
-      y: settledY + Math.cos(t * n.freq * 0.8 + n.phase + 1.2) * floatAmp,
+function simulateTick() {
+  // Repulsion — every node pushes every other node away
+  for (let i = 0; i < simNodes.length; i++) {
+    for (let j = i + 1; j < simNodes.length; j++) {
+      const a = simNodes[i], b = simNodes[j]
+      let dx = b.x - a.x
+      let dy = b.y - a.y
+      let distSq = dx * dx + dy * dy
+      if (distSq < 1) { dx = (Math.random() - 0.5) || 0.1; dy = (Math.random() - 0.5) || 0.1; distSq = dx * dx + dy * dy }
+      const dist = Math.sqrt(distSq)
+      const force = REPULSION / distSq
+      const fx = (dx / dist) * force
+      const fy = (dy / dist) * force
+      a.vx -= fx; a.vy -= fy
+      b.vx += fx; b.vy += fy
     }
   }
+
+  // Springs — connected nodes pull toward the ideal edge length
+  for (const edge of edgeData) {
+    const a = simNodeMap.get(edge.source)
+    const b = simNodeMap.get(edge.target)
+    if (!a || !b) continue
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const dist = Math.sqrt(dx * dx + dy * dy) || 0.1
+    const diff = dist - SPRING_LENGTH
+    const force = diff * SPRING_STRENGTH
+    const fx = (dx / dist) * force
+    const fy = (dy / dist) * force
+    a.vx += fx; a.vy += fy
+    b.vx -= fx; b.vy -= fy
+  }
+
+  // Integrate — centering, damping, a touch of jitter, then move
+  for (const n of simNodes) {
+    if (n.fx != null && n.fy != null) {
+      n.x = n.fx; n.y = n.fy
+      n.vx = 0; n.vy = 0
+      continue
+    }
+    n.vx += -n.x * CENTER_STRENGTH + (Math.random() - 0.5) * JITTER
+    n.vy += -n.y * CENTER_STRENGTH + (Math.random() - 0.5) * JITTER
+    n.vx *= DAMPING
+    n.vy *= DAMPING
+    n.x += n.vx
+    n.y += n.vy
+  }
+}
+
+function animate() {
+  simulateTick()
+  const p: Record<string, { x: number; y: number }> = {}
+  for (const n of simNodes) p[n.id] = { x: n.x, y: n.y }
   displayPos.value = p
   animFrame = requestAnimationFrame(animate)
 }
 
-// Pan / zoom handlers
+// Pan / zoom / node-drag handlers
+let draggingId: string | null = null
+let dragStart = { mx: 0, my: 0, moved: false }
+
 function onSvgMouseDown(e: MouseEvent) {
   isPanning = true
   panAnchor = { mx: e.clientX, my: e.clientY, px: pan.x, py: pan.y }
 }
 
+function onNodeMouseDown(e: MouseEvent, id: string) {
+  draggingId = id
+  dragStart = { mx: e.clientX, my: e.clientY, moved: false }
+  const n = simNodeMap.get(id)
+  if (n) { n.fx = n.x; n.fy = n.y }
+}
+
+function eventToWorld(e: MouseEvent) {
+  const rect = graphContainer.value!.getBoundingClientRect()
+  const mx = e.clientX - rect.left
+  const my = e.clientY - rect.top
+  return {
+    x: (mx - (cx.value + pan.x)) / zoom.value,
+    y: (my - (cy.value + pan.y)) / zoom.value,
+  }
+}
+
 function onMouseMove(e: MouseEvent) {
+  if (draggingId) {
+    const n = simNodeMap.get(draggingId)
+    if (n) {
+      const { x, y } = eventToWorld(e)
+      n.fx = x; n.fy = y
+    }
+    if (Math.abs(e.clientX - dragStart.mx) > 4 || Math.abs(e.clientY - dragStart.my) > 4) dragStart.moved = true
+    return
+  }
   if (!isPanning) return
   pan.x = panAnchor.px + (e.clientX - panAnchor.mx)
   pan.y = panAnchor.py + (e.clientY - panAnchor.my)
 }
 
 function onMouseUp() {
+  if (draggingId) {
+    const id = draggingId
+    const n = simNodeMap.get(id)
+    if (n) { n.fx = null; n.fy = null }
+    if (!dragStart.moved) selectNode(id)
+    draggingId = null
+  }
   isPanning = false
 }
 
@@ -410,8 +494,7 @@ onMounted(() => {
   containerW.value = el.clientWidth
   containerH.value = el.clientHeight
 
-  initNodes()
-  mountTime = performance.now()
+  initSim()
   animFrame = requestAnimationFrame(animate)
 
   const ro = new ResizeObserver(() => {

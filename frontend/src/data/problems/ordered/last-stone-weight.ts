@@ -8,20 +8,23 @@ export default {
     { input: 'stones = [1]', output: '1' },
   ],
   constraints: ['1 <= stones.length <= 30', '1 <= stones[i] <= 1000'],
-  starterCode: `def last_stone_weight(stones):
-  pass`,
+  starterCode: `class Solution:
+    def last_stone_weight(self, stones):
+        pass`,
+  runnerSetup: 'last_stone_weight = Solution().last_stone_weight',
   functionName: 'last_stone_weight',
   conceptId: 'heap',
   testCases: [
     { label: '[2,7,4,1,8,1]', args: [[2,7,4,1,8,1]], expected: 1 },
     { label: 'single', args: [[1]], expected: 1 },
   ],
-  bruteHint: 'Describe the approach of sorting the array before every round to find the two heaviest stones, and its repeated cost.',
-  optimizeHint: 'Name the data structure that gives log-time access to the current heaviest stone as the collection changes.',
+  bruteHint: 'The brute-force approach sorts the entire stones array before every round just to find the two heaviest, smashes them, and repeats. Each sort costs O(n log n), and you repeat that sort up to n times as stones are removed. What is the total cost across all rounds, and is re-sorting the whole array really necessary just to find the top two?',
+  optimizeComplexity: { time: 'O(n log n)', space: 'O(n)' },
   clues: [
     {
       id: 'repeated-max-access',
-      question: 'Each round you must smash the two heaviest stones. What does "repeatedly access the two heaviest" suggest?',
+      question: 'When an algorithm needs the current maximum (or minimum) over and over as the collection itself keeps changing, that repetition is usually a signal to reach for a structure built for fast ordered access rather than re-deriving order every time. Each round you must smash the two heaviest stones. What does "repeatedly access the two heaviest" suggest?',
+      highlight: { location: 'description', text: 'on each turn we smash the two heaviest stones' },
       options: [
         { label: 'Sort the array before every round', isCorrect: false, feedback: 'Sorting before every round costs O(n log n) per round. With up to 30 stones and at most 29 rounds, it works for this input size — but a heap gives you O(log n) per operation and is the pattern the problem is designed to teach.' },
         { label: 'Use a max-heap to always access the largest in O(log n)', isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'smash-outcome-cases',
-      question: '"If equal weight, both are destroyed; otherwise the larger is reduced by the smaller." How many distinct outcomes do you handle per round?',
+      question: 'Problems that describe multiple distinct outcomes for the same operation are signaling that your implementation needs explicit branching logic, not a single uniform update rule. "If equal weight, both are destroyed; otherwise the larger is reduced by the smaller." How many distinct outcomes do you handle per round?',
+      highlight: { location: 'description', text: 'If they have equal weight both are destroyed' },
       options: [
         { label: 'One — always push the difference back', isCorrect: false, feedback: 'If the two stones are equal, both are destroyed and nothing is pushed back. Pushing a 0 back would incorrectly leave a stone in the heap that should not exist.' },
         { label: 'Two — push the difference only when the stones are unequal', isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'termination-condition',
-      question: 'The loop runs until at most one stone remains. What are the two possible terminal states?',
+      question: 'Loop termination conditions often hide edge cases — you need to check what state the data structure can be in when the loop stops, not just assume the typical case. The loop runs until at most one stone remains. What are the two possible terminal states?',
+      highlight: { location: 'description', text: 'Return the weight of the last remaining stone, or 0 if none remain.' },
       options: [
         { label: 'Always one stone remains', isCorrect: false, feedback: 'When all stones happen to cancel out — for example [2, 2] — the heap ends empty. You must return 0 in that case, not assume a stone always survives.' },
         { label: 'Zero stones (return 0) or one stone (return its weight)', isCorrect: true },
@@ -66,7 +71,7 @@ export default {
     },
     {
       id: 'python-max-heap',
-      question: 'Python\'s heapq is a min-heap. How do you use it to always extract the maximum weight?',
+      question: 'The standard library available to you does not always match what the problem requires directly — sometimes you need a transformation trick to bridge that gap. Python\'s heapq is a min-heap. How do you use it to always extract the maximum weight?',
       options: [
         { label: 'Use heapq.nlargest() each round', isCorrect: false, feedback: 'heapq.nlargest() scans the whole heap each call — O(n) per round. Negating values keeps each operation at O(log n) and is the idiomatic pattern for max-heap behavior in Python.' },
         { label: 'Store negated weights so the most negative (= heaviest) is at the root', isCorrect: true },
@@ -80,4 +85,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def last_stone_weight(self, stones):
+        heap = [-s for s in stones]
+        heapq.heapify(heap)
+        while len(heap) > 1:
+            first = -heapq.heappop(heap)
+            second = -heapq.heappop(heap)
+            if first != second:
+                heapq.heappush(heap, -(first - second))
+        return -heap[0] if heap else 0`,
+  solutionComplexity: { time: 'O(n log n)', space: 'O(n)' },
+  solutionCaveat: 'Every value is stored negated throughout — pushed in negated, popped and re-negated to work with, then re-negated again before pushing the result back — since Python\'s <code>heapq</code> only ever exposes a min-heap, and negation is the standard trick to borrow it as a max-heap.',
+  solutionExplanation: 'Repeatedly needing "the two largest remaining values" is exactly what a max-heap is for: each smash pops the two heaviest stones in O(log n), and if they are not equal, the leftover weight goes back in for future rounds to consider — otherwise both are simply gone. This avoids re-sorting the whole collection every round just to find the current top two, which is what the brute-force approach would otherwise repeat.',
 }

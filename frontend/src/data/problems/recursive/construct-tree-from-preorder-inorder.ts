@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def build_tree(preorder, inorder):
-  pass`,
+class Solution:
+    def build_tree(self, preorder, inorder):
+        pass`,
   functionName: 'build_tree_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -29,17 +30,18 @@ def _level(root):
   while res and res[-1] is None: res.pop()
   return res
 def build_tree_run(pre, ino):
-  return _level(build_tree(pre, ino))`,
+  return _level(Solution().build_tree(pre, ino))`,
   testCases: [
     { label: 'classic', args: [[3,9,20,15,7],[9,3,15,20,7]], expected: [3,9,20,null,null,15,7] },
     { label: 'single', args: [[-1],[-1]], expected: [-1] },
   ],
-  bruteHint: 'Describe scanning the inorder array for the root\'s value at every recursive call, and what that costs across all n nodes',
-  optimizeHint: 'Name the data structure that gives you the root\'s split point in O(1) instead of scanning',
+  bruteHint: 'The brute-force approach scans the entire inorder array with a linear search every time it needs to find the index of the root value, once per recursive call. Since there are n recursive calls (one per node) and each scan costs O(n), the total work is O(n²) across the whole tree — with up to 3,000 nodes, that is millions of comparisons. What could you precompute once, before recursion starts, to make each lookup instant?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'preorder-root-signal',
-      question: 'preorder is "root, left, right." What does this tell you about preorder[0]?',
+      highlight: { location: 'description', text: '<code>preorder</code> is the preorder traversal of a binary tree' },
+      question: 'The description tells you exactly which traversal each array represents, and that ordering is itself a structural signal. preorder is "root, left, right." What does this tell you about preorder[0]?',
       options: [
         { label: 'preorder[0] is the leftmost leaf', isCorrect: false, feedback: 'Preorder visits the root first, before any children. preorder[0] is the root of the entire tree, not a leaf.' },
         { label: 'preorder[0] is always the root of the current subtree', isCorrect: true },
@@ -54,7 +56,8 @@ def build_tree_run(pre, ino):
     },
     {
       id: 'inorder-split-signal',
-      question: 'inorder is "left, root, right." Once you know the root value, what does finding it in the inorder array tell you?',
+      highlight: { location: 'description', text: '<code>inorder</code> is the inorder traversal of the same tree' },
+      question: 'Knowing the structural pattern behind a traversal lets you turn a single index lookup into information about subtree sizes. inorder is "left, root, right." Once you know the root value, what does finding it in the inorder array tell you?',
       options: [
         { label: 'Nothing — inorder only confirms the root exists', isCorrect: false, feedback: 'The root\'s position in inorder is the key insight: everything to its left belongs to the left subtree, everything to its right to the right subtree. This splits the problem into two smaller subproblems.' },
         { label: 'How many nodes are in the left and right subtrees', isCorrect: true },
@@ -69,11 +72,12 @@ def build_tree_run(pre, ino):
     },
     {
       id: 'unique-values-guarantee',
-      question: '"All values are unique." Why is this constraint necessary for the reconstruction to work?',
+      highlight: { location: 'constraint', text: 'All values are unique' },
+      question: 'Constraints that guarantee uniqueness often exist because the algorithm would break without them. "All values are unique." Why is this constraint necessary for the reconstruction to work?',
       options: [
         { label: 'Duplicate values would make the tree unbalanced', isCorrect: false, feedback: 'Duplicates have no bearing on balance. The constraint is necessary because if a value appears twice, you cannot uniquely identify which occurrence in inorder corresponds to the current root.' },
         { label: 'Without uniqueness, you cannot unambiguously locate the root in inorder', isCorrect: true },
-        { label: 'Unique values allow binary search in the inorder array', isCorrect: false, feedback: 'Binary search in inorder would only apply if inorder were sorted (i.e., a BST). In a general binary tree, inorder is not sorted. Uniqueness enables unambiguous root identification, not binary search.' },
+        { label: 'Unique values let you repeatedly narrow the search range by comparing against a middle element', isCorrect: false, feedback: 'Binary search in inorder would only apply if inorder were sorted (i.e., a BST). In a general binary tree, inorder is not sorted. Uniqueness enables unambiguous root identification, not binary search.' },
         { label: 'Duplicates would require storing extra metadata per node', isCorrect: false, feedback: 'The uniqueness constraint is about algorithmic correctness, not metadata overhead. Without uniqueness, the root\'s position in inorder is ambiguous, making reconstruction impossible.' },
       ],
       correctFeedback: 'If a value appears multiple times in inorder, you cannot tell which occurrence marks the boundary between left and right subtrees. Uniqueness guarantees exactly one match, making the split unambiguous.',
@@ -84,7 +88,8 @@ def build_tree_run(pre, ino):
     },
     {
       id: 'lookup-optimization',
-      question: 'With up to 3,000 nodes, scanning inorder for the root at every recursive call is O(n) per call. What optimization reduces overall complexity?',
+      highlight: { location: 'constraint', text: '1 <= preorder.length <= 3000' },
+      question: 'Large input bounds in the constraints are a signal to check whether the per-step cost of your approach is cheap enough at scale. With up to 3,000 nodes, scanning inorder for the root at every recursive call is O(n) per call. What optimization reduces overall complexity?',
       options: [
         { label: 'Sort the inorder array before searching', isCorrect: false, feedback: 'Sorting inorder would destroy the structural information it carries. Inorder must remain in its original order — sorting it removes the left/right split meaning.' },
         { label: 'Precompute a hash map from value to inorder index', isCorrect: true },
@@ -98,4 +103,30 @@ def build_tree_run(pre, ino):
       ],
     },
   ],
+  solutionCode: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def build_tree(self, preorder, inorder):
+        index_map = {val: i for i, val in enumerate(inorder)}
+        self.pre_idx = 0
+
+        def build(lo, hi):
+            if lo > hi:
+                return None
+            root_val = preorder[self.pre_idx]
+            self.pre_idx += 1
+            root = TreeNode(root_val)
+            mid = index_map[root_val]
+            root.left = build(lo, mid - 1)
+            root.right = build(mid + 1, hi)
+            return root
+
+        return build(0, len(inorder) - 1)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The left subtree is always built <code>before</code> the right subtree at every call — this order matters because <code>self.pre_idx</code> is a single shared counter advancing through <code>preorder</code>, and preorder always lists an entire left subtree before any node of the right subtree, so building right first would consume the wrong slice of <code>preorder</code> for each side.',
+  solutionExplanation: 'Every call to <code>build</code> consumes exactly the next unused element of <code>preorder</code> as the current subtree\'s root — correct because preorder always visits a subtree\'s root before either of its children — and looking that value up in the precomputed <code>index_map</code> instantly reveals the split point in <code>inorder</code>, telling <code>build</code> how many elements belong to the left subtree versus the right without any further scanning. Precomputing that value-to-index map once, rather than searching <code>inorder</code> from scratch on every one of the n recursive calls, is what turns an O(n²) reconstruction into O(n).',
 }

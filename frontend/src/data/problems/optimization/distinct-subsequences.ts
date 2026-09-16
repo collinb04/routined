@@ -7,8 +7,10 @@ export default {
     { input: 's="rabbbit", t="rabbit"', output: '3', explanation: 'Three ways to choose letters from "rabbbit" to form "rabbit".' },
   ],
   constraints: ['1 ≤ s.length, t.length ≤ 1000', 's and t consist of lowercase English letters'],
-  starterCode: `def num_distinct(s, t):
-  pass`,
+  starterCode: `class Solution:
+    def num_distinct(self, s, t):
+        pass`,
+  runnerSetup: 'num_distinct = Solution().num_distinct',
   functionName: 'num_distinct',
   conceptId: 'dp-2d',
   testCases: [
@@ -16,12 +18,13 @@ export default {
     { label: '"babgbag"', args: ['babgbag','bag'], expected: 5 },
     { label: 'Exact match', args: ['a','a'], expected: 1 },
   ],
-  bruteHint: 'Describe the recursive approach that, at each character of s, branches into matching it against t or skipping it, and explain why the same (s position, t position) pairs get re-explored exponentially.',
-  optimizeHint: 'Name the two things the DP state needs to track — your position in s and your position in t — so each pair of prefixes is memoized once.',
+  bruteHint: 'The brute-force approach recurses at every character of s: either skip it, or — when it matches the current character of t — consume it and advance both pointers. Each of up to 1,000 characters spawns two branches, so the call tree grows to O(2^m), and the same (s position, t position) pair gets recomputed on every path that reaches it. What would let you compute each (i, j) pair exactly once instead of rediscovering it down every branch?',
+  optimizeComplexity: { time: 'O(m·n)', space: 'O(m·n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 's.length, t.length ≤ 1000 tells you…',
+      question: 'Constraints define the complexity budget your solution has to fit inside. s.length, t.length ≤ 1000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ s.length, t.length ≤ 1000' },
       options: [
         { label: 'O(n) is possible — process characters left to right', isCorrect: false, feedback: 'A single pass can\'t track how many ways the prefix of t has been matched at each position in s. Both string lengths independently affect the state.' },
         { label: 'O(s × t) is the natural target',                      isCorrect: true },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'output-count',
-      question: 'The output is a count of distinct subsequences, not the subsequences themselves. What does this tell you?',
+      question: 'The shape of the return value tells you what you actually need to accumulate as you go. The output is a count of distinct subsequences, not the subsequences themselves. What does this tell you?',
+      highlight: { location: 'description', text: 'return the number of distinct subsequences of <code>s</code> that equal <code>t</code>' },
       options: [
         { label: 'Store every matching subsequence found',           isCorrect: false, feedback: 'The number of matching subsequences can be exponentially large. "babgbag" already has 5 for "bag". Storing them all wastes memory and time — you only need the count.' },
         { label: 'Accumulate a count, not a collection',             isCorrect: true },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'two-string-dp',
-      question: 'The state depends on how much of s has been consumed and how much of t has been matched. What does this suggest?',
+      question: 'When two independent inputs each advance their own position, that usually dictates the shape of your state space. The state depends on how much of s has been consumed and how much of t has been matched. What does this suggest?',
+      highlight: { location: 'description', text: 'Given strings <code>s</code> and <code>t</code>' },
       options: [
         { label: 'A 1D dp array indexed by position in s',           isCorrect: false, feedback: 'A 1D index over s loses track of how far into t you\'ve matched. At the same position in s, you might have matched 0, 1, or 3 characters of t — those are different states.' },
         { label: 'A 2D dp table: dp[i][j] over (s position, t position)', isCorrect: true },
@@ -66,7 +71,8 @@ export default {
     },
     {
       id: 'recurrence-cases',
-      question: 'At each cell dp[i][j], you\'re at s[i] and t[j]. What are the two cases?',
+      question: 'The recurrence at each state is driven by how the two current elements relate to each other. At each cell dp[i][j], you\'re at s[i] and t[j]. What are the two cases?',
+      highlight: { location: 'constraint', text: 's and t consist of lowercase English letters' },
       options: [
         { label: 'Match: dp[i][j] = dp[i-1][j-1]; no match: dp[i][j] = 0',       isCorrect: false, feedback: 'When there\'s no match, you don\'t zero out the cell — you skip s[i] and carry forward dp[i-1][j]. Zeroing would lose all ways found through earlier characters in s.' },
         { label: 'Always skip s[i], and also use it if s[i] == t[j]',             isCorrect: true },
@@ -80,4 +86,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def num_distinct(self, s, t):
+        m, n = len(s), len(t)
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(m + 1):
+            dp[i][0] = 1
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                dp[i][j] = dp[i - 1][j]
+                if s[i - 1] == t[j - 1]:
+                    dp[i][j] += dp[i - 1][j - 1]
+        return dp[m][n]`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: '<code>dp[i][0] = 1</code> for every <code>i</code> — there is always exactly one way to match the empty prefix of <code>t</code>: use none of <code>s</code>\'s characters — which is the base case every other cell\'s count ultimately builds on.',
+  solutionExplanation: '<code>dp[i][j]</code> always inherits <code>dp[i-1][j]</code> — the count of ways using one fewer character of <code>s</code> — because <code>s[i-1]</code> can always be skipped regardless of whether it matches; when it also matches <code>t[j-1]</code>, an additional <code>dp[i-1][j-1]</code> ways get added, representing every way to have already matched <code>t</code>\'s prefix up to <code>j-1</code> before consuming <code>s[i-1]</code> to extend the match. Adding rather than choosing between these two contributions is precisely what produces multiple distinct subsequences when a repeated character in <code>s</code> could serve the same role in <code>t</code> in more than one way.',
 }

@@ -8,8 +8,10 @@ export default {
     { input: 'nums = [2,2,2,2,2]', output: '5', explanation: 'LIS length = 1. There are 5 of length 1.' },
   ],
   constraints: ['1 ≤ nums.length ≤ 2000', '-10⁶ ≤ nums[i] ≤ 10⁶'],
-  starterCode: `def find_number_of_lis(nums):
-  pass`,
+  starterCode: `class Solution:
+    def find_number_of_lis(self, nums):
+        pass`,
+  runnerSetup: 'find_number_of_lis = Solution().find_number_of_lis',
   functionName: 'find_number_of_lis',
   conceptId: 'dp-1d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'All same', args: [[2,2,2,2,2]], expected: 5 },
     { label: 'Single', args: [[1]], expected: 1 },
   ],
-  bruteHint: 'Describe the naive recursive approach that tries every subsequence to find the longest increasing one, and why the number of subsequences is exponential',
-  optimizeHint: 'Name the DP state that tracks both the LIS length and the count of subsequences ending at each index',
+  bruteHint: 'The brute-force approach enumerates every possible subsequence of nums by recursively deciding, at each index, whether to include or skip the current element, then checks which resulting subsequences are strictly increasing to find the longest ones and count them. Since each of the n elements can independently be included or excluded, there are O(2ⁿ) possible subsequences to examine. At n = 2,000, that search space is far too large to explore directly. If you already knew the length and count of the longest increasing subsequence ending at every earlier index, would you still need to regenerate every subsequence from scratch just to extend it by one more element?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 2000 tells you…',
+      question: 'Constraints often reveal the time complexity budget before you write a single line of code. nums.length ≤ 2000 tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 2000' },
       options: [
         { label: 'O(n log n) is required', isCorrect: false, feedback: 'O(n log n) works for finding the length of the LIS, but counting all sequences of that length is harder to do in O(n log n). At n = 2,000, O(n²) is 4 million operations — well within limits.' },
         { label: 'O(n²) is acceptable', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'count-not-length',
-      question: 'The output is the count of longest subsequences, not the length. This means…',
+      question: 'Paying close attention to exactly what value the problem asks you to return often reveals what additional state your DP needs to track. The output is the count of longest subsequences, not the length. This means…',
+      highlight: { location: 'description', text: 'the number of longest increasing subsequences' },
       options: [
         { label: 'Track both length and count at each index', isCorrect: true },
         { label: 'Find the LIS length first, then count separately', isCorrect: false, feedback: 'Two separate passes work but aren\'t necessary. You can accumulate both length[i] and count[i] simultaneously in a single O(n²) pass — fewer variables, one loop.' },
@@ -52,7 +56,7 @@ export default {
     },
     {
       id: 'count-update-rule',
-      question: 'When two paths of equal length reach the same endpoint, the count must be…',
+      question: 'When multiple subproblems combine into one answer, whether you sum, take the max, or multiply depends entirely on whether those subproblems are alternatives or independent choices. When two paths of equal length reach the same endpoint, the count must be…',
       options: [
         { label: 'Taken as the maximum of the two counts', isCorrect: false, feedback: 'Taking the max would pick one path over the other, but both are valid. You want the total number of distinct LIS ending at this index, so you add the counts.' },
         { label: 'Summed: count[i] += count[j]', isCorrect: true },
@@ -67,7 +71,7 @@ export default {
     },
     {
       id: 'equal-elements-edge',
-      question: '[2,2,2,2,2] produces output 5. This means…',
+      question: 'Worked examples often expose an edge case that a careless implementation would handle incorrectly. [2,2,2,2,2] produces output 5. This means…',
       options: [
         { label: 'Duplicate values extend increasing subsequences', isCorrect: false, feedback: '2 is not strictly greater than 2, so no element extends another here. Each element is a LIS of length 1 on its own — that\'s why there are 5 of them.' },
         { label: 'Each element is its own LIS of length 1', isCorrect: true },
@@ -81,4 +85,22 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_number_of_lis(self, nums):
+        n = len(nums)
+        length = [1] * n
+        count = [1] * n
+        for i in range(n):
+            for j in range(i):
+                if nums[j] < nums[i]:
+                    if length[j] + 1 > length[i]:
+                        length[i] = length[j] + 1
+                        count[i] = count[j]
+                    elif length[j] + 1 == length[i]:
+                        count[i] += count[j]
+        max_len = max(length)
+        return sum(c for l, c in zip(length, count) if l == max_len)`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(n)' },
+  solutionCaveat: 'Finding a strictly <code>longer</code> extension from <code>j</code> resets <code>count[i]</code> to <code>count[j]</code>, while finding an <code>equally</code> long one adds to it — these are different operations because a strictly longer path from <code>j</code> makes every prior count at <code>i</code> obsolete, while an equal-length path is a genuinely new way to reach the same best length.',
+  solutionExplanation: 'Tracking both <code>length[i]</code> (the LIS length ending at index <code>i</code>) and <code>count[i]</code> (how many distinct subsequences of that length end there) at every index lets the algorithm answer "how many" without ever materializing an actual subsequence: whenever an earlier index <code>j</code> can extend to <code>i</code>, it either sets a new best length (adopting <code>count[j]</code> as the new count) or matches the current best length (adding <code>count[j]</code> to the existing count). Summing <code>count[i]</code> over every index where <code>length[i]</code> equals the global maximum gives the total across every index the true LIS could end at.',
 }

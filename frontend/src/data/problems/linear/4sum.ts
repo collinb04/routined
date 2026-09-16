@@ -8,8 +8,10 @@ export default {
     { input: 'nums=[2,2,2,2,2], target=8', output: '[[2,2,2,2]]' },
   ],
   constraints: ['1 ≤ nums.length ≤ 200', '-10⁹ ≤ nums[i] ≤ 10⁹', '-10⁹ ≤ target ≤ 10⁹'],
-  starterCode: `def four_sum(nums, target):
-  pass`,
+  starterCode: `class Solution:
+    def four_sum(self, nums, target):
+        pass`,
+  runnerSetup: 'four_sum = Solution().four_sum',
   functionName: 'four_sum',
   conceptId: 'two-pointers',
   testCases: [
@@ -17,12 +19,12 @@ export default {
     { label: 'All same', args: [[2,2,2,2,2],8], expected: [[2,2,2,2]] },
     { label: 'No solution', args: [[1,2,3,4],100], expected: [] },
   ],
-  bruteHint: 'Describe the quadruple nested loop over all combinations of four numbers and its time complexity',
-  optimizeHint: 'Name the technique that sorts the array first, fixes two elements with nested loops, then uses two pointers converging from both ends for the remaining pair',
+  bruteHint: 'The brute-force approach checks every possible quadruplet of indices — four nested loops trying every combination of a, b, c, and d, testing whether the four values sum to target. That works, but it checks on the order of n⁴ combinations. At n up to 200, that\'s 200⁴ ≈ 1.6 billion checks — how long would that take, and what does it suggest about cutting one of those nested loops?',
+  optimizeComplexity: { time: 'O(n³)', space: 'O(log n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 200 tells you…',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. What does n ≤ 200 tell you?',
       options: [
         { label: 'O(n²) is all you need', isCorrect: false, feedback: 'O(n²) handles pairs, not quadruplets. You need to fix two elements with outer loops, so O(n²) is the cost of the inner two-pointer scan alone — the total is O(n³).' },
         { label: 'O(n³) is acceptable', isCorrect: true },
@@ -34,10 +36,11 @@ export default {
         'A brute-force quad loop at n = 200 is 200⁴ = 1.6 billion. What does the constraint suggest you cut it down to?',
         'Two outer loops (O(n²)) plus a two-pointer inner scan (O(n)) gives O(n³) total — that is the sweet spot at n = 200.',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 200' },
     },
     {
       id: 'unique-quadruplets',
-      question: '"Return all unique quadruplets." What must you handle that a naïve quad loop misses?',
+      question: 'A uniqueness requirement in the output tells you what extra bookkeeping the naive approach is missing. The problem says to return all unique quadruplets — what must you handle that a naïve quad loop misses?',
       options: [
         { label: 'Duplicate quadruplets from repeated values', isCorrect: true },
         { label: 'Quadruplets with negative numbers', isCorrect: false, feedback: 'Negative numbers are just values — the algorithm handles them naturally. The uniqueness constraint is specifically about preventing the same four-value combination from appearing twice.' },
@@ -49,14 +52,15 @@ export default {
         'The constraint says unique quadruplets. What causes the same four values to appear more than once in a naïve search?',
         'Repeated values in nums can produce the same quadruplet via different indices. After sorting, how do you detect and skip those repeats?',
       ],
+      highlight: { location: 'description', text: 'return all unique quadruplets' },
     },
     {
       id: 'large-value-range',
-      question: 'Values reach ±10⁹ and target also reaches ±10⁹. What arithmetic concern does this introduce?',
+      question: 'Large value bounds tell you not just about algorithmic complexity, but about arithmetic safety when several values are summed together. Values reach ±10⁹ and target also reaches ±10⁹ — what arithmetic concern does this introduce?',
       options: [
         { label: 'Sums can exceed 32-bit integer range', isCorrect: true },
         { label: 'Negative values make comparison undefined', isCorrect: false, feedback: 'Comparison works fine on negative numbers. The concern is arithmetic: four values each up to 10⁹ sum to at most 4 × 10⁹, which overflows a 32-bit signed integer.' },
-        { label: 'Two pointers break on negative values', isCorrect: false, feedback: 'Two pointers rely on sorted order, not sign. Negative values sort normally and the pointer logic is unchanged.' },
+        { label: 'Scanning inward from both ends breaks on negative values', isCorrect: false, feedback: 'Two pointers rely on sorted order, not sign. Negative values sort normally and the pointer logic is unchanged.' },
         { label: 'No concern — Python handles big integers', isCorrect: false, feedback: 'Python does handle arbitrary integers, but the signal is still worth reading: in other languages this would overflow, and the intent is to recognize that intermediate sums can be very large.' },
       ],
       correctFeedback: '4 × 10⁹ exceeds the 32-bit signed max of ~2.1 × 10⁹. Python handles this transparently, but recognizing it informs the comparison logic in languages with fixed-width integers.',
@@ -64,10 +68,11 @@ export default {
         'Four values each up to 10⁹ — how large can their sum get, and what integer type does that require?',
         '4 × 10⁹ overflows a 32-bit signed integer. In Python this is automatic, but the constraint is flagging that intermediate sums need more than 32 bits.',
       ],
+      highlight: { location: 'constraint', text: '-10⁹ ≤ nums[i] ≤ 10⁹' },
     },
     {
       id: 'generalizing-from-3sum',
-      question: 'This problem extends 3Sum by adding one more element. The key insight is…',
+      question: 'Recognizing that a new problem is a small variation on one you\'ve already solved tells you which technique to reach for, instead of designing from scratch. This problem extends 3Sum by adding one more element — what\'s the key insight for adapting the approach?',
       options: [
         { label: 'Add an outer loop and reuse the 3Sum approach', isCorrect: true },
         { label: 'Use a hash map for all four elements', isCorrect: false, feedback: 'A hash map for four elements would require storing triplet sums as keys — complex and hard to deduplicate. The natural extension of sorted two pointers scales more cleanly.' },
@@ -81,4 +86,34 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def four_sum(self, nums, target):
+        nums.sort()
+        n = len(nums)
+        res = []
+        for a in range(n - 3):
+            if a > 0 and nums[a] == nums[a - 1]:
+                continue
+            for b in range(a + 1, n - 2):
+                if b > a + 1 and nums[b] == nums[b - 1]:
+                    continue
+                lo, hi = b + 1, n - 1
+                while lo < hi:
+                    s = nums[a] + nums[b] + nums[lo] + nums[hi]
+                    if s < target:
+                        lo += 1
+                    elif s > target:
+                        hi -= 1
+                    else:
+                        res.append([nums[a], nums[b], nums[lo], nums[hi]])
+                        lo += 1
+                        hi -= 1
+                        while lo < hi and nums[lo] == nums[lo - 1]:
+                            lo += 1
+                        while lo < hi and nums[hi] == nums[hi + 1]:
+                            hi -= 1
+        return res`,
+  solutionComplexity: { time: 'O(n³)', space: 'O(log n)' },
+  solutionCaveat: 'Both outer loops need their own duplicate-skip check — skipping repeats of <code>nums[a]</code> alone isn\'t enough, since fixing the same <code>nums[a]</code> with a repeated <code>nums[b]</code> would still regenerate a quadruplet already found.',
+  solutionExplanation: 'This is 3Sum with one more fixed index: nesting a second loop over <code>nums[b]</code> reduces "find four numbers summing to target" to "find two numbers summing to <code>target - nums[a] - nums[b]</code>," which a two-pointer scan solves in O(n). Two nested O(n) loops around an O(n) scan gives O(n³) total, and duplicate quadruplets are avoided the same way as 3Sum — skipping repeated values at each fixed position and after each match, which only works reliably because the array is sorted.',
 }

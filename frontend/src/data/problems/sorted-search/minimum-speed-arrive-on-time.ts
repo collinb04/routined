@@ -9,8 +9,10 @@ export default {
     { input: 'dist=[1,3,2], hour=1.9', output: '-1' },
   ],
   constraints: ['n == dist.length', '1 ≤ n ≤ 10⁵', '1 ≤ dist[i] ≤ 10⁵', '1 ≤ hour ≤ 10⁷'],
-  starterCode: `def min_speed_on_time(dist, hour):
-  pass`,
+  starterCode: `class Solution:
+    def min_speed_on_time(self, dist, hour):
+        pass`,
+  runnerSetup: 'min_speed_on_time = Solution().min_speed_on_time',
   functionName: 'min_speed_on_time',
   conceptId: 'binary-search',
   testCases: [
@@ -18,12 +20,12 @@ export default {
     { label: 'Speed 3', args: [[1,3,2],2.7], expected: 3 },
     { label: 'Impossible', args: [[1,3,2],1.9], expected: -1 },
   ],
-  bruteHint: 'Describe trying every integer speed starting from 1 upward and checking feasibility for each, and why that could be slow',
-  optimizeHint: 'Name the search technique that exploits the fact that feasibility is monotone in speed',
+  bruteHint: 'The brute-force approach tries every integer speed starting from 1 upward, checking feasibility of each one in O(n) time until the first one works. Since the required speed could climb as high as 10⁵, this scan costs O(n · maxSpeed) in the worst case. What happens to that runtime as both n and the maximum possible speed grow toward their limits?',
+  optimizeComplexity: { time: 'O(n log m)', space: 'O(1)' },
   clues: [
     {
       id: 'monotone-feasibility',
-      question: 'If speed s gets you there on time, does any speed greater than s also work? What does this property enable?',
+      question: 'Recognizing monotonic behavior in a feasibility check is a strong signal about which search strategy will work efficiently. If speed s gets you there on time, does any speed greater than s also work? What does this property enable?',
       options: [
         { label: 'Greedy: always pick the largest dist', isCorrect: false },
         { label: 'Binary search on the answer', isCorrect: true },
@@ -38,7 +40,8 @@ export default {
     },
     {
       id: 'search-space-bounds',
-      question: 'n ≤ 10⁵ and dist[i] ≤ 10⁵. What is a safe upper bound for the binary search range?',
+      highlight: { location: 'constraint', text: '1 ≤ dist[i] ≤ 10⁵' },
+      question: 'Constraint bounds often hand you the exact range a search needs to cover. n ≤ 10⁵ and dist[i] ≤ 10⁵. What is a safe upper bound for the binary search range?',
       options: [
         { label: '10⁷ (from hour upper bound)', isCorrect: false, feedback: 'hour bounds time, not speed. The worst-case minimum speed is driven by the maximum distance and the tightest time budget, not by hour directly.' },
         { label: '10⁵ (maximum dist value)', isCorrect: true },
@@ -53,7 +56,7 @@ export default {
     },
     {
       id: 'ceiling-rounding-rule',
-      question: 'All trains except the last depart on the hour (ceiling rounding). How does this affect feasibility checking?',
+      question: 'Precise wording about timing rules often hides a computation detail you must replicate exactly. All trains except the last depart on the hour (ceiling rounding). How does this affect feasibility checking?',
       options: [
         { label: 'Ignore the last train; check the rest', isCorrect: false, feedback: 'The last train\'s time is not ceiling-rounded — it uses exact division. Ignoring it means you\'re not accounting for the fractional arrival time.' },
         { label: 'Sum ceil(dist/speed) for all but last, then add exact for last', isCorrect: true },
@@ -68,7 +71,8 @@ export default {
     },
     {
       id: 'impossible-case',
-      question: 'The problem returns -1 when arrival is impossible. When is it definitely impossible regardless of speed?',
+      highlight: { location: 'description', text: 'or -1 if impossible' },
+      question: 'A special sentinel return value usually flags an edge case that needs its own explicit check. The problem returns -1 when arrival is impossible. When is it definitely impossible regardless of speed?',
       options: [
         { label: 'When n > hour', isCorrect: false, feedback: 'n > hour is a necessary condition (you need at least n-1 full hours for the first n-1 trains), but it\'s not "definitely impossible." When hour ≤ n-1 is the precise cutoff.' },
         { label: 'When hour ≤ n − 1', isCorrect: true },
@@ -82,4 +86,30 @@ export default {
       ],
     },
   ],
+  solutionCode: `import math
+
+class Solution:
+    def min_speed_on_time(self, dist, hour):
+        n = len(dist)
+        if hour <= n - 1:
+            return -1
+
+        def time_needed(speed):
+            total = 0
+            for d in dist[:-1]:
+                total += math.ceil(d / speed)
+            total += dist[-1] / speed
+            return total
+
+        lo, hi = 1, 10**7
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if time_needed(mid) <= hour:
+                hi = mid
+            else:
+                lo = mid + 1
+        return lo`,
+  solutionComplexity: { time: 'O(n log m)', space: 'O(1)' },
+  solutionCaveat: 'Every train *except the last* rounds its travel time up to a whole hour (since the next train can only depart on the hour), but the final leg does not need to wait for anything after it, so only it uses exact division — mixing this up would silently overcount the total time needed.',
+  solutionExplanation: 'Faster speeds can only ever reduce (or leave unchanged) the total time needed, which makes feasibility monotonic in speed — the exact property binary search needs to zero in on the smallest speed that still finishes on time. If even the fastest reasonable speed can\'t make up for the mandatory whole-hour rounding on every train but the last, arrival is impossible outright, which is exactly what the early <code>hour &lt;= n - 1</code> check catches before any search begins.',
 }

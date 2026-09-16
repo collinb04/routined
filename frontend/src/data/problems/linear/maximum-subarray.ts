@@ -9,8 +9,10 @@ export default {
     { input: 'nums = [5,4,-1,7,8]', output: '23' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁵', '-10⁴ ≤ nums[i] ≤ 10⁴'],
-  starterCode: `def max_sub_array(nums):
-  pass`,
+  starterCode: `class Solution:
+    def max_sub_array(self, nums):
+        pass`,
+  runnerSetup: 'max_sub_array = Solution().max_sub_array',
   functionName: 'max_sub_array',
   conceptId: 'arrays',
   testCases: [
@@ -19,17 +21,18 @@ export default {
     { label: 'All positive', args: [[5,4,-1,7,8]], expected: 23 },
     { label: 'All negative', args: [[-1,-2,-3]], expected: -1 },
   ],
-  bruteHint: 'Describe checking every subarray and summing it, and the resulting time complexity',
-  optimizeHint: 'Name the single-pass technique that tracks a running max-ending-here value as it scans',
+  bruteHint: 'The brute-force approach tries every pair of start and end indices, summing the elements between them for each candidate subarray. With nested loops over start and end, that is roughly O(n²) subarrays to check, and resumming each one from scratch pushes it toward O(n³). At n up to 100,000, how many operations would that be, and would it finish in time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁵. What does this tell you about trying all possible subarrays?',
+      question: 'We can understand how efficient we need to be based on the size constraint of the input. nums.length ≤ 10⁵. What does this tell you about trying all possible subarrays?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁵' },
       options: [
         { label: 'Enumerating all (start, end) pairs is too slow', isCorrect: true },
         { label: 'Enumerating all (start, end) pairs is fine', isCorrect: false, feedback: 'There are O(n²) pairs — 5 billion at n = 100,000. Summing each one naively adds another O(n) factor. You need an approach that visits each element a constant number of times.' },
-        { label: 'O(n log n) divide-and-conquer is required', isCorrect: false, feedback: 'Divide-and-conquer works at O(n log n) and is a valid approach, but linear O(n) is achievable here. The constraint rules out O(n²), not O(n).' },
-        { label: 'You should precompute all prefix sums first', isCorrect: false, feedback: 'Prefix sums let you compute any subarray sum in O(1), but you still need to check O(n²) pairs to find the maximum. Prefix sums alone do not reduce the complexity below O(n²).' },
+        { label: 'Splitting the array in half repeatedly and combining the results is required', isCorrect: false, feedback: 'Divide-and-conquer works at O(n log n) and is a valid approach, but linear O(n) is achievable here. The constraint rules out O(n²), not O(n).' },
+        { label: 'You should compute the running total from the start up to every index first', isCorrect: false, feedback: 'Prefix sums let you compute any subarray sum in O(1), but you still need to check O(n²) pairs to find the maximum. Prefix sums alone do not reduce the complexity below O(n²).' },
       ],
       correctFeedback: 'O(n²) is 10 billion operations at n = 100,000 — too slow. You need an O(n) scan that decides at each element whether to extend the current subarray or start fresh.',
       wrongFeedback: [
@@ -39,7 +42,8 @@ export default {
     },
     {
       id: 'negative-values',
-      question: '-10⁴ ≤ nums[i] ≤ 10⁴ — values can be negative. What does the presence of negatives imply for subarray selection?',
+      question: 'We can figure out which cases our approach must handle by considering the full range of values allowed. -10⁴ ≤ nums[i] ≤ 10⁴ — values can be negative. What does the presence of negatives imply for subarray selection?',
+      highlight: { location: 'constraint', text: '-10⁴ ≤ nums[i] ≤ 10⁴' },
       options: [
         { label: 'Filter out negatives before processing', isCorrect: false, feedback: 'Removing negatives breaks contiguity. The subarray [4,-1,2,1] has sum 6, which beats [4,2,1] = 7 — wait, actually filtering here loses the contiguity constraint entirely. A negative element can be worth including if it bridges two large positive sections.' },
         { label: 'A negative running sum is worth restarting from the current element', isCorrect: true },
@@ -54,7 +58,7 @@ export default {
     },
     {
       id: 'all-negative-case',
-      question: 'The test case [-1,-2,-3] has output -1, not 0. What does this tell you about the answer?',
+      question: 'We can spot important edge cases by examining what the examples imply about valid outputs. The test case [-1,-2,-3] has output -1, not 0. What does this tell you about the answer?',
       options: [
         { label: 'Return 0 when all elements are negative', isCorrect: false, feedback: 'The output for [-1,-2,-3] is -1, not 0. The problem requires a non-empty subarray — which means you must return the least-bad negative when all elements are negative.' },
         { label: 'The subarray must be non-empty, so the answer can be negative', isCorrect: true },
@@ -69,7 +73,8 @@ export default {
     },
     {
       id: 'output-sum',
-      question: 'The output is the sum of the best subarray, not the subarray itself or its indices. What does that simplify?',
+      question: 'We can figure out how much state we actually need to track based on exactly what the output requires. The output is the sum of the best subarray, not the subarray itself or its indices. What does that simplify?',
+      highlight: { location: 'description', text: 'return that sum' },
       options: [
         { label: 'Track only two integers: running sum and global max', isCorrect: true },
         { label: 'You still need to record the start and end indices', isCorrect: false, feedback: 'Indices are only needed if asked to return the subarray itself. Since the output is the sum, you track two numbers — current running sum and the global maximum — and nothing else.' },
@@ -83,4 +88,14 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def max_sub_array(self, nums):
+        best = nums[0]
+        current = nums[0]
+        for n in nums[1:]:
+            current = max(n, current + n)
+            best = max(best, current)
+        return best`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionExplanation: 'At every position, the best subarray ending exactly there is either "extend the previous best-ending-here subarray by one element" or "start fresh from this element alone" — whichever gives a bigger sum. Once a running sum drops low enough that starting over would beat extending it, there is never a reason to drag that negative baggage forward, since it can only ever pull future sums down. Tracking that running "best ending here" alongside a separate global best seen so far turns the whole search into one linear pass.',
 }

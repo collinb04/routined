@@ -8,8 +8,10 @@ export default {
     { input: 'rooms = [[1,3],[3,0,1],[2],[0]]', output: 'false', explanation: 'Room 2 cannot be reached.' },
   ],
   constraints: ['n == rooms.length', '1 ≤ n ≤ 1000', '0 ≤ rooms[i].length ≤ 1000'],
-  starterCode: `def can_visit_all_rooms(rooms):
-  pass`,
+  starterCode: `class Solution:
+    def can_visit_all_rooms(self, rooms):
+        pass`,
+  runnerSetup: 'can_visit_all_rooms = Solution().can_visit_all_rooms',
   functionName: 'can_visit_all_rooms',
   conceptId: 'graphs',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Cannot visit all', args: [[[1,3],[3,0,1],[2],[0]]], expected: false },
     { label: 'Single room', args: [[[]]], expected: true },
   ],
-  bruteHint: 'Describe repeatedly re-scanning all rooms each round to find newly unlockable ones, and why that repeated scanning is wasteful',
-  optimizeHint: 'Name the traversal technique that visits each newly unlocked room exactly once starting from room 0',
+  bruteHint: 'A brute-force approach would repeatedly scan the entire list of rooms each round, checking whether any newly-collected key unlocks a room you have not yet visited, and repeat that full scan until a pass finds no new rooms. Each pass costs O(n) and you might need up to n passes before reaching a fixed point, giving roughly O(n²) time overall. Instead of re-scanning everything each round, could you process each room\'s keys exactly once as you discover them?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 1000 rooms, each with up to 1000 keys. What does this tell you about traversal cost?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 1000' },
+      question: 'Constraint bounds on room and key counts tell you whether a full traversal over all rooms and keys is computationally affordable. n ≤ 1000 rooms, each with up to 1000 keys. What does this tell you about traversal cost?',
       options: [
         { label: 'O(n²) is too slow', isCorrect: false, feedback: 'At n = 1000, O(n²) is 1 million operations — trivially fast. The constraint is small enough that a complete traversal of all rooms and all keys is perfectly acceptable.' },
         { label: 'O(n + k) traversal over rooms and keys is fine', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'starting-condition',
-      question: '"Room 0 is unlocked." What does this guarantee about your starting state?',
+      highlight: { location: 'description', text: 'Room 0 is unlocked.' },
+      question: 'Starting conditions given by a problem often signal where your traversal should begin and how the rest unfolds. "Room 0 is unlocked." What does this guarantee about your starting state?',
       options: [
         { label: 'All rooms are initially reachable', isCorrect: false, feedback: 'Only room 0 starts unlocked. Other rooms must be unlocked by collecting their keys from visited rooms. The guarantee is about where you start, not about what is immediately reachable.' },
         { label: 'You have a fixed traversal entry point', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'output-boolean',
-      question: 'The output is true if you "can visit all rooms." What determines whether you return true?',
+      highlight: { location: 'description', text: '<code>true</code> if you can visit all rooms' },
+      question: 'The output type tells you what condition must hold at the end of a traversal for the answer to be true. The output is true if you "can visit all rooms." What determines whether you return true?',
       options: [
         { label: 'The number of keys collected equals n', isCorrect: false, feedback: 'Keys collected is not the same as rooms visited. A room may hold a key to itself or to an already-visited room. The right check is whether every room was reached, not whether you collected n distinct keys.' },
         { label: 'Every room was marked visited after traversal', isCorrect: true },
@@ -67,7 +72,8 @@ export default {
     },
     {
       id: 'graph-model',
-      question: 'Each room holds keys to other rooms. How should you model this structure?',
+      highlight: { location: 'description', text: 'Each room contains keys to other rooms.' },
+      question: 'How relationships in a problem are phrased often reveals the right data structure to model them as. Each room holds keys to other rooms. How should you model this structure?',
       options: [
         { label: 'As an undirected graph', isCorrect: false, feedback: 'Keys are one-directional — room A holding a key to room B does not mean room B holds a key to room A. The edges are directed from room to the rooms its keys unlock.' },
         { label: 'As a directed graph with reachability traversal', isCorrect: true },
@@ -81,4 +87,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def can_visit_all_rooms(self, rooms):
+        n = len(rooms)
+        visited = {0}
+        stack = [0]
+        while stack:
+            room = stack.pop()
+            for key in rooms[room]:
+                if key not in visited:
+                    visited.add(key)
+                    stack.append(key)
+        return len(visited) == n`,
+  solutionComplexity: { time: 'O(V + E)', space: 'O(V)' },
+  solutionCaveat: 'Room 0 starts unlocked by assumption, so the traversal seeds <code>visited</code> with just <code>{0}</code> — no key is needed to enter the room the search begins in.',
+  solutionExplanation: 'Modeling each room as a node and each key inside a room as a directed edge to the room it unlocks turns "can every room eventually be opened" into a plain reachability question: starting from room 0, does DFS/BFS reach every other room? Comparing the size of the visited set to the total room count at the end answers that directly, with no need to simulate collecting or using keys in any particular order.',
 }

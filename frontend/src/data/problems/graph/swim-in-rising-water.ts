@@ -7,20 +7,23 @@ export default {
     { input: 'grid=[[0,2],[1,3]]', output: '3', explanation: 'At t=3, all cells are reachable.' },
   ],
   constraints: ['n == grid.length == grid[0].length', '1 ≤ n ≤ 50', 'grid[i][j] is a permutation of [0, n²−1]'],
-  starterCode: `def swim_in_water(grid):
-  pass`,
+  starterCode: `class Solution:
+    def swim_in_water(self, grid):
+        pass`,
+  runnerSetup: 'swim_in_water = Solution().swim_in_water',
   functionName: 'swim_in_water',
-  conceptId: 'advanced-graphs',
+  conceptId: 'heaps',
   testCases: [
     { label: '2×2', args: [[[0,2],[1,3]]], expected: 3 },
     { label: '1×1', args: [[[0]]], expected: 0 },
   ],
-  bruteHint: 'Describe a brute-force approach that explores every possible path via DFS and tracks the maximum elevation along each one, and why that is exponential in the worst case',
-  optimizeHint: 'Name the shortest-path algorithm you can adapt to minimize the maximum elevation on a path instead of the sum of edge weights',
+  bruteHint: 'A brute-force approach explores every possible path from the top-left to the bottom-right via DFS, tracking the maximum elevation seen so far on each path and keeping the best (smallest) result across all of them. Since a grid graph can have exponentially many distinct paths between two corners, this approach costs exponential time in the worst case, far too slow once n grows past a handful of rows and columns. What repeated exploration is this approach doing that a smarter, priority-driven traversal could skip entirely?',
+  optimizeComplexity: { time: 'O(n² log n)', space: 'O(n²)' },
   clues: [
     {
       id: 'objective-minimize-max',
-      question: 'You want the least time t to reach the bottom-right. At time t, you can enter any cell with elevation ≤ t. What is the path cost you are minimizing?',
+      question: 'Before picking an algorithm, it\'s worth pinning down exactly what quantity defines a path\'s cost, since minimizing the wrong function leads to solving the wrong problem entirely. You want the least time t to reach the bottom-right. At time t, you can enter any cell with elevation ≤ t. What is the path cost you are minimizing?',
+      highlight: { location: 'description', text: 'at time <code>t</code> you can swim in cells with elevation ≤ t.' },
       options: [
         { label: 'Sum of elevations along the path', isCorrect: false, feedback: 'Summing elevations would favor short paths, but that\'s not what the problem measures. The time needed equals the maximum elevation encountered — you must wait for the water to rise to that level.' },
         { label: 'Maximum elevation on the path', isCorrect: true },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'algorithm-choice',
-      question: 'You need the path from (0,0) to (n−1,n−1) that minimizes the maximum edge/cell weight. What algorithm finds this?',
+      question: 'Once you know the exact cost function you\'re minimizing, matching it to the right graph-search algorithm is what separates a working solution from a correct and efficient one. You need the path from (0,0) to (n−1,n−1) that minimizes the maximum edge/cell weight. What algorithm finds this?',
+      highlight: { location: 'description', text: 'Find the least time to swim from the top-left to bottom-right.' },
       options: [
         { label: 'BFS — it finds shortest paths in unweighted graphs', isCorrect: false, feedback: 'BFS treats all edges equally, but here cells have different elevations. BFS would find the path with the fewest steps, not the path with the lowest peak elevation.' },
         { label: 'Dijkstra with cost = max elevation seen so far', isCorrect: true },
@@ -50,10 +54,11 @@ export default {
     },
     {
       id: 'permutation-guarantee',
-      question: 'grid[i][j] is a permutation of [0, n²−1] — all elevations are distinct integers from 0 to n²−1. What does this guarantee?',
+      question: 'Constraints that guarantee uniqueness or a fixed range often simplify implementation details like tie-breaking, even when they don\'t change the overall algorithm. grid[i][j] is a permutation of [0, n²−1] — all elevations are distinct integers from 0 to n²−1. What does this guarantee?',
+      highlight: { location: 'constraint', text: 'grid[i][j] is a permutation of [0, n²−1]' },
       options: [
         { label: 'The answer is always n²−1', isCorrect: false, feedback: 'The permutation guarantee means elevations are unique integers, not that you must traverse all of them. The answer is the peak elevation of the optimal path, which can be much less than n²−1.' },
-        { label: 'No ties in elevation — simpler priority queue logic', isCorrect: true },
+        { label: 'No ties in elevation — every comparison resolves clearly', isCorrect: true },
         { label: 'The shortest path by steps is always optimal', isCorrect: false, feedback: 'Distinct elevations don\'t imply step count and max-elevation align. A long path through low elevations can beat a short path through a high one.' },
         { label: 'You can reach any cell by time n²−1 at the latest', isCorrect: false, feedback: 'While technically true (the maximum elevation in the grid is n²−1), this is not the useful insight. The permutation guarantee primarily simplifies tie-breaking in the priority queue.' },
       ],
@@ -64,4 +69,27 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def swim_in_water(self, grid):
+        n = len(grid)
+        visited = [[False] * n for _ in range(n)]
+        heap = [(grid[0][0], 0, 0)]
+        visited[0][0] = True
+        result = 0
+        while heap:
+            t, r, c = heapq.heappop(heap)
+            result = max(result, t)
+            if r == n - 1 and c == n - 1:
+                return result
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < n and 0 <= nc < n and not visited[nr][nc]:
+                    visited[nr][nc] = True
+                    heapq.heappush(heap, (max(t, grid[nr][nc]), nr, nc))
+        return result`,
+  solutionComplexity: { time: 'O(n² log n)', space: 'O(n²)' },
+  solutionCaveat: 'Each heap entry stores <code>max(t, grid[nr][nc])</code> — the highest elevation crossed <code>so far</code> along that path, not the neighbor\'s own elevation — since the time needed to swim a path is bottlenecked by its single highest cell, not by the elevation of wherever the path currently ends.',
+  solutionExplanation: 'This is Dijkstra with the usual "sum of edge weights" replaced by "maximum cell elevation seen so far" — always expanding from the cell reachable with the smallest such bottleneck first guarantees that by the time the heap pops the destination, no unexplored path could possibly offer a lower bottleneck. The answer is exactly that popped value: the smallest possible "highest elevation you must be able to swim at" to have a route from the top-left to the bottom-right corner.',
 }

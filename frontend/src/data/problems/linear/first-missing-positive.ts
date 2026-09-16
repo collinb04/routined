@@ -9,8 +9,10 @@ export default {
     { input: 'nums = [7,8,9,11,12]', output: '1' },
   ],
   constraints: ['1 ≤ nums.length ≤ 10⁵', '-2³¹ ≤ nums[i] ≤ 2³¹ − 1'],
-  starterCode: `def first_missing_positive(nums):
-  pass`,
+  starterCode: `class Solution:
+    def first_missing_positive(self, nums):
+        pass`,
+  runnerSetup: 'first_missing_positive = Solution().first_missing_positive',
   functionName: 'first_missing_positive',
   conceptId: 'arrays',
   testCases: [
@@ -19,14 +21,14 @@ export default {
     { label: 'Missing 1', args: [[7,8,9,11,12]], expected: 1 },
     { label: 'Sequential', args: [[1,2,3]], expected: 4 },
   ],
-  bruteHint: 'Describe sorting the array or using a hash set to check for each positive integer, and its space complexity',
-  optimizeHint: 'Describe how you could place each value at its corresponding index in place to avoid extra space',
+  bruteHint: 'The brute-force approach checks each positive integer starting from 1 — for each one, scan the array to see whether it\'s present, and stop at the first integer that\'s missing. A hash set makes each membership check O(1), giving you O(n) time overall, but building that set costs O(n) auxiliary space. Sorting the array first and scanning for the first gap gets you down to O(1) extra space, but costs O(n log n) time for the sort. Which resource are you willing to spend — and is there a way to avoid spending either?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-o1-space',
-      question: '"Use O(1) auxiliary space." What does this rule out?',
+      question: 'Space constraints tell you which data structures are even on the table. "Use O(1) auxiliary space." What does this rule out?',
       options: [
-        { label: 'A hash set to track seen values', isCorrect: true },
+        { label: 'A separate structure that records every value seen so far', isCorrect: true },
         { label: 'In-place swaps within the input array', isCorrect: false, feedback: 'Modifying the input array in-place uses no extra space — the array itself becomes the data structure.' },
         { label: 'Counting present values using index signs', isCorrect: false, feedback: 'Using element signs as boolean markers is a classic O(1)-space trick — it encodes information into the existing array without allocating anything new.' },
         { label: 'A single integer to track the answer', isCorrect: false, feedback: 'One integer variable is O(1) space — that\'s well within the constraint.' },
@@ -36,10 +38,11 @@ export default {
         'O(1) auxiliary space means you cannot allocate structures proportional to n. Which of these options creates a new data structure sized by the input?',
         'The constraint rules out any separate storage that grows with n. One of these options requires exactly that.',
       ],
+      highlight: { location: 'description', text: 'O(1) auxiliary space' },
     },
     {
       id: 'constraint-linear-time',
-      question: '"O(n) time." What does this rule out?',
+      question: 'Time constraints tell you how much work your algorithm can afford to repeat. "O(n) time." What does this rule out?',
       options: [
         { label: 'Sorting the array first', isCorrect: true },
         { label: 'A single pass over the array', isCorrect: false, feedback: 'A single pass is O(n) — that\'s exactly what the constraint demands.' },
@@ -51,10 +54,11 @@ export default {
         'Sorting a 10⁵-element array is O(n log n). What does the time constraint say about that?',
         'The constraint is O(n), not O(n log n). Which of these options exceeds that bound?',
       ],
+      highlight: { location: 'description', text: 'O(n) time' },
     },
     {
       id: 'answer-range-guarantee',
-      question: 'The array has n elements. What is the guaranteed range of the first missing positive?',
+      question: 'Knowing how many elements you have lets you bound what the answer could possibly be, instead of searching an unbounded range. The array has n elements — what is the guaranteed range of the first missing positive?',
       options: [
         { label: 'It could be any positive integer', isCorrect: false, feedback: 'With n elements, the pigeonhole principle guarantees the answer is between 1 and n+1 — if 1 through n are all present, the answer is n+1.' },
         { label: 'Between 1 and n+1, inclusive', isCorrect: true },
@@ -66,10 +70,11 @@ export default {
         'The array has n slots. Can it hold every integer from 1 to n+1? What does that say about where the answer must land?',
         'Pigeonhole: n slots, n+1 possible values (1 through n+1). At least one of those values must be absent — and that absence is bounded.',
       ],
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁵' },
     },
     {
       id: 'key-insight-array-as-hashmap',
-      question: 'You need O(1) space but must track which positives in [1, n] are present. What can the array itself act as?',
+      question: 'When you can\'t allocate new storage, the input itself has to double as your data structure. You need O(1) space but must track which positives in [1, n] are present — what can the array itself act as?',
       options: [
         { label: 'A sorted list of positives', isCorrect: false, feedback: 'Sorting is O(n log n) and doesn\'t encode presence in O(1) space without extra allocation.' },
         { label: 'A boolean presence map using index positions', isCorrect: true },
@@ -83,4 +88,18 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def first_missing_positive(self, nums):
+        n = len(nums)
+        for i in range(n):
+            while 1 <= nums[i] <= n and nums[nums[i] - 1] != nums[i]:
+                target = nums[i] - 1
+                nums[i], nums[target] = nums[target], nums[i]
+        for i in range(n):
+            if nums[i] != i + 1:
+                return i + 1
+        return n + 1`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The answer is always in <code>[1, n + 1]</code>: with n elements, the only way every one of 1..n could be present is if they fill every slot exactly, making <code>n + 1</code> the answer; any value outside <code>[1, n]</code> can never contribute to the answer and is simply left wherever it lands.',
+  solutionExplanation: 'If the array were perfectly arranged, value <code>v</code> would sit at index <code>v - 1</code> — so the algorithm repeatedly swaps each value into that home position, skipping values already out of range or already correctly placed (or duplicated, which the <code>!=</code> check also catches to avoid an infinite swap loop). After this cleanup pass, the first index where <code>nums[i] != i + 1</code> reveals the first positive integer that never found a home; since swaps are bounded (each one places at least one value correctly), the whole rearrangement is still O(n) despite the nested-looking loop.',
 }

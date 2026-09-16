@@ -11,8 +11,10 @@ export default {
     '1 ≤ nums.length ≤ 10⁴',
     'nums is sorted in ascending order with unique values',
   ],
-  starterCode: `def binary_search(nums, target):
-  pass`,
+  starterCode: `class Solution:
+    def binary_search(self, nums, target):
+        pass`,
+  runnerSetup: 'binary_search = Solution().binary_search',
   functionName: 'binary_search',
   conceptId: 'binary-search',
   testCases: [
@@ -22,15 +24,16 @@ export default {
     { label: 'First element', args: [[1, 3, 5, 7], 1], expected: 0 },
     { label: 'Last element', args: [[1, 3, 5, 7], 7], expected: 3 },
   ],
-  bruteHint: 'Describe the linear-scan approach and its time complexity',
-  optimizeHint: 'Name the technique that halves the search space each step by exploiting sorted order',
+  bruteHint: 'The most direct approach checks every element from left to right until it finds the target or reaches the end, which takes O(n) time in the worst case since it never relies on the ordering of the array. This works on any array, sorted or not. Given that nums is already sorted, what does that guarantee let you skip that a plain left-to-right scan cannot?',
+  optimizeComplexity: { time: 'O(log n)', space: 'O(1)' },
   clues: [
     {
       id: 'sorted-input',
-      question: '"nums is sorted in ascending order" — what does this tell you about how to search?',
+      question: 'Constraints describing input order often decide which search strategy is valid. "nums is sorted in ascending order" — what does this tell you about how to search?',
+      highlight: { location: 'constraint', text: 'nums is sorted in ascending order with unique values' },
       options: [
         { label: 'Scan every element linearly', isCorrect: false, feedback: 'Linear scan ignores the sorted order entirely. Sorting is a structural guarantee that lets you eliminate half the remaining elements with each comparison.' },
-        { label: 'Use a hash map for O(1) lookup', isCorrect: false, feedback: 'A hash map is powerful for unsorted data, but you already have something better: sorted order. You can exploit that structure without extra space.' },
+        { label: 'Trade extra space for O(1) element lookups', isCorrect: false, feedback: 'A hash map is powerful for unsorted data, but you already have something better: sorted order. You can exploit that structure without extra space.' },
         { label: 'Halve the search space each step', isCorrect: true },
         { label: 'Sort it again before searching', isCorrect: false, feedback: 'The array is already sorted — re-sorting is unnecessary work. The guarantee is there so you can skip it.' },
       ],
@@ -42,7 +45,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁴ — is a linear scan acceptable here?',
+      question: 'Numeric bounds in the constraints reveal which time complexity is required. nums.length ≤ 10⁴ — is a linear scan acceptable here?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁴' },
       options: [
         { label: 'Yes, 10⁴ is small enough', isCorrect: false, feedback: 'Linear scan is O(n), which is 10,000 operations at worst — that would pass. But the sorted guarantee makes O(log n) achievable, and the problem is testing whether you use it.' },
         { label: 'No, you must use O(log n)', isCorrect: true },
@@ -57,11 +61,12 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is the index of the target, not the value. What does that mean for your search state?',
+      question: 'The shape of the required output often reveals what state your algorithm needs to track. The output is the index of the target, not the value. What does that mean for your search state?',
+      highlight: { location: 'description', text: 'return the index of the target' },
       options: [
         { label: 'Track the value at each midpoint', isCorrect: false, feedback: 'You compare values to decide which half to search next, but the thing you ultimately return is a position, not a value.' },
         { label: 'Track left and right index boundaries', isCorrect: true },
-        { label: 'Build a map from values to indices first', isCorrect: false, feedback: 'Prebuilding a map costs O(n) time and space. The sorted structure already enables index-based searching without it.' },
+        { label: 'Precompute value-to-position lookups before searching', isCorrect: false, feedback: 'Prebuilding a map costs O(n) time and space. The sorted structure already enables index-based searching without it.' },
         { label: 'Return early as soon as any match appears', isCorrect: false },
       ],
       correctFeedback: 'Binary search works by narrowing an index window — left and right pointers. The midpoint index is what you check and ultimately return.',
@@ -72,7 +77,8 @@ export default {
     },
     {
       id: 'not-found-case',
-      question: 'Return -1 if not found. When does the search definitely fail?',
+      question: 'Edge cases named in the problem statement often define when a loop should terminate. Return -1 if not found. When does the search definitely fail?',
+      highlight: { location: 'description', text: 'If not found, return <code>-1</code>.' },
       options: [
         { label: 'When left equals right', isCorrect: false, feedback: 'When left equals right, one candidate remains and must still be checked. The window is exhausted only when left exceeds right.' },
         { label: 'When the midpoint value is too large', isCorrect: false, feedback: 'A midpoint being too large just narrows the window to the left half — it does not end the search.' },
@@ -86,4 +92,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def binary_search(self, nums, target):
+        left, right = 0, len(nums) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if nums[mid] == target:
+                return mid
+            elif nums[mid] < target:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return -1`,
+  solutionComplexity: { time: 'O(log n)', space: 'O(1)' },
+  solutionCaveat: 'The loop condition is <code>left &lt;= right</code>, not <code>&lt;</code> — with <code>&lt;</code>, a search space of exactly one element (<code>left == right</code>) would exit the loop without ever checking it, silently missing a target that\'s sitting right there.',
+  solutionExplanation: 'Every iteration asks one question — is the middle element too small, too big, or exactly right — and that answer eliminates half the remaining space, forever. <code>mid = (left + right) // 2</code> picks the midpoint of whatever range is left; moving <code>left</code> or <code>right</code> to <code>mid ± 1</code> (never <code>mid</code> itself) is what guarantees the loop keeps shrinking instead of getting stuck re-checking the same index.',
 }

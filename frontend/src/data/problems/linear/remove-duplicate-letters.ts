@@ -8,8 +8,10 @@ export default {
     { input: 's = "cbacdcbc"', output: '"acdb"' },
   ],
   constraints: ['1 ≤ s.length ≤ 10⁴', 's consists of lowercase English letters'],
-  starterCode: `def remove_duplicate_letters(s):
-  pass`,
+  starterCode: `class Solution:
+    def remove_duplicate_letters(self, s):
+        pass`,
+  runnerSetup: 'remove_duplicate_letters = Solution().remove_duplicate_letters',
   functionName: 'remove_duplicate_letters',
   conceptId: 'monotonic-stack',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '"cbacdcbc"', args: ['cbacdcbc'], expected: 'acdb' },
     { label: 'No duplicates', args: ['abc'], expected: 'abc' },
   ],
-  bruteHint: 'Describe trying every possible subsequence ordering and checking validity, and explain why that blows up combinatorially',
-  optimizeHint: 'Name the structure that greedily builds the result, using a "last occurrence" map to decide when to pop a character',
+  bruteHint: 'Imagine listing every way to remove characters from s so each remaining letter appears exactly once, then filtering for validity and comparing all the survivors to find the lexicographically smallest one. The number of such subsequences explodes combinatorially as the string grows. With s.length up to 10⁴, how many candidates would you need to generate and compare before finding the answer, and does that number stay manageable?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-input-size',
-      question: 's.length ≤ 10⁴ tells you…',
+      question: 'Input size sets the ceiling on what complexity your solution can afford. s.length ≤ 10⁴ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ s.length ≤ 10⁴' },
       options: [
         { label: 'O(n²) is fine — 10⁸ is manageable', isCorrect: false, feedback: 'At n = 10,000, O(n²) is 100 million operations. For a string problem that means re-scanning on every character — too slow. You need a linear or near-linear approach.' },
         { label: 'O(n) or O(n · 26) is acceptable', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'output-lexicographic-minimum',
-      question: '"Smallest in lexicographic order among all possible results." What does this require you to do when you encounter a smaller character?',
+      question: 'This ordering requirement decides whether you can safely remove a character you already placed. "Smallest in lexicographic order among all possible results." What does this require you to do when you encounter a smaller character?',
+      highlight: { location: 'description', text: 'smallest in lexicographic order among all possible results.' },
       options: [
         { label: 'Always place smaller characters at the front', isCorrect: false, feedback: 'You cannot simply front-load small characters — you must include each letter exactly once, and some earlier larger letters may have no remaining occurrences to place later.' },
         { label: 'Pop larger characters from the result if they appear again later', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'each-letter-once',
-      question: '"Every letter appears once." What extra information do you need to track?',
+      question: 'Knowing exactly what invariant to maintain determines which bookkeeping your solution needs. "Every letter appears once." What extra information do you need to track?',
+      highlight: { location: 'description', text: 'every letter appears once.' },
       options: [
         { label: 'The sorted order of all unique characters', isCorrect: false, feedback: 'Sorted order does not help you decide whether to pop a character — you need to know if it appears again later, not its rank.' },
         { label: 'Whether a character is already in the result', isCorrect: false, feedback: 'Knowing a character is already in the result is necessary, but insufficient. You also need to know if characters not yet placed will appear again later in s.' },
@@ -67,10 +72,11 @@ export default {
     },
     {
       id: 'lowercase-alphabet-constraint',
-      question: '"s consists of lowercase English letters." How does a bounded alphabet simplify your bookkeeping?',
+      question: 'Knowing the exact character set available tells you what size bookkeeping you can fix ahead of time. "s consists of lowercase English letters." How does a bounded alphabet simplify your bookkeeping?',
+      highlight: { location: 'constraint', text: 's consists of lowercase English letters' },
       options: [
-        { label: 'You can use a hash map for O(1) lookups', isCorrect: false, feedback: 'A hash map works, but a fixed array of 26 integers is simpler, faster, and avoids hashing overhead when you know the alphabet size upfront.' },
-        { label: 'Fixed arrays of size 26 replace general-purpose maps', isCorrect: true },
+        { label: 'You could track each letter with a general-purpose keyed lookup for O(1) access', isCorrect: false, feedback: 'A general-purpose keyed lookup works, but a fixed array of 26 integers is simpler, faster, and avoids hashing overhead when you know the alphabet size upfront.' },
+        { label: 'Index directly by letter into fixed-size storage instead of a general-purpose keyed lookup', isCorrect: true },
         { label: 'You only need to track 5 characters at a time', isCorrect: false, feedback: 'The alphabet has 26 characters, all of which may appear. There is no reason to limit tracking to 5.' },
         { label: 'It means the output is always length ≤ 26', isCorrect: false, feedback: 'The output length is at most 26 (one of each letter), but that fact is a consequence of the problem, not the reason a fixed array helps with bookkeeping.' },
       ],
@@ -81,4 +87,20 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def remove_duplicate_letters(self, s):
+        last_occurrence = {ch: i for i, ch in enumerate(s)}
+        stack = []
+        seen = set()
+        for i, ch in enumerate(s):
+            if ch in seen:
+                continue
+            while stack and stack[-1] > ch and last_occurrence[stack[-1]] > i:
+                seen.discard(stack.pop())
+            stack.append(ch)
+            seen.add(ch)
+        return ''.join(stack)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'A letter on the stack is only popped when it still has a *later* occurrence to fall back on (<code>last_occurrence[stack[-1]] > i</code>) — popping a letter that never appears again would lose it from the result entirely, since every letter must appear exactly once.',
+  solutionExplanation: 'Building the result greedily letter by letter, a bigger letter already on the stack should be dropped in favor of a smaller one arriving now — but only if that bigger letter is guaranteed to show up again later, since otherwise dropping it would remove it from the answer permanently. Tracking each letter\'s last occurrence answers exactly that "will it come back?" question in O(1), and skipping any letter already placed on the stack (via the <code>seen</code> set) prevents it from ever appearing twice in the final result.',
 }

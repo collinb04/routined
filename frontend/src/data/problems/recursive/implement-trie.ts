@@ -24,18 +24,27 @@ class Trie:
 
   def starts_with(self, prefix):
       pass`,
-  functionName: 'Trie',
+  functionName: 'trie_run',
   conceptId: 'tries',
+  runnerSetup: `def trie_run(ops, args):
+  t = Trie()
+  results = []
+  for op, a in zip(ops, args):
+      if op == 'insert': t.insert(a); results.append(None)
+      elif op == 'search': results.append(t.search(a))
+      elif op == 'startsWith': results.append(t.starts_with(a))
+  return results`,
   testCases: [
     { label: 'Insert and search', args: [['insert','search','search','startsWith','insert','search'],['apple','apple','app','app','app','app']], expected: [null,true,false,true,null,true] },
     { label: 'Prefix check', args: [['insert','startsWith','search'],['hello','hel','hel']], expected: [null,true,false] },
   ],
-  bruteHint: 'Describe storing all inserted words in a list or set and scanning through them character by character for every search or startsWith call',
-  optimizeHint: 'Explain how a trie\'s per-character nodes give lookups proportional to word length rather than to how many words are stored',
+  bruteHint: 'A brute-force implementation stores every inserted word in a plain list or set, then linearly scans that collection on every search or startsWith call to look for a match or a matching prefix. Each such scan costs O(total characters across all stored words) in the worst case, since you may need to compare against every stored word character by character. With up to 3 × 10⁴ calls and words as long as 2000 characters, that scan cost adds up quickly. What structure would let each operation\'s cost depend only on the length of the word being looked up, not on how many other words exist?',
+  optimizeComplexity: { time: 'O(L)', space: 'O(total characters inserted)' },
   clues: [
     {
       id: 'search-vs-startswith',
-      question: 'search("app") returns false after inserting only "apple", but startsWith("app") returns true. What is the structural difference between the two operations?',
+      question: 'The description spells out exactly what each method must return — that precision is often the clearest signal for what state your data structure needs to track. search("app") returns false after inserting only "apple", but startsWith("app") returns true. What is the structural difference between the two operations?',
+      highlight: { location: 'description', text: '<code>search</code> returns true only if the exact word was inserted; <code>startsWith</code> returns true if any inserted word has that prefix.' },
       options: [
         { label: 'search checks length; startsWith does not', isCorrect: false, feedback: 'Both operations traverse the trie character by character — length is implicit in that traversal. The difference is what you check at the final node: is_end for search, mere existence for startsWith.' },
         { label: 'search requires is_end=True at the last character; startsWith only requires the path to exist', isCorrect: true },
@@ -94,4 +103,39 @@ class Trie:
       ],
     },
   ],
+  solutionCode: `class TrieNode:
+  def __init__(self):
+      self.children = {}
+      self.is_end = False
+
+class Trie:
+  def __init__(self):
+      self.root = TrieNode()
+
+  def insert(self, word):
+      node = self.root
+      for ch in word:
+          if ch not in node.children:
+              node.children[ch] = TrieNode()
+          node = node.children[ch]
+      node.is_end = True
+
+  def search(self, word):
+      node = self.root
+      for ch in word:
+          if ch not in node.children:
+              return False
+          node = node.children[ch]
+      return node.is_end
+
+  def starts_with(self, prefix):
+      node = self.root
+      for ch in prefix:
+          if ch not in node.children:
+              return False
+          node = node.children[ch]
+      return True`,
+  solutionComplexity: { time: 'O(L)', space: 'O(total characters inserted)' },
+  solutionCaveat: '<code>search</code> and <code>starts_with</code> share almost identical traversal logic, but only <code>search</code> checks <code>node.is_end</code> at the end — <code>starts_with</code> stops as soon as the path exists, since a prefix that was never itself inserted as a complete word should still return true.',
+  solutionExplanation: 'Each character of a word maps to one child node, so inserting a word simply walks (creating nodes as needed) one node per character and marks the final node as a complete word\'s end — words sharing a prefix, like "app" and "apple", automatically share the same nodes for that prefix rather than duplicating them. Both lookups (<code>search</code>, <code>starts_with</code>) follow the exact same character-by-character path; they differ only in what they check once that path is exhausted, which is exactly the distinction the problem draws between "was this exact word inserted" and "does any inserted word start this way."',
 }

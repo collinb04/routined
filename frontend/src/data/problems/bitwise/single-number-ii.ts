@@ -8,24 +8,27 @@ export default {
     { input: 'nums = [0,1,0,1,0,1,99]', output: '99' },
   ],
   constraints: ['1 ≤ nums.length ≤ 3 × 10⁴', 'Every element appears exactly three times except one', '-2³¹ ≤ nums[i] ≤ 2³¹ − 1'],
-  starterCode: `def single_number(nums):
-  pass`,
+  starterCode: `class Solution:
+    def single_number(self, nums):
+        pass`,
+  runnerSetup: 'single_number = Solution().single_number',
   functionName: 'single_number',
   conceptId: 'bit-manipulation',
   testCases: [
     { label: 'Three pairs', args: [[2,2,3,2]], expected: 3 },
     { label: 'Larger', args: [[0,1,0,1,0,1,99]], expected: 99 },
     { label: 'Single element', args: [[7]], expected: 7 },
-    { label: 'Negatives', args: [-2,-2,-3,-2], expected: -3 },
+    { label: 'Negatives', args: [[-2,-2,-3,-2]], expected: -3 },
   ],
-  bruteHint: 'Describe using a hash map to count each element\'s frequency, and its space complexity',
-  optimizeHint: 'Name the bitwise technique that tracks bit counts modulo 3 without space proportional to n',
+  bruteHint: 'One brute-force approach tallies each element\'s frequency in an auxiliary structure keyed by value, then scans it for the key with a count of one — O(n) time but O(n) space, since the structure can grow to hold one entry per unique element. That extra space is exactly what this problem forbids. What would you need to change to get the space down to O(1)?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'space-constraint',
-      question: 'O(1) extra space is required. What does this rule out?',
+      question: 'Explicit space constraints in a problem statement usually rule out the most obvious approach and point toward a leaner one. O(1) extra space is required. What does this rule out?',
+      highlight: { location: 'description', text: 'Your algorithm must use O(1) extra space.' },
       options: [
-        { label: 'Using a hash map to count frequencies', isCorrect: true },
+        { label: 'Tallying each value\'s frequency in a structure that grows with the number of unique elements', isCorrect: true },
         { label: 'Using variables to track state', isCorrect: false, feedback: 'A constant number of integer variables is O(1) space. The constraint rules out structures that grow with input size — like a hash map with one entry per unique value.' },
         { label: 'Reading the array more than once', isCorrect: false, feedback: 'Multiple passes through the array are an O(n) time consideration, not space. The O(1) constraint is about memory, not the number of traversals.' },
         { label: 'Using bit operations on the elements', isCorrect: false, feedback: 'Bit operations work in-place on fixed-width integers — no extra memory allocation. They are exactly the kind of O(1)-space technique this constraint points toward.' },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'why-xor-fails',
-      question: 'In Single Number I, XOR worked because each duplicate appeared twice (a ^ a = 0). Why doesn\'t plain XOR work here?',
+      question: 'Comparing a new problem to a similar one you\'ve already solved often reveals exactly which assumption breaks. In Single Number I, XOR worked because each duplicate appeared twice (a ^ a = 0). Why doesn\'t plain XOR work here?',
+      highlight: { location: 'description', text: 'every element appears three times except for one' },
       options: [
         { label: 'XOR only handles positive integers', isCorrect: false, feedback: 'XOR works on all integers regardless of sign — it operates bit by bit on two\'s complement representations. The issue here is the count, not the sign.' },
         { label: 'Tripling doesn\'t cancel under XOR: a ^ a ^ a = a, not 0', isCorrect: true },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'bit-count-mod-3',
-      question: 'Every repeated element appears exactly three times. What happens to the total count of each bit position across the whole array?',
+      question: 'Exact repetition counts in a constraint often hint at the modular arithmetic you should apply. Every repeated element appears exactly three times. What happens to the total count of each bit position across the whole array?',
+      highlight: { location: 'constraint', text: 'Every element appears exactly three times except one' },
       options: [
         { label: 'Each bit sum is always a multiple of 3', isCorrect: false, feedback: 'For bits in the tripled elements, yes — their contribution is a multiple of 3. But the single element contributes 0 or 1 to each bit position. So the total is either a multiple of 3 (if that bit of the single number is 0) or a multiple of 3 plus 1.' },
         { label: 'Each bit sum is divisible by 3, except bits set in the single number', isCorrect: true },
@@ -68,12 +73,12 @@ export default {
     },
     {
       id: 'ones-twos-state-machine',
-      question: 'One O(1)-space approach tracks two variables: ones (bits seen exactly once mod 3) and twos (bits seen exactly twice mod 3). What transition resets them?',
+      question: 'Naming the specific state variables an approach relies on is often the fastest way to understand its mechanics. One O(1)-space approach tracks two variables: ones (bits seen exactly once mod 3) and twos (bits seen exactly twice mod 3). What transition resets them?',
       options: [
         { label: 'When ones == twos, reset both to 0', isCorrect: false, feedback: 'ones and twos can be equal (both 0) at the start without needing a reset. The reset happens when a bit has been seen three times — the ones and twos variables together encode that state.' },
         { label: 'When a bit appears in both ones and twos, clear it from both', isCorrect: true },
         { label: 'Reset ones and twos every 3 elements', isCorrect: false, feedback: 'Elements in the array aren\'t grouped in threes — the same value\'s three copies could be spread anywhere. Resetting on element count instead of bit count would corrupt the state.' },
-        { label: 'XOR twos into ones at each step', isCorrect: false, feedback: 'XORing twos into ones unconditionally would mix the two counts. The state machine must update ones and twos separately, then clear bits that have reached count 3.' },
+        { label: 'Merge twos directly into ones at every step', isCorrect: false, feedback: 'XORing twos into ones unconditionally would mix the two counts. The state machine must update ones and twos separately, then clear bits that have reached count 3.' },
       ],
       correctFeedback: 'After updating ones and twos for the new element, compute threes = ones & twos (bits seen 3 times), then clear them: ones &= ~threes, twos &= ~threes. At the end, ones holds the single number.',
       wrongFeedback: [
@@ -82,4 +87,14 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def single_number(self, nums):
+        ones, twos = 0, 0
+        for n in nums:
+            ones = (ones ^ n) & ~twos
+            twos = (twos ^ n) & ~ones
+        return ones if ones < 2**31 else ones - 2**32`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The final <code>ones - 2**32</code> adjustment is only needed because Python integers don\'t wrap at 32 bits on their own — <code>ones</code> is built as an unsigned bit pattern, so a value with the sign bit set has to be manually reinterpreted as negative to match the expected signed result.',
+  solutionExplanation: '<code>ones</code> and <code>twos</code> track, bit by bit, whether each bit position has appeared exactly once or exactly twice among the numbers seen so far — a two-bit counter per position, counting modulo 3 (a third occurrence clears both, cycling back to "seen zero times" for that bit). Since every number except one appears exactly three times, every bit contributed by those triples cycles all the way back to zero, leaving only the singly-occurring number\'s bits sitting in <code>ones</code> once every element has been processed.',
 }

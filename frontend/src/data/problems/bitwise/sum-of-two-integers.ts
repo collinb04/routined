@@ -8,8 +8,10 @@ export default {
     { input: 'a = 2, b = 3', output: '5' },
   ],
   constraints: ['-1000 ≤ a, b ≤ 1000'],
-  starterCode: `def get_sum(a, b):
-  pass`,
+  starterCode: `class Solution:
+    def get_sum(self, a, b):
+        pass`,
+  runnerSetup: 'get_sum = Solution().get_sum',
   functionName: 'get_sum',
   conceptId: 'bit-manipulation',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Negatives', args: [-1,-2], expected: -3 },
     { label: 'One negative', args: [5,-3], expected: 2 },
   ],
-  bruteHint: 'Describe how XOR and a shifted AND combine to simulate addition with carry',
-  optimizeHint: 'Name the fix needed so this terminates correctly for negative numbers given arbitrary-precision integers',
+  bruteHint: 'One brute-force approach repeatedly increments a by one — using a bit trick to add 1 without the + operator — decrementing b each time until it reaches zero, which takes O(b) time proportional to the magnitude of b rather than a fixed number of steps. With b bounded by ±1000, that could mean up to a thousand loop iterations for a single call. What would let you finish in a fixed number of steps regardless of how large b is?',
+  optimizeComplexity: { time: 'O(1)', space: 'O(1)' },
   clues: [
     {
       id: 'xor-as-addition',
-      question: 'XOR gives the sum of two bits without carry: 1 ^ 1 = 0, 0 ^ 1 = 1. What does a ^ b compute across all bit positions?',
+      question: 'Ruled-out operators in a problem statement tell you exactly which primitive you need to replace. XOR gives the sum of two bits without carry: 1 ^ 1 = 0, 0 ^ 1 = 1. What does a ^ b compute across all bit positions?',
+      highlight: { location: 'description', text: 'without using the operators <code>+</code> or <code>-</code>' },
       options: [
         { label: 'The full sum including carry', isCorrect: false, feedback: 'a ^ b computes the carry-free partial sum — bits where exactly one of a or b is set. The carry (where both bits are 1) is a separate step handled by AND and left-shift.' },
         { label: 'The partial sum without carries', isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'carry-propagation',
-      question: 'Carry occurs when both bits are 1: (a & b) gives carry positions. How do you propagate the carry to the next bit position?',
+      question: 'The phrase "bit manipulation" in a problem statement is a hint to think in terms of individual bit positions rather than whole-number arithmetic. Carry occurs when both bits are 1: (a & b) gives carry positions. How do you propagate the carry to the next bit position?',
+      highlight: { location: 'description', text: 'Use bit manipulation instead.' },
       options: [
         { label: 'OR the carry into the partial sum', isCorrect: false, feedback: 'OR would set bits at the carry positions rather than shift them. Carry from bit k must be added at bit k + 1 — that requires a left-shift, not OR.' },
         { label: 'Left-shift the carry by 1: (a & b) << 1', isCorrect: true },
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'iteration-termination',
-      question: 'The process repeats: partial_sum = a ^ b, carry = (a & b) << 1, then set a = partial_sum and b = carry. When does it stop?',
+      question: 'Loop invariants often hint at the natural terminating condition for an iterative bit-manipulation approach. The process repeats: partial_sum = a ^ b, carry = (a & b) << 1, then set a = partial_sum and b = carry. When does it stop?',
       options: [
         { label: 'After exactly 32 iterations', isCorrect: false, feedback: 'The number of iterations depends on how long carries propagate, not a fixed width. For a = 1, b = 2, carry disappears after one iteration. For numbers that generate cascading carries, it may take more steps.' },
         { label: 'When the carry becomes 0', isCorrect: true },
@@ -68,7 +72,8 @@ export default {
     },
     {
       id: 'negative-numbers',
-      question: 'The constraints include negative values (-1000 ≤ a, b ≤ 1000). In Python, integers have arbitrary precision, causing infinite carry loops for negatives. What solves this?',
+      question: 'Constraints that include negative bounds often signal an edge case your bit-level approach must explicitly handle. The constraints include negative values (-1000 ≤ a, b ≤ 1000). In Python, integers have arbitrary precision, causing infinite carry loops for negatives. What solves this?',
+      highlight: { location: 'constraint', text: '-1000 ≤ a, b ≤ 1000' },
       options: [
         { label: 'Convert to absolute value, add, restore sign', isCorrect: false, feedback: 'Sign restoration requires subtraction or addition, which you\'re not allowed to use. The correct fix is masking to a fixed bit width to simulate two\'s complement overflow.' },
         { label: 'Mask with 0xFFFFFFFF to simulate 32-bit integers', isCorrect: true },
@@ -82,4 +87,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def get_sum(self, a, b):
+        mask = 0xFFFFFFFF
+        while b != 0:
+            carry = (a & b) & mask
+            a = (a ^ b) & mask
+            b = (carry << 1) & mask
+        if a > 0x7FFFFFFF:
+            a -= 0x100000000
+        return a`,
+  solutionComplexity: { time: 'O(1)', space: 'O(1)' },
+  solutionCaveat: 'Masking with <code>0xFFFFFFFF</code> after every operation is what keeps this finite — Python integers never overflow on their own, so without the mask, a negative number\'s infinite string of leading 1-bits would make the carry-propagation loop run forever instead of settling to zero.',
+  solutionExplanation: 'XOR adds two bits together ignoring any carry, and AND-then-shift-left computes exactly the carry that XOR dropped — repeating "add without carry, then add the carry in" until there is no carry left to add is precisely how addition works at the hardware level. Since a carry can ripple at most 32 positions in a 32-bit number, the loop is guaranteed to terminate, and the final check reinterprets the raw bit pattern as a signed integer if the sign bit ended up set.',
 }

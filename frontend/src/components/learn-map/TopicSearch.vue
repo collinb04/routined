@@ -201,7 +201,7 @@ onUnmounted(() => window.removeEventListener('keydown', globalKeydown))
               >
                 <!-- Cluster color dot -->
                 <span
-                  class="w-2 h-2 rounded-full shrink-0"
+                  class="w-2 h-2 rounded-lg shrink-0"
                   :style="{ background: item.groupColor }"
                 />
 

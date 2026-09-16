@@ -7,20 +7,23 @@ export default {
     { input: 'n=4, edges=[[0,1,3],[1,2,1],[1,3,4],[2,3,1]], distanceThreshold=4', output: '3' },
   ],
   constraints: ['2 ≤ n ≤ 100', '1 ≤ edges.length ≤ n*(n-1)/2', '1 ≤ distanceThreshold ≤ 10⁴'],
-  starterCode: `def find_the_city(n, edges, distance_threshold):
-  pass`,
+  starterCode: `class Solution:
+    def find_the_city(self, n, edges, distance_threshold):
+        pass`,
+  runnerSetup: 'find_the_city = Solution().find_the_city',
   functionName: 'find_the_city',
-  conceptId: 'advanced-graphs',
+  conceptId: 'graphs',
   testCases: [
     { label: 'City 3', args: [4,[[0,1,3],[1,2,1],[1,3,4],[2,3,1]],4], expected: 3 },
     { label: 'City 0', args: [5,[[0,1,2],[0,4,8],[1,2,3],[1,4,2],[2,3,1],[3,4,1]],2], expected: 0 },
   ],
-  bruteHint: 'Describe running an independent shortest-path search from every city with no shared work, and the resulting complexity',
-  optimizeHint: 'Name the all-pairs shortest-path algorithm that fills in a full distance matrix through intermediate nodes',
+  bruteHint: 'The brute-force approach runs an independent shortest-path search, such as Dijkstra\'s algorithm, from each of the n cities in turn, treating every city\'s search as its own separate problem with no reuse of work between them. Each Dijkstra run costs roughly O(E log V), so repeating it for all n cities costs about O(n · E log V) overall, plus the bookkeeping of n separate distance arrays. What single algorithm could compute the shortest distance between every pair of cities together, reusing intermediate results across all of them at once?',
+  optimizeComplexity: { time: 'O(V³)', space: 'O(V²)' },
   clues: [
     {
       id: 'constraint-size',
-      question: 'n ≤ 100 cities. You need shortest paths between all pairs. What algorithm and complexity applies?',
+      highlight: { location: 'constraint', text: '2 ≤ n ≤ 100' },
+      question: 'Input-size bounds narrow down which algorithms are fast enough, especially when comparing per-node searches against an all-pairs approach. n ≤ 100 cities. You need shortest paths between all pairs. What algorithm and complexity applies?',
       options: [
         { label: 'Dijkstra from each node — O(n² log n)', isCorrect: false, feedback: 'Dijkstra from each of n nodes works and is O(n · (E log n)) — valid for n = 100. But Floyd-Warshall at O(n³) = 10⁶ is simpler to implement for all-pairs and equally fast at this scale.' },
         { label: 'Floyd-Warshall all-pairs shortest paths — O(n³)', isCorrect: true },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'threshold-filter',
-      question: '"Fewest reachable cities within the threshold distance." What does within threshold mean for counting?',
+      highlight: { location: 'description', text: 'Given n cities, edges with weights, and a threshold, find the city with the fewest reachable cities (within threshold).' },
+      question: 'Parenthetical qualifiers in a problem statement often carry precise inclusion or exclusion rules that are easy to misread. "Fewest reachable cities within the threshold distance." What does within threshold mean for counting?',
       options: [
         { label: 'Count cities with distance exactly equal to distanceThreshold', isCorrect: false, feedback: '"Within" means ≤ distanceThreshold, not exactly equal. Cities closer than the threshold still count — you want all cities reachable without exceeding the distance limit.' },
         { label: 'Count cities with distance ≤ distanceThreshold (excluding self)', isCorrect: true },
@@ -50,7 +54,8 @@ export default {
     },
     {
       id: 'tie-breaking',
-      question: '"If there is a tie, return the city with the greatest number." What does greatest number mean here?',
+      highlight: { location: 'description', text: 'If tie, return the one with the greatest number.' },
+      question: 'Explicit tie-breaking rules in a problem statement tell you exactly how to resolve ambiguous outputs, so they can\'t be skipped or assumed. "If there is a tie, return the city with the greatest number." What does greatest number mean here?',
       options: [
         { label: 'The city with the most edges', isCorrect: false, feedback: 'Greatest number refers to the city\'s index label (0 to n-1), not its degree. Among cities tied for fewest reachable neighbors, pick the one with the highest index.' },
         { label: 'The city with the highest index label', isCorrect: true },
@@ -65,7 +70,8 @@ export default {
     },
     {
       id: 'floyd-warshall-init',
-      question: 'Floyd-Warshall starts with a distance matrix. What are the initial values before running the algorithm?',
+      highlight: { location: 'constraint', text: '1 ≤ edges.length ≤ n*(n-1)/2' },
+      question: 'Constraints on how many edges can exist reveal that the graph may be sparse, which matters for how you initialize any all-pairs distance structure. Floyd-Warshall starts with a distance matrix. What are the initial values before running the algorithm?',
       options: [
         { label: 'All zeros — distances start at 0', isCorrect: false, feedback: 'Zero would mean every city is distance 0 from every other city, which would make Floyd-Warshall\'s relaxation step do nothing. Initialize to infinity for unconnected pairs, 0 on the diagonal, and edge weights for direct connections.' },
         { label: 'dist[i][i]=0, direct edges get their weight, rest infinity', isCorrect: true },
@@ -79,4 +85,31 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_the_city(self, n, edges, distance_threshold):
+        INF = float('inf')
+        dist = [[INF] * n for _ in range(n)]
+        for i in range(n):
+            dist[i][i] = 0
+        for u, v, w in edges:
+            dist[u][v] = w
+            dist[v][u] = w
+
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    if dist[i][k] + dist[k][j] < dist[i][j]:
+                        dist[i][j] = dist[i][k] + dist[k][j]
+
+        best_city = -1
+        best_count = n + 1
+        for i in range(n):
+            count = sum(1 for j in range(n) if i != j and dist[i][j] <= distance_threshold)
+            if count <= best_count:
+                best_count = count
+                best_city = i
+        return best_city`,
+  solutionComplexity: { time: 'O(n³)', space: 'O(n²)' },
+  solutionCaveat: 'Ties are broken toward the <code>greatest</code> city number by using <code>&lt;=</code> rather than <code>&lt;</code> when comparing reachable-city counts — later cities with an equally small count overwrite the earlier best, which is what the problem requires when several cities have the same smallest count.',
+  solutionExplanation: 'Floyd-Warshall computes every pair of cities\' shortest distance by allowing each city in turn to act as an intermediate stop — after considering all n cities as potential waypoints, <code>dist[i][j]</code> holds the true shortest path. Once every pairwise distance is known, finding "the city reaching the fewest other cities within the threshold" is just one linear pass counting, for each city, how many others fall within <code>distance_threshold</code>.',
 }

@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def kth_smallest(root, k):
-  pass`,
+class Solution:
+    def kth_smallest(self, root, k):
+        pass`,
   functionName: 'kth_smallest_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def kth_smallest_run(arr, k):
-  return kth_smallest(_build(arr), k)`,
+  return Solution().kth_smallest(_build(arr), k)`,
   testCases: [
     { label: 'k=1', args: [[3,1,4,null,2], 1], expected: 1 },
     { label: 'k=3', args: [[5,3,6,2,4,null,null,1], 3], expected: 3 },
   ],
-  bruteHint: 'Describe collecting every node\'s value into a list, sorting it, and indexing to the kth position',
-  optimizeHint: 'Name the traversal order that visits BST nodes in sorted order automatically, and what lets you stop as soon as you\'ve counted k nodes',
+  bruteHint: 'The brute-force approach collects every node\'s value into a list via any traversal, sorts that list, and returns the element at index k-1. Collecting all n values costs O(n) time and space, and sorting adds an extra O(n log n) on top of that — even though a BST already hands you sorted order for free. What traversal order visits BST nodes in already-sorted order, without needing to sort anything?',
+  optimizeComplexity: { time: 'O(h + k)', space: 'O(h)' },
   clues: [
     {
       id: 'bst-inorder-sorted',
-      question: 'The input is a BST. What property of BSTs makes finding the kth smallest straightforward?',
+      highlight: { location: 'description', text: 'binary search tree' },
+      question: 'Recognizing which data-structure property is in play often unlocks a traversal or algorithm that would otherwise take extra work. The input is a BST. What property of BSTs makes finding the kth smallest straightforward?',
       options: [
         { label: 'BST nodes are stored in a sorted array internally', isCorrect: false, feedback: 'BST nodes are tree nodes connected by pointers — there is no underlying sorted array. The sorted order is a logical property: inorder traversal visits nodes in ascending order.' },
         { label: 'Inorder traversal of a BST visits nodes in ascending order', isCorrect: true },
@@ -57,7 +59,8 @@ def kth_smallest_run(arr, k):
     },
     {
       id: 'early-exit',
-      question: '1 ≤ k ≤ n. Should your traversal visit all n nodes to find the kth smallest?',
+      highlight: { location: 'constraint', text: '1 <= k <= n <= 10^4' },
+      question: 'A constraint that ties two variables together, like k to n here, often hints at when you can stop early instead of doing the full amount of work. 1 ≤ k ≤ n. Should your traversal visit all n nodes to find the kth smallest?',
       options: [
         { label: 'Yes — collect all values, sort, return index k-1', isCorrect: false, feedback: 'A BST already gives you sorted order via inorder traversal — sorting collected values throws away that free ordering. Collecting all n values is also O(n) space when you only need to count k steps.' },
         { label: 'No — stop as soon as you have visited k nodes inorder', isCorrect: true },
@@ -72,7 +75,8 @@ def kth_smallest_run(arr, k):
     },
     {
       id: 'constraint-size',
-      question: 'n ≤ 10⁴ and k ≤ n. What is the worst-case complexity of an inorder traversal approach?',
+      highlight: { location: 'constraint', text: '1 <= k <= n <= 10^4' },
+      question: 'Input-size bounds tell you the ceiling on total work, which is exactly what worst-case complexity analysis measures. n ≤ 10⁴ and k ≤ n. What is the worst-case complexity of an inorder traversal approach?',
       options: [
         { label: 'O(k) — you stop after k nodes', isCorrect: false, feedback: 'O(k) is the average case when k is small, but the worst case is k=n — you must visit all n nodes. The early exit helps in practice but the worst case is still O(n).' },
         { label: 'O(n) — you may visit all nodes when k = n', isCorrect: true },
@@ -87,7 +91,7 @@ def kth_smallest_run(arr, k):
     },
     {
       id: 'stack-vs-recursion',
-      question: 'An iterative inorder traversal uses an explicit stack. What is the space complexity of either approach?',
+      question: 'The way an algorithm tracks its backtracking path — recursion or an explicit stack — usually determines its space complexity. An iterative inorder traversal uses an explicit stack. What is the space complexity of either approach?',
       options: [
         { label: 'O(1) — tree pointers are already there', isCorrect: false, feedback: 'An inorder traversal must remember which nodes to come back to after visiting a left subtree. That backtracking requires O(h) memory — either in the call stack (recursive) or an explicit stack (iterative).' },
         { label: 'O(h) where h is the tree height', isCorrect: true },
@@ -101,4 +105,22 @@ def kth_smallest_run(arr, k):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def kth_smallest(self, root, k):
+        stack = []
+        node = root
+        count = 0
+        while stack or node:
+            while node:
+                stack.append(node)
+                node = node.left
+            node = stack.pop()
+            count += 1
+            if count == k:
+                return node.val
+            node = node.right
+        return -1`,
+  solutionComplexity: { time: 'O(h + k)', space: 'O(h)' },
+  solutionCaveat: 'The traversal returns the instant <code>count == k</code>, without ever finishing the rest of the tree — for a small <code>k</code>, this means only a fraction of the tree is ever visited, in contrast to collecting-and-sorting approaches that must always touch every node.',
+  solutionExplanation: 'An explicit stack simulates inorder traversal (left, root, right) without recursion: descending all the way left before processing a node reproduces the BST\'s ascending sorted order directly, since every value in a left subtree is smaller than the node above it. Counting each node as it\'s popped and stopping the moment that count reaches <code>k</code> exploits the fact that inorder order is exactly sorted order — the k-th node visited is, by definition, the k-th smallest value in the tree.',
 }

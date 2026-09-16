@@ -8,30 +8,43 @@ export default {
     { input: 'head = [1,2,3,4,5,6]', output: '[4,5,6]', explanation: 'Two middles: 3 and 4. Return second middle.' },
   ],
   constraints: ['1 ≤ list length ≤ 100', '1 ≤ Node.val ≤ 100'],
-  starterCode: `def middle_node(head):
-  slow = fast = head
-  while fast and fast.next:
-      slow = slow.next
-      fast = fast.next.next
-  return slow`,
-  functionName: 'middle_node',
+  starterCode: `class ListNode:
+  def __init__(self, val=0, next=None):
+      self.val = val
+      self.next = next
+
+class Solution:
+    def middle_node(self, head):
+        pass`,
+  functionName: 'middle_node_run',
+  runnerSetup: `def _tol(h):
+  r=[]
+  while h: r.append(h.val); h=h.next
+  return r
+def _ton(a):
+  if not a: return None
+  h=ListNode(a[0]); c=h
+  for v in a[1:]: c.next=ListNode(v); c=c.next
+  return h
+def middle_node_run(a):
+  return _tol(Solution().middle_node(_ton(a)))`,
   conceptId: 'linked-list',
   testCases: [
     { label: 'Odd length', args: [[1,2,3,4,5]], expected: [3,4,5] },
     { label: 'Even length', args: [[1,2,3,4,5,6]], expected: [4,5,6] },
     { label: 'Single', args: [[1]], expected: [1] },
   ],
-  bruteHint: 'Describe counting the list length in one pass, then walking to the middle in a second pass',
-  optimizeHint: 'Name the two-pointer technique that finds the middle node in a single pass',
+  bruteHint: 'The brute-force approach counts the list length in one full pass, then walks to index length // 2 in a second pass — O(n) time, O(1) space, but two separate traversals of the list. Can you find the middle by making only one pass over the list, without ever knowing its length up front?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'no-random-access',
-      question: 'A singly linked list has no length property and no index access. Finding the middle by index requires…',
+      question: 'Knowing which operations a data structure supports rules out approaches that need them. A singly linked list has no length property and no index access. Finding the middle by index requires…',
       options: [
         { label: 'One pass — middle is at index length // 2', isCorrect: false, feedback: 'You don\'t know the length without traversing first. Finding length // 2 takes one full pass, then a second pass to reach that index — that\'s two passes total, not one.' },
         { label: 'Two passes — one to count length, one to reach middle', isCorrect: true },
         { label: 'No traversal — check head.next.next', isCorrect: false, feedback: 'Checking head.next.next only works for a 3-node list. For an arbitrary-length list you cannot compute the middle without traversal.' },
-        { label: 'A sort to bring the median to the middle', isCorrect: false, feedback: 'Sorting by value has nothing to do with structural middle position. The middle is determined by list length, not node values.' },
+        { label: 'Reordering the values by size so the middle one settles into place', isCorrect: false, feedback: 'Sorting by value has nothing to do with structural middle position. The middle is determined by list length, not node values.' },
       ],
       correctFeedback: 'Without length information, the naive approach is: count all nodes in one pass, then walk to index length // 2 in a second pass. The starter code\'s two-pointer approach achieves the same in one pass.',
       wrongFeedback: [
@@ -41,7 +54,8 @@ export default {
     },
     {
       id: 'even-length-tie-break',
-      question: '"If there are two middle nodes, return the second one." For a 6-node list [1,2,3,4,5,6], the output is [4,5,6]. This means…',
+      question: 'Precise wording in a problem statement can rule out an approach that looks right but isn\'t. "If there are two middle nodes, return the second one." For a 6-node list [1,2,3,4,5,6], the output is [4,5,6]. This means…',
+      highlight: { location: 'description', text: 'If there are two middle nodes, return the second one.' },
       options: [
         { label: 'Always return the node at index length // 2 - 1', isCorrect: false, feedback: 'Index length // 2 - 1 = 2 for a 6-node list, pointing to node 3 — the first middle, not the second. The spec says return the second, which is at index length // 2.' },
         { label: 'For even-length lists, prefer the right of the two middles', isCorrect: true },
@@ -56,7 +70,7 @@ export default {
     },
     {
       id: 'fast-slow-pointer-signal',
-      question: 'The starter code uses slow and fast pointers — slow moves one step, fast moves two. When fast reaches the end, slow is at the middle. This approach uses…',
+      question: 'Recognizing the time and space cost of a technique tells you whether it\'s actually efficient. The starter code uses slow and fast pointers — slow moves one step, fast moves two. When fast reaches the end, slow is at the middle. This approach uses…',
       options: [
         { label: 'O(n) time and O(n) space', isCorrect: false, feedback: 'The two-pointer approach uses O(1) space — just two pointer variables. No auxiliary storage grows with list length.' },
         { label: 'O(n) time and O(1) space', isCorrect: true },
@@ -71,7 +85,7 @@ export default {
     },
     {
       id: 'termination-condition',
-      question: 'The loop condition is `while fast and fast.next`. Why must you check fast.next and not just fast?',
+      question: 'Understanding why each part of a loop condition exists rules out edge cases that would otherwise crash. The loop condition is `while fast and fast.next`. Why must you check fast.next and not just fast?',
       options: [
         { label: 'fast.next prevents the loop from running on a single node', isCorrect: false, feedback: 'For a single node, fast is non-null so the first condition holds. fast.next is null so the loop exits immediately — that\'s correct behavior, but the reason to check fast.next is about even-length lists.' },
         { label: 'fast.next.next would crash if fast.next is null', isCorrect: true },
@@ -85,4 +99,14 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def middle_node(self, head):
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+        return slow`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'Checking both <code>fast</code> and <code>fast.next</code> in the loop condition — not just <code>fast</code> — is what prevents an <code>AttributeError</code> from <code>None.next</code> on the final step of an odd-length list, where <code>fast.next</code> can legitimately be <code>None</code> right when the loop should stop.',
+  solutionExplanation: 'Advancing <code>fast</code> twice for every one step of <code>slow</code> means that by the time <code>fast</code> reaches the end of the list, <code>slow</code> has covered exactly half the distance — landing it on the middle node in a single pass, with no separate length-counting step required. For an even-length list, <code>fast</code> runs out one step earlier, which naturally lands <code>slow</code> on the *second* of the two middle nodes, matching what the problem asks for.',
 }

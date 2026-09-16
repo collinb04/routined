@@ -29,12 +29,12 @@ export default {
     { label: 'odd/even', args: [['add_num','add_num','find_median','add_num','find_median'],[[1],[2],[],[3],[]]], expected: [1.5,2.0] },
     { label: 'single', args: [['add_num','find_median'],[[6],[]]], expected: [6.0] },
   ],
-  bruteHint: 'Describe what re-sorting (or inserting into a sorted list) the entire stream on every add_num call would cost.',
-  optimizeHint: 'Name the pair of structures that track the boundary elements between the lower and upper halves of the stream.',
+  bruteHint: 'The brute-force approach keeps all numbers in a sorted list, inserting each new value into its correct position and reading off the middle element(s) for find_median. Inserting into a sorted array to maintain order costs O(n) per insertion, since existing elements must shift to make room. With add_num and find_median interleaved many times as the stream grows, what does that O(n) insertion cost do to your overall performance over a long stream?',
+  optimizeComplexity: { time: 'O(log n)', space: 'O(n)' },
   clues: [
     {
       id: 'streaming-structure',
-      question: 'add_num and find_median are called interleaved many times. This means you need a data structure that…',
+      question: 'How often an operation will be called — and in what order — tells you whether you can defer work or must handle it incrementally. add_num and find_median are called interleaved many times. This means you need a data structure that…',
       options: [
         { label: 'Sorts the array on every find_median call', isCorrect: false, feedback: 'Sorting on every find_median call costs O(n log n) per query. With many interleaved calls, that compounds quickly. You need a structure that stays ordered incrementally.' },
         { label: 'Maintains order incrementally as elements arrive', isCorrect: true },
@@ -46,10 +46,11 @@ export default {
         'find_median can be called after every single insertion. What does that rule out about when you can sort?',
         'You need the median available at any moment. What structure stays ordered as you insert elements one at a time?',
       ],
+      highlight: { location: 'description', text: 'returns the median of all elements so far' },
     },
     {
       id: 'median-access-pattern',
-      question: 'The median is always the middle element (or average of two middle elements). What does this tell you about which elements you need fast access to?',
+      question: 'The exact value you must produce narrows down which pieces of the underlying data you actually need fast access to. The median is always the middle element (or average of two middle elements). What does this tell you about which elements you need fast access to?',
       options: [
         { label: 'The maximum element', isCorrect: false, feedback: 'The maximum is an extreme, not the middle. Fast max access does not help you find the median unless the structure also exposes the boundary of the lower half.' },
         { label: 'The top and bottom of the two halves', isCorrect: true },
@@ -61,10 +62,11 @@ export default {
         'Imagine the stream split into a lower half and an upper half. Which specific element from each half determines the median?',
         'You need the largest element of the bottom half and the smallest element of the top half. What structure exposes those two elements instantly?',
       ],
+      highlight: { location: 'description', text: 'the middle element' },
     },
     {
       id: 'two-heap-balance',
-      question: 'You split elements into a lower half (max-heap) and an upper half (min-heap). What invariant must you maintain after each add_num?',
+      question: 'When a solution relies on two cooperating structures, the invariant you maintain between them determines whether the answer stays correct after every update. You split elements into a lower half (max-heap) and an upper half (min-heap). What invariant must you maintain after each add_num?',
       options: [
         { label: 'Both heaps always have the same size', isCorrect: false, feedback: 'Sizes can differ by one when the total count is odd. Forcing equal sizes would be impossible for odd-length streams.' },
         { label: 'Sizes differ by at most one, and max-heap top ≤ min-heap top', isCorrect: true },
@@ -79,7 +81,7 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'find_median returns a float even when all elements are integers. What does this tell you?',
+      question: 'The exact return type — and how it varies across cases — tells you which branches your logic must explicitly handle. find_median returns a float even when all elements are integers. What does this tell you?',
       options: [
         { label: 'You need to store elements as floats', isCorrect: false, feedback: 'Elements can remain integers. The float output comes from the even-length case — averaging two integers — not from how elements are stored.' },
         { label: 'You must handle even-length and odd-length cases separately', isCorrect: true },
@@ -91,6 +93,27 @@ export default {
         'The first example returns 1.5 for two elements and 2.0 for three. What changes between those two calls?',
         'When total count is odd vs. even, how does the median calculation differ? Your return logic needs to branch on that.',
       ],
+      highlight: { location: 'description', text: 'the mean of the two middle elements' },
     },
   ],
+  solutionCode: `import heapq
+
+class MedianFinder:
+    def __init__(self):
+        self.small = []
+        self.large = []
+
+    def add_num(self, num):
+        heapq.heappush(self.small, -num)
+        heapq.heappush(self.large, -heapq.heappop(self.small))
+        if len(self.large) > len(self.small):
+            heapq.heappush(self.small, -heapq.heappop(self.large))
+
+    def find_median(self):
+        if len(self.small) > len(self.large):
+            return float(-self.small[0])
+        return (-self.small[0] + self.large[0]) / 2.0`,
+  solutionComplexity: { time: 'O(log n) per add, O(1) per median', space: 'O(n)' },
+  solutionCaveat: 'Every number is pushed to <code>small</code> first and then shuffled to <code>large</code> if needed — never pushed to <code>large</code> directly — which guarantees every value passes through the max-heap\'s comparison against the current lower half before landing on the correct side, even if it should end up in <code>large</code>.',
+  solutionExplanation: 'Splitting all numbers into a max-heap of the smaller half and a min-heap of the larger half, kept within one element of each other in size, means the median is always sitting at the top of one or both heaps — no sorting required. Routing every new number through <code>small</code> first and immediately rebalancing by moving its largest element to <code>large</code> keeps the invariant "everything in small ≤ everything in large" true after every single insertion, which is what makes an O(1) median lookup possible.',
 }

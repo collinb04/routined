@@ -13,8 +13,9 @@ export default {
       self.val = val
       self.next = next
 
-def reorder_list(head):
-  pass`,
+class Solution:
+    def reorder_list(self, head):
+        pass`,
   functionName: 'reorder_list_run',
   conceptId: 'linked-list',
   runnerSetup: `def _tol(h):
@@ -28,18 +29,19 @@ def _ton(a):
   return h
 def reorder_list_run(arr):
   head = _ton(arr)
-  reorder_list(head)
+  Solution().reorder_list(head)
   return _tol(head)`,
   testCases: [
     { label: '[1,2,3,4]', args: [[1,2,3,4]], expected: [1,4,2,3] },
     { label: '[1,2,3,4,5]', args: [[1,2,3,4,5]], expected: [1,5,2,4,3] },
   ],
-  bruteHint: 'Describe storing references to every node in an array so you can jump to indices from both ends',
-  optimizeHint: 'Name the combination of pointer techniques — finding the middle, reversing a half, and merging — that solves this in place',
+  bruteHint: 'The brute-force approach is to make a single pass through the list, storing a reference to every node in an array so you get O(1) index-based access to any node. From there you can build the reordered list by picking alternately from the front and back of that array and relinking the nodes, which is only O(n) time. But storing a reference to every node means allocating memory proportional to the list\'s size — with up to 50,000 nodes, what does that extra array cost you, and could the same reordering be done with just a constant number of pointers instead?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'interleaving-pattern',
-      question: 'The pattern is L0 → Ln → L1 → Ln-1 → .... This interleaves the front half with the reversed back half. What three-step approach does this suggest?',
+      question: 'Recognizing the shape of a required output often reveals which technique fits the problem before you write any code. The pattern is L0 → Ln → L1 → Ln-1 → .... This interleaves the front half with the reversed back half. What three-step approach does this suggest?',
+      highlight: { location: 'description', text: '<code>L0 → Ln → L1 → Ln-1 → L2 → Ln-2 → ...</code>' },
       options: [
         { label: 'Sort by distance from both ends simultaneously', isCorrect: false, feedback: 'Sorting doesn\'t produce this pattern — node Ln must come right after L0, which is a structural transformation, not a sort key. The interleaving requires you to combine two specific sub-sequences.' },
         { label: 'Find middle, reverse second half, merge the two halves', isCorrect: true },
@@ -54,7 +56,8 @@ def reorder_list_run(arr):
     },
     {
       id: 'no-value-modification',
-      question: '"You may not modify the values in the list\'s nodes. Only nodes themselves may be changed." This means…',
+      question: 'Constraints on what you\'re allowed to modify often rule out an entire category of easy solutions. "You may not modify the values in the list\'s nodes. Only nodes themselves may be changed." This means…',
+      highlight: { location: 'description', text: 'You may not modify the values in the list\'s nodes. Only nodes themselves may be changed.' },
       options: [
         { label: 'Collect all values into an array and write them back in reorder', isCorrect: false, feedback: 'Writing reordered values back into nodes modifies node values — exactly what the constraint forbids. You must move the actual node objects by rewiring their next pointers.' },
         { label: 'Rewire next pointers to achieve the new ordering', isCorrect: true },
@@ -69,12 +72,13 @@ def reorder_list_run(arr):
     },
     {
       id: 'constraint-large-n',
-      question: 'Up to 5 × 10⁴ nodes tells you…',
+      question: 'Large input bounds are usually a signal for exactly how efficient your solution needs to be. Up to 5 × 10⁴ nodes tells you…',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [1, 5 * 10^4]' },
       options: [
         { label: 'O(n²) is fine — 50,000 nodes is small', isCorrect: false, feedback: 'O(n²) at n = 50,000 is 2.5 billion operations — far too slow for Python, which handles roughly 10 million simple operations per second. You need O(n).' },
         { label: 'O(n) time is required; naive re-scanning is too slow', isCorrect: true },
         { label: 'Use O(n) extra space to simplify the logic', isCorrect: false, feedback: 'O(n) space (e.g. a deque of all nodes) would work at this scale, but the three-step approach — find middle, reverse, merge — does it in O(1) space. Extra space is not required.' },
-        { label: 'Recursion is the clearest approach', isCorrect: false, feedback: 'Python\'s default recursion limit is 1,000. With up to 50,000 nodes, a recursive approach would hit that limit. An iterative implementation is needed.' },
+        { label: 'Solving smaller sub-lists first and combining the results is the clearest approach', isCorrect: false, feedback: 'Python\'s default recursion limit is 1,000. With up to 50,000 nodes, a recursive approach would hit that limit. An iterative implementation is needed.' },
       ],
       correctFeedback: 'n = 50,000 rules out O(n²). The find-middle + reverse-second-half + merge approach is three O(n) passes — O(n) total, O(1) space. Each step is a clean linear traversal.',
       wrongFeedback: [
@@ -84,7 +88,7 @@ def reorder_list_run(arr):
     },
     {
       id: 'second-half-reversal',
-      question: 'To merge L0…Lm with Ln…Lm+1 in the interleaved pattern, the second half must be reversed. Why can\'t you interleave without reversing first?',
+      question: 'Working out why a specific step is necessary — not just what it is — helps you avoid subtle ordering bugs. To merge L0…Lm with Ln…Lm+1 in the interleaved pattern, the second half must be reversed. Why can\'t you interleave without reversing first?',
       options: [
         { label: 'The second half is in sorted order and needs reordering', isCorrect: false, feedback: 'Sort order is irrelevant here — the reversal is not about values. Without reversing, you can\'t access Ln first; you\'d be interleaving Lm+1 (the start of the second half) before Ln.' },
         { label: 'Without reversal you\'d interleave from the middle outward, not from the ends inward', isCorrect: true },
@@ -98,4 +102,30 @@ def reorder_list_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def reorder_list(self, head):
+        if not head or not head.next:
+            return
+        slow, fast = head, head.next
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+        second = slow.next
+        slow.next = None
+        prev = None
+        while second:
+            nxt = second.next
+            second.next = prev
+            prev = second
+            second = nxt
+        first, second = head, prev
+        while second:
+            tmp1, tmp2 = first.next, second.next
+            first.next = second
+            second.next = tmp1
+            first = tmp1
+            second = tmp2`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The second half is reversed *before* interleaving, not after — reversing turns "first half in order, second half in order" into "first half in order, second half in reverse order," which is exactly what makes a simple alternating splice (one node from each side in turn) produce <code>L0 → Ln → L1 → Ln-1 → ...</code> instead of the wrong <code>L0 → L(mid) → L1 → L(mid+1) → ...</code>.',
+  solutionExplanation: 'The target order pairs the list\'s front with its back, working inward — exactly what you get by finding the midpoint, reversing the second half so it now runs from the *end* backward, and then weaving the two halves together one node at a time. Every step (finding the midpoint, reversing, splicing) is a single O(n) pointer-only pass with no extra list or array, which is what keeps the whole operation in place.',
 }

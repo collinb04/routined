@@ -8,8 +8,10 @@ export default {
     { input: 'numRows = 1', output: '[[1]]' },
   ],
   constraints: ['1 ≤ numRows ≤ 30'],
-  starterCode: `def generate(num_rows):
-  pass`,
+  starterCode: `class Solution:
+    def generate(self, num_rows):
+        pass`,
+  runnerSetup: 'generate = Solution().generate',
   functionName: 'generate',
   conceptId: 'arrays',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: '1 row', args: [1], expected: [[1]] },
     { label: '3 rows', args: [3], expected: [[1],[1,1],[1,2,1]] },
   ],
-  bruteHint: 'Describe recomputing each row from scratch using combinatorics formulas and why that repeats work',
-  optimizeHint: 'Name what relationship between a row and the row before it lets you build each value directly instead',
+  bruteHint: 'One approach recomputes every value directly from the binomial coefficient formula C(row, k), rather than reusing anything already computed. Each C(row, k) takes O(row) work to compute from scratch, and you would repeat that for every entry in every one of the numRows rows, giving roughly O(numRows³) total work. If two adjacent values already sitting in the row above give you everything needed to compute the value below them, why keep recomputing from the formula each time?',
+  optimizeComplexity: { time: 'O(numRows²)', space: 'O(numRows²)' },
   clues: [
     {
       id: 'output-structure',
-      question: 'The output is a list of lists (rows). What does that tell you about how to build the result?',
+      question: 'Recognizing what each output value depends on tells you which piece must already be built before you can compute the next one. The output is a list of lists (rows). What does that tell you about how to build the result?',
+      highlight: { location: 'description', text: 'each number is the sum of the two numbers directly above it' },
       options: [
         { label: 'Compute each value independently', isCorrect: false, feedback: 'Each interior value depends on the two values above it in the previous row. You cannot compute row i without row i−1 already computed.' },
         { label: 'Build one row at a time using the previous row', isCorrect: true },
@@ -37,7 +40,7 @@ export default {
     },
     {
       id: 'row-boundaries',
-      question: 'Every row starts and ends with 1. What does this tell you about building a new row?',
+      question: 'Spotting values that never actually need computing tells you how much real work remains for each row. Every row starts and ends with 1. What does this tell you about building a new row?',
       options: [
         { label: 'Only the first row has boundaries', isCorrect: false, feedback: 'Every row begins and ends with 1 — not just the first. The boundaries are always known, so you only need to compute interior elements.' },
         { label: 'Initialize each row with leading and trailing 1s', isCorrect: true },
@@ -52,11 +55,12 @@ export default {
     },
     {
       id: 'small-constraint',
-      question: 'numRows ≤ 30. What does this say about the complexity requirements?',
+      question: 'Recognizing how small the input bound is tells you whether optimization is even necessary here. numRows ≤ 30. What does this say about the complexity requirements?',
+      highlight: { location: 'constraint', text: '1 ≤ numRows ≤ 30' },
       options: [
         { label: 'Only O(log n) solutions are acceptable', isCorrect: false, feedback: 'numRows ≤ 30 is tiny. Even an O(n²) approach processes at most 30² = 900 elements — any reasonable implementation is fast enough.' },
         { label: 'Even O(n²) is fast enough; simplicity wins', isCorrect: true },
-        { label: 'You need memoization to avoid recomputation', isCorrect: false, feedback: 'Each row is computed once and used once — there is no repeated subproblem. Memoization adds complexity without benefit at this scale.' },
+        { label: 'You need to cache previously computed results to avoid recomputation', isCorrect: false, feedback: 'Each row is computed once and used once — there is no repeated subproblem. Caching adds complexity without benefit at this scale.' },
         { label: 'Input size is too small to matter to the algorithm', isCorrect: false, feedback: 'Size matters because it tells you simplicity is acceptable. Knowing n ≤ 30 lets you choose the straightforward row-by-row build without worrying about efficiency.' },
       ],
       correctFeedback: 'The total number of elements is 1 + 2 + … + 30 = 465. Any O(n²) or even O(n³) approach is trivially fast. Clarity of implementation is more important than micro-optimization here.',
@@ -66,4 +70,17 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def generate(self, num_rows):
+        result = [[1]]
+        for i in range(1, num_rows):
+            prev = result[-1]
+            row = [1]
+            for j in range(1, i):
+                row.append(prev[j - 1] + prev[j])
+            row.append(1)
+            result.append(row)
+        return result[:num_rows]`,
+  solutionComplexity: { time: 'O(numRows²)', space: 'O(numRows²)' },
+  solutionExplanation: 'Every interior value is defined directly in terms of the row above it — "the sum of the two numbers directly above" — so each new row can be built purely by looking at the row that was just finished, with no need to recompute anything from a binomial-coefficient formula. Every row starts and ends with 1 (an edge has only one neighbor above it), and everything in between is the sum of the two values straddling it in the previous row.',
 }

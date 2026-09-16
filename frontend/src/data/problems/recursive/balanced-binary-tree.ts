@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def is_balanced(root):
-  pass`,
+class Solution:
+    def is_balanced(self, root):
+        pass`,
   functionName: 'is_balanced_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def is_balanced_run(arr):
-  return is_balanced(_build(arr))`,
+  return Solution().is_balanced(_build(arr))`,
   testCases: [
     { label: 'balanced', args: [[3,9,20,null,null,15,7]], expected: true },
     { label: 'unbalanced', args: [[1,2,2,3,3,null,null,4,4]], expected: false },
   ],
-  bruteHint: 'Describe what happens when you call a separate height function at every node, and why that repeats work',
-  optimizeHint: 'Name the technique of computing height and balance together in one bottom-up pass',
+  bruteHint: 'The brute-force approach calls a separate height-computing function at every node, comparing its left and right subtree heights to check the balance condition there. Because computing height from a node means re-walking that node\'s entire subtree, and this happens at every one of the n nodes, the total work becomes O(n²) in the worst case — for example on a skewed, chain-shaped tree. Each call redoes work that a deeper, previous call already performed. Could you restructure the traversal so each subtree\'s height is computed exactly once and reused by its ancestors?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'definition-scope',
-      question: '"The depth of the two subtrees of every node never differs by more than one." What does "every node" imply about where you must check?',
+      question: 'Precise wording in a definition like this often marks exactly where your solution\'s logic must apply — not just at the top level. "The depth of the two subtrees of every node never differs by more than one." What does "every node" imply about where you must check?',
+      highlight: { location: 'description', text: 'the depth of the two subtrees of every node never differs by more than one.' },
       options: [
         { label: 'Check only the root\'s two subtrees', isCorrect: false, feedback: 'The root\'s subtrees could be balanced while a deeper node is not. The definition requires the condition to hold at every single node in the tree.' },
         { label: 'Check the balance condition at each node recursively', isCorrect: true },
@@ -57,7 +59,7 @@ def is_balanced_run(arr):
     },
     {
       id: 'output-type',
-      question: 'The output is a boolean. What does that mean for how you communicate imbalance up the recursion?',
+      question: 'The shape of a function\'s return type is often a clue about what auxiliary state you need to thread through recursive calls. The output is a boolean. What does that mean for how you communicate imbalance up the recursion?',
       options: [
         { label: 'Return the height of each subtree', isCorrect: false, feedback: 'Height alone is not the final output, but you do need it to compute the balance condition. The trick is returning both height and balance status together — or using a sentinel value for "unbalanced."' },
         { label: 'Propagate a failure sentinel so you stop early', isCorrect: true },
@@ -72,7 +74,8 @@ def is_balanced_run(arr):
     },
     {
       id: 'complexity-naive',
-      question: 'A naive approach calls a separate height function at each node. With up to 5,000 nodes, what is the complexity of that approach?',
+      question: 'Node-count constraints are typically included so you can judge whether a naive, repeated-work approach will actually finish in time. A naive approach calls a separate height function at each node. With up to 5,000 nodes, what is the complexity of that approach?',
+      highlight: { location: 'constraint', text: 'The number of nodes is in [0, 5000]' },
       options: [
         { label: 'O(n) — each node visited once', isCorrect: false, feedback: 'If you call a height function at each node and that function itself traverses the subtree, each node is visited multiple times — not once.' },
         { label: 'O(n²) — height recomputed at each node', isCorrect: true },
@@ -86,4 +89,23 @@ def is_balanced_run(arr):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_balanced(self, root):
+        def height(node):
+            if not node:
+                return 0
+            left = height(node.left)
+            if left == -1:
+                return -1
+            right = height(node.right)
+            if right == -1:
+                return -1
+            if abs(left - right) > 1:
+                return -1
+            return 1 + max(left, right)
+
+        return height(root) != -1`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The moment a subtree is found unbalanced, <code>-1</code> propagates straight up through every ancestor without computing any further heights — that sentinel both reports the failure and doubles as an early-exit signal, so no node above the first imbalance ever does unnecessary work.',
+  solutionExplanation: 'A single post-order pass computes each node\'s height while checking that node\'s own balance condition at the same time, since a node cannot decide whether it is balanced until both of its subtrees have reported their heights. Returning the height itself on success but a sentinel of <code>-1</code> on failure means a single value serves double duty — real height information flows up when everything below is fine, but the instant any subtree fails, that failure is all that needs to propagate, collapsing what would otherwise be O(n²) repeated height recomputation into a single O(n) traversal.',
 }

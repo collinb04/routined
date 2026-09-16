@@ -37,17 +37,18 @@ export default {
     { label: 'push/get_min/pop', args: [['push','push','push','get_min','pop','top','get_min'],[-2,0,-3,0,0,0,0]], expected: [-3,0,-2] },
     { label: 'simple', args: [['push','push','get_min','pop','get_min'],[5,3,0,0,0]], expected: [3,5] },
   ],
-  bruteHint: 'Describe scanning the whole stack to find the minimum on every get_min() call and its time complexity',
-  optimizeHint: 'Name what extra structure you could maintain alongside the stack so the minimum is always available in O(1)',
+  bruteHint: 'The brute-force approach scans the entire stack on every get_min() call to find the current minimum, which is correct but costs O(n) time per call. If push and get_min operations are interleaved heavily across n total operations, how much total work would that scanning approach cost, and does that satisfy an O(1) per-operation requirement?',
+  optimizeComplexity: { time: 'O(1)', space: 'O(n)' },
   clues: [
     {
       id: 'get-min-complexity',
-      question: 'get_min() must run in O(1) time. What does that rule out?',
+      question: 'We can rule out certain approaches based on the time complexity required for an operation. get_min() must run in O(1) time. What does that rule out?',
+      highlight: { location: 'description', text: 'retrieving the minimum element in constant time' },
       options: [
         { label: 'Scanning the stack on each call', isCorrect: false },
         { label: 'Sorting the stack to find the min', isCorrect: false, feedback: 'Sorting takes O(n log n) and destroys stack order. get_min() must be O(1) and leave the stack intact.' },
         { label: 'Storing auxiliary min info per element', isCorrect: true },
-        { label: 'Using a heap to track the minimum', isCorrect: false, feedback: 'A heap gives O(log n) extraction, not O(1). The constraint requires constant time.' },
+        { label: 'Extracting the smallest remaining value in O(log n) time', isCorrect: false, feedback: 'A heap gives O(log n) extraction, not O(1). The constraint requires constant time.' },
       ],
       correctFeedback: 'Scanning or sorting the stack on each call is O(n). To hit O(1), you need to precompute and store the minimum alongside each element as you push.',
       wrongFeedback: [
@@ -57,7 +58,7 @@ export default {
     },
     {
       id: 'pop-invalidates-min',
-      question: 'After pop(), the minimum may change. How do you keep get_min() correct?',
+      question: 'We can determine what information needs to persist based on how the required state changes over time. After pop(), the minimum may change. How do you keep get_min() correct?',
       options: [
         { label: 'Recompute from the remaining stack', isCorrect: false, feedback: 'Recomputing scans the stack in O(n), violating the O(1) requirement.' },
         { label: 'Track the global minimum separately', isCorrect: false, feedback: 'A single global minimum loses history. After popping the current minimum, you have no way to recover the previous minimum without rescanning.' },
@@ -72,7 +73,8 @@ export default {
     },
     {
       id: 'non-empty-guarantee',
-      question: 'The problem guarantees pop, top, and get_min are always called on non-empty stacks. What does that let you skip?',
+      question: 'We can rule out certain defensive checks based on the guarantees the problem gives about input state. The problem guarantees pop, top, and get_min are always called on non-empty stacks. What does that let you skip?',
+      highlight: { location: 'constraint', text: 'Methods pop, top and get_min will always be called on non-empty stacks' },
       options: [
         { label: 'Tracking the stack size', isCorrect: false },
         { label: 'Bounds checking on every operation', isCorrect: true },
@@ -86,4 +88,23 @@ export default {
       ],
     },
   ],
+  solutionCode: `class MinStack:
+    def __init__(self):
+        self.stack = []
+
+    def push(self, val):
+        min_val = val if not self.stack else min(val, self.stack[-1][1])
+        self.stack.append((val, min_val))
+
+    def pop(self):
+        self.stack.pop()
+
+    def top(self):
+        return self.stack[-1][0]
+
+    def get_min(self):
+        return self.stack[-1][1]`,
+  solutionComplexity: { time: 'O(1)', space: 'O(n)' },
+  solutionCaveat: 'Each entry stores "the minimum of everything at or below this point," not just its own value — that redundancy is exactly what makes <code>get_min()</code> O(1): popping never has to recompute anything, since the new top already knows the correct minimum for what remains.',
+  solutionExplanation: 'Pairing every pushed value with the running minimum *at the moment it was pushed* means each stack frame carries its own complete answer to "what is the minimum so far," so popping an element never loses information — the new top was already tracking the correct minimum for everything beneath it. This trades a small constant amount of extra space per element for making every single operation, including <code>get_min()</code>, a direct O(1) lookup instead of a scan.',
 }

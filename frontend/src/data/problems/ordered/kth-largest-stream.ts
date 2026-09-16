@@ -10,33 +10,28 @@ export default {
     '1 ≤ k ≤ nums.length + 1',
     '-10⁴ ≤ nums[i], stream[i] ≤ 10⁴',
   ],
-  starterCode: `import heapq
-
-def kth_in_stream(k, nums, stream):
-  # Hint: maintain a min-heap of size k; heap[0] is always the kth largest
-  results = []
-  # initialize heap with nums...
-  for val in stream:
-      # add val, maintain size k, append heap[0]
-      pass
-  return results`,
+  starterCode: `class Solution:
+    def kth_in_stream(self, k, nums, stream):
+        pass`,
   functionName: 'kth_in_stream',
+  runnerSetup: 'kth_in_stream = Solution().kth_in_stream',
   conceptId: 'heaps',
   testCases: [
-    { label: 'Basic stream', args: [3, [4,5,8,2], [3,5,10,9,4]], expected: [4,5,8,8,8] },
+    { label: 'Basic stream', args: [3, [4,5,8,2], [3,5,10,9,4]], expected: [4,5,5,8,8] },
     { label: 'k=1', args: [1, [1], [2,3]], expected: [2,3] },
     { label: 'Single add', args: [2, [3,1], [2]], expected: [2] },
   ],
-  bruteHint: 'Describe what re-sorting every value seen so far would cost if you did it after each addition.',
-  optimizeHint: 'Explain why a bounded-size heap of exactly k elements is enough to answer each query in log time.',
+  bruteHint: 'The brute-force approach re-sorts every value seen so far after each new addition, then reads off the k-th largest by index. Sorting costs O(n log n), and with n growing across the whole stream, you pay that cost again on every single call. If the stream has m additions, how much total work have you done, and how much of the sorted order do you actually need to keep around?',
+  optimizeComplexity: { time: 'O(log k)', space: 'O(k)' },
   clues: [
     {
       id: 'streaming-constraint',
-      question: 'You must report the k-th largest after every addition. What does this rule out?',
+      question: 'Constraints on when an answer must be produced — after every single update rather than once at the end — often rule out approaches that redo work from scratch each time. You must report the k-th largest after every addition. What does this rule out?',
+      highlight: { location: 'description', text: 'return the kth largest element in the running stream after each addition' },
       options: [
         { label: 'Sorting all seen elements after each addition', isCorrect: false, feedback: 'Sorting after each addition costs O(n log n) per step, where n grows with the stream. A heap maintains order incrementally at O(log k) per addition.' },
         { label: 'Storing every element ever seen', isCorrect: true },
-        { label: 'Using a heap', isCorrect: false, feedback: 'A heap is precisely the right tool here. The streaming constraint rules out approaches that require all elements to be present before computing, not heap-based approaches.' },
+        { label: 'Keeping only a small bounded set of candidates instead of the full history', isCorrect: false, feedback: 'That is precisely the right approach here. The streaming constraint rules out approaches that require all elements to be present before computing, not bounded-candidate approaches.' },
         { label: 'Knowing k in advance', isCorrect: false, feedback: 'k is given upfront and is fixed. The streaming constraint is about needing the answer after each element arrives, not about uncertainty in k.' },
       ],
       correctFeedback: 'You only care about the top k elements. Keeping all seen values wastes memory and slows down the query. A heap of exactly size k is sufficient.',
@@ -47,7 +42,8 @@ def kth_in_stream(k, nums, stream):
     },
     {
       id: 'min-heap-insight',
-      question: 'The hint says "use a min-heap of size k; heap[0] is always the kth largest." Why does the minimum of a size-k heap equal the k-th largest overall?',
+      question: 'Once you have settled on a candidate structure, you need to verify its core invariant actually produces the value the problem asks for — otherwise the choice is just a guess. The hint says "use a min-heap of size k; heap[0] is always the kth largest." Why does the minimum of a size-k heap equal the k-th largest overall?',
+      highlight: { location: 'description', text: 'Use a min-heap of size <code>k</code>.' },
       options: [
         { label: 'Because Python\'s heapq is a min-heap by default', isCorrect: false, feedback: 'That explains the implementation detail, not the logic. The reason heap[0] is the k-th largest is about what a size-k heap containing the top k elements represents, not about Python\'s default.' },
         { label: 'The heap holds the k largest seen; its minimum is ranked exactly k-th', isCorrect: true },
@@ -62,12 +58,13 @@ def kth_in_stream(k, nums, stream):
     },
     {
       id: 'heap-maintenance',
-      question: 'When a new value arrives, how do you maintain a min-heap of exactly size k?',
+      question: 'Knowing which structure to use is only half the battle — you also need a precise rule for keeping it correctly sized as new data arrives. When a new value arrives, how do you maintain a min-heap of exactly size k?',
+      highlight: { location: 'description', text: 'a list of values to add one at a time' },
       options: [
         { label: 'Push the new value; if size > k, pop the maximum', isCorrect: false, feedback: 'A min-heap cannot pop the maximum efficiently — that would require a max-heap or a full scan. The eviction candidate is the minimum (heap[0]), since it is the smallest of the current top-k.' },
         { label: 'Push the new value; if size > k, pop the minimum', isCorrect: true },
-        { label: 'Replace heap[0] with the new value unconditionally', isCorrect: false, feedback: 'If the new value is smaller than heap[0], replacing would insert a value smaller than the current k-th largest — it should be ignored, not inserted. You need a comparison first.' },
-        { label: 'Rebuild the heap from scratch with all seen elements', isCorrect: false, feedback: 'Rebuilding from all seen elements grows with the stream length and loses the constant-size benefit. Incremental push/pop keeps the heap at size k regardless of how long the stream runs.' },
+        { label: 'Replace the smallest tracked value with the new value unconditionally', isCorrect: false, feedback: 'If the new value is smaller than heap[0], replacing would insert a value smaller than the current k-th largest — it should be ignored, not inserted. You need a comparison first.' },
+        { label: 'Rebuild the entire tracking structure from scratch using all seen elements', isCorrect: false, feedback: 'Rebuilding from all seen elements grows with the stream length and loses the constant-size benefit. Incremental push/pop keeps the heap at size k regardless of how long the stream runs.' },
       ],
       correctFeedback: 'Push the new value (O(log k)), then if len(heap) > k, pop the root (O(log k)). The popped element is the smallest of the top k+1 candidates — it drops out of the top k. heap[0] is now the new k-th largest.',
       wrongFeedback: [
@@ -77,11 +74,12 @@ def kth_in_stream(k, nums, stream):
     },
     {
       id: 'initialization',
-      question: 'You are given an initial array nums before the stream begins. How should you initialize the heap?',
+      question: 'Handling the steady-state update rule is not enough — you also need a correct starting point that accounts for any data given before the stream of updates begins. You are given an initial array nums before the stream begins. How should you initialize the heap?',
+      highlight: { location: 'description', text: 'an initial array <code>nums</code>' },
       options: [
-        { label: 'Push all nums elements into the heap, then trim to size k', isCorrect: true },
-        { label: 'Sort nums and take the k largest to seed the heap', isCorrect: false, feedback: 'Sorting works but costs O(n log n). Pushing all elements and trimming is O(n log k), which is tighter. More importantly, the push-and-trim approach is the same logic used for each stream element — consistent and simpler to implement.' },
-        { label: 'Ignore nums; start from an empty heap', isCorrect: false, feedback: 'Ignoring nums means the first stream elements have no prior context. The k-th largest after adding the first stream value depends on all previously seen numbers, including those in nums.' },
+        { label: 'Insert every element of nums, then trim down to size k', isCorrect: true },
+        { label: 'Sort nums and take the k largest as the starting set', isCorrect: false, feedback: 'Sorting works but costs O(n log n). Pushing all elements and trimming is O(n log k), which is tighter. More importantly, the push-and-trim approach is the same logic used for each stream element — consistent and simpler to implement.' },
+        { label: 'Ignore nums; start with nothing tracked', isCorrect: false, feedback: 'Ignoring nums means the first stream elements have no prior context. The k-th largest after adding the first stream value depends on all previously seen numbers, including those in nums.' },
         { label: 'Push only the k largest elements from nums', isCorrect: false, feedback: 'Finding the k largest from nums requires scanning all of nums anyway. Pushing everything and trimming is equivalent work and avoids a separate selection step.' },
       ],
       correctFeedback: 'Push every element of nums into the heap (O(n log k)), then pop until the heap has exactly k elements. This seeds the heap with the top k values from the initial array before any stream values arrive.',
@@ -91,4 +89,22 @@ def kth_in_stream(k, nums, stream):
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def kth_in_stream(self, k, nums, stream):
+        heap = list(nums)
+        heapq.heapify(heap)
+        while len(heap) > k:
+            heapq.heappop(heap)
+        results = []
+        for val in stream:
+            heapq.heappush(heap, val)
+            if len(heap) > k:
+                heapq.heappop(heap)
+            results.append(heap[0])
+        return results`,
+  solutionComplexity: { time: 'O(log k) per add, amortized', space: 'O(k)' },
+  solutionCaveat: 'The heap only ever needs to remember the current top k values, not the full history of everything ever added — every value that gets popped is, by definition, too small to ever matter again once k larger values exist.',
+  solutionExplanation: 'A min-heap capped at size k keeps exactly the k largest values seen so far, with the *smallest of those k* sitting at the root — which is precisely the kth largest overall. Adding a new value and immediately trimming back down to size k (by popping the root when the heap overflows) keeps that invariant true after every single addition, so <code>heap[0]</code> is always a valid answer to read off directly.',
 }

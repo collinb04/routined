@@ -7,20 +7,23 @@ export default {
     { input: 'nums=[[4,10,15,24,26],[0,9,12,20],[5,18,22,30]]', output: '[20,24]', explanation: 'Range [20,24] includes 24 from list 1, 20 from list 2, 22 from list 3.' },
   ],
   constraints: ['nums.length == k', '1 ≤ k ≤ 3500', '1 ≤ nums[i].length ≤ 50', 'All lists are sorted'],
-  starterCode: `def smallest_range(nums):
-  pass`,
+  starterCode: `class Solution:
+    def smallest_range(self, nums):
+        pass`,
+  runnerSetup: 'smallest_range = Solution().smallest_range',
   functionName: 'smallest_range',
   conceptId: 'heap',
   testCases: [
     { label: 'Standard', args: [[[4,10,15,24,26],[0,9,12,20],[5,18,22,30]]], expected: [20,24] },
     { label: 'Two lists', args: [[[1,2,3],[1,2,3]]], expected: [1,1] },
   ],
-  bruteHint: 'Describe the approach of generating every combination of one element per list and checking the range, and why that\'s infeasible here.',
-  optimizeHint: 'Name the data structure that tracks the minimum among one pointer per list so you can advance it in log time.',
+  bruteHint: 'A brute-force approach would generate every combination of picking one element from each of the k lists, compute the range for each combination, and keep the smallest — that means a product of list lengths, up to 50^3500 combinations here, which is astronomically infeasible. Even for a handful of lists this blows up long before reaching the given limits. What smaller, incrementally-updated state could replace tracking every full combination at once?',
+  optimizeComplexity: { time: 'O(n log k)', space: 'O(k)' },
   clues: [
     {
       id: 'coverage-requirement',
-      question: 'The range must include at least one element from each of the k lists. What invariant must your algorithm maintain at every step?',
+      highlight: { location: 'constraint', text: 'nums.length == k' },
+      question: 'Naming the invariant your algorithm must preserve at every step is what turns a vague requirement into a concrete loop condition. The range must include at least one element from each of the k lists. What invariant must your algorithm maintain at every step?',
       options: [
         { label: 'The range always contains exactly one element per list', isCorrect: false, feedback: 'A range can contain multiple elements from one list — what matters is that every list contributes at least one. "Exactly one" is a stronger constraint than the problem requires.' },
         { label: 'One representative from each list is tracked in the current window', isCorrect: true },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'min-heap-frontier',
-      question: 'You track k current elements, one per list. You need the minimum of those k elements efficiently. What structure is right for this?',
+      highlight: { location: 'constraint', text: '1 ≤ k ≤ 3500' },
+      question: 'Spotting a repeated "find the minimum among many tracked values, then swap one out" pattern points straight at a heap-based solution. You track k current elements, one per list. You need the minimum of those k elements efficiently. What structure is right for this?',
       options: [
         { label: 'Scan all k pointers each step to find the minimum', isCorrect: false, feedback: 'Scanning all k pointers each step costs O(k) per step. With up to 3500 lists and 50 elements each, you have up to 175,000 advance steps — O(k) per step gives O(k × total) which is avoidable.' },
         { label: 'A min-heap holding (value, list_index, element_index)', isCorrect: true },
@@ -50,7 +54,8 @@ export default {
     },
     {
       id: 'range-shrinking-strategy',
-      question: 'The range is [min of current elements, max of current elements]. To shrink the range, which pointer should you advance?',
+      highlight: { location: 'constraint', text: 'All lists are sorted' },
+      question: 'Working out exactly which pointer to move to tighten a bound is the crux of turning brute-force enumeration into an efficient advancing strategy. The range is [min of current elements, max of current elements]. To shrink the range, which pointer should you advance?',
       options: [
         { label: 'The pointer at the maximum value', isCorrect: false, feedback: 'Advancing the maximum pointer increases the minimum of the range or keeps it the same, but does not shrink the gap. To shrink [a, b], you need to raise a or lower b — and you can only raise a by advancing the minimum.' },
         { label: 'The pointer at the minimum value', isCorrect: true },
@@ -65,7 +70,8 @@ export default {
     },
     {
       id: 'termination-condition',
-      question: 'When does the algorithm stop?',
+      highlight: { location: 'constraint', text: '1 ≤ nums[i].length ≤ 50' },
+      question: 'Defining a precise stopping condition prevents both premature exits and infinite loops once a list runs out of elements. When does the algorithm stop?',
       options: [
         { label: 'When the range width equals zero', isCorrect: false, feedback: 'A width-zero range is ideal but not always achievable. The algorithm must stop when it can no longer maintain full coverage — not only when it finds a perfect match.' },
         { label: 'When any list\'s pointer reaches the end', isCorrect: true },
@@ -79,4 +85,27 @@ export default {
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def smallest_range(self, nums):
+        heap = []
+        current_max = float('-inf')
+        for i, lst in enumerate(nums):
+            heapq.heappush(heap, (lst[0], i, 0))
+            current_max = max(current_max, lst[0])
+        best = [float('-inf'), float('inf')]
+        while True:
+            val, i, j = heapq.heappop(heap)
+            if current_max - val < best[1] - best[0]:
+                best = [val, current_max]
+            if j + 1 == len(nums[i]):
+                break
+            next_val = nums[i][j + 1]
+            current_max = max(current_max, next_val)
+            heapq.heappush(heap, (next_val, i, j + 1))
+        return best`,
+  solutionComplexity: { time: 'O(n log k)', space: 'O(k)' },
+  solutionCaveat: 'The loop stops the moment any list runs out of a next element to advance to — not because coverage is impossible, but because the smallest possible value that could still keep *every* list represented is now unreachable, so no wider search could ever improve on the best range already found.',
+  solutionExplanation: 'The heap always holds exactly one "current pointer" per list, so its minimum is always the smallest value among all currently-covered elements — a range from that minimum to the running maximum of all current pointers is guaranteed to cover every list. Advancing only the pointer that produced the current minimum (since it is the one holding the range back) and re-checking is exactly the k-way merge pattern, and each such range is a valid candidate to compare against the best one seen so far.',
 }

@@ -13,8 +13,9 @@ export default {
       self.val = val
       self.next = next
 
-def merge_k_lists(lists):
-  pass`,
+class Solution:
+    def merge_k_lists(self, lists):
+        pass`,
   functionName: 'merge_k_lists_run',
   conceptId: 'linked-list',
   runnerSetup: `def _tol(h):
@@ -27,17 +28,17 @@ def _ton(a):
   for v in a[1:]: c.next=ListNode(v); c=c.next
   return h
 def merge_k_lists_run(arrs):
-  return _tol(merge_k_lists([_ton(a) for a in arrs]))`,
+  return _tol(Solution().merge_k_lists([_ton(a) for a in arrs]))`,
   testCases: [
     { label: '3 lists', args: [[[1,4,5],[1,3,4],[2,6]]], expected: [1,1,2,3,4,4,5,6] },
     { label: 'empty', args: [[]], expected: [] },
   ],
-  bruteHint: 'Describe collecting every value into one array, sorting it, and rebuilding the list, and the extra time that costs',
-  optimizeHint: 'Name the data structure that yields the smallest of the k current heads in O(log k)',
+  bruteHint: 'A straightforward approach walks every list, collects all node values into one big array, sorts that array, and rebuilds a new linked list from the sorted values. With N total nodes across all lists, sorting alone costs O(N log N), plus O(N) more to collect and rebuild. Given that each individual list already arrives sorted, does re-sorting everything from scratch make good use of that existing order?',
+  optimizeComplexity: { time: 'O(n log k)', space: 'O(k)' },
   clues: [
     {
       id: 'constraint-total-nodes',
-      question: 'k ≤ 10^4 lists, each with up to 500 nodes, means up to 5 × 10^6 total nodes. Comparing every node to every other is…',
+      question: 'Multiplying constraint bounds together reveals how large the actual workload can get. k ≤ 10^4 lists, each with up to 500 nodes, means up to 5 × 10^6 total nodes. Comparing every node to every other is…',
       options: [
         { label: 'Fine — 5 million nodes is small', isCorrect: false, feedback: 'Comparing all pairs of 5 million nodes is O(N²) — up to 25 × 10^12 comparisons. That\'s not feasible. The total node count tells you that you need O(N log k) or better.' },
         { label: 'O(N²) — too slow by a factor of millions', isCorrect: true },
@@ -52,7 +53,8 @@ def merge_k_lists_run(arrs):
     },
     {
       id: 'sorted-lists-signal',
-      question: 'Each list is "sorted in ascending order." This means…',
+      question: 'Knowing the input is already sorted narrows down which elements can possibly come next. Each list is "sorted in ascending order." This means…',
+      highlight: { location: 'description', text: 'each sorted in ascending order' },
       options: [
         { label: 'You must re-sort the merged list at the end', isCorrect: false, feedback: 'Re-sorting at the end ignores the fact that all lists are already sorted. You can produce a sorted output by always picking the smallest current head — no post-processing sort needed.' },
         { label: 'The next candidate for the output is always one of the k current heads', isCorrect: true },
@@ -67,7 +69,7 @@ def merge_k_lists_run(arrs):
     },
     {
       id: 'k-heads-efficiency',
-      question: 'At each step you pick the minimum of up to k = 10^4 current heads. Scanning all k heads linearly costs O(k) per step. With N total nodes, that is…',
+      question: 'Working out the cost of the naive per-step operation shows whether it scales to the given bounds. At each step you pick the minimum of up to k = 10^4 current heads. Scanning all k heads linearly costs O(k) per step. With N total nodes, that is…',
       options: [
         { label: 'O(N) total — acceptable', isCorrect: false, feedback: 'Each of the N steps costs O(k) for a linear scan, making the total O(N × k). With N = 5 × 10^6 and k = 10^4, that\'s 5 × 10^10 operations — not O(N).' },
         { label: 'O(N × k) — potentially 5 × 10^10 operations', isCorrect: true },
@@ -82,11 +84,11 @@ def merge_k_lists_run(arrs):
     },
     {
       id: 'empty-list-guarantee',
-      question: 'k can be 0 and lists[i] can be empty. This means…',
+      question: 'Edge-case constraints tell you which inputs your code must handle without special-casing them away. k can be 0 and lists[i] can be empty. This means…',
       options: [
         { label: 'An empty input is an error condition', isCorrect: false, feedback: 'The constraints explicitly allow k = 0 (empty lists array) and empty individual lists. These are valid inputs, not errors — your code must handle them without crashing.' },
         { label: 'You must handle empty lists without crashing', isCorrect: true },
-        { label: 'You can skip null-checking inside the heap', isCorrect: false, feedback: 'When a list is exhausted, its head becomes null. Pushing null into your heap or trying to access null.val would crash. You must check before pushing each next pointer.' },
+        { label: 'Null-checking only matters during initial setup, not later', isCorrect: false, feedback: 'When a list is exhausted, its head becomes null. Pushing null into your heap or trying to access null.val would crash. You must check before pushing each next pointer.' },
         { label: 'Empty lists can be removed in preprocessing', isCorrect: false, feedback: 'While filtering empty lists upfront is valid, the signal here is that your algorithm must not assume every list has at least one node. Runtime null checks are still needed as lists become exhausted.' },
       ],
       correctFeedback: 'Both k = 0 and empty individual lists are valid. Your heap initialization must skip null heads, and after extracting a node you must check that node.next is non-null before pushing it back.',
@@ -96,4 +98,24 @@ def merge_k_lists_run(arrs):
       ],
     },
   ],
+  solutionCode: `import heapq
+
+class Solution:
+    def merge_k_lists(self, lists):
+        heap = []
+        for i, node in enumerate(lists):
+            if node:
+                heapq.heappush(heap, (node.val, i, node))
+        dummy = ListNode()
+        curr = dummy
+        while heap:
+            val, i, node = heapq.heappop(heap)
+            curr.next = node
+            curr = curr.next
+            if node.next:
+                heapq.heappush(heap, (node.next.val, i, node.next))
+        return dummy.next`,
+  solutionComplexity: { time: 'O(n log k)', space: 'O(k)' },
+  solutionCaveat: 'Each heap entry includes the list index <code>i</code> as a tiebreaker — without it, two nodes with equal values from different lists would make the tuple comparison fall through to comparing the <code>ListNode</code> objects themselves, which Python cannot order and would raise a <code>TypeError</code>.',
+  solutionExplanation: 'A heap holding one "current smallest unprocessed node" per list always exposes the true overall smallest at its top, so building the merged list is just repeatedly taking that smallest, appending it to the result, and replacing it in the heap with its own successor — the same k-way merge pattern as the two-list version, generalized so the heap does the work of comparing across all k lists at once instead of just two.',
 }

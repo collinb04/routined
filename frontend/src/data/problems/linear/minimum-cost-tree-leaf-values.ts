@@ -7,22 +7,25 @@ export default {
     { input: 'arr = [6,2,4]', output: '32', explanation: 'Two possible trees: 6*(2*4)=48+24 vs (6*2)*4=32.' },
   ],
   constraints: ['2 ≤ arr.length ≤ 40', '1 ≤ arr[i] ≤ 15'],
-  starterCode: `def mct_from_leaf_values(arr):
-  pass`,
+  starterCode: `class Solution:
+    def mct_from_leaf_values(self, arr):
+        pass`,
+  runnerSetup: 'mct_from_leaf_values = Solution().mct_from_leaf_values',
   functionName: 'mct_from_leaf_values',
   conceptId: 'monotonic-stack',
   testCases: [
     { label: 'Three leaves', args: [[6,2,4]], expected: 32 },
     { label: 'Two leaves', args: [[3,5]], expected: 15 },
   ],
-  bruteHint: 'Describe trying every possible binary tree grouping of the leaves recursively and why that blows up',
-  optimizeHint: 'Name the kind of stack that lets you greedily merge the smallest adjacent leaves first',
+  bruteHint: 'The brute-force approach recursively tries every way to split the leaf array into a left and right subtree at each possible position, computing the cost of every resulting tree shape. The number of distinct binary trees for n leaves grows with the Catalan numbers — exponential in n. At arr.length up to 40, would trying every tree shape finish in any reasonable time?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-size',
-      question: 'arr.length ≤ 40 and arr[i] ≤ 15. What does this small constraint allow?',
+      question: 'We can gauge how much computational room we have based on the size constraints on the input. arr.length ≤ 40 and arr[i] ≤ 15. What does this small constraint allow?',
+      highlight: { location: 'constraint', text: '2 ≤ arr.length ≤ 40' },
       options: [
-        { label: 'O(n³) dynamic programming is feasible', isCorrect: true },
+        { label: 'Considering every possible split of every subrange, even revisiting overlapping work, is fast enough', isCorrect: true },
         { label: 'Only O(n) solutions are fast enough', isCorrect: false, feedback: 'With n ≤ 40, even O(n³) is just 64,000 operations. O(n) would be impressive but is not required — the constraint is permissive enough for cubic DP.' },
         { label: 'Brute-force over all possible binary trees', isCorrect: false, feedback: 'The number of distinct binary trees with n leaves is the (n−1)th Catalan number — exponential. Even at n = 40 that is astronomically large. The constraint allows polynomial DP, not pure brute force.' },
         { label: 'You can sort the leaves to minimize cost', isCorrect: false, feedback: 'The order of leaves is fixed — it encodes the tree structure (left-to-right in-order traversal). Sorting would change which trees are valid.' },
@@ -35,7 +38,7 @@ export default {
     },
     {
       id: 'leaf-order-fixed',
-      question: 'The leaf array defines the in-order traversal of the tree. What does "fixed order" mean for how you can split the problem?',
+      question: 'We can determine how the problem is allowed to be decomposed based on the fixed structure of the input array. The leaf array defines the in-order traversal of the tree. What does "fixed order" mean for how you can split the problem?',
       options: [
         { label: 'Split the array at any index into left and right subtrees', isCorrect: true },
         { label: 'Only split at the position of the maximum element', isCorrect: false, feedback: 'You can split at any index — the maximum-element split is one heuristic that minimizes cost for certain cases, but the general solution considers all possible splits.' },
@@ -50,7 +53,8 @@ export default {
     },
     {
       id: 'non-leaf-cost',
-      question: 'Each non-leaf node costs max(left subtree leaves) × max(right subtree leaves). What does this mean for large leaf values?',
+      question: 'We can figure out which values are costly to combine based on how the non-leaf cost is computed. Each non-leaf node costs max(left subtree leaves) × max(right subtree leaves). What does this mean for large leaf values?',
+      highlight: { location: 'description', text: 'each non-leaf node holds the product of the max leaves in its left and right subtrees' },
       options: [
         { label: 'Large leaves should be paired together to reduce cost', isCorrect: false, feedback: 'Pairing two large leaves forces their product to appear as a non-leaf cost. You want large leaves to be "used" as few times as possible — pair them with small neighbors instead.' },
         { label: 'Large leaves should be paired with their smallest adjacent neighbor', isCorrect: true },
@@ -65,7 +69,7 @@ export default {
     },
     {
       id: 'monotonic-stack-signal',
-      question: 'The problem asks you to greedily eliminate the smallest leaves first. What data structure supports this efficiently?',
+      question: 'We can identify which data structure supports the technique based on the access pattern the greedy elimination requires. The problem asks you to greedily eliminate the smallest leaves first. What data structure supports this efficiently?',
       options: [
         { label: 'A min-heap to always remove the smallest leaf', isCorrect: false, feedback: 'A min-heap finds the global minimum, but you need the smallest element adjacent to its neighbors — a local comparison. The heap does not preserve adjacency information.' },
         { label: 'A monotonic stack that maintains decreasing order', isCorrect: true },
@@ -79,4 +83,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def mct_from_leaf_values(self, arr):
+        stack = [float('inf')]
+        total = 0
+        for n in arr:
+            while stack[-1] <= n:
+                mid = stack.pop()
+                total += mid * min(stack[-1], n)
+            stack.append(n)
+        while len(stack) > 2:
+            total += stack.pop() * stack[-1]
+        return total`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The sentinel <code>float(\'inf\')</code> at the stack\'s base guarantees the very first element always gets pushed rather than triggering a pop — without it, the empty-stack case would need its own special handling.',
+  solutionExplanation: 'Greedily merging the smallest leaf with the smaller of its two neighbors, repeatedly, always produces the minimum total cost — because a smaller leaf should be "used up" (multiplied) as early and as cheaply as possible before larger values dominate the rest of the tree. A monotonic decreasing stack finds exactly that: whenever a new leaf is at least as large as the stack\'s top, the top is a local minimum ready to be eliminated, multiplied by the smaller of what remains below it on the stack and the new arriving leaf.',
 }

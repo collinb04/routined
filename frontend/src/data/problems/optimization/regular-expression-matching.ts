@@ -9,8 +9,10 @@ export default {
     { input: 's="ab", p=".*"', output: 'true', explanation: '".*" matches any string.' },
   ],
   constraints: ['1 ≤ s.length ≤ 20', '1 ≤ p.length ≤ 30', 's contains only lowercase letters; p contains lowercase letters, \'.\', \'*\''],
-  starterCode: `def is_match(s, p):
-  pass`,
+  starterCode: `class Solution:
+    def is_match(self, s, p):
+        pass`,
+  runnerSetup: 'is_match = Solution().is_match',
   functionName: 'is_match',
   conceptId: 'dp-2d',
   testCases: [
@@ -19,12 +21,13 @@ export default {
     { label: 'Dot star', args: ['ab','.*'], expected: true },
     { label: 'Complex', args: ['aab','c*a*b'], expected: true },
   ],
-  bruteHint: 'Describe the naive recursion that branches on every possible interpretation of each "*" in the pattern, and why the same (i, j) position pairs get re-explored',
-  optimizeHint: 'Name the 2D DP state that caches whether s[:i] matches p[:j], avoiding re-solving the same prefix pair',
+  bruteHint: 'The brute-force approach recursively tries every possible interpretation of each "*" in the pattern — either skipping the preceding element or consuming another matching character — branching at every position pair (i, j) in s and p. Because each "*" can independently choose to expand or stop, the number of recursive paths grows exponentially, roughly O(2^(m+n)) in the worst case. Many of those branches end up re-deriving the same (i, j) position pair through entirely different call sequences. If the same (i, j) pair is being solved again and again, what technique would let you solve it exactly once and reuse the result?',
+  optimizeComplexity: { time: 'O(m·n)', space: 'O(m·n)' },
   clues: [
     {
       id: 'two-string-state',
-      question: 'You\'re matching string s against pattern p character by character. What state tracks the matching progress?',
+      question: 'When two independent sequences must be traversed together, the DP state has to capture progress in each one separately. You\'re matching string s against pattern p character by character. What state tracks the matching progress?',
+      highlight: { location: 'constraint', text: 's contains only lowercase letters; p contains lowercase letters, \'.\', \'*\'' },
       options: [
         { label: 'A single index into s', isCorrect: false, feedback: 'A single index into s doesn\'t tell you where you are in the pattern. You need to track progress in both s and p independently.' },
         { label: 'Index i into s and index j into p', isCorrect: true },
@@ -39,7 +42,8 @@ export default {
     },
     {
       id: 'star-semantics',
-      question: '"*" matches zero or more of the preceding element. What makes "*" harder than "."?',
+      question: 'Certain pattern characters change how many ways a match can proceed, and identifying that difference tells you where your DP transition needs extra cases. "*" matches zero or more of the preceding element. What makes "*" harder than "."?',
+      highlight: { location: 'description', text: '<code>*</code> (matches zero or more of the preceding element)' },
       options: [
         { label: '"*" can match any character, "." cannot', isCorrect: false, feedback: 'That\'s backwards. "." matches any single character; "*" modifies the preceding element to match zero or more of it. They serve completely different roles.' },
         { label: '"*" can consume zero characters, allowing the pattern to skip ahead', isCorrect: true },
@@ -54,7 +58,8 @@ export default {
     },
     {
       id: 'full-match-requirement',
-      question: '"The match must cover the entire input string." What does this change?',
+      question: 'Whether a problem asks for a full match or just any match changes what your base or terminal state must check. "The match must cover the entire input string." What does this change?',
+      highlight: { location: 'description', text: 'The match must cover the entire input string.' },
       options: [
         { label: 'Return true as soon as any prefix of s matches p', isCorrect: false, feedback: 'A prefix match isn\'t sufficient. For s="aa", p="a", matching only the first "a" would return true — but the correct answer is false because the second "a" is unmatched.' },
         { label: 'The answer is dp[len(s)][len(p)]', isCorrect: true },
@@ -68,4 +73,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_match(self, s, p):
+        m, n = len(s), len(p)
+        dp = [[False] * (n + 1) for _ in range(m + 1)]
+        dp[0][0] = True
+        for j in range(1, n + 1):
+            if p[j - 1] == '*':
+                dp[0][j] = dp[0][j - 2]
+
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if p[j - 1] == '*':
+                    dp[i][j] = dp[i][j - 2]
+                    if p[j - 2] == '.' or p[j - 2] == s[i - 1]:
+                        dp[i][j] = dp[i][j] or dp[i - 1][j]
+                else:
+                    if p[j - 1] == '.' or p[j - 1] == s[i - 1]:
+                        dp[i][j] = dp[i - 1][j - 1]
+        return dp[m][n]`,
+  solutionComplexity: { time: 'O(m · n)', space: 'O(m · n)' },
+  solutionCaveat: 'When <code>p[j-1]</code> is <code>\'*\'</code>, <code>dp[i][j]</code> is true if <code>either</code> the "use zero occurrences" branch (<code>dp[i][j-2]</code>) or the "match one more occurrence" branch (<code>dp[i-1][j]</code>, only when the preceding pattern character actually matches <code>s[i-1]</code>) succeeds — both must be checked since a star can validly resolve either way depending on the rest of the string.',
+  solutionExplanation: 'A <code>\'*\'</code> in the pattern is the one case where a single pattern position corresponds to a genuine choice rather than a single comparison, so <code>dp[i][j]</code> branches: either the starred element is skipped entirely (falling back to <code>dp[i][j-2]</code>, as if it was never in the pattern) or one more occurrence of the preceding element is consumed from <code>s</code> (falling back to <code>dp[i-1][j]</code>, staying at the same pattern position since <code>*</code> can repeat). Every other pattern character is a direct one-to-one comparison against <code>s[i-1]</code>, advancing both indices together, and the row/column of empty-prefix base cases handles patterns like <code>"a*"</code> matching the empty string.',
 }

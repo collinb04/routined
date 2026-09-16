@@ -8,9 +8,11 @@ export default {
     { input: 'nums = [2,0,1]', output: '[0,1,2]' },
   ],
   constraints: ['n == nums.length', '1 ≤ n ≤ 300', 'nums[i] is 0, 1, or 2'],
-  starterCode: `def sort_colors(nums):
-  pass
-  return nums`,
+  starterCode: `class Solution:
+    def sort_colors(self, nums):
+        pass
+        return nums`,
+  runnerSetup: 'sort_colors = Solution().sort_colors',
   functionName: 'sort_colors',
   conceptId: 'arrays',
   testCases: [
@@ -18,12 +20,13 @@ export default {
     { label: 'Three values', args: [[2,0,1]], expected: [0,1,2] },
     { label: 'Already sorted', args: [[0,1,2]], expected: [0,1,2] },
   ],
-  bruteHint: 'Describe counting each color and overwriting the array (or using a library sort), and explain why that takes two passes or is disallowed',
-  optimizeHint: 'Name the three-pointer technique that partitions the array in a single in-place pass',
+  bruteHint: 'A straightforward approach counts how many 0s, 1s, and 2s appear in a first pass, then overwrites the array with that many 0s, 1s, and 2s in order during a second pass — O(n) time, but two full traversals of the array. Alternatively, calling a library sort takes O(n log n) time even though the values only span three possibilities. Since a single traversal is possible here, what extra work is the two-pass counting approach — or the log-n sort — doing that is not actually necessary?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'fixed-value-domain',
-      question: '"nums[i] is 0, 1, or 2" — exactly three possible values. What does this tell you about your approach?',
+      question: 'A tightly bounded set of possible values often signals which structure fits the job. "nums[i] is 0, 1, or 2" — exactly three possible values. What does this tell you about your approach?',
+      highlight: { location: 'constraint', text: 'nums[i] is 0, 1, or 2' },
       options: [
         { label: 'Use a comparison sort', isCorrect: false, feedback: 'A comparison sort treats all values as unknown. When the domain is exactly {0, 1, 2}, you can exploit the structure rather than comparing everything.' },
         { label: 'Track positions for all three values', isCorrect: true },
@@ -38,7 +41,8 @@ export default {
     },
     {
       id: 'in-place-constraint',
-      question: '"Sort them in-place without using a library sort." What constraint does this impose?',
+      question: 'Space constraints tell you what kinds of solutions are ruled out entirely. "Sort them in-place without using a library sort." What constraint does this impose?',
+      highlight: { location: 'description', text: 'sort them in-place without using a library sort.' },
       options: [
         { label: 'O(1) extra space', isCorrect: true },
         { label: 'You must use recursion', isCorrect: false, feedback: 'In-place means you cannot allocate a new array proportional to n — it says nothing about recursion. A pure iterative solution is fine.' },
@@ -53,7 +57,8 @@ export default {
     },
     {
       id: 'single-pass-opportunity',
-      question: 'The problem name hints at the Dutch National Flag algorithm. What does that suggest about the number of passes needed?',
+      question: 'The name of a classic algorithm can be a direct signal about how much work — and how many passes — the optimal solution needs. The problem name hints at the Dutch National Flag algorithm. What does that suggest about the number of passes needed?',
+      highlight: { location: 'description', text: '(Dutch National Flag problem)' },
       options: [
         { label: 'Three passes, one per value', isCorrect: false, feedback: 'Three passes would work, but the Dutch National Flag algorithm achieves the same result in one pass by simultaneously maintaining all three partitions.' },
         { label: 'Two passes — count then place', isCorrect: false, feedback: 'Counting then placing is O(n) but takes two passes. The Dutch National Flag approach handles all three regions in a single traversal.' },
@@ -67,4 +72,21 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def sort_colors(self, nums):
+        low, mid, high = 0, 0, len(nums) - 1
+        while mid <= high:
+            if nums[mid] == 0:
+                nums[low], nums[mid] = nums[mid], nums[low]
+                low += 1
+                mid += 1
+            elif nums[mid] == 1:
+                mid += 1
+            else:
+                nums[mid], nums[high] = nums[high], nums[mid]
+                high -= 1
+        return nums`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'After swapping a 2 to the back, <code>mid</code> does not advance — the value just swapped into <code>mid</code>\'s position came from the unexplored tail and still needs to be classified, unlike the 0-swap case where the value swapped in from <code>low</code> is already known to be a 1 (everything between <code>low</code> and <code>mid</code> is guaranteed 1 at that point).',
+  solutionExplanation: 'Three pointers carve the array into four regions as the scan proceeds: definitely-0 (before <code>low</code>), definitely-1 (between <code>low</code> and <code>mid</code>), unexplored (between <code>mid</code> and <code>high</code>), and definitely-2 (after <code>high</code>). Each comparison at <code>mid</code> either grows the 0-region, grows the 1-region by just moving past a correctly-placed value, or grows the 2-region — every element is examined and placed in one pass, with the three-way split doing in a single traversal what counting-then-overwriting would need two passes for.',
 }

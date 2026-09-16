@@ -8,8 +8,10 @@ export default {
     { input: 'nums=[1,2,3,4,5], k=2', output: '9', explanation: 'Split [1,2,3,4] | [5].' },
   ],
   constraints: ['1 ≤ nums.length ≤ 1000', '0 ≤ nums[i] ≤ 10⁶', '1 ≤ k ≤ min(50, nums.length)'],
-  starterCode: `def split_array(nums, k):
-  pass`,
+  starterCode: `class Solution:
+    def split_array(self, nums, k):
+        pass`,
+  runnerSetup: 'split_array = Solution().split_array',
   functionName: 'split_array',
   conceptId: 'binary-search',
   testCases: [
@@ -17,12 +19,12 @@ export default {
     { label: 'Sequential k=2', args: [[1,2,3,4,5],2], expected: 9 },
     { label: 'k=1', args: [[1,2,3],1], expected: 6 },
   ],
-  bruteHint: 'Describe trying every possible way to partition the array into k subarrays and its exponential time complexity',
-  optimizeHint: 'Name the technique that binary searches over the possible answer values, using a greedy feasibility check at each step',
+  bruteHint: "The brute-force approach enumerates every way to place k-1 split points among the array's boundaries, computes the largest subarray sum for each resulting partition, and keeps the smallest of those maximums. Since split points can fall in any combination of positions, the number of partitions to check grows exponentially with n. With nums.length up to 1000, how long would it take to check every single partition before finding the best one?",
+  optimizeComplexity: { time: 'O(n log s)', space: 'O(1)' },
   clues: [
     {
       id: 'search-space',
-      question: 'The answer is the minimized largest subarray sum. What are the lower and upper bounds of the search space?',
+      question: 'Binary search requires a well-defined range to search within before it can narrow toward an answer. The answer is the minimized largest subarray sum. What are the lower and upper bounds of the search space?',
       options: [
         { label: 'Lower: 0, Upper: 10⁶', isCorrect: false, feedback: 'The lower bound must be at least the maximum single element — if any element is 10⁶, it must appear in some subarray, so the largest sum can\'t be less than 10⁶. 0 is too low.' },
         { label: 'Lower: max(nums), Upper: sum(nums)', isCorrect: true },
@@ -37,7 +39,7 @@ export default {
     },
     {
       id: 'monotone-feasibility',
-      question: 'If you can split the array into k pieces where no piece exceeds limit L, can you do the same for any limit greater than L?',
+      question: 'Binary search only works when the property being tested changes monotonically across the search range. If you can split the array into k pieces where no piece exceeds limit L, can you do the same for any limit greater than L?',
       options: [
         { label: 'Not necessarily — larger limits might force different splits', isCorrect: false, feedback: 'Any split valid under limit L is also valid under limit L+1 — every subarray sum ≤ L is also ≤ L+1. Larger limits are strictly easier, never harder.' },
         { label: 'Yes — feasibility is monotone in L', isCorrect: true },
@@ -52,7 +54,8 @@ export default {
     },
     {
       id: 'feasibility-check',
-      question: 'To check if limit L is feasible, you greedily assign elements to the current subarray. When do you start a new piece?',
+      question: 'A binary search over candidate answers is only efficient if each candidate can be verified quickly. To check if limit L is feasible, you greedily assign elements to the current subarray. When do you start a new piece?',
+      highlight: { location: 'description', text: 'non-empty contiguous subarrays' },
       options: [
         { label: 'After every k elements', isCorrect: false, feedback: 'Fixed-size chunks ignore the actual sums. A subarray of k elements might sum to far more than L, or far less. You split based on cumulative sum, not element count.' },
         { label: 'When adding the next element would exceed L', isCorrect: true },
@@ -67,7 +70,7 @@ export default {
     },
     {
       id: 'output-interpretation',
-      question: 'Binary search finds the smallest L where feasible(L) is true. Why is that L guaranteed to be achievable by some actual split?',
+      question: 'A candidate answer produced by binary search is only useful if it corresponds to something actually achievable, not just a theoretical bound. Binary search finds the smallest L where feasible(L) is true. Why is that L guaranteed to be achievable by some actual split?',
       options: [
         { label: 'It might not be — L is just a theoretical bound', isCorrect: false, feedback: 'The feasibility check is based on an actual greedy split, not a theoretical bound. If feasible(L) returns true, the greedy split that produced it is a concrete valid answer.' },
         { label: 'The greedy check constructs a real split, not just a bound', isCorrect: true },
@@ -81,4 +84,28 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def split_array(self, nums, k):
+        def count_splits(max_sum):
+            splits = 1
+            current = 0
+            for n in nums:
+                if current + n > max_sum:
+                    splits += 1
+                    current = n
+                else:
+                    current += n
+            return splits
+
+        lo, hi = max(nums), sum(nums)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if count_splits(mid) <= k:
+                hi = mid
+            else:
+                lo = mid + 1
+        return lo`,
+  solutionComplexity: { time: 'O(n log s)', space: 'O(1)' },
+  solutionCaveat: 'The search range starts at <code>max(nums)</code>, not 0 — any candidate "largest sum" smaller than the single biggest element could never actually be achieved, since that one element alone would exceed it no matter how the array is split.',
+  solutionExplanation: '"Can this array be split into at most k pieces where no piece exceeds sum L?" is a yes/no question that gets easier to satisfy as L grows — greedily packing as many elements as fit under L per piece and counting how many pieces that takes either confirms feasibility or not. That monotonic feasibility is what makes binary searching directly on the *answer* (the largest-sum value itself) valid, turning an exponential "try every way to split" search into a logarithmic search over possible sum values, each checked with one greedy O(n) pass.',
 }

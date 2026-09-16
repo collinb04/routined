@@ -8,20 +8,51 @@ export default {
     { input: 'root=[3,5,1,6,2,0,8,null,null,7,4], p=5, q=4', output: '5' },
   ],
   constraints: ['2 ≤ number of nodes ≤ 10⁵', '-10⁹ ≤ Node.val ≤ 10⁹', 'All node values are unique; p and q exist in the tree'],
-  starterCode: `def lowest_common_ancestor(root, p, q):
-  pass`,
-  functionName: 'lowest_common_ancestor',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def lowest_common_ancestor(self, root, p, q):
+        pass`,
+  functionName: 'lca_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def _find(node, val):
+  if not node: return None
+  if node.val == val: return node
+  return _find(node.left, val) or _find(node.right, val)
+def lca_run(arr, p_val, q_val):
+  root = _build(arr)
+  p = _find(root, p_val)
+  q = _find(root, q_val)
+  result = Solution().lowest_common_ancestor(root, p, q)
+  return result.val if result else None`,
   testCases: [
     { label: 'LCA is root', args: [[3,5,1,6,2,0,8,null,null,7,4],5,1], expected: 3 },
     { label: 'LCA is ancestor', args: [[3,5,1,6,2,0,8,null,null,7,4],5,4], expected: 5 },
   ],
-  bruteHint: 'Describe finding the full root-to-node path for p and for q separately, then comparing the two paths for their last shared node',
-  optimizeHint: 'Name the traversal where each recursive call reports what it found in its own subtree, so paths never need to be stored separately',
+  bruteHint: 'The brute-force approach walks from the root to build the complete path of nodes leading to p, then does the same to build the complete path to q — each traversal costs O(n) time in the worst case. Comparing the two path lists from the start, the last node where they still match is the lowest common ancestor. This takes O(n) time to build both paths plus O(n) to compare them, and O(n) space to store them. Can you find the LCA in a single pass, without ever storing the full paths?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'Up to 10⁵ nodes in the tree. What complexity does this permit?',
+      highlight: { location: 'constraint', text: '2 ≤ number of nodes ≤ 10⁵' },
+      question: 'Constraints define the performance ceiling your algorithm must respect. Up to 10⁵ nodes in the tree. What complexity does this permit?',
       options: [
         { label: 'O(n²) is fine at 10⁵ nodes', isCorrect: false, feedback: 'At n = 100,000, O(n²) is 10 billion operations — far too slow. You need an approach that visits each node at most once.' },
         { label: 'O(n) traversal is the target', isCorrect: true },
@@ -36,7 +67,8 @@ export default {
     },
     {
       id: 'ancestor-definition',
-      question: '"A node is its own descendant." What does this guarantee about how you handle the case where p is an ancestor of q?',
+      highlight: { location: 'description', text: 'a node is its own descendant' },
+      question: 'A problem definition often encodes the exact rule your solution must implement. "A node is its own descendant." What does this guarantee about how you handle the case where p is an ancestor of q?',
       options: [
         { label: 'You must continue searching below p', isCorrect: false, feedback: 'If p is an ancestor of q, then p itself is the LCA by definition — no need to search further. The "own descendant" rule means you can return p as soon as you find it.' },
         { label: 'Return p immediately when found', isCorrect: true },
@@ -51,7 +83,8 @@ export default {
     },
     {
       id: 'output-structure',
-      question: 'Both p and q are guaranteed to exist in the tree. How does this simplify your search?',
+      highlight: { location: 'constraint', text: 'All node values are unique; p and q exist in the tree' },
+      question: 'Guarantees baked into the constraints reveal which edge cases you can safely skip. Both p and q are guaranteed to exist in the tree. How does this simplify your search?',
       options: [
         { label: 'You must handle the not-found case', isCorrect: false, feedback: 'The guarantee states both p and q exist. Writing a not-found handler would be dead code — the constraint is telling you what you can skip.' },
         { label: 'No null-result handling needed; always returns a node', isCorrect: true },
@@ -66,7 +99,7 @@ export default {
     },
     {
       id: 'recursive-split-signal',
-      question: 'When DFS returns a non-null value from both the left and right subtrees of a node, what does that tell you?',
+      question: 'Watching what each recursive call reports back reveals exactly where two search paths converge. When DFS returns a non-null value from both the left and right subtrees of a node, what does that tell you?',
       options: [
         { label: 'The tree has duplicate values', isCorrect: false, feedback: 'All node values are unique (stated in the constraints), so non-null returns from both subtrees cannot mean duplicates. It means p is in one subtree and q is in the other.' },
         { label: 'p and q split across this node — it is the LCA', isCorrect: true },
@@ -80,4 +113,16 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def lowest_common_ancestor(self, root, p, q):
+        if not root or root == p or root == q:
+            return root
+        left = self.lowest_common_ancestor(root.left, p, q)
+        right = self.lowest_common_ancestor(root.right, p, q)
+        if left and right:
+            return root
+        return left or right`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The base case returns immediately on hitting <code>p</code> or <code>q</code> — since "a node is its own descendant" per the problem\'s own definition, reaching either target node directly is enough to know it\'s the LCA if the other target turns out to live somewhere in its subtree, so there\'s never a need to keep searching past it.',
+  solutionExplanation: 'A single post-order DFS finds both targets in one pass: at every node, recursing into both children and getting a non-null result from <code>both</code> sides means <code>p</code> and <code>q</code> live in different subtrees, making the current node exactly the point where their paths from the root diverge — the definition of lowest common ancestor. If only one side returns non-null, that result is simply passed further up, since the LCA must still be found higher in the tree (or is the non-null result itself, if one target is an ancestor of the other).',
 }

@@ -8,8 +8,10 @@ export default {
     { input: 'target=4, nums=[1,4,4]', output: '1' },
   ],
   constraints: ['1 ≤ target ≤ 10⁹', '1 ≤ nums.length ≤ 10⁵', '1 ≤ nums[i] ≤ 10⁴'],
-  starterCode: `def min_sub_array_len(target, nums):
-  pass`,
+  starterCode: `class Solution:
+    def min_sub_array_len(self, target, nums):
+        pass`,
+  runnerSetup: 'min_sub_array_len = Solution().min_sub_array_len',
   functionName: 'min_sub_array_len',
   conceptId: 'sliding-window',
   testCases: [
@@ -18,15 +20,16 @@ export default {
     { label: 'No solution', args: [11,[1,1,1,1,1]], expected: 0 },
     { label: 'Whole array', args: [7,[2,3,2]], expected: 3 },
   ],
-  bruteHint: 'Describe checking every subarray and its time complexity',
-  optimizeHint: 'Name the two-pointer technique that shrinks the window from the left once the sum condition is met',
+  bruteHint: 'The brute-force approach checks every contiguous subarray: for each starting index, extend the ending index outward and sum the elements until you find the shortest one that meets the target. Two nested loops over start and end examine O(n²) subarrays, and summing each one from scratch pushes that toward O(n³). At n up to 100,000, how many operations would that be, and could each element be added to and removed from a running sum a bounded number of times instead?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'nums.length ≤ 10⁵. What does this rule out?',
+      question: 'We can gauge how efficient our solution needs to be from the size limit on the array. nums.length ≤ 10⁵. What does this rule out?',
+      highlight: { location: 'constraint', text: '1 ≤ nums.length ≤ 10⁵' },
       options: [
         { label: 'Checking every (start, end) pair of indices', isCorrect: true },
-        { label: 'Using a sliding window', isCorrect: false, feedback: 'A sliding window runs in O(n) — well within n = 100,000. The constraint rules out slower approaches, not the one you want.' },
+        { label: 'Expanding and shrinking a window of elements in a single scan', isCorrect: false, feedback: 'That approach runs in O(n) — well within n = 100,000. The constraint rules out slower approaches, not the one you want.' },
         { label: 'Iterating through the array once', isCorrect: false, feedback: 'A single pass is O(n) — exactly what you want. The constraint rules out O(n²) pair enumeration, not linear scans.' },
         { label: 'Subarrays that span the full array', isCorrect: false, feedback: 'Full-array subarrays are valid candidates. The constraint limits time complexity — it does not restrict which subarrays are valid answers.' },
       ],
@@ -38,12 +41,13 @@ export default {
     },
     {
       id: 'all-positive-values',
-      question: '1 ≤ nums[i] ≤ 10⁴ — all values are strictly positive. What does this guarantee about the sliding window?',
+      question: 'We can tell which approach actually works by checking what guarantee the value range gives us. 1 ≤ nums[i] ≤ 10⁴ — all values are strictly positive. What does this guarantee about the sliding window?',
+      highlight: { location: 'constraint', text: '1 ≤ nums[i] ≤ 10⁴' },
       options: [
         { label: 'Adding an element always increases the window sum', isCorrect: true },
         { label: 'The minimum-length subarray is always at the start', isCorrect: false, feedback: 'Positive values guarantee monotone behavior of the window sum, but the optimal subarray can be anywhere. [2,3,1,2,4,3] with target=7 finds [4,3] near the end.' },
         { label: 'The window never needs to shrink', isCorrect: false, feedback: 'The window does shrink — that is the whole point. Once the sum reaches the target, you shrink from the left to minimize length. Positive values guarantee shrinking reduces the sum predictably.' },
-        { label: 'Binary search on the window size is required', isCorrect: false, feedback: 'Binary search on window size works (O(n log n)) but is not required. The all-positive constraint enables a simpler O(n) shrink-when-valid approach.' },
+        { label: 'You would need to try every possible window size one at a time', isCorrect: false, feedback: 'Trying window sizes one at a time can work but costs more, and is not required. The all-positive constraint enables a simpler O(n) approach that shrinks the window only when it is valid.' },
       ],
       correctFeedback: 'All-positive values mean the sum strictly increases as the window grows and strictly decreases as it shrinks. This monotone property makes the two-pointer shrink-when-valid strategy correct.',
       wrongFeedback: [
@@ -53,7 +57,7 @@ export default {
     },
     {
       id: 'shrink-when-valid',
-      question: 'Once the window sum reaches target, what should you do next?',
+      question: 'We can figure out the right move at each step by thinking about what keeps the total work linear. Once the window sum reaches target, what should you do next?',
       options: [
         { label: 'Record the window length and keep expanding', isCorrect: false, feedback: 'Continuing to expand after hitting the target would only make the window larger. Once valid, shrink from the left to find the minimal length that still meets the target.' },
         { label: 'Shrink from the left while the sum remains ≥ target', isCorrect: true },
@@ -68,7 +72,8 @@ export default {
     },
     {
       id: 'no-solution-case',
-      question: 'Return 0 if no such subarray exists. When is this the case?',
+      question: 'We can pin down which inputs have no valid answer by considering the most extreme case. Return 0 if no such subarray exists. When is this the case?',
+      highlight: { location: 'description', text: 'Return 0 if no such subarray exists.' },
       options: [
         { label: 'When target is larger than the sum of the entire array', isCorrect: true },
         { label: 'When all values in nums equal 1', isCorrect: false, feedback: 'If all values are 1 and the array is long enough, the whole array can still meet the target. The no-solution case is when even the full array sum falls short of target.' },
@@ -82,4 +87,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def min_sub_array_len(self, target, nums):
+        left = 0
+        total = 0
+        best = float('inf')
+        for right, n in enumerate(nums):
+            total += n
+            while total >= target:
+                best = min(best, right - left + 1)
+                total -= nums[left]
+                left += 1
+        return best if best != float('inf') else 0`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'This relies on every <code>nums[i]</code> being positive — shrinking the window whenever the sum is still <code>&gt;= target</code> is only guaranteed to find the true minimum because removing an element can never make an already-too-small sum accidentally valid again, which would fail if negative numbers were allowed.',
+  solutionExplanation: 'Because all values are positive, growing the window can only increase the sum and shrinking it can only decrease it — so once a window reaches the target, shrinking from the left as far as possible while staying at or above the target finds the shortest valid window ending at the current right pointer. Both pointers only ever move forward across the whole array, which is what keeps the total work linear despite the nested-looking while loop.',
 }

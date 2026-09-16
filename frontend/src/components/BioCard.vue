@@ -3,7 +3,7 @@
     <!-- Row -->
     <div class="flex items-center gap-5 px-6 py-5 cursor-pointer select-none" @click="open = !open">
       <!-- Avatar -->
-      <div class="shrink-0 w-24 h-24 rounded-full bg-gray-100 border-blue-300 border-4 overflow-hidden">
+      <div class="shrink-0 w-24 h-24 rounded-lg bg-gray-100 border-blue-300 border-4 overflow-hidden">
         <img v-if="image" :src="image" :alt="name" class="w-full h-full object-cover" />
       </div>
 

@@ -8,8 +8,10 @@ export default {
     { input: 'arr=[3,0,2,1,2], start=2', output: 'false' },
   ],
   constraints: ['1 ≤ arr.length ≤ 5 × 10⁴', '0 ≤ arr[i] < arr.length', '0 ≤ start < arr.length'],
-  starterCode: `def can_reach(arr, start):
-  pass`,
+  starterCode: `class Solution:
+    def can_reach(self, arr, start):
+        pass`,
+  runnerSetup: 'can_reach = Solution().can_reach',
   functionName: 'can_reach',
   conceptId: 'dp-1d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Cannot reach', args: [[3,0,2,1,2],2], expected: false },
     { label: 'Start is zero', args: [[0],0], expected: true },
   ],
-  bruteHint: 'Describe what happens if you recurse on both jump directions without remembering which indices you\'ve already tried — why can it loop forever or redo the same work?',
-  optimizeHint: 'Name the structure that records which indices have already been explored so each one is visited only once',
+  bruteHint: 'The brute-force approach recurses from start, trying both i + arr[i] and i - arr[i] at every index without tracking which indices you\'ve already visited. Since jumps can lead back to indices already tried, this unbounded recursion can loop forever, or at best redo the same work at exponential cost. What would let you guarantee each index is explored only once?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'arr.length ≤ 5 × 10⁴ tells you…',
+      question: 'Constraint bounds tell you which time complexities are even feasible before you write a line of code. arr.length ≤ 5 × 10⁴ tells you…',
+      highlight: { location: 'constraint', text: '1 ≤ arr.length ≤ 5 × 10⁴' },
       options: [
         { label: 'O(n²) is fine', isCorrect: false, feedback: 'At n = 50,000, O(n²) is 2.5 billion operations — far too slow. You need a linear-time traversal.' },
         { label: 'O(n) is the target complexity', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'bidirectional-jumps',
-      question: 'From index i you can jump to i + arr[i] or i - arr[i]. What does having two jump directions imply?',
+      question: 'The way states connect to each other determines what kind of traversal the problem actually needs. From index i you can jump to i + arr[i] or i - arr[i]. What does having two jump directions imply?',
+      highlight: { location: 'description', text: 'you can jump to index <code>i + arr[i]</code> or <code>i - arr[i]</code>' },
       options: [
         { label: 'Always jump forward; ignore backward jumps', isCorrect: false, feedback: 'Ignoring backward jumps can miss the answer entirely. The first example reaches value 0 by jumping backward from index 5 to 4 to 1 to 3. Both directions must be explored.' },
         { label: 'Model as a graph and explore all reachable nodes', isCorrect: true },
@@ -52,7 +56,8 @@ export default {
     },
     {
       id: 'target-condition',
-      question: 'The goal is to reach any index with value 0 — not a specific index. This means…',
+      question: 'How a problem defines success determines when your search is allowed to stop early. The goal is to reach any index with value 0 — not a specific index. This means…',
+      highlight: { location: 'description', text: 'Return <code>true</code> if you can reach any index with value 0.' },
       options: [
         { label: 'There is always exactly one index with value 0', isCorrect: false, feedback: 'The problem doesn\'t guarantee a unique zero. Multiple indices can have value 0, and reaching any one of them satisfies the condition.' },
         { label: 'Return true as soon as any zero-value index is reached', isCorrect: true },
@@ -67,11 +72,12 @@ export default {
     },
     {
       id: 'bounds-check',
-      question: '0 ≤ arr[i] < arr.length guarantees jumps stay in bounds. What does this let you skip?',
+      question: 'Precise bounds in the constraints tell you exactly which edge cases your code must handle explicitly. 0 ≤ arr[i] < arr.length guarantees jumps stay in bounds. What does this let you skip?',
+      highlight: { location: 'constraint', text: '0 ≤ arr[i] < arr.length' },
       options: [
         { label: 'You must still check for out-of-bounds jumps', isCorrect: false, feedback: 'The constraint guarantees arr[i] < arr.length, so i + arr[i] ≤ 2*(arr.length - 1) — which could still exceed the array. You must still check that jump destinations are within [0, n-1].' },
         { label: 'Skip bounds checks entirely', isCorrect: false, feedback: 'i + arr[i] can exceed n-1 even though arr[i] < n — for example i=3, arr[i]=4, n=5 gives destination 7. You still need bounds checks.' },
-        { label: 'You never need a visited set', isCorrect: false, feedback: 'Without a visited set, you can loop indefinitely between indices. The visited set is essential to prevent infinite cycles regardless of the bounds guarantee.' },
+        { label: 'You never need to track indices you\'ve already visited', isCorrect: false, feedback: 'Without a visited set, you can loop indefinitely between indices. The visited set is essential to prevent infinite cycles regardless of the bounds guarantee.' },
         { label: 'Clamp destinations to valid indices instead of rejecting them', isCorrect: true },
       ],
       correctFeedback: 'arr[i] ≥ 0 means you never jump to a negative index from i — only i-arr[i] can go negative. Checking i+arr[i] < n and i-arr[i] >= 0 covers all cases with simple comparisons.',
@@ -81,4 +87,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `from collections import deque
+
+class Solution:
+    def can_reach(self, arr, start):
+        n = len(arr)
+        if arr[start] == 0:
+            return True
+
+        visited = {start}
+        queue = deque([start])
+        while queue:
+            i = queue.popleft()
+            for ni in (i + arr[i], i - arr[i]):
+                if 0 <= ni < n and ni not in visited:
+                    if arr[ni] == 0:
+                        return True
+                    visited.add(ni)
+                    queue.append(ni)
+        return False`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: '<code>visited</code> is checked and updated <code>before</code> a neighbor is ever explored further, not after it\'s dequeued — since <code>i + arr[i]</code> and <code>i - arr[i]</code> can both point back to indices already queued, skipping this check would let the same index re-enter the queue indefinitely.',
+  solutionExplanation: 'Modeling each index as a node with up to two outgoing edges (<code>i + arr[i]</code> and <code>i - arr[i]</code>) turns this into plain graph reachability from <code>start</code>, which BFS explores in O(n) by visiting each index at most once — the two-directional jumps don\'t change the traversal strategy, only which neighbors get generated at each step. The search can return <code>true</code> the instant any reachable index has value 0, without needing to exhaust the rest of the reachable set.',
 }

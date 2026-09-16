@@ -9,22 +9,25 @@ export default {
     { input: 'x = 2.0, n = -2', output: '0.25', explanation: '1/4.' },
   ],
   constraints: ['-100.0 < x < 100.0', '-2³¹ ≤ n ≤ 2³¹ − 1', 'n is an integer', 'Either x ≠ 0 or n > 0'],
-  starterCode: `def my_pow(x, n):
-  pass`,
+  starterCode: `class Solution:
+    def my_pow(self, x, n):
+        pass`,
+  runnerSetup: 'my_pow = Solution().my_pow',
   functionName: 'my_pow',
-  conceptId: 'math-geometry',
+  conceptId: 'recursion',
   testCases: [
     { label: '2^10', args: [2.0, 10], expected: 1024.0 },
     { label: 'Negative exp', args: [2.0, -2], expected: 0.25 },
     { label: 'n=0', args: [5.0, 0], expected: 1.0 },
     { label: 'n=1', args: [3.0, 1], expected: 3.0 },
   ],
-  bruteHint: 'Describe multiplying x by itself n times in a loop and its time complexity',
-  optimizeHint: 'Name the technique that repeatedly squares the base and halves the exponent to compute the result in O(log n)',
+  bruteHint: 'The simplest approach multiplies x by itself n times in a single loop, accumulating the product as it goes. This brute-force approach runs in O(n) time, since it performs one multiplication per unit of n. With n bounded by 2³¹ − 1, how many multiplications would that require in the worst case, and would that finish in a reasonable amount of time?',
+  optimizeComplexity: { time: 'O(log n)', space: 'O(log n)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'The problem asks for O(log n) rather than repeated multiplication. With n up to 2³¹ − 1 ≈ 2.1 billion, what does O(n) multiplication cost?',
+      question: 'Constraints that describe a huge input range are often a hint about the time complexity your solution needs. The problem asks for O(log n) rather than repeated multiplication. With n up to 2³¹ − 1 ≈ 2.1 billion, what does O(n) multiplication cost?',
+      highlight: { location: 'constraint', text: '-2³¹ ≤ n ≤ 2³¹ − 1' },
       options: [
         { label: 'About 2 billion multiplications', isCorrect: true },
         { label: 'About 31 multiplications', isCorrect: false, feedback: '31 multiplications is O(log n) — that\'s the target, not the naive approach. The naive approach multiplies n times.' },
@@ -39,12 +42,13 @@ export default {
     },
     {
       id: 'negative-exponent',
-      question: 'n can be negative (e.g., n = −2 gives 0.25). How should your algorithm handle this?',
+      question: 'Edge cases in the allowed input range often force extra branching in your algorithm. n can be negative (e.g., n = −2 gives 0.25). How should your algorithm handle this?',
+      highlight: { location: 'constraint', text: '-2³¹ ≤ n ≤ 2³¹ − 1' },
       options: [
         { label: 'Return 0 for negative n', isCorrect: false, feedback: 'x⁻² = 1/x² = 0.25 when x = 2.0 — never 0. Negative exponents mean reciprocals, not zero.' },
         { label: 'Compute pow(x, |n|) then take the reciprocal', isCorrect: true },
         { label: 'Negate x and use positive n', isCorrect: false, feedback: '(−x)ⁿ ≠ x⁻ⁿ. Negating x changes the base, not the exponent. x⁻ⁿ = 1 / xⁿ.' },
-        { label: 'Raise n to the absolute value before calling recursively', isCorrect: false, feedback: 'You convert n to |n| for the recursive computation, but what you return is 1 / pow(x, |n|), not pow(x, |n|). The conversion is correct; the return value is wrong in this description.' },
+        { label: 'Raise n to the absolute value before computing the result', isCorrect: false, feedback: 'You convert n to |n| for the computation, but what you return is 1 / pow(x, |n|), not pow(x, |n|). The conversion is correct; the return value is wrong in this description.' },
       ],
       correctFeedback: 'x⁻ⁿ = 1 / xⁿ. Compute the positive-exponent result first, then return its reciprocal. This handles the sign in one step without changing the recursion structure.',
       wrongFeedback: [
@@ -54,7 +58,8 @@ export default {
     },
     {
       id: 'fast-exponentiation-insight',
-      question: '"Fast exponentiation" halves the exponent at each step. What is the key mathematical identity that enables this?',
+      question: 'The problem description names the required technique directly, which is worth reading closely. "Fast exponentiation" halves the exponent at each step. What is the key mathematical identity that enables this?',
+      highlight: { location: 'description', text: 'Use fast exponentiation (O(log n)) rather than repeated multiplication.' },
       options: [
         { label: 'xⁿ = x × xⁿ⁻¹', isCorrect: false, feedback: 'This identity is correct but leads to O(n) recursion — one multiplication per step. Fast exponentiation needs to halve the problem, not reduce it by one.' },
         { label: 'xⁿ = (x²)^(n/2)', isCorrect: true },
@@ -69,7 +74,7 @@ export default {
     },
     {
       id: 'odd-exponent',
-      question: 'When n is odd, (x²)^(n/2) loses one factor of x. How do you account for this?',
+      question: 'Getting an algorithm\'s edge cases right is often what separates a working solution from a broken one. When n is odd, (x²)^(n/2) loses one factor of x. How do you account for this?',
       options: [
         { label: 'Round n up to the nearest even number', isCorrect: false, feedback: 'Rounding up changes the exponent — x⁵ ≠ x⁶. You need the exact answer, so you must handle the odd case without changing n.' },
         { label: 'Multiply the result by one extra x', isCorrect: true },
@@ -83,4 +88,19 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def my_pow(self, x, n):
+        if n < 0:
+            x = 1 / x
+            n = -n
+        result = 1
+        while n:
+            if n % 2 == 1:
+                result *= x
+            x *= x
+            n //= 2
+        return result`,
+  solutionComplexity: { time: 'O(log n)', space: 'O(1)' },
+  solutionCaveat: 'A negative exponent is normalized up front by inverting the base and flipping the sign of <code>n</code> — after that single adjustment, the rest of the algorithm only ever deals with non-negative exponents, so no negative-exponent logic needs to be threaded through the main loop.',
+  solutionExplanation: 'Binary exponentiation exploits the fact that <code>x^n</code> can be built from repeated squaring rather than <code>n</code> individual multiplications: each bit of <code>n</code>, read from least to most significant as the loop divides <code>n</code> by 2 each time, decides whether the *current* power of <code>x</code> (which itself doubles in exponent every iteration via squaring) gets folded into the running result. Since <code>n</code> is halved every step, the loop runs roughly <code>log₂n</code> times instead of <code>n</code> times.',
 }

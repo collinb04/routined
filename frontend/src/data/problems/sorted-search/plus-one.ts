@@ -8,22 +8,25 @@ export default {
     { input: 'digits = [9,9]', output: '[1,0,0]', explanation: '99 + 1 = 100.' },
   ],
   constraints: ['1 ≤ digits.length ≤ 100', '0 ≤ digits[i] ≤ 9', 'digits does not contain leading zeros'],
-  starterCode: `def plus_one(digits):
-  pass`,
+  starterCode: `class Solution:
+    def plus_one(self, digits):
+        pass`,
+  runnerSetup: 'plus_one = Solution().plus_one',
   functionName: 'plus_one',
-  conceptId: 'math-geometry',
+  conceptId: 'arrays',
   testCases: [
     { label: 'No carry', args: [[1,2,3]], expected: [1,2,4] },
     { label: 'Carry propagates', args: [[9,9]], expected: [1,0,0] },
     { label: 'Single nine', args: [[9]], expected: [1,0] },
     { label: 'No carry simple', args: [[4,3,2,1]], expected: [4,3,2,2] },
   ],
-  bruteHint: 'Describe converting the digit array to an integer, adding one, and converting back to a list of digits',
-  optimizeHint: 'Name the edge case where carries propagate through every digit (e.g., all 9s) that a direct array-based increment must handle correctly',
+  bruteHint: 'The brute-force approach joins the digits into a single integer, adds one with ordinary arithmetic, and splits the result back into a list of digits — an O(n) conversion in each direction. This works because Python integers have arbitrary precision, but it leans on a language guarantee that isn\'t universal, and it does more work than necessary just to add 1. Can you find an approach that increments the array directly, digit by digit, without ever forming the whole number?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'carry-propagation',
-      question: 'digits = [9,9] produces [1,0,0]. What special case must your traversal handle?',
+      highlight: { location: 'constraint', text: '0 ≤ digits[i] ≤ 9' },
+      question: 'Digit bounds tell you exactly which value triggers a cascading edge case. digits = [9,9] produces [1,0,0]. What special case must your traversal handle?',
       options: [
         { label: 'Digits can be negative', isCorrect: false, feedback: 'The constraint states 0 ≤ digits[i] ≤ 9 — no negatives. The edge case here is about carry, not sign.' },
         { label: 'A carry can propagate through all digits', isCorrect: true },
@@ -38,7 +41,7 @@ export default {
     },
     {
       id: 'traversal-direction',
-      question: 'You need to add one to the last digit first, then propagate carry leftward. Which traversal direction does this require?',
+      question: 'The order you process elements in often determines whether a running computation like a carry works correctly. You need to add one to the last digit first, then propagate carry leftward. Which traversal direction does this require?',
       options: [
         { label: 'Left to right (index 0 first)', isCorrect: false, feedback: 'Starting at index 0 adds to the most significant digit first — the opposite of addition. Carry flows right to left, so you must traverse right to left.' },
         { label: 'Right to left (last index first)', isCorrect: true },
@@ -53,7 +56,8 @@ export default {
     },
     {
       id: 'output-length',
-      question: 'The input has no leading zeros, but the output might be longer than the input. When does this happen?',
+      highlight: { location: 'constraint', text: 'digits does not contain leading zeros' },
+      question: 'A stated input guarantee, like the absence of leading zeros, can hint at exactly when the output structure must change shape. The input has no leading zeros, but the output might be longer than the input. When does this happen?',
       options: [
         { label: 'When the last digit is 9', isCorrect: false, feedback: 'If only the last digit is 9, incrementing it yields 0 with carry 1 to the next digit — but the total length doesn\'t grow unless every digit is 9. [1,9] → [2,0], same length.' },
         { label: 'When every digit is 9', isCorrect: false, feedback: 'This is correct reasoning, but the framing from the problem is more precise: the output grows when the carry exits past the leftmost digit.' },
@@ -67,4 +71,16 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def plus_one(self, digits):
+        digits = digits[:]
+        for i in range(len(digits) - 1, -1, -1):
+            if digits[i] < 9:
+                digits[i] += 1
+                return digits
+            digits[i] = 0
+        return [1] + digits`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'Returning immediately the moment a digit less than 9 is found is what keeps this from ever touching more digits than necessary — a carry only continues propagating leftward through a run of 9s, so the scan can stop the instant that run ends.',
+  solutionExplanation: 'Adding one only ever needs to ripple past a digit if that digit is a 9 (which rolls over to 0 and carries into the next position); the moment a non-9 digit is found, incrementing it in place resolves the entire addition with nothing left to carry. The only case that needs a genuinely new digit is when every position was a 9 and rolled over to 0 — at that point the number has grown by a whole digit, so a leading 1 is prepended.',
 }

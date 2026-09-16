@@ -8,20 +8,23 @@ export default {
     { input: 'n = 5, edges = [[0,1],[1,2],[2,3],[1,3],[1,4]]', output: 'false' },
   ],
   constraints: ['1 <= n <= 2000', '0 <= edges.length <= 5000', 'No self-loops or repeated edges'],
-  starterCode: `def valid_tree(n, edges):
-  pass`,
+  starterCode: `class Solution:
+    def valid_tree(self, n, edges):
+        pass`,
+  runnerSetup: 'valid_tree = Solution().valid_tree',
   functionName: 'valid_tree',
   conceptId: 'graphs',
   testCases: [
     { label: 'valid tree', args: [5, [[0,1],[0,2],[0,3],[1,4]]], expected: true },
     { label: 'has cycle', args: [5, [[0,1],[1,2],[2,3],[1,3],[1,4]]], expected: false },
   ],
-  bruteHint: 'Describe testing connectivity by checking reachability between every pair of nodes, and its time complexity',
-  optimizeHint: 'Name the technique that combines an edge-count check with Union-Find to detect cycles in a single pass',
+  bruteHint: 'A brute-force approach would check reachability between every pair of nodes to confirm the graph is fully connected, then separately scan for cycles. Testing all pairs costs O(n²) time, and combined with a separate cycle check, this quickly becomes expensive as n grows. What single pass could verify both connectivity and cycle-freedom together?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 2000 and edges.length ≤ 5000. What does this tell you about acceptable complexity?',
+      question: 'Constraint bounds tell you upfront which time complexities are realistic before you commit to an approach. n ≤ 2000 and edges.length ≤ 5000. What does this tell you about acceptable complexity?',
+      highlight: { location: 'constraint', text: '1 <= n <= 2000' },
       options: [
         { label: 'O(n²) is too slow', isCorrect: false, feedback: 'At n = 2000, O(n²) is 4 million operations — well within reach. The constraint here is generous; it does not rule out quadratic approaches.' },
         { label: 'O(n log n) is required', isCorrect: false, feedback: 'Nothing about n = 2000 demands log-factor efficiency. The bound is permissive enough for linear or near-linear work on both nodes and edges.' },
@@ -36,7 +39,8 @@ export default {
     },
     {
       id: 'tree-definition',
-      question: 'A valid tree has "exactly n-1 edges and is fully connected with no cycles." What two conditions must both hold?',
+      question: 'When a problem spells out a precise definition, every clause in that definition becomes a condition your solution must verify. A valid tree has "exactly n-1 edges and is fully connected with no cycles." What two conditions must both hold?',
+      highlight: { location: 'description', text: 'A valid tree has exactly <code>n-1</code> edges and is fully connected with no cycles.' },
       options: [
         { label: 'Connected and acyclic', isCorrect: true },
         { label: 'Acyclic with n edges', isCorrect: false, feedback: 'A tree on n nodes has exactly n-1 edges — not n. n edges with connectivity would introduce a cycle.' },
@@ -51,7 +55,8 @@ export default {
     },
     {
       id: 'edge-count-shortcut',
-      question: '"Exactly n-1 edges" is listed as a tree requirement. What does checking edge count let you do?',
+      question: 'Spotting a cheap necessary condition inside a definition lets you rule out invalid inputs before doing any expensive work. "Exactly n-1 edges" is listed as a tree requirement. What does checking edge count let you do?',
+      highlight: { location: 'description', text: 'exactly <code>n-1</code> edges' },
       options: [
         { label: 'Skip traversal entirely', isCorrect: false, feedback: 'Edge count alone does not prove a tree. A graph with n-1 edges could still be disconnected (e.g., a cycle plus an isolated node). You still need to verify connectivity.' },
         { label: 'Guarantee no cycle exists', isCorrect: false, feedback: 'n-1 edges is necessary but not sufficient to rule out cycles on its own. A disconnected graph with a cycle in one component could have fewer than n edges overall.' },
@@ -66,7 +71,8 @@ export default {
     },
     {
       id: 'output-type',
-      question: 'The output is a boolean — true or false. What does this mean for your traversal?',
+      question: 'The form of the expected output — yes/no versus a value — shapes how early your traversal can safely stop. The output is a boolean — true or false. What does this mean for your traversal?',
+      highlight: { location: 'description', text: 'Check if the edges make up a valid tree.' },
       options: [
         { label: 'Return a path between nodes', isCorrect: false, feedback: 'The problem asks whether the graph is a valid tree, not for any path. A boolean output means you need a yes/no check, not route reconstruction.' },
         { label: 'Count components and compare to 1', isCorrect: false, feedback: 'Counting components is one valid approach, but the output itself just says true or false. The boolean means you only need to confirm or deny the two conditions — how you do it is your choice.' },
@@ -80,4 +86,25 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def valid_tree(self, n, edges):
+        if len(edges) != n - 1:
+            return False
+        parent = list(range(n))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        for u, v in edges:
+            ru, rv = find(u), find(v)
+            if ru == rv:
+                return False
+            parent[ru] = rv
+        return True`,
+  solutionComplexity: { time: 'O(n)', space: 'O(n)' },
+  solutionCaveat: 'The edge-count check (<code>len(edges) == n - 1</code>) is a necessary but not sufficient condition on its own — an n-node graph with exactly n-1 edges could still be disconnected with a separate cycle elsewhere, so union-find is still needed to confirm no cycle exists among the edges actually given.',
+  solutionExplanation: 'A valid tree on n nodes has exactly n-1 edges and no cycles — checking the edge count first is an O(1) rejection for graphs that are already too sparse or too dense to be trees, and then union-find confirms the rest: unioning every edge\'s two endpoints, and immediately failing if an edge ever connects two nodes that are already in the same set, since that means a cycle. If every edge unions two previously-separate components and the total edge count is exactly n-1, the graph is connected with no redundant edges — a tree.',
 }

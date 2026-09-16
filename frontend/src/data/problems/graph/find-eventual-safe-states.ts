@@ -7,20 +7,23 @@ export default {
     { input: 'graph = [[1,2],[2,3],[5],[0],[5],[],[]]', output: '[2,4,5,6]' },
   ],
   constraints: ['n == graph.length', '1 ≤ n ≤ 10⁴', '0 ≤ graph[i].length ≤ n'],
-  starterCode: `def eventual_safe_nodes(graph):
-  pass`,
+  starterCode: `class Solution:
+    def eventual_safe_nodes(self, graph):
+        pass`,
+  runnerSetup: 'eventual_safe_nodes = Solution().eventual_safe_nodes',
   functionName: 'eventual_safe_nodes',
   conceptId: 'graphs',
   testCases: [
     { label: 'Standard', args: [[[1,2],[2,3],[5],[0],[5],[],[]]], expected: [2,4,5,6] },
     { label: 'No cycles', args: [[[1],[2],[]]], expected: [0,1,2] },
   ],
-  bruteHint: 'Describe running an independent cycle check from every node without reusing any earlier results, and its complexity',
-  optimizeHint: 'Name the technique that classifies every node in one DFS pass by caching the result for already-resolved nodes',
+  bruteHint: 'The brute-force approach checks every node independently: for each of the n nodes, run a fresh cycle-detection search across its reachable subgraph without remembering what earlier searches already discovered. Since each search can touch O(n + E) nodes and edges, repeating this for every node costs O(n · (n + E)) — up to O(n³) when the graph is dense. What information from a node you\'ve already fully explored could you cache to avoid redoing that work for every other node that reaches it?',
+  optimizeComplexity: { time: 'O(V + E)', space: 'O(V + E)' },
   clues: [
     {
       id: 'safe-definition',
-      question: 'A node is safe if every path from it eventually leads to a terminal node. What makes a node unsafe?',
+      highlight: { location: 'description', text: 'A node is safe if every path from it eventually leads to a terminal node (no outgoing edges).' },
+      question: 'Description wording often hides the precise rule you must implement, so parsing it carefully prevents wrong assumptions. A node is safe if every path from it eventually leads to a terminal node. What makes a node unsafe?',
       options: [
         { label: 'It has more than one outgoing edge', isCorrect: false, feedback: 'Multiple outgoing edges are fine — node 4 in the example has one edge to 5 and is safe. Unsafe nodes are those with at least one path that loops forever, meaning they are on or lead into a cycle.' },
         { label: 'It lies on or leads into a cycle', isCorrect: true },
@@ -35,7 +38,8 @@ export default {
     },
     {
       id: 'cycle-detection-approach',
-      question: 'n ≤ 10⁴ nodes with up to n outgoing edges each. You need to classify every node. What approach works in O(n + E)?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 10⁴' },
+      question: 'Constraint bounds tell you the complexity ceiling your solution must respect before you write a single line of code. n ≤ 10⁴ nodes with up to n outgoing edges each. You need to classify every node. What approach works in O(n + E)?',
       options: [
         { label: 'Run separate DFS from every node to check for cycles', isCorrect: false, feedback: 'Running an independent DFS from each of n nodes costs O(n · (n + E)) — up to O(n³) when each node has n neighbors. Memoizing cycle status across DFS calls brings this down to O(n + E).' },
         { label: 'Single DFS with three-color cycle detection and memoized results', isCorrect: true },
@@ -79,4 +83,26 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def eventual_safe_nodes(self, graph):
+        n = len(graph)
+        state = [0] * n
+
+        def dfs(node):
+            if state[node] == 1:
+                return False
+            if state[node] in (2, 3):
+                return state[node] == 2
+            state[node] = 1
+            for nbr in graph[node]:
+                if not dfs(nbr):
+                    state[node] = 3
+                    return False
+            state[node] = 2
+            return True
+
+        return [i for i in range(n) if dfs(i)]`,
+  solutionComplexity: { time: 'O(V + E)', space: 'O(V)' },
+  solutionCaveat: 'The three-way <code>state</code> (unvisited, visiting, safe/unsafe) does more than plain visited/unvisited — the "visiting" marker is what actually detects a cycle, since revisiting a node still marked "visiting" means the DFS looped back onto its own current path.',
+  solutionExplanation: 'A node is safe exactly when every path out of it eventually terminates without hitting a cycle — so a node is unsafe if it lies on a cycle or leads to one. Marking each node "visiting" on entry and "safe" or "unsafe" on exit lets the DFS recognize a cycle the instant it revisits a node still marked "visiting" (a back edge to the current path), and memoizing the final safe/unsafe verdict per node means no node is ever re-explored from scratch, keeping the whole traversal linear despite nodes being reachable through many different paths.',
 }

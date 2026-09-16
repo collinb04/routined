@@ -7,22 +7,25 @@ export default {
     { input: 'matrix = [[1,2,3],[4,5,6],[7,8,9]]', output: '[1,2,3,6,9,8,7,4,5]', explanation: 'Traverse the border, then spiral inward.' },
   ],
   constraints: ['m == matrix.length', 'n == matrix[0].length', '1 ≤ m, n ≤ 10', '-100 ≤ matrix[i][j] ≤ 100'],
-  starterCode: `def spiral_order(matrix):
-  pass`,
+  starterCode: `class Solution:
+    def spiral_order(self, matrix):
+        pass`,
+  runnerSetup: 'spiral_order = Solution().spiral_order',
   functionName: 'spiral_order',
-  conceptId: 'math-geometry',
+  conceptId: '2d-array-traversal',
   testCases: [
     { label: '3×3', args: [[[1,2,3],[4,5,6],[7,8,9]]], expected: [1,2,3,6,9,8,7,4,5] },
     { label: '2×3', args: [[[1,2,3],[4,5,6]]], expected: [1,2,3,6,5,4] },
     { label: 'Single row', args: [[[1,2,3,4]]], expected: [1,2,3,4] },
     { label: 'Single column', args: [[[1],[2],[3]]], expected: [1,2,3] },
   ],
-  bruteHint: 'Describe tracking visited cells with a visited matrix or set as you traverse in spiral order, and its extra space cost',
-  optimizeHint: 'Name the technique that maintains four shrinking boundary pointers (top, bottom, left, right) instead of tracking visited cells',
+  bruteHint: 'A brute-force approach allocates a same-sized visited matrix (or a set of coordinates) and, at each step, checks the surrounding directions to find an unvisited neighbor to move into next. This correctly produces the spiral order but costs O(m · n) extra space for the visited structure on top of the output list. Since the matrix\'s own dimensions already define its boundaries, is there a way to know which cells remain unvisited without storing them explicitly?',
+  optimizeComplexity: { time: 'O(m · n)', space: 'O(1)' },
   clues: [
     {
       id: 'output-structure',
-      question: 'The output is a flat list of all m × n elements. What does "spiral order" define?',
+      question: 'Pinning down the exact traversal pattern a problem describes matters before you write any code. The output is a flat list of all m × n elements. What does "spiral order" define?',
+      highlight: { location: 'description', text: 'clockwise from the outer ring inward' },
       options: [
         { label: 'A diagonal traversal of the matrix', isCorrect: false, feedback: 'Diagonal traversal visits elements along NW-to-SE diagonals — a completely different pattern. Spiral order traverses the outermost ring clockwise, then recurses inward.' },
         { label: 'The sequence in which elements are collected layer by layer', isCorrect: true },
@@ -37,7 +40,7 @@ export default {
     },
     {
       id: 'boundary-tracking',
-      question: 'To avoid revisiting cells, you need to track which area remains unvisited. What is the cleanest way to do this?',
+      question: 'Tracking which cells you\'ve already visited can lean on extra memory or on implicit state, and that choice drives your space complexity. To avoid revisiting cells, you need to track which area remains unvisited. What is the cleanest way to do this?',
       options: [
         { label: 'Mark visited cells with a special value', isCorrect: false, feedback: 'Marking with a sentinel (e.g., None) works but requires reading the value range to pick a safe sentinel — with values from −100 to 100, you need care. Shrinking boundaries avoids any mutation of the original values.' },
         { label: 'Maintain top, bottom, left, right boundary pointers', isCorrect: true },
@@ -52,7 +55,8 @@ export default {
     },
     {
       id: 'non-square-edge-case',
-      question: 'The matrix can be non-square (e.g., 2×3 or single row). What must you check before traversing each edge?',
+      question: 'When two dimensions are bounded independently, don\'t assume the common square case holds. The matrix can be non-square (e.g., 2×3 or single row). What must you check before traversing each edge?',
+      highlight: { location: 'constraint', text: '1 ≤ m, n ≤ 10' },
       options: [
         { label: 'Nothing extra — the four edges always exist', isCorrect: false, feedback: 'For a single-row matrix, the "bottom" traversal would re-visit the same row. For a single-column matrix, the "right" traversal would re-visit the same column. You must guard against traversing an edge when the layer has collapsed to a line.' },
         { label: 'That top ≤ bottom and left ≤ right still hold after each edge', isCorrect: true },
@@ -66,4 +70,27 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def spiral_order(self, matrix):
+        result = []
+        top, bottom = 0, len(matrix) - 1
+        left, right = 0, len(matrix[0]) - 1
+        while top <= bottom and left <= right:
+            for c in range(left, right + 1):
+                result.append(matrix[top][c])
+            top += 1
+            for r in range(top, bottom + 1):
+                result.append(matrix[r][right])
+            right -= 1
+            if top <= bottom:
+                for c in range(right, left - 1, -1):
+                    result.append(matrix[bottom][c])
+                bottom -= 1
+            if left <= right:
+                for r in range(bottom, top - 1, -1):
+                    result.append(matrix[r][left])
+                left += 1
+        return result`,
+  solutionComplexity: { time: 'O(m × n)', space: 'O(1) extra (output aside)' },
+  solutionExplanation: 'Four pointers — top, bottom, left, right — mark the boundary of whatever ring hasn\'t been visited yet. Each pass around the loop walks one full ring: right along the top, down the right side, left along the bottom, up the left side, then shrinks every boundary inward by one. The two guard checks (top &lt;= bottom before the bottom pass, left &lt;= right before the left pass) exist because a single row or column matrix would otherwise walk the same cells twice on the way back.',
 }

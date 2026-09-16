@@ -8,8 +8,10 @@ export default {
     { input: 'amount=3, coins=[2]', output: '0', explanation: 'Cannot make 3 with coins of 2.' },
   ],
   constraints: ['1 ≤ coins.length ≤ 300', '1 ≤ coins[i] ≤ 5000', '0 ≤ amount ≤ 5000'],
-  starterCode: `def change(amount, coins):
-  pass`,
+  starterCode: `class Solution:
+    def change(self, amount, coins):
+        pass`,
+  runnerSetup: 'change = Solution().change',
   functionName: 'change',
   conceptId: 'dp-2d',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'No solution', args: [3,[2]], expected: 0 },
     { label: 'amount=0', args: [0,[1,2,3]], expected: 1 },
   ],
-  bruteHint: 'Describe the recursive approach that tries every combination of coins (with repetition) toward the amount, and explain why the same remaining amounts get re-explored many times.',
-  optimizeHint: 'Name the 2D state — which coin you\'re considering and how much amount remains — you can tabulate so each subproblem is solved once.',
+  bruteHint: 'The brute-force approach recursively tries including or excluding each coin at every step, branching into every possible combination that could sum to the amount. Because coins can repeat, the recursion tree grows exponentially — closer to O(2^amount) in the worst case — and the same remaining sub-amount gets recomputed from scratch every time a different path reaches it. If you could remember the count of ways to make each sub-amount the first time you computed it, would you ever need to redo that work?',
+  optimizeComplexity: { time: 'O(amount·coins)', space: 'O(amount)' },
   clues: [
     {
       id: 'constraint-complexity',
-      question: 'coins.length ≤ 300 and amount ≤ 5000. What complexity does this suggest?',
+      highlight: { location: 'constraint', text: '1 ≤ coins.length ≤ 300' },
+      question: 'Numeric constraints are often the clearest signal of the intended time complexity before you write any code. coins.length ≤ 300 and amount ≤ 5000. What complexity does this suggest?',
       options: [
         { label: 'O(amount) only — coins don\'t matter', isCorrect: false, feedback: 'Coin denominations are part of the state. An approach that doesn\'t consider which coins are available can\'t distinguish between amount=5 with coins=[2] (0 ways) versus coins=[1,2,5] (4 ways).' },
         { label: 'O(coins × amount) is the target',      isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'combinations-not-permutations',
-      question: 'The output is the number of combinations, not permutations. What does this mean for [1,2] summing to 3?',
+      highlight: { location: 'description', text: 'the number of combinations' },
+      question: 'The precise wording of what you\'re asked to count determines whether order matters and how you avoid double-counting. The output is the number of combinations, not permutations. What does this mean for [1,2] summing to 3?',
       options: [
         { label: '[1,2] and [2,1] are both counted',     isCorrect: false, feedback: 'Those are the same combination — just in different order. Combinations don\'t care about order, so 1+2 and 2+1 count as one way, not two.' },
         { label: '[1,2] and [2,1] count as one way',     isCorrect: true },
@@ -52,7 +56,7 @@ export default {
     },
     {
       id: 'unbounded-reuse',
-      question: '"Coins of different denominations" — the problem doesn\'t say each coin is used at most once. What does unlimited reuse imply?',
+      question: 'Knowing whether a resource is limited or unlimited tells you whether earlier choices can be revisited later in your recurrence. "Coins of different denominations" — the problem doesn\'t say each coin is used at most once. What does unlimited reuse imply?',
       options: [
         { label: 'You track how many of each coin remains', isCorrect: false, feedback: 'There\'s no finite supply to track. With unlimited coins, you only need to know which denominations exist — not how many of each are left.' },
         { label: 'Each denomination can contribute multiple times', isCorrect: true },
@@ -67,7 +71,8 @@ export default {
     },
     {
       id: 'amount-zero-base-case',
-      question: '"0 ≤ amount" is in the constraints. What does amount=0 mean for the answer?',
+      highlight: { location: 'constraint', text: '0 ≤ amount ≤ 5000' },
+      question: 'Boundary values explicitly called out in the constraints often point directly at the base case your DP must handle correctly. "0 ≤ amount" is in the constraints. What does amount=0 mean for the answer?',
       options: [
         { label: 'Return -1 — no coins can be selected',  isCorrect: false, feedback: 'amount=0 has exactly one valid combination: the empty selection. -1 would signal impossibility, but zero amount is always achievable.' },
         { label: 'Return 1 — the empty combination counts', isCorrect: true },
@@ -81,4 +86,15 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def change(self, amount, coins):
+        dp = [0] * (amount + 1)
+        dp[0] = 1
+        for coin in coins:
+            for a in range(coin, amount + 1):
+                dp[a] += dp[a - coin]
+        return dp[amount]`,
+  solutionComplexity: { time: 'O(coins · amount)', space: 'O(amount)' },
+  solutionCaveat: 'The outer loop iterates over <code>coins</code> and the inner loop over <code>amount</code> — never the reverse — which is exactly what keeps each combination counted once regardless of the order its coins are picked in, since every way of making a given amount is only ever discovered while that amount\'s specific coin denomination is the "current" one being considered.',
+  solutionExplanation: 'Processing one coin denomination fully before moving to the next is what turns this into unordered combination-counting rather than ordered permutation-counting: by the time coin <code>c</code> is being considered, <code>dp[a - c]</code> already reflects every way to build that sub-amount using coins processed so far (including possibly <code>c</code> itself, since the inner loop runs low-to-high and coins are unlimited), so adding <code>dp[a - c]</code> into <code>dp[a]</code> extends each of those ways by exactly one more copy of <code>c</code> without ever double-counting a reordering of the same multiset.',
 }

@@ -28,15 +28,16 @@ export default {
   testCases: [
     { label: 'eviction', args: [2, ['put','put','get','put','get','put','get','get','get'], [[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]], expected: [1,-1,-1,3,4] },
   ],
-  bruteHint: 'Describe using a plain list or dict where finding and evicting the least-recently-used entry needs an O(n) scan',
-  optimizeHint: 'Name the combined data structure — a hash map paired with a doubly linked list — that gets O(1) get and put',
+  bruteHint: 'A simple approach stores entries in a plain dict for O(1) key lookup, but tracks recency separately — for example by scanning all entries for a timestamp whenever you need to evict. That eviction scan costs O(n) per put once the cache is full, since finding the least-recently-used entry means checking every stored key. With up to 2 × 10^5 calls and capacity up to 3,000, what does that scan cost add up to?',
+  optimizeComplexity: { time: 'O(1)', space: 'O(capacity)' },
   clues: [
     {
       id: 'constraint-o1-operations',
-      question: '"Both operations must run in O(1) average time." With up to 2 × 10^5 calls, this rules out…',
+      question: 'How fast an operation must run tells you which data structures are even viable. "Both operations must run in O(1) average time." With up to 2 × 10^5 calls, this rules out…',
+      highlight: { location: 'description', text: 'Both operations must run in O(1) average time.' },
       options: [
         { label: 'Scanning a list to find the LRU item', isCorrect: true },
-        { label: 'Using a hash map for key lookup', isCorrect: false, feedback: 'A hash map gives O(1) average lookup — that\'s exactly what you need. The constraint rules out linear scans, not hash-based lookup.' },
+        { label: 'Retrieving a value by key in constant time', isCorrect: false, feedback: 'A hash map gives O(1) average lookup — that\'s exactly what you need. The constraint rules out linear scans, not hash-based lookup.' },
         { label: 'Storing key-value pairs at all', isCorrect: false, feedback: 'You must store key-value pairs — that\'s the core of a cache. The O(1) constraint is about how quickly you access and evict them, not whether you store them.' },
         { label: 'Tracking which item was used most recently', isCorrect: false, feedback: 'Tracking recency is required — the eviction policy depends on it. The constraint is that tracking and evicting must happen in O(1), not that they should be skipped.' },
       ],
@@ -48,7 +49,8 @@ export default {
     },
     {
       id: 'eviction-policy',
-      question: '"Evict the least recently used key before inserting." This means recency must be tracked…',
+      question: 'Which operations must update recency tells you what your structure needs to support. "Evict the least recently used key before inserting." This means recency must be tracked…',
+      highlight: { location: 'description', text: 'evict the least recently used key before inserting.' },
       options: [
         { label: 'By insertion order only', isCorrect: false, feedback: 'Insertion order is only correct for newly inserted keys. A get operation also counts as a "use" and must promote that key to most-recently-used — which insertion order alone doesn\'t capture.' },
         { label: 'By both get and put operations', isCorrect: true },
@@ -63,7 +65,7 @@ export default {
     },
     {
       id: 'two-structure-insight',
-      question: 'O(1) get requires instant key lookup; O(1) eviction requires instant access to the least-recently-used node. No single standard structure does both. This implies…',
+      question: 'When no single structure satisfies every requirement, look for two structures whose strengths cover each other\'s gaps. O(1) get requires instant key lookup; O(1) eviction requires instant access to the least-recently-used node. No single standard structure does both. This implies…',
       options: [
         { label: 'Use a sorted array updated on each access', isCorrect: false, feedback: 'Maintaining a sorted array requires shifting elements on each update — O(n) per operation at capacity 3,000. That defeats the O(1) requirement.' },
         { label: 'Combine a hash map with a doubly linked list', isCorrect: true },
@@ -78,7 +80,8 @@ export default {
     },
     {
       id: 'capacity-constraint',
-      question: '1 ≤ capacity ≤ 3000 and up to 2 × 10^5 calls. This means…',
+      question: 'Constraints on cache size and call volume tell you when eviction logic actually needs to run. 1 ≤ capacity ≤ 3000 and up to 2 × 10^5 calls. This means…',
+      highlight: { location: 'constraint', text: '1 <= capacity <= 3000' },
       options: [
         { label: 'You must evict on every put regardless', isCorrect: false, feedback: 'You only evict when the cache is at capacity — if there is still room, just insert. Evicting unnecessarily would lose valid cached entries.' },
         { label: 'Eviction only triggers when at capacity and a new key is inserted', isCorrect: true },
@@ -92,4 +95,55 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Node:
+    def __init__(self, key=0, val=0):
+        self.key = key
+        self.val = val
+        self.prev = None
+        self.next = None
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        node.prev.next = node.next
+        node.next.prev = node.prev
+
+    def _add_to_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.cache:
+            return -1
+        node = self.cache[key]
+        self._remove(node)
+        self._add_to_front(node)
+        return node.val
+
+    def put(self, key, value):
+        if key in self.cache:
+            node = self.cache[key]
+            node.val = value
+            self._remove(node)
+            self._add_to_front(node)
+        else:
+            if len(self.cache) >= self.capacity:
+                lru = self.tail.prev
+                self._remove(lru)
+                del self.cache[lru.key]
+            node = Node(key, value)
+            self.cache[key] = node
+            self._add_to_front(node)`,
+  solutionComplexity: { time: 'O(1)', space: 'O(capacity)' },
+  solutionCaveat: 'The two sentinel nodes (<code>head</code> and <code>tail</code>) always stay in the list — they are never real entries — which is what lets <code>_remove</code> and <code>_add_to_front</code> stay branch-free: there is never a "removing the only node" or "list is empty" special case to check for.',
+  solutionExplanation: 'A hash map gives O(1) lookup by key, but recency needs an ordering that a plain dict can\'t track — that\'s what the doubly linked list is for, with the front representing "most recently used" and the back representing "least recently used." Every <code>get</code> or successful <code>put</code> on an existing key removes that node from wherever it sits and re-inserts it at the front, both O(1) pointer operations, while a <code>put</code> on a new key at full capacity evicts whatever sits just before the tail sentinel — always the true least-recently-used entry.',
 }

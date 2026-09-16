@@ -14,8 +14,9 @@ export default {
       self.left = left
       self.right = right
 
-def is_same_tree(p, q):
-  pass`,
+class Solution:
+    def is_same_tree(self, p, q):
+        pass`,
   functionName: 'is_same_tree_run',
   conceptId: 'trees',
   runnerSetup: `from collections import deque
@@ -32,17 +33,18 @@ def _build(arr):
       i += 1
   return root
 def is_same_tree_run(p, q):
-  return is_same_tree(_build(p), _build(q))`,
+  return Solution().is_same_tree(_build(p), _build(q))`,
   testCases: [
     { label: 'same', args: [[1,2,3],[1,2,3]], expected: true },
     { label: 'different structure', args: [[1,2],[1,null,2]], expected: false },
   ],
-  bruteHint: 'Describe converting both trees into flattened traversal lists first and then comparing those lists element by element, and note the extra space this requires',
-  optimizeHint: 'Name the technique that walks both trees simultaneously and stops the instant a mismatch is found, avoiding any extra traversal or storage',
+  bruteHint: 'One brute-force approach is to flatten both trees into traversal lists — for example, a preorder traversal that includes null markers for missing children — and then compare the two lists element by element. This takes O(n) time to build and compare the lists, but it also costs O(n) extra space, since every node from both trees must be materialized into a list before any comparison happens. Can you compare the two trees directly, node by node, without first converting them into flat lists?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(h)' },
   clues: [
     {
       id: 'input-two-roots',
-      question: 'You are given two separate tree roots, p and q. What does this tell you about how to traverse?',
+      question: 'Input parameters often hint at the traversal strategy needed to solve a problem. You are given two separate tree roots, p and q. What does this tell you about how to traverse?',
+      highlight: { location: 'description', text: 'the roots of two binary trees <code>p</code> and <code>q</code>' },
       options: [
         { label: 'Flatten both to arrays, then compare', isCorrect: false, feedback: 'Flattening loses structural information — two different trees can produce the same level-order array if nulls are omitted. The structure check must happen node by node.' },
         { label: 'Walk both trees simultaneously', isCorrect: true },
@@ -57,7 +59,8 @@ def is_same_tree_run(p, q):
     },
     {
       id: 'output-boolean',
-      question: 'The output is a single boolean. What does this mean for your recursion?',
+      question: 'The declared return type often limits how much of the input your algorithm actually needs to inspect. The output is a single boolean. What does this mean for your recursion?',
+      highlight: { location: 'description', text: 'check if they are the same or not' },
       options: [
         { label: 'Collect mismatches and return a list', isCorrect: false, feedback: 'Collecting mismatches returns too much — you only need to know whether any mismatch exists, not enumerate them. A boolean short-circuit is sufficient.' },
         { label: 'Short-circuit on the first mismatch', isCorrect: true },
@@ -72,11 +75,12 @@ def is_same_tree_run(p, q):
     },
     {
       id: 'structural-identity',
-      question: 'Trees must be "structurally identical, and nodes have the same value." What are the two separate checks this implies?',
+      question: 'Precise wording in a problem statement often encodes the exact checks a solution must perform. Trees must be "structurally identical, and nodes have the same value." What are the two separate checks this implies?',
+      highlight: { location: 'description', text: 'structurally identical, and the nodes have the same value' },
       options: [
         { label: 'Values equal and same depth', isCorrect: false, feedback: 'Same depth is not sufficient — two trees can have equal depth but completely different shapes. The check must be per-node: same value and same left/right structure.' },
         { label: 'Values equal and null/non-null match', isCorrect: true },
-        { label: 'Same in-order traversal', isCorrect: false, feedback: 'In-order traversal is not unique to a tree structure — different shaped BSTs can produce the same in-order sequence. You need structural checks, not just value order.' },
+        { label: 'Same left-to-right sequence of values', isCorrect: false, feedback: 'In-order traversal is not unique to a tree structure — different shaped BSTs can produce the same in-order sequence. You need structural checks, not just value order.' },
         { label: 'Same number of nodes and same sum', isCorrect: false, feedback: 'Two trees can have the same node count and sum while being completely different. Both structure and per-node values must match simultaneously.' },
       ],
       correctFeedback: 'Exactly — at each node pair you check: are both null (base case, return true), is one null and one not (return false), and do the values match (then recurse left and right).',
@@ -86,4 +90,16 @@ def is_same_tree_run(p, q):
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def is_same_tree(self, p, q):
+        if not p and not q:
+            return True
+        if not p or not q:
+            return False
+        if p.val != q.val:
+            return False
+        return self.is_same_tree(p.left, q.left) and self.is_same_tree(p.right, q.right)`,
+  solutionComplexity: { time: 'O(n)', space: 'O(h)' },
+  solutionCaveat: 'The two null checks are split into separate conditions — <code>not p and not q</code> (both empty, structurally fine) versus <code>not p or not q</code> (exactly one empty, a structural mismatch) — collapsing them into one combined check would fail to distinguish "both trees ended here correctly" from "one tree has a node the other doesn\'t."',
+  solutionExplanation: 'Recursing into both trees in lockstep — comparing <code>p</code> and <code>q</code> at every corresponding position — checks both required conditions at once: the value equality check confirms the node data matches, and the null-pattern checks confirm the structure matches, since two structurally different trees will eventually diverge at some node where one side has a child and the other doesn\'t. The <code>and</code> between the two recursive calls is what lets the function short-circuit and return false the instant any single node pair fails, without needing to inspect the rest of either tree.',
 }

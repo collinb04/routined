@@ -12,9 +12,8 @@ DSA learning platform teaching pattern recognition, not solution memorization. U
 
 ## Commands
 
-<!-- TODO: verify these match your actual scripts -->
 - Frontend dev: `npm run dev`
-- Typecheck: `npx nuxt typecheck` (run after any change to problem files or types)
+- Typecheck: `npx vue-tsc --noEmit --ignoreDeprecations 6.0` (run from `frontend/`, after any change to problem files or types — this is a Vite/vue-tsc project, not Nuxt)
 - Backend dev: `python run.py` (from backend dir, venv active)
 - DB: `docker compose up -d`
 
@@ -27,8 +26,10 @@ DSA learning platform teaching pattern recognition, not solution memorization. U
 
 ## Content authoring
 
-- **Dissect clue authoring: follow `docs/dissect-authoring.md`.** Read that spec and the target problem file only — nothing else. Edit the file directly; do not print the content in chat; reply with a one-line summary.
+- **Dissect clue authoring: follow `docs/dissect-authoring.md`.** Read that spec and the target problem file only — nothing else. Edit the file directly; do not print the content in chat; reply with a one-line summary. Track progress in `docs/dissect-todo.md`.
 - **Struggle & Optimize authoring: follow `docs/struggle-authoring.md`.** Same discipline: spec + problem file only. Validate the generated block against the Zod schema in `scripts/struggle-schema.mjs` before checking off in `docs/struggle-todo.md`.
+- **Solution tab authoring: follow `docs/solution-authoring.md`.** Same discipline: spec + problem file only. This is a reveal tab (names techniques/code directly, no de-spoiling) — only `contains-duplicate` has it so far; no todo tracker exists yet for the rollout.
+- **`starterCode`/`runnerSetup` and `bruteHint`/`optimizeComplexity` conventions: see `docs/problem-schema.md`.** All 312 problems already follow this (calibrated on contains-duplicate) — only relevant if you're adding a new problem or reworking an existing one's hints.
 - When locating a problem in a large file, grep for its `id` and read only the surrounding ~200 lines. Never read an entire multi-thousand-line content file.
 
 ## Struggle & Optimize phase — hard rules

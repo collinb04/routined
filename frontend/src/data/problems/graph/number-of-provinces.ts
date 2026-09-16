@@ -8,8 +8,10 @@ export default {
     { input: 'isConnected = [[1,0,0],[0,1,0],[0,0,1]]', output: '3' },
   ],
   constraints: ['1 ≤ n ≤ 200', 'n == isConnected.length == isConnected[i].length', 'isConnected[i][j] is 1 or 0'],
-  starterCode: `def find_circle_num(is_connected):
-  pass`,
+  starterCode: `class Solution:
+    def find_circle_num(self, is_connected):
+        pass`,
+  runnerSetup: 'find_circle_num = Solution().find_circle_num',
   functionName: 'find_circle_num',
   conceptId: 'graphs',
   testCases: [
@@ -17,12 +19,13 @@ export default {
     { label: 'Three provinces', args: [[[1,0,0],[0,1,0],[0,0,1]]], expected: 3 },
     { label: 'One province', args: [[[1,1,1],[1,1,1],[1,1,1]]], expected: 1 },
   ],
-  bruteHint: 'Describe checking reachability between every pair of cities individually using the matrix, and its time complexity',
-  optimizeHint: 'Name the technique (Union-Find or repeated DFS/BFS) that groups cities into provinces by visiting each unvisited city exactly once',
+  bruteHint: 'Imagine checking every pair of cities individually: for each pair (i, j), run a fresh traversal over the adjacency matrix to determine whether j is reachable from i, then use those reachability results to group cities into provinces. With n cities there are O(n²) pairs, and each traversal over an n × n matrix costs O(n²) on its own, giving roughly O(n⁴) total work. What lets you avoid re-checking reachability for pairs already grouped together?',
+  optimizeComplexity: { time: 'O(n²)', space: 'O(n)' },
   clues: [
     {
       id: 'input-format',
-      question: 'The input is an n × n adjacency matrix, not an edge list. What does isConnected[i][j] == 1 mean?',
+      question: 'Before you can reason about traversal, you need to know exactly what each entry in the given structure represents. The input is an n × n adjacency matrix, not an edge list. What does isConnected[i][j] == 1 mean?',
+      highlight: { location: 'constraint', text: 'isConnected[i][j] is 1 or 0' },
       options: [
         { label: 'City i has exactly j neighbors', isCorrect: false, feedback: 'isConnected[i][j] is a binary flag, not a count. A value of 1 means city i and city j are directly connected; j here is a city index, not a neighbor count.' },
         { label: 'City i and city j are directly connected', isCorrect: true },
@@ -37,7 +40,8 @@ export default {
     },
     {
       id: 'constraint-complexity',
-      question: 'n ≤ 200. The adjacency matrix has n² entries. What is the cost of reading it completely?',
+      question: 'Constraints define the scale you must handle efficiently, so reading the bounds first tells you what complexity is actually achievable. n ≤ 200. The adjacency matrix has n² entries. What is the cost of reading it completely?',
+      highlight: { location: 'constraint', text: '1 ≤ n ≤ 200' },
       options: [
         { label: 'O(n) — one pass through the matrix', isCorrect: false, feedback: 'A matrix has n² entries. Reading it once is O(n²). At n = 200, that is 40,000 entries — fast, but not O(n).' },
         { label: 'O(n²) — you must read n² entries', isCorrect: true },
@@ -52,7 +56,7 @@ export default {
     },
     {
       id: 'diagonal-entries',
-      question: 'isConnected[i][i] is always 1 — every city is connected to itself. How should your traversal handle the diagonal?',
+      question: 'Input formats often carry a formatting convention that adds no real information, and recognizing it keeps your traversal logic clean. isConnected[i][i] is always 1 — every city is connected to itself. How should your traversal handle the diagonal?',
       options: [
         { label: 'Treat self-connections as edges to new nodes', isCorrect: false, feedback: 'isConnected[i][i] == 1 is just the matrix convention for "city i exists." Treating it as an edge to another node would be incorrect — i and i are the same city.' },
         { label: 'Skip diagonal entries — they add no traversal information', isCorrect: true },
@@ -67,7 +71,8 @@ export default {
     },
     {
       id: 'output-count',
-      question: 'The output is the number of provinces (connected components). What traversal pattern produces the count?',
+      question: 'Understanding what the output represents shapes the traversal pattern you need, so before diving into implementation, clarify exactly what you are counting. The output is the number of provinces (connected components). What traversal pattern produces the count?',
+      highlight: { location: 'description', text: 'number of provinces (connected components)' },
       options: [
         { label: 'Count cities where isConnected[i][i] == 1', isCorrect: false, feedback: 'isConnected[i][i] is always 1 for all i — counting them gives n, not the province count. Province count requires grouping cities by reachability.' },
         { label: 'Start a new DFS/BFS for each unvisited city; count starts', isCorrect: true },
@@ -81,4 +86,30 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def find_circle_num(self, is_connected):
+        n = len(is_connected)
+        parent = list(range(n))
+        count = [n]
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(x, y):
+            rx, ry = find(x), find(y)
+            if rx != ry:
+                parent[rx] = ry
+                count[0] -= 1
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                if is_connected[i][j] == 1:
+                    union(i, j)
+        return count[0]`,
+  solutionComplexity: { time: 'O(n²)', space: 'O(n)' },
+  solutionCaveat: 'Only the upper triangle (<code>j > i</code>) of the adjacency matrix is scanned — the matrix is symmetric since <code>is_connected[i][j]</code> always equals <code>is_connected[j][i]</code>, so checking each pair once is enough and avoids redundant unions.',
+  solutionExplanation: 'A "province" is exactly a connected component in the graph the adjacency matrix describes, so union-find naturally counts them: every direct connection unions its two cities, and after processing the whole matrix, the number of remaining distinct components is the number of provinces. This is the same union-find component-counting pattern as plain graph connectivity, just reading edges out of a matrix instead of an edge list.',
 }

@@ -16,12 +16,21 @@ export interface ClueOption {
   feedback?: string
 }
 
+export interface ClueHighlight {
+  location: 'description' | 'constraint'
+  // For 'description': the exact tag-free substring to wrap and highlight.
+  // Omit to highlight the whole description block instead of a sub-phrase.
+  // For 'constraint': the exact string in `constraints[]` to highlight.
+  text?: string
+}
+
 export interface ClueCard {
   id: string
   question: string
   options: ClueOption[]
   correctFeedback: string
   wrongFeedback: string[]
+  highlight?: ClueHighlight
 }
 
 export type Viability = 'optimal' | 'viable_suboptimal' | 'trap' | 'inapplicable'
@@ -39,6 +48,36 @@ export interface StruggleContent {
   options: StrategyOption[]
   targetInsight: string
   insightRubric: string[]
+}
+
+export interface SolutionSubgoal {
+  label: string
+  explanation: string
+}
+
+export interface SolutionApproach {
+  approachName: string
+  oneLineIdea: string
+  subgoals: SolutionSubgoal[]
+  code: string
+  timeComplexity: string
+  spaceComplexity: string
+  whenYouWouldActuallyUseThis: string
+}
+
+export interface SolutionComparisonRow {
+  approach: string
+  time: string
+  space: string
+  structuralUnlock: string
+}
+
+export interface ProblemSolution {
+  patternName: string
+  approaches: SolutionApproach[]
+  comparisonTable: SolutionComparisonRow[]
+  transferNote: string
+  retrievalCheck: string[]
 }
 
 export interface Problem {
@@ -59,6 +98,16 @@ export interface Problem {
   optimizeSeedMessage?: string
   bruteHint?: string
   optimizeHint?: string
+  optimizeComplexity?: { time: string; space: string }
+  solution?: ProblemSolution
+  // Single canonical solution reveal shown in Blog.vue's practice-problem sandbox
+  // (distinct from `solution` above, which feeds ProblemSpace.vue's multi-approach
+  // comparison UI). `solutionExplanation` is rendered via v-html — hand-write an
+  // inline <svg> in it if a problem needs a diagram.
+  solutionCode?: string
+  solutionComplexity?: { time: string; space: string }
+  solutionCaveat?: string
+  solutionExplanation?: string
 }
 
 
@@ -68,6 +117,7 @@ import twoSumIi from './linear/two-sum-ii'
 import maxAverageSubarray from './linear/max-average-subarray'
 import rangeSumQuery from './linear/range-sum-query'
 import validParentheses from './linear/valid-parentheses'
+import implementQueueUsingStacks from './linear/implement-queue-using-stacks'
 import nextGreaterElement from './linear/next-greater-element'
 import bubbleSort from './sorted-search/bubble-sort'
 import insertionSort from './sorted-search/insertion-sort'
@@ -382,6 +432,7 @@ export const PROBLEMS: Problem[] = [
   maxAverageSubarray,
   rangeSumQuery,
   validParentheses,
+  implementQueueUsingStacks,
   nextGreaterElement,
   bubbleSort,
   insertionSort,

@@ -8,19 +8,53 @@ export default {
     { input: 'root = [3,1,4,null,null,2]', output: '[2,1,4,null,null,3]', explanation: 'Swap 2 and 3 back.' },
   ],
   constraints: ['2 ≤ number of nodes ≤ 1000', '-2³¹ ≤ Node.val ≤ 2³¹ − 1'],
-  starterCode: `def recover_tree(root):
-  pass`,
-  functionName: 'recover_tree',
+  starterCode: `class TreeNode:
+  def __init__(self, val=0, left=None, right=None):
+      self.val = val
+      self.left = left
+      self.right = right
+
+class Solution:
+    def recover_tree(self, root):
+        pass`,
+  functionName: 'recover_tree_run',
   conceptId: 'trees',
+  runnerSetup: `from collections import deque
+def _build(arr):
+  if not arr or arr[0] is None: return None
+  root = TreeNode(arr[0]); q = deque([root]); i = 1
+  while q and i < len(arr):
+      node = q.popleft()
+      if i < len(arr) and arr[i] is not None:
+          node.left = TreeNode(arr[i]); q.append(node.left)
+      i += 1
+      if i < len(arr) and arr[i] is not None:
+          node.right = TreeNode(arr[i]); q.append(node.right)
+      i += 1
+  return root
+def _level(root):
+  if not root: return []
+  q = deque([root]); res = []
+  while q:
+      node = q.popleft()
+      if node: res.append(node.val); q.append(node.left); q.append(node.right)
+      else: res.append(None)
+  while res and res[-1] is None: res.pop()
+  return res
+def recover_tree_run(arr):
+  root = _build(arr)
+  Solution().recover_tree(root)
+  return _level(root)`,
   testCases: [
     { label: 'Swap at root', args: [[1,3,null,null,2]], expected: [3,1,null,null,2] },
   ],
-  bruteHint: 'Describe collecting all node values, sorting a copy, and comparing it against the original inorder sequence to locate the swapped pair',
-  optimizeHint: 'Name the traversal order where a single pass naturally exposes the point(s) where a value is smaller than the one just before it',
+  bruteHint: 'The brute-force approach performs an inorder traversal to collect all node values into a list, sorts a copy of that list, and compares the two to find the two positions where they differ — revealing which values were swapped. This takes O(n log n) time for the sort and O(n) space for the collected values, then a second traversal to find and swap the actual nodes. Can you avoid the extra array and the sort by looking for inversions during a single traversal instead?',
+  optimizeComplexity: { time: 'O(n)', space: 'O(1)' },
   clues: [
     {
       id: 'inorder-bst-signal',
-      question: 'A valid BST has a strictly increasing inorder traversal. Two nodes are swapped. What does this produce in the inorder sequence?',
+      question: 'Recognizing how a described corruption manifests in your data structure tells you exactly what pattern to search for. A valid BST has a strictly increasing inorder traversal. Two nodes are swapped. What does this produce in the inorder sequence?',
+      highlight: { location: 'description', text: 'Two nodes of a BST are swapped by mistake.' },
       options: [
         { label: 'One out-of-order element in the sequence', isCorrect: false, feedback: 'Swapping two nodes creates two violations in the inorder sequence, not one. At each swap point, a larger value appears before a smaller one — that is two descents, though they may be adjacent (appearing as one).' },
         { label: 'One or two inversions in the inorder sequence', isCorrect: true },
@@ -35,7 +69,7 @@ export default {
     },
     {
       id: 'two-pointers-signal',
-      question: 'During inorder traversal, how do you identify the two nodes that need to be swapped?',
+      question: 'Once you know how many inversions to expect, you need a strategy to actually pinpoint the offending nodes during traversal. During inorder traversal, how do you identify the two nodes that need to be swapped?',
       options: [
         { label: 'Find the node whose value is largest and smallest', isCorrect: false, feedback: 'The largest and smallest values are not necessarily the swapped ones. The swapped nodes are identified by where they violate the inorder ordering — not by their absolute values.' },
         { label: 'Track the first place prev > curr, and the last place prev > curr', isCorrect: true },
@@ -50,7 +84,8 @@ export default {
     },
     {
       id: 'space-complexity-signal',
-      question: 'The problem says "try to use O(1) constant space." What does O(1) space mean for a tree traversal?',
+      question: 'When a problem explicitly hints at a target space complexity, that phrasing often names the exact technique required. The problem says "try to use O(1) constant space." What does O(1) space mean for a tree traversal?',
+      highlight: { location: 'description', text: 'Try to use O(1) constant space (Morris inorder traversal).' },
       options: [
         { label: 'Use an explicit stack instead of recursion', isCorrect: false, feedback: 'An explicit stack still uses O(h) space — O(log n) for balanced trees, O(n) worst case. That is not O(1). The O(1) hint refers to Morris traversal, which uses no stack at all.' },
         { label: 'Morris inorder traversal — no recursion stack or queue', isCorrect: true },
@@ -65,7 +100,8 @@ export default {
     },
     {
       id: 'in-place-recovery-signal',
-      question: 'The problem says "recover the BST without changing its structure." What exactly do you swap?',
+      question: 'Constraints on what you are allowed to modify narrow down which part of the data structure actually needs fixing. The problem says "recover the BST without changing its structure." What exactly do you swap?',
+      highlight: { location: 'description', text: 'Recover the BST without changing its structure.' },
       options: [
         { label: 'The two nodes themselves (restructure the tree)', isCorrect: false, feedback: 'Restructuring the tree — changing parent/child pointers — would change the structure, which is explicitly forbidden. Only the values inside the misplaced nodes need to be swapped.' },
         { label: 'Only the values of the two identified nodes', isCorrect: true },
@@ -79,4 +115,29 @@ export default {
       ],
     },
   ],
+  solutionCode: `class Solution:
+    def recover_tree(self, root):
+        first = second = prev = None
+        curr = root
+        while curr:
+            if curr.left:
+                pred = curr.left
+                while pred.right and pred.right != curr:
+                    pred = pred.right
+                if not pred.right:
+                    pred.right = curr
+                    curr = curr.left
+                    continue
+                else:
+                    pred.right = None
+            if prev and prev.val > curr.val:
+                if not first:
+                    first = prev
+                second = curr
+            prev = curr
+            curr = curr.right
+        first.val, second.val = second.val, first.val`,
+  solutionComplexity: { time: 'O(n)', space: 'O(1)' },
+  solutionCaveat: 'The threaded pointer (<code>pred.right = curr</code>) is removed again the moment it\'s used to return to <code>curr</code> — leaving it in place would permanently corrupt the tree\'s structure, so the temporary thread must be torn down immediately after it serves its one purpose of avoiding a stack.',
+  solutionExplanation: 'Morris traversal simulates inorder traversal without recursion or an explicit stack by temporarily linking each node\'s inorder predecessor forward to it, which is what lets the traversal return to a node after descending into its left subtree with zero extra memory. Every time the current value is smaller than the previous one visited, that\'s a violation of the BST\'s required ascending inorder order; recording the first violation\'s earlier node as <code>first</code> and every violation\'s later node as <code>second</code> correctly identifies both misplaced nodes whether the swap was between adjacent values (one violation) or distant ones (two violations) — swapping only their <code>.val</code> fields at the end repairs the BST without touching any pointer in the tree\'s actual structure.',
 }
