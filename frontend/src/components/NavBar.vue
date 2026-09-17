@@ -1,6 +1,6 @@
 <template>
   <header
-    class="sticky top-0 z-50 flex items-center justify-between px-5 sm:px-[12.5%] py-4 transition-all duration-300"
+    class="sticky top-0 z-60 flex items-center justify-between px-5 sm:px-[12.5%] py-4 transition-all duration-300"
     :class="scrolled ? 'bg-[#f5f5f2]/90 backdrop-blur-md shadow-sm' : 'bg-transparent'"
   >
     <div class="flex items-center gap-2">
@@ -203,7 +203,7 @@
   >
     <div
       v-if="mobileOpen"
-      class="md:hidden fixed inset-x-0 top-14.25 z-40 bg-[#f5f5f2]/75 border-b border-black backdrop-blur-md px-5 py-5 flex flex-col gap-1"
+      class="md:hidden fixed inset-x-0 top-14.25 z-60 bg-[#f5f5f2]/75 border-b border-black backdrop-blur-md px-5 py-5 flex flex-col gap-1"
     >
       <template v-for="link in links" :key="link.label">
         <template v-if="link.dropdown">

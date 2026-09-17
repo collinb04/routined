@@ -8,6 +8,7 @@ from .routes.progress import progress_bp
 from .routes.checklist import checklist_bp
 from .routes.learn import learn_bp
 from .routes.contact import contact_bp
+from .routes.learn_mode import learn_mode_bp
 
 
 def create_app():
@@ -21,5 +22,6 @@ def create_app():
     app.register_blueprint(checklist_bp)
     app.register_blueprint(learn_bp)
     app.register_blueprint(contact_bp)
+    app.register_blueprint(learn_mode_bp)
 
     return app

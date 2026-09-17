@@ -1,5 +1,5 @@
 <template>
-  <div class="flex" style="background: #111215">
+  <div ref="pageRootEl" class="flex" style="background: #111215">
 
     <!-- Mobile backdrop (tap outside to close) -->
     <div
@@ -24,6 +24,53 @@
           </svg>
         </button>
       </div>
+
+      <!-- Learn mode -->
+      <div ref="learnModeRowEl" class="w-full lg:w-56 px-4 pb-3 flex items-center justify-between gap-2">
+        <span class="text-[11px] font-medium" style="color:#d4af37" title="Require Dissect to be completed before Struggle &amp; Optimize or Attack">Learn mode</span>
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="learnMode.enabled"
+          class="relative shrink-0 w-8 h-4.5 rounded-full transition-colors"
+          :style="learnMode.enabled ? 'background:#d4af37' : 'background:rgba(255,255,255,0.15)'"
+          @click="learnMode.setEnabled(!learnMode.enabled)"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform"
+            :class="learnMode.enabled ? 'translate-x-3.5' : 'translate-x-0'"
+          />
+        </button>
+      </div>
+
+      <!-- Learn mode intro popup — one-time, dismissed only via its close button.
+           Teleported to <body> so it isn't inside the page's transition-transformed
+           root element (a "fixed" descendant of a transformed ancestor gets dragged
+           along with that transform instead of staying pinned to the viewport). -->
+      <Teleport to="body">
+        <div
+          v-if="showLearnModeBanner"
+          class="fixed z-50 w-64 rounded-xl shadow-xl p-4 flex flex-col gap-2.5"
+          :style="{ top: bannerStyle.top, left: bannerStyle.left, background: '#181a1d', border: '1px solid #d4af37' }"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-[12px] font-semibold" style="color:#d4af37">New: Learn mode</p>
+            <button class="shrink-0 transition-colors" style="color:rgba(255,255,255,0.4)" @click="dismissLearnModeBanner">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <p class="text-[11.5px] leading-relaxed" style="color:rgba(255,255,255,0.55)">
+            Turn it on to require Dissect to be completed before Struggle &amp; Optimize or Attack. Enforce the important part.
+          </p>
+          <button
+            class="self-start text-[12px] font-semibold px-3 py-1.5 rounded-md text-black transition-opacity hover:opacity-90"
+            style="background:#d4af37"
+            @click="enableLearnModeFromBanner"
+          >
+            Turn on
+          </button>
+        </div>
+      </Teleport>
 
       <!-- Problem search -->
       <div class="w-full lg:w-56 px-4 pb-3">
@@ -267,11 +314,42 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
+import { useLearnModeStore } from '@/stores/learnMode'
 
 const router = useRouter()
+const learnMode = useLearnModeStore()
+
+// ── Learn mode intro popup (shown once, next to the toggle) ────────────────
+const LEARN_MODE_BANNER_KEY = 'learnModeBannerSeen'
+const showLearnModeBanner = ref(false)
+const learnModeRowEl = ref(null)
+const bannerStyle = reactive({ top: '0px', left: '0px' })
+const pageRootEl = ref(null)
+let cleanupLearnModeBannerReveal = null
+
+function positionLearnModeBanner() {
+  if (!learnModeRowEl.value) return
+  const rect = learnModeRowEl.value.getBoundingClientRect()
+  bannerStyle.top = `${rect.top}px`
+  bannerStyle.left = `${rect.right + 10}px`
+}
+
+function dismissLearnModeBanner() {
+  showLearnModeBanner.value = false
+  try {
+    localStorage.setItem(LEARN_MODE_BANNER_KEY, '1')
+  } catch {
+    // best-effort — localStorage may be unavailable (private mode, quota, etc.)
+  }
+}
+
+function enableLearnModeFromBanner() {
+  learnMode.setEnabled(true)
+  dismissLearnModeBanner()
+}
 const sidebarOpen = ref(window.innerWidth >= 1024)
 const selectedTopic = ref(null)
 const mainEl = ref(null)
@@ -1243,10 +1321,48 @@ onMounted(() => {
   selectedTopic.value = topics[0]
   loadChecklist()
   document.body.classList.add('product-page-scroll')
+
+  try {
+    if (!localStorage.getItem(LEARN_MODE_BANNER_KEY)) {
+      // Don't reveal until the page-enter transition finishes — measuring the row
+      // while it's still animating would show the popup in the wrong spot and then
+      // snap it into place, which reads as a glitch. Show it once, already correct.
+      const revealLearnModeBanner = () => {
+        showLearnModeBanner.value = true
+        nextTick(positionLearnModeBanner)
+      }
+      const root = pageRootEl.value
+      if (root) {
+        let revealed = false
+        const onTransitionEnd = () => {
+          revealed = true
+          revealLearnModeBanner()
+        }
+        root.addEventListener('transitionend', onTransitionEnd, { once: true })
+        const fallbackTimer = setTimeout(() => {
+          if (!revealed) {
+            root.removeEventListener('transitionend', onTransitionEnd)
+            revealLearnModeBanner()
+          }
+        }, 1000)
+        cleanupLearnModeBannerReveal = () => {
+          root.removeEventListener('transitionend', onTransitionEnd)
+          clearTimeout(fallbackTimer)
+        }
+      } else {
+        revealLearnModeBanner()
+      }
+    }
+  } catch {
+    // best-effort — localStorage may be unavailable (private mode, quota, etc.)
+  }
+  window.addEventListener('resize', positionLearnModeBanner)
 })
 
 onUnmounted(() => {
   document.body.classList.remove('product-page-scroll')
+  window.removeEventListener('resize', positionLearnModeBanner)
+  cleanupLearnModeBannerReveal?.()
 })
 </script>
 

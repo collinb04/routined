@@ -45,14 +45,14 @@ onMounted(() => loadPyodide())
 
 <style>
 .reveal-enter-active {
-  transition: all 0.7s ease-out;
+  transition: opacity 0.9s ease, transform 0.9s ease-out;
 }
 .reveal-leave-active {
-  transition: all 0.15s ease-in;
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
 }
 .reveal-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(16px);
 }
 .reveal-leave-to {
   opacity: 0;

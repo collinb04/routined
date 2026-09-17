@@ -2,6 +2,7 @@
 import { ref, reactive, computed, nextTick, onBeforeUnmount } from 'vue'
 import type { ClueCard, StruggleContent } from '@/data/problems'
 import type { ProblemContext } from '@/stores/struggleTutor'
+import { useLearnModeStore } from '@/stores/learnMode'
 import StruggleTutorHub from '@/components/StruggleTutorHub.vue'
 
 export interface ChatMessage {
@@ -58,6 +59,8 @@ const emit = defineEmits<{
 
 const PHASE_NAMES = ['Dissect', 'Struggle & Optimize', 'Attack'] as const
 
+const learnMode = useLearnModeStore()
+
 // Struggle & Optimize is a free-use tutor, not a graded step — it never
 // contributes a "done" state, and doesn't gate Attack. Only Dissect and
 // Attack have real completion.
@@ -75,7 +78,13 @@ function tabStatus(i: number): 'done' | 'unlocked' {
   return completedPhases.has(i) ? 'done' : 'unlocked'
 }
 
+// Learn mode: Struggle & Optimize and Attack stay locked until Dissect is done.
+function isLocked(i: number): boolean {
+  return learnMode.enabled && i > 0 && !props.phaseCompletion.dissect
+}
+
 function clickTab(i: number) {
+  if (isLocked(i)) return
   activePhase.value = i
 }
 
@@ -396,17 +405,24 @@ onBeforeUnmount(() => {
             class="flex items-center gap-1 px-3 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px"
             :class="[
               i === activePhase ? 'border-accent' : 'border-transparent',
-              tabStatus(i) === 'done'
-                ? 'text-green cursor-pointer'
-                : i === activePhase
-                  ? 'text-text cursor-pointer'
-                  : 'text-text-muted hover:text-text cursor-pointer',
+              isLocked(i)
+                ? 'text-text-muted/50 cursor-not-allowed'
+                : tabStatus(i) === 'done'
+                  ? 'text-green cursor-pointer'
+                  : i === activePhase
+                    ? 'text-text cursor-pointer'
+                    : 'text-text-muted hover:text-text cursor-pointer',
             ]"
+            :disabled="isLocked(i)"
+            :title="isLocked(i) ? 'Complete Dissect to unlock' : undefined"
             @click="clickTab(i)"
           >
             <span class="text-[11px] font-medium shrink-0 mt-0.5 w-4 text-center" :class="tabStatus(i) === 'done' ? 'text-green' : 'text-text-muted'">
               <svg v-if="tabStatus(i) === 'done'" width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline">
                 <polyline points="2 6 5 9 10 3"/>
+              </svg>
+              <svg v-else-if="isLocked(i)" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline">
+                <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
               <span v-else>{{ i + 1 }}</span>
             </span>
