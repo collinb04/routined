@@ -132,13 +132,13 @@ def chat(problem_id):
     return jsonify({"content": assistant_text})
 
 
-# ── /tutor-chat (Explore + Identify tabs — ungated, ungraded) ──────────────────
+# ── /tutor-chat (general free-use tutor — ungated, ungraded) ───────────────────
 
 def _strip_html(text):
     return re.sub(r"<[^>]+>", "", text or "")
 
 
-def _explore_system_prompt(problem_id, problem_context):
+def _tutor_system_prompt(problem_id, problem_context, options, target_insight, code, run_error):
     description = _strip_html((problem_context or {}).get("description", ""))
     examples = (problem_context or {}).get("examples") or []
     constraints = (problem_context or {}).get("constraints") or []
@@ -149,8 +149,20 @@ def _explore_system_prompt(problem_id, problem_context):
         for e in examples
     ) or "(none given)"
     constraints_block = "\n".join(f"- {c}" for c in constraints) or "(none given)"
+    options_block = "\n".join(
+        f"- {o.get('strategyId')} ({o.get('viability')}): {o.get('rationale')}"
+        for o in (options or [])
+    ) or "(none given)"
+    insight_line = (
+        f"\nNever state or directly imply this insight: \"{target_insight}\"\n"
+        if target_insight else ""
+    )
+    code_block = f"```\n{code}\n```" if (code or "").strip() else "(learner has not written any code yet)"
+    run_error_line = (
+        f"\nMost recent run error/output:\n\"{run_error}\"\n" if (run_error or "").strip() else ""
+    )
 
-    return f"""You are a Socratic coding tutor helping a learner who is completely stuck on "{problem_id}" and has not chosen any approach yet.
+    return f"""You are a Socratic coding tutor helping a learner work through "{problem_id}" — from first getting oriented, through picking an approach, to pressure-testing it. This is one continuous conversation with no fixed stages; infer where the learner is from the transcript so far and respond to that.
 
 Problem description:
 {description}
@@ -161,66 +173,21 @@ Examples:
 Constraints:
 {constraints_block}
 
-Your job: help them get oriented through questions alone — restate the goal in their own words, walk through an example by hand, notice what a brute-force approach would even look like. You are grounding them in the problem, not steering them toward a specific technique.
-
-Rules:
-1. Never name a specific data structure, algorithm, or technique (no "hash map", "two pointers", "sort", etc.) — if asked directly what to use, redirect with a question instead of answering.
-2. Ask exactly one focused question per response.
-3. Be encouraging but keep the learner doing the thinking.
-4. Keep responses to 2–4 sentences plus the question."""
-
-
-def _identify_system_prompt(problem_id, problem_context, options):
-    description = _strip_html((problem_context or {}).get("description", ""))
-    options_block = "\n".join(
-        f"- {o.get('strategyId')} ({o.get('viability')}): {o.get('rationale')}"
-        for o in (options or [])
-    ) or "(none given)"
-
-    return f"""You are a Socratic coding tutor helping a learner narrow down which family of technique or data structure fits "{problem_id}". They have not committed to an approach yet.
-
-Problem description:
-{description}
-
-Candidate approaches (private reference — never reveal this list, never state which is optimal, never rank them or use superlatives like "best"/"better" about any one of them):
-{options_block}
-
-Your job: ask questions that help the learner notice which properties of the problem (constraints, output type, guarantees) rule approaches in or out, so they arrive at a candidate technique themselves.
-
-Rules:
-1. Never state which approach is optimal, and never rank the candidates against each other.
-2. Never say which option is a "trap" or reveal why one fails — let the learner reason there themselves.
-3. Ask exactly one focused question per response.
-4. Keep responses to 2–4 sentences plus the question."""
-
-
-def _approach_system_prompt(problem_id, problem_context, options, target_insight):
-    description = _strip_html((problem_context or {}).get("description", ""))
-    options_block = "\n".join(
-        f"- {o.get('strategyId')} ({o.get('viability')}): {o.get('rationale')}"
-        for o in (options or [])
-    ) or "(none given)"
-    insight_line = (
-        f"\nNever state or directly imply this insight: \"{target_insight}\"\n"
-        if target_insight else ""
-    )
-
-    return f"""You are a Socratic coding tutor helping a learner pressure-test whatever approach they describe for "{problem_id}". There is no form to fill out first — let the conversation reveal their strategy rather than asking them to declare it up front.
-
-Problem description:
-{description}
-
-Candidate approaches (private reference — never reveal this list, never state which is optimal or use superlatives about any one of them):
+Candidate approaches (private reference — NEVER reveal this list, never name one, never rank them or use superlatives like "best"/"better"/"optimal" about any of them):
 {options_block}
 {insight_line}
-Your job: once the learner describes an approach (even loosely), ask probing questions that surface its complexity, edge cases, or weaknesses. If they haven't described one yet, ask them to.
-
-Rules:
-1. Never name the optimal strategy.
-2. Never state the key insight — guide toward it with questions.
+The learner's current code (only look at this if they explicitly ask for help with their code, mention it's not working, or describe an error — otherwise ignore it and do not comment on it unprompted):
+{code_block}
+{run_error_line}
+Default mode — Socratic, ask don't tell:
+1. Never name a specific data structure, algorithm, or technique, and never name or rank which candidate approach is optimal — redirect with a question instead of answering directly.
+2. Never state the key insight above — guide toward it with questions.
 3. Ask exactly one focused question per response.
-4. Be encouraging but intellectually challenging.
-5. Keep responses to 2–4 sentences plus the question."""
+4. Be encouraging but keep the learner doing the thinking. Keep responses to 2–4 sentences plus the question.
+
+Progressive relaxation — once the learner has described a concrete approach of their own (in their own words, even loosely — not just asked what to use), you may pressure-test THAT approach directly: surface its complexity, edge cases, or weaknesses through questions, and compare it against constraints they haven't considered. You may still never name a better approach or state the target insight outright — keep guiding them to it.
+
+Debugging exception — if the learner explicitly asks for debugging help, pastes/references an error, or says their code isn't working, you may be more direct for that turn, but do not fully solve it for them: look at their code and the run error above and narrow down WHERE the bug likely is (name the specific line, variable, or piece of logic that looks off) and WHAT KIND of mistake it looks like (e.g. an off-by-one, a wrong comparison, mutating while iterating) — but do not rewrite their code, do not give a step-by-step fix, and do not paste corrected code. End with a question that points them at what to check or try next, so they make the actual fix themselves. Return to the Socratic default once the immediate bug is resolved and the conversation moves back to strategy."""
 
 
 @struggle_bp.route("/<problem_id>/struggle/tutor-chat", methods=["POST"])
@@ -229,32 +196,21 @@ def tutor_chat(problem_id):
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Intentionally ungated: this backs the Explore/Identify/Approach tabs,
-    # a free-use tutor with no forced order. Do not add a "must commit first"
-    # check here — that hard rule belongs only to /chat above, which is now
-    # dead code left in place rather than wired into the tabbed UI.
+    # Intentionally ungated: a free-use tutor with no forced order and no
+    # "must commit first" check — that hard rule belongs only to /chat above,
+    # which is now dead code left in place rather than wired into the UI.
     data = request.get_json(force=True)
-    goal = data.get("goal")
-    if goal not in ("explore", "identify", "approach"):
-        return jsonify({"error": "goal must be 'explore', 'identify', or 'approach'"}), 400
-
     messages = data.get("messages") or []
     if not messages:
         return jsonify({"error": "messages array is required"}), 400
 
     problem_context = data.get("problemContext") or {}
     options = data.get("options") or []
+    target_insight = (data.get("targetInsight") or "").strip()
+    code = data.get("code")
+    run_error = data.get("runError")
 
-    if goal == "explore":
-        system_prompt = _explore_system_prompt(problem_id, problem_context)
-        state_key = "exploreMessages"
-    elif goal == "identify":
-        system_prompt = _identify_system_prompt(problem_id, problem_context, options)
-        state_key = "identifyMessages"
-    else:
-        target_insight = (data.get("targetInsight") or "").strip()
-        system_prompt = _approach_system_prompt(problem_id, problem_context, options, target_insight)
-        state_key = "approachMessages"
+    system_prompt = _tutor_system_prompt(problem_id, problem_context, options, target_insight, code, run_error)
 
     client = anthropic.Anthropic(api_key=env.get("ANTHROPIC_API_KEY"))
     response = client.messages.create(
@@ -266,7 +222,7 @@ def tutor_chat(problem_id):
     assistant_text = response.content[0].text
 
     _persist_attempt(user["sub"], problem_id, "struggle", state_patch={
-        state_key: messages + [{"role": "assistant", "content": assistant_text}],
+        "messages": messages + [{"role": "assistant", "content": assistant_text}],
     })
 
     return jsonify({"content": assistant_text})

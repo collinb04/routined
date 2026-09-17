@@ -304,6 +304,8 @@
         :struggle-progress="progress?.struggle ?? null"
         :phase-completion="phaseCompletion"
         :has-solution="!!problem?.solutionCode"
+        :code="codeContent"
+        :run-error="runError"
         :embedded="props.embedded"
         @reveal-highlight="onRevealHighlight"
         @advance-phase="onAdvancePhase"
@@ -526,6 +528,7 @@ import CodeEditor from '@/components/sandbox/CodeEditor.vue'
 import TestResults from '@/components/sandbox/TestResults.vue'
 import SolutionCodeBlock from '@/components/sandbox/SolutionCodeBlock.vue'
 import PhasedLearningPanel from '@/components/PhasedLearningPanel.vue'
+import { useLearnModeStore } from '@/stores/learnMode'
 import { usePyodide } from '@/composables/usePyodide'
 import { PROBLEMS } from '@/data/problems'
 import { CLUSTERS, CLUSTER_EDGES, clusterForSection } from '@/data/clusters'
@@ -676,11 +679,17 @@ const selectedCase = ref(0)
 
 const { runTests, runPython, isReady: pyodideReady, isLoading: pyodideLoading } = usePyodide()
 
-const leftTabs = [
-  { id: 'problem',  label: 'Question', locked: false },
-  { id: 'solution', label: 'Solution', locked: false },
-  { id: 'learning', label: 'Learning', locked: false },
-]
+const learnMode = useLearnModeStore()
+
+// Learn mode: Solution and Learning stay locked until the problem is solved.
+const leftTabs = computed(() => {
+  const locked = learnMode.enabled && !phaseCompletion.value.attack
+  return [
+    { id: 'problem',  label: 'Question', locked: false },
+    { id: 'solution', label: 'Solution', locked },
+    { id: 'learning', label: 'Learning', locked },
+  ]
+})
 
 const examples    = computed(() => problem.value?.examples    ?? [])
 const constraints = computed(() => problem.value?.constraints ?? [])

@@ -336,7 +336,7 @@ async function handleEvaluate() {
           <div
             v-if="msg.role === 'assistant'"
             class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"
-          >R</div>
+          ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5c-3.3 0-5.8 2.2-5.8 5.5v4.3c0 1 .4 1.9 1.1 2.6l1 1v2.1c0 1.1.9 2 2 2h3.4c1.1 0 2-.9 2-2v-2.1l1-1c.7-.7 1.1-1.6 1.1-2.6V8c0-3.3-2.5-5.5-5.8-5.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.2 9.5h11.6M9.3 14.6h5.4M9 15.3v3.4M15 15.3v3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="9.3" cy="10.7" r="1.1" fill="#ef4444"/><circle cx="14.7" cy="10.7" r="1.1" fill="#ef4444"/></svg></div>
           <div
             class="max-w-[80%] px-4 py-2.5 text-sm leading-relaxed"
             :class="msg.role === 'user'
@@ -354,7 +354,7 @@ async function handleEvaluate() {
         </div>
         <!-- Typing indicator -->
         <div v-if="store.chatLoading" class="flex items-end gap-2 justify-start">
-          <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5">R</div>
+          <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5c-3.3 0-5.8 2.2-5.8 5.5v4.3c0 1 .4 1.9 1.1 2.6l1 1v2.1c0 1.1.9 2 2 2h3.4c1.1 0 2-.9 2-2v-2.1l1-1c.7-.7 1.1-1.6 1.1-2.6V8c0-3.3-2.5-5.5-5.8-5.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.2 9.5h11.6M9.3 14.6h5.4M9 15.3v3.4M15 15.3v3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="9.3" cy="10.7" r="1.1" fill="#ef4444"/><circle cx="14.7" cy="10.7" r="1.1" fill="#ef4444"/></svg></div>
           <div class="px-4 py-3 bg-white rounded-2xl rounded-bl-sm border border-gray-100 shadow-sm">
             <div class="flex gap-1 items-center">
               <span class="typing-dot" style="animation-delay: 0ms" />

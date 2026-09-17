@@ -3,8 +3,6 @@ import { ref } from 'vue'
 import type { StruggleContent } from '@/data/problems'
 import type { ApiMessage } from '@/stores/struggle'
 
-export type TutorGoal = 'explore' | 'identify' | 'approach'
-
 export interface ProblemContext {
   description?: string
   examples?: Array<{ input: string; output: string; explanation?: string }>
@@ -13,33 +11,13 @@ export interface ProblemContext {
 
 export const useStruggleTutorStore = defineStore('struggleTutor', () => {
   const problemId = ref('')
-  const exploreMessages = ref<ApiMessage[]>([])
-  const identifyMessages = ref<ApiMessage[]>([])
-  const approachMessages = ref<ApiMessage[]>([])
-  const exploreLoading = ref(false)
-  const identifyLoading = ref(false)
-  const approachLoading = ref(false)
+  const messages = ref<ApiMessage[]>([])
+  const loading = ref(false)
 
   function init(pid: string, saved?: Record<string, any> | null) {
     problemId.value = pid
-    exploreMessages.value = saved?.exploreMessages ?? []
-    identifyMessages.value = saved?.identifyMessages ?? []
-    approachMessages.value = saved?.approachMessages ?? []
-    exploreLoading.value = false
-    identifyLoading.value = false
-    approachLoading.value = false
-  }
-
-  function messagesFor(goal: TutorGoal) {
-    if (goal === 'explore') return exploreMessages
-    if (goal === 'identify') return identifyMessages
-    return approachMessages
-  }
-
-  function loadingFor(goal: TutorGoal) {
-    if (goal === 'explore') return exploreLoading
-    if (goal === 'identify') return identifyLoading
-    return approachLoading
+    messages.value = saved?.messages ?? []
+    loading.value = false
   }
 
   // Home page's embedded example problem is not a real, signed-in session —
@@ -48,14 +26,13 @@ export const useStruggleTutorStore = defineStore('struggleTutor', () => {
   const DEMO_REPLY = "This is for demo purposes only — sign up to chat with the real Struggle & Optimize tutor on any problem."
 
   async function sendMessage(
-    goal: TutorGoal,
     userText: string,
     problemContext?: ProblemContext,
     struggle?: StruggleContent,
+    code?: string,
+    runError?: string | null,
     demoMode = false,
   ): Promise<string> {
-    const messages = messagesFor(goal)
-    const loading = loadingFor(goal)
     messages.value.push({ role: 'user', content: userText })
     loading.value = true
     if (demoMode) {
@@ -71,11 +48,12 @@ export const useStruggleTutorStore = defineStore('struggleTutor', () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          goal,
           messages: messages.value,
           problemContext,
           options: struggle?.options,
           targetInsight: struggle?.targetInsight,
+          code,
+          runError,
         }),
       })
       if (!res.ok) throw new Error('Tutor chat request failed')
@@ -88,9 +66,7 @@ export const useStruggleTutorStore = defineStore('struggleTutor', () => {
   }
 
   return {
-    problemId, exploreMessages, identifyMessages, approachMessages,
-    exploreLoading, identifyLoading, approachLoading,
-    messagesFor, loadingFor,
+    problemId, messages, loading,
     init, sendMessage,
   }
 })

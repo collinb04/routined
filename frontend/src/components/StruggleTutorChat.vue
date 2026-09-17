@@ -1,49 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
-import { useStruggleTutorStore, type TutorGoal, type ProblemContext } from '@/stores/struggleTutor'
+import { useStruggleTutorStore, type ProblemContext } from '@/stores/struggleTutor'
 import type { StruggleContent } from '@/data/problems'
 
 const props = defineProps<{
-  goal: TutorGoal
   problemContext?: ProblemContext
   struggle?: StruggleContent
+  code?: string
+  runError?: string | null
   embedded?: boolean
 }>()
 
 const store = useStruggleTutorStore()
 
-const SUBTITLES: Record<TutorGoal, string> = {
-  explore: 'No approach in mind yet? Talk through the problem itself.',
-  identify: "Not sure which technique fits? Let's narrow it down.",
-  approach: 'Have a plan? Describe it and get it pressure-tested.',
-}
+const INTRO_MESSAGE = "Ask anything — get stuck, narrow down an approach, or pressure-test a plan."
 
-const STARTER_CHIPS: Record<TutorGoal, string[]> = {
-  explore: [
-    "I don't know where to start — can you help me break this down?",
-    'Can we walk through an example together?',
-  ],
-  identify: [
-    'What should I be paying attention to in this problem?',
-    "I have a couple of ideas but I'm not sure which fits — can you help?",
-  ],
-  approach: [
-    "Here's the approach I'm thinking of — can you pressure-test it?",
-    'What complexity should I expect from my plan?',
-  ],
-}
-
-const messages = computed(() => {
-  if (props.goal === 'explore') return store.exploreMessages
-  if (props.goal === 'identify') return store.identifyMessages
-  return store.approachMessages
-})
-
-const loading = computed(() => {
-  if (props.goal === 'explore') return store.exploreLoading
-  if (props.goal === 'identify') return store.identifyLoading
-  return store.approachLoading
-})
+const messages = computed(() => store.messages)
+const loading = computed(() => store.loading)
 
 const chatInput = ref('')
 const chatScrollEl = ref<HTMLElement | null>(null)
@@ -60,7 +33,7 @@ async function sendChatMessage(text?: string) {
   if (!msg || loading.value) return
   chatInput.value = ''
   try {
-    await store.sendMessage(props.goal, msg, props.problemContext, props.struggle, props.embedded)
+    await store.sendMessage(msg, props.problemContext, props.struggle, props.code, props.runError, props.embedded)
     scrollToBottom()
   } catch {
     // error already reflected in store via re-thrown failures on next attempt
@@ -77,12 +50,14 @@ function autoResize(e: Event) {
 <template>
   <div class="flex flex-col h-full bg-white">
 
-    <div class="shrink-0 px-4 py-2.5 border-b border-gray-100 bg-surface">
-      <span class="text-[12px] text-text-muted">{{ SUBTITLES[goal] }}</span>
-    </div>
-
     <!-- Messages -->
     <div ref="chatScrollEl" class="flex-1 min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-3 bg-[#f5f5f2]">
+      <!-- Static intro bubble, styled as the bot's opening message (client-side only — never sent/persisted) -->
+      <div class="flex items-end gap-2 justify-start">
+        <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5c-3.3 0-5.8 2.2-5.8 5.5v4.3c0 1 .4 1.9 1.1 2.6l1 1v2.1c0 1.1.9 2 2 2h3.4c1.1 0 2-.9 2-2v-2.1l1-1c.7-.7 1.1-1.6 1.1-2.6V8c0-3.3-2.5-5.5-5.8-5.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.2 9.5h11.6M9.3 14.6h5.4M9 15.3v3.4M15 15.3v3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="9.3" cy="10.7" r="1.1" fill="#ef4444"/><circle cx="14.7" cy="10.7" r="1.1" fill="#ef4444"/></svg></div>
+        <div class="max-w-[80%] px-4 py-2.5 text-sm leading-relaxed bg-white text-text-dim shadow-sm rounded-2xl rounded-bl-sm border border-gray-100">{{ INTRO_MESSAGE }}</div>
+      </div>
+
       <div
         v-for="(msg, i) in messages"
         :key="i"
@@ -92,7 +67,7 @@ function autoResize(e: Event) {
         <div
           v-if="msg.role === 'assistant'"
           class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"
-        >R</div>
+        ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5c-3.3 0-5.8 2.2-5.8 5.5v4.3c0 1 .4 1.9 1.1 2.6l1 1v2.1c0 1.1.9 2 2 2h3.4c1.1 0 2-.9 2-2v-2.1l1-1c.7-.7 1.1-1.6 1.1-2.6V8c0-3.3-2.5-5.5-5.8-5.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.2 9.5h11.6M9.3 14.6h5.4M9 15.3v3.4M15 15.3v3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="9.3" cy="10.7" r="1.1" fill="#ef4444"/><circle cx="14.7" cy="10.7" r="1.1" fill="#ef4444"/></svg></div>
         <div
           class="max-w-[80%] px-4 py-2.5 text-sm leading-relaxed"
           :class="msg.role === 'user'
@@ -108,9 +83,10 @@ function autoResize(e: Event) {
           </svg>
         </div>
       </div>
+
       <!-- Typing indicator -->
       <div v-if="loading" class="flex items-end gap-2 justify-start">
-        <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5">R</div>
+        <div class="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 mb-0.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5c-3.3 0-5.8 2.2-5.8 5.5v4.3c0 1 .4 1.9 1.1 2.6l1 1v2.1c0 1.1.9 2 2 2h3.4c1.1 0 2-.9 2-2v-2.1l1-1c.7-.7 1.1-1.6 1.1-2.6V8c0-3.3-2.5-5.5-5.8-5.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.2 9.5h11.6M9.3 14.6h5.4M9 15.3v3.4M15 15.3v3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="9.3" cy="10.7" r="1.1" fill="#ef4444"/><circle cx="14.7" cy="10.7" r="1.1" fill="#ef4444"/></svg></div>
         <div class="px-4 py-3 bg-white rounded-2xl rounded-bl-sm border border-gray-100 shadow-sm">
           <div class="flex gap-1 items-center">
             <span class="typing-dot" style="animation-delay: 0ms" />
@@ -119,20 +95,6 @@ function autoResize(e: Event) {
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Starter chips -->
-    <div
-      v-if="messages.length === 0"
-      class="shrink-0 px-4 pb-2 pt-1 bg-[#f5f5f2] flex flex-wrap gap-1.5"
-    >
-      <button
-        v-for="chip in STARTER_CHIPS[goal]"
-        :key="chip"
-        class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[12px] text-text-dim hover:border-accent/40 hover:text-accent transition-colors"
-        :disabled="loading"
-        @click="sendChatMessage(chip)"
-      >{{ chip }}</button>
     </div>
 
     <!-- Input -->

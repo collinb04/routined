@@ -3,6 +3,7 @@ import { ref, reactive, computed, nextTick, onBeforeUnmount } from 'vue'
 import type { ClueCard, StruggleContent } from '@/data/problems'
 import type { ProblemContext } from '@/stores/struggleTutor'
 import { useLearnModeStore } from '@/stores/learnMode'
+import { useStruggleTutorStore } from '@/stores/struggleTutor'
 import StruggleTutorHub from '@/components/StruggleTutorHub.vue'
 
 export interface ChatMessage {
@@ -39,6 +40,8 @@ const props = withDefaults(defineProps<{
   phaseCompletion?: PhaseCompletion
   hasSolution?: boolean
   embedded?: boolean
+  code?: string
+  runError?: string | null
 }>(), {
   problemId: '',
   dissectProgress: null,
@@ -60,6 +63,7 @@ const emit = defineEmits<{
 const PHASE_NAMES = ['Dissect', 'Struggle & Optimize', 'Attack'] as const
 
 const learnMode = useLearnModeStore()
+const struggleTutor = useStruggleTutorStore()
 
 // Struggle & Optimize is a free-use tutor, not a graded step — it never
 // contributes a "done" state, and doesn't gate Attack. Only Dissect and
@@ -82,6 +86,9 @@ function tabStatus(i: number): 'done' | 'unlocked' {
 function isLocked(i: number): boolean {
   return learnMode.enabled && i > 0 && !props.phaseCompletion.dissect
 }
+
+// Learn mode: the solution reveal stays locked until the problem is actually solved.
+const solutionLocked = computed(() => learnMode.enabled && !props.phaseCompletion.attack)
 
 function clickTab(i: number) {
   if (isLocked(i)) return
@@ -255,6 +262,15 @@ async function resetProblem() {
 
   activePhase.value = 0
   completedPhases.clear()
+
+  // Dock the floating tutor popup back and let it re-place itself fresh next time.
+  struggleFloating.value = false
+  floatPlaced = false
+
+  // Clear the tutor's in-memory chat context — the backend history is wiped
+  // below, but the Pinia store otherwise keeps showing stale messages until
+  // a full reload re-inits it from (now-empty) saved state.
+  struggleTutor.init(props.problemId, null)
   clueStates.forEach((s, i) => {
     s.status = i === 0 ? 'active' : 'locked'
     s.selectedOption = null
@@ -462,15 +478,22 @@ onBeforeUnmount(() => {
 
         <div v-if="hasSolution" class="relative group">
           <button
-            class="flex items-center justify-center w-8 h-8 rounded-lg text-text-muted hover:text-text hover:bg-black/5 transition-colors cursor-pointer"
+            class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            :class="solutionLocked
+              ? 'text-text-muted/50 cursor-not-allowed'
+              : 'text-text-muted hover:text-text hover:bg-black/5 cursor-pointer'"
+            :disabled="solutionLocked"
             @click="solutionConfirmOpen = true"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-if="solutionLocked" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>
             </svg>
           </button>
           <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:block whitespace-nowrap bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-2.5 py-1.5 pointer-events-none z-20">
-            Solution
+            {{ solutionLocked ? 'Solve the problem first to unlock' : 'Solution' }}
           </div>
         </div>
 
@@ -692,6 +715,8 @@ onBeforeUnmount(() => {
           :problem-id="problemId"
           :problem-context="problemContext"
           :saved-state="struggleProgress?.state ?? null"
+          :code="code"
+          :run-error="runError"
           :embedded="embedded"
           class="flex-1 min-h-0"
         />
@@ -751,6 +776,8 @@ onBeforeUnmount(() => {
             :problem-id="problemId"
             :problem-context="problemContext"
             :saved-state="struggleProgress?.state ?? null"
+            :code="code"
+            :run-error="runError"
             :embedded="embedded"
             class="flex-1 min-h-0 overflow-y-auto"
           />

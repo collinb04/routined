@@ -34,7 +34,7 @@ The frontend is a single Vue SPA. The Flask backend is a thin session/persistenc
 | Path | Purpose |
 |---|---|
 | `routes/auth.py` | Login/signup/social login/logout, backed by Auth0, with a local `users` table mirror |
-| `routes/struggle.py` | The Anthropic-backed Socratic tutor (commit/chat, ungated Explore/Identify/Approach tabs, insight grading) |
+| `routes/struggle.py` | The Anthropic-backed Socratic tutor (commit/chat, ungated general-purpose tutor chat, insight grading) |
 | `routes/progress.py` | Shared phase-progress persistence (`GET /progress`, Dissect/Attack save endpoints) — also exports helpers `struggle.py` calls into |
 | `routes/checklist.py` | The manual "done" checkboxes on the `/problems` curriculum page — deliberately separate from phase progress |
 | `routes/learn.py` | "Mark as completed" toggles for Learn-section pages |
@@ -52,7 +52,7 @@ Each problem moves through three phases, rendered as tabs by `PhasedLearningPane
 1. **Dissect** — multiple-choice "clue" cards (`ClueCard[]`, authored inline on each problem). `PhasedLearningPanel.vue` owns the per-clue state machine (locked → active → solved, with wrong-answer tracking), and posts progress to `POST /api/problems/:id/dissect/progress`.
 2. **Struggle & Optimize** — two parallel UIs share this tab:
    - A graded **commit → chat → insight** flow (`stores/struggle.ts`, `struggle.py`'s `/commit`, `/chat`, `/evaluate-insight`), where the learner commits to a strategy/complexity/plan before chatting.
-   - An **ungated** Explore/Identify/Approach tutor (`stores/struggleTutor.ts`, `StruggleTutorHub.vue` + `StruggleTutorChat.vue`, `struggle.py`'s `/tutor-chat`) with no required order or commitment — this is the one actually surfaced in the tab UI today.
+   - An **ungated**, single general-purpose tutor chat (`stores/struggleTutor.ts`, `StruggleTutorHub.vue` + `StruggleTutorChat.vue`, `struggle.py`'s `/tutor-chat`) with no required order or commitment — this is the one actually surfaced in the tab UI today. One continuous conversation and one system prompt; the model infers conversation stage from the transcript (still-exploring vs. has-named-an-approach) rather than the UI enforcing separate modes. It also has access to the learner's current Attack-tab code and last run error, referenced only when debugging help is explicitly requested.
 
    Struggle never contributes a "done" state and never gates Attack (see the comment in `PhasedLearningPanel.vue`) — only Dissect and Attack have real completion.
 3. **Attack** — the learner writes code in an in-browser editor (CodeMirror) and runs it via `usePyodide().runTests` against the problem's `testCases`, then can reveal `solutionCode`/`solutionExplanation`. Progress posts to `POST /api/problems/:id/attack/progress`.
