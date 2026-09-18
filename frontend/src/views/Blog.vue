@@ -2110,6 +2110,7 @@ import ComplexityGraph from '@/components/ComplexityGraph.vue'
 import PracticeProblemSandbox from '@/components/sandbox/PracticeProblemSandbox.vue'
 import { PROBLEMS, problemForConcept } from '@/data/problems'
 import { CLUSTERS, clusterForSection } from '@/data/clusters'
+import { API_URL } from '@/lib/apiUrl'
 
 
 const router = useRouter()
@@ -2466,7 +2467,7 @@ const completed = ref(new Set())
 
 async function persistCompleted(sectionId, isCompleted) {
   try {
-    await fetch('/api/learn/completed/toggle', {
+    await fetch(`${API_URL}/api/learn/completed/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -2487,7 +2488,7 @@ function toggleCompleted(id) {
 
 async function loadCompletedSections() {
   try {
-    const res = await fetch('/api/learn/completed', { credentials: 'include' })
+    const res = await fetch(`${API_URL}/api/learn/completed`, { credentials: 'include' })
     if (!res.ok) return
     const { sectionIds } = await res.json()
     completed.value = new Set(sectionIds)

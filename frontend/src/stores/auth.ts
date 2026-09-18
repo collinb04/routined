@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { API_URL } from '@/lib/apiUrl'
 
 interface User {
   sub: string
@@ -29,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function init() {
     try {
-      const res = await fetch('/auth/me', { credentials: 'include' })
+      const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' })
       if (res.ok) {
         user.value       = await res.json()
         isAuthenticated.value = true
@@ -39,7 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(email: string, password: string) {
-    const res = await fetch('/auth/login', {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -52,7 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signup(email: string, password: string, name: string) {
-    const res = await fetch('/auth/signup', {
+    const res = await fetch(`${API_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -65,13 +66,13 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    await fetch('/auth/logout', { method: 'POST', credentials: 'include' })
+    await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' })
     user.value       = null
     isAuthenticated.value = false
   }
 
   async function forgotPassword(email: string) {
-    await fetch('/auth/forgot-password', {
+    await fetch(`${API_URL}/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -79,7 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function loginWithSocialToken(accessToken: string, mode: 'login' | 'signup') {
-    const res = await fetch('/auth/social', {
+    const res = await fetch(`${API_URL}/auth/social`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

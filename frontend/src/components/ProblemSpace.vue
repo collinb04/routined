@@ -532,6 +532,7 @@ import { useLearnModeStore } from '@/stores/learnMode'
 import { usePyodide } from '@/composables/usePyodide'
 import { PROBLEMS } from '@/data/problems'
 import { CLUSTERS, CLUSTER_EDGES, clusterForSection } from '@/data/clusters'
+import { API_URL } from '@/lib/apiUrl'
 
 const TWO_SUM_FALLBACK = PROBLEMS.find(p => p.id === 'two-sum')
 
@@ -817,7 +818,7 @@ async function fetchProgress() {
     return
   }
   try {
-    const res = await fetch(`/api/problems/${id}/progress`, { credentials: 'include' })
+    const res = await fetch(`${API_URL}/api/problems/${id}/progress`, { credentials: 'include' })
     if (res.ok) {
       progress.value = await res.json()
       reconcileAttackProgress(id, progress.value.attack)
@@ -907,7 +908,7 @@ async function persistAttack(extra = {}) {
   const id = problem.value?.id
   if (!id || props.embedded) return
   try {
-    await fetch(`/api/problems/${id}/attack/progress`, {
+    await fetch(`${API_URL}/api/problems/${id}/attack/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

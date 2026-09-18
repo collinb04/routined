@@ -5,6 +5,7 @@ import type { ProblemContext } from '@/stores/struggleTutor'
 import { useLearnModeStore } from '@/stores/learnMode'
 import { useStruggleTutorStore } from '@/stores/struggleTutor'
 import StruggleTutorHub from '@/components/StruggleTutorHub.vue'
+import { API_URL } from '@/lib/apiUrl'
 
 export interface ChatMessage {
   role: 'bot' | 'user'
@@ -158,7 +159,7 @@ function selectOption(ci: number, oi: number) {
 async function persistDissect(completed = false) {
   if (!props.problemId || props.embedded) return
   try {
-    await fetch(`/api/problems/${props.problemId}/dissect/progress`, {
+    await fetch(`${API_URL}/api/problems/${props.problemId}/dissect/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -234,7 +235,7 @@ async function submitBugReport() {
   bugReportSubmitting.value = true
   try {
     if (!props.embedded) {
-      await fetch(`/api/problems/${props.problemId}/bug-report`, {
+      await fetch(`${API_URL}/api/problems/${props.problemId}/bug-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -285,7 +286,7 @@ async function resetProblem() {
 
   if (props.problemId && !props.embedded) {
     try {
-      await fetch(`/api/problems/${props.problemId}/struggle/reset`, {
+      await fetch(`${API_URL}/api/problems/${props.problemId}/struggle/reset`, {
         method: 'POST',
         credentials: 'include',
       })

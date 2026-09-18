@@ -318,6 +318,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 import { useLearnModeStore } from '@/stores/learnMode'
+import { API_URL } from '@/lib/apiUrl'
 
 const router = useRouter()
 const learnMode = useLearnModeStore()
@@ -480,7 +481,7 @@ function fireGoldConfetti() {
 
 async function persistChecklist(topicId, problemId, done) {
   try {
-    await fetch('/api/checklist/toggle', {
+    await fetch(`${API_URL}/api/checklist/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -499,7 +500,7 @@ function toggleDone(topic, problem) {
 
 async function loadChecklist() {
   try {
-    const res = await fetch('/api/checklist', { credentials: 'include' })
+    const res = await fetch(`${API_URL}/api/checklist`, { credentials: 'include' })
     if (!res.ok) return
     const saved = await res.json()
     for (const topic of topics) {

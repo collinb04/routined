@@ -370,6 +370,7 @@
   import { useAuthStore } from '@/stores/auth'
   import ProblemSpace from '@/components/ProblemSpace.vue'
   import StoryGraph from '@/components/StoryGraph.vue'
+  import { API_URL } from '@/lib/apiUrl'
 
   const router = useRouter()
   const auth = useAuthStore()
@@ -390,7 +391,7 @@
     contactSubmitting.value = true
     contactError.value = ''
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch(`${API_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

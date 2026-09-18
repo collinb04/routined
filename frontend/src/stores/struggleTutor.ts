@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { StruggleContent } from '@/data/problems'
 import type { ApiMessage } from '@/stores/struggle'
+import { API_URL } from '@/lib/apiUrl'
 
 export interface ProblemContext {
   description?: string
@@ -43,7 +44,7 @@ export const useStruggleTutorStore = defineStore('struggleTutor', () => {
       return DEMO_REPLY
     }
     try {
-      const res = await fetch(`/api/problems/${problemId.value}/struggle/tutor-chat`, {
+      const res = await fetch(`${API_URL}/api/problems/${problemId.value}/struggle/tutor-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

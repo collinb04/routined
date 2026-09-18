@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { StruggleContent } from '@/data/problems'
+import { API_URL } from '@/lib/apiUrl'
 
 export type StruggleStep = 'commit' | 'chat' | 'revise' | 'done'
 
@@ -60,7 +61,7 @@ export const useStruggleStore = defineStore('struggle', () => {
   }
 
   async function submitCommit(): Promise<void> {
-    const res = await fetch(`/api/problems/${problemId.value}/struggle/commit`, {
+    const res = await fetch(`${API_URL}/api/problems/${problemId.value}/struggle/commit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -83,7 +84,7 @@ export const useStruggleStore = defineStore('struggle', () => {
     messages.value.push({ role: 'user', content: userText })
     chatLoading.value = true
     try {
-      const res = await fetch(`/api/problems/${problemId.value}/struggle/chat`, {
+      const res = await fetch(`${API_URL}/api/problems/${problemId.value}/struggle/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -104,7 +105,7 @@ export const useStruggleStore = defineStore('struggle', () => {
   async function evaluateInsight(): Promise<InsightResult> {
     evaluating.value = true
     try {
-      const res = await fetch(`/api/problems/${problemId.value}/struggle/evaluate-insight`, {
+      const res = await fetch(`${API_URL}/api/problems/${problemId.value}/struggle/evaluate-insight`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

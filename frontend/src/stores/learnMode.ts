@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { API_URL } from '@/lib/apiUrl'
 
 export const useLearnModeStore = defineStore('learnMode', () => {
   const enabled = ref(false)
@@ -7,7 +8,7 @@ export const useLearnModeStore = defineStore('learnMode', () => {
 
   async function load() {
     try {
-      const res = await fetch('/api/learn-mode', { credentials: 'include' })
+      const res = await fetch(`${API_URL}/api/learn-mode`, { credentials: 'include' })
       if (res.ok) {
         const body = await res.json()
         enabled.value = !!body.learnMode
@@ -20,7 +21,7 @@ export const useLearnModeStore = defineStore('learnMode', () => {
     const previous = enabled.value
     enabled.value = value
     try {
-      const res = await fetch('/api/learn-mode', {
+      const res = await fetch(`${API_URL}/api/learn-mode`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
