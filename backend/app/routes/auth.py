@@ -77,6 +77,7 @@ def login():
     raw = _userinfo(tokens["access_token"])
     user = {k: raw.get(k) for k in ("sub", "email", "name", "nickname", "picture")}
     _upsert_user(user)
+    session.permanent = True
     session["user"] = user
     return jsonify(user)
 
@@ -122,6 +123,7 @@ def signup():
     if not user.get("name"):
         user["name"] = name
     _upsert_user(user)
+    session.permanent = True
     session["user"] = user
     return jsonify(user)
 
@@ -177,6 +179,7 @@ def social_login():
             return jsonify({"error": "An account with this email already exists"}), 400
         user = {k: raw.get(k) for k in ("sub", "email", "name", "nickname", "picture")}
         _upsert_user(user)
+        session.permanent = True
         session["user"] = user
         return jsonify(user)
 
@@ -184,6 +187,7 @@ def social_login():
     if not existing:
         return jsonify({"error": "No account found for this email. Please sign up first."}), 404
     user = {"sub": existing["auth0_id"], "email": existing["email"], "name": existing["username"]}
+    session.permanent = True
     session["user"] = user
     return jsonify(user)
 
@@ -198,7 +202,9 @@ def logout():
 def me():
     user = session.get("user")
     if not user:
-        return jsonify({}), 401
+        resp = jsonify({})
+        resp.headers["Cache-Control"] = "no-store"
+        return resp, 401
 
     with db.engine.connect() as conn:
         exists = conn.execute(
@@ -211,6 +217,10 @@ def me():
         # since this session was issued. Don't keep honoring a cookie for an
         # account that no longer exists.
         session.clear()
-        return jsonify({}), 401
+        resp = jsonify({})
+        resp.headers["Cache-Control"] = "no-store"
+        return resp, 401
 
-    return jsonify(user)
+    resp = jsonify(user)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
